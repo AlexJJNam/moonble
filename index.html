@@ -1,37 +1,78 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>moondle</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>moonble</title>
   <style>
+    :root {
+      --primary-color: #38bdf8;
+      --bg-color: #0f172a;
+      --text-color: #f1f5f9;
+      --accent-color: #a78bfa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Helvetica Neue', sans-serif;
-      background-color: #0f172a;
-      color: #f1f5f9;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
+      padding: 1rem;
+      text-align: center;
     }
+
     h1 {
-      font-size: 3rem;
+      font-size: 3.5rem;
       margin-bottom: 1rem;
+      color: var(--primary-color);
     }
+
     p {
-      font-size: 1.2rem;
-      opacity: 0.8;
+      font-size: 1.25rem;
+      max-width: 600px;
+      opacity: 0.9;
+      margin-bottom: 2rem;
     }
-    .highlight {
-      color: #38bdf8;
+
+    .button {
+      background-color: var(--accent-color);
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #7c3aed;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to <span class="highlight">moonble</span></h1>
-  <p>This site is made by jjcorp</p>
+  <h1>Welcome to <span style="color: var(--accent-color)">moonble</span></h1>
+  <p>당신의 아이디어를 현실로. moonble은 스타트업을 위한 스마트한 시작점입니다.</p>
+  <button class="button">지금 시작하기</button>
 </body>
 </html>
