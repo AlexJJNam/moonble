@@ -2,77 +2,326 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>moonble</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>moonble — 빛나는 아이디어를 현실로</title>
   <style>
-    :root {
-      --primary-color: #38bdf8;
-      --bg-color: #0f172a;
-      --text-color: #f1f5f9;
-      --accent-color: #a78bfa;
-    }
-
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
 
     body {
-      font-family: 'Helvetica Neue', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      font-family: 'Poppins', sans-serif;
+      background: #0e0e10;
+      color: #f5f5f7;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      padding: 1rem;
+      background: #1a1a1d;
+      border-bottom: 1px solid #2a2a2e;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    nav a {
+      margin-left: 1rem;
+      color: #b5b5c2;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover {
+      color: #ffffff;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      padding: 4rem 2rem;
+      text-align: center;
+      background: #1a1a1d;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: repeating-linear-gradient(
+        135deg,
+        red 0%,
+        orange 14%,
+        yellow 28%,
+        green 42%,
+        blue 56%,
+        indigo 70%,
+        violet 84%,
+        red 100%
+      );
+      background-size: 400% 400%;
+      animation: rainbowWave 15s ease-in-out infinite;
+      opacity: 0.15;
+      z-index: 0;
+      transform: rotate(10deg);
+    }
+
+    @keyframes rainbowWave {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 50% 60%; }
+      50% { background-position: 100% 50%; }
+      75% { background-position: 50% 40%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .hero * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #8e44ad, #3498db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1rem;
+      color: #cfcfd9;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-button {
+      margin-top: 2rem;
+      padding: 0.9rem 1.8rem;
+      background: #3498db;
+      border: none;
+      border-radius: 30px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .cta-button:hover {
+      background: #2c80b4;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #2a2a2e;
+      color: #ddd;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      margin-top: 1rem;
+    }
+
+    .section {
+      padding: 3rem 2rem;
+    }
+
+    .section h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: #ffffff;
       text-align: center;
     }
 
-    h1 {
-      font-size: 3.5rem;
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .feature-card {
+      background: #1f1f23;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-card h4 {
       margin-bottom: 1rem;
-      color: var(--primary-color);
+      color: #aabbee;
+      font-size: 1.2rem;
     }
 
-    p {
-      font-size: 1.25rem;
-      max-width: 600px;
-      opacity: 0.9;
-      margin-bottom: 2rem;
+    .feature-card p {
+      font-size: 0.95rem;
+      color: #c9c9d2;
     }
 
-    .button {
-      background-color: var(--accent-color);
-      color: white;
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
     }
 
-    .button:hover {
-      background-color: #7c3aed;
+    .image-placeholder {
+      background: #2b2b31;
+      height: 180px;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
+      font-size: 0.9rem;
+      font-style: italic;
     }
 
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2.5rem;
+    .contact-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: #151518;
+    }
+
+    .contact-section h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer {
+      padding: 2rem;
+      text-align: center;
+      background: #111113;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* 반응형 스타일 */
+    @media (min-width: 600px) {
+      nav {
+        margin-top: 0;
       }
 
-      p {
-        font-size: 1rem;
+      .hero h2 {
+        font-size: 3rem;
+      }
+
+      .section h3 {
+        font-size: 2rem;
+      }
+
+      .features {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .features {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      header {
+        padding: 2rem 4rem;
+      }
+
+      .hero {
+        padding: 6rem 4rem;
+      }
+
+      .section {
+        padding: 4rem 4rem;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
       }
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to <span style="color: var(--accent-color)">moonble</span></h1>
-  <p>Yes, jj.corp</p>
-  <button class="button">지금 시작하기</button>
+
+  <header>
+    <h1>moonble</h1>
+    <nav>
+      <a href="#">비전</a>
+      <a href="#">기능</a>
+      <a href="#">팀 소개</a>
+      <a href="#">문의</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>당신의 아이디어를 빛나게</h2>
+    <p>moonble은 창의적이고 대담한 스타트업을 위한 런칭 플랫폼입니다. 강력한 도구, 감각적인 설계, 그리고 빠른 실행력을 경험하세요.</p>
+    <button class="cta-button">지금 시작하기</button>
+    <div class="badge">🚀 BETA 출시 중</div>
+  </section>
+
+  <section class="section">
+    <h3>무엇이 특별할까요?</h3>
+    <div class="features">
+      <div class="feature-card">
+        <h4>1. 번개처럼 빠른 런칭</h4>
+        <p>노코드 기반으로 아이디어를 당일 실행. 이제 MVP는 몇 주가 아니라 몇 시간입니다.</p>
+      </div>
+      <div class="feature-card">
+        <h4>2. 디자인은 기본값</h4>
+        <p>스타일 고민은 그만. 감각적인 UI가 자동 적용되어 당신의 브랜드를 돋보이게 합니다.</p>
+      </div>
+      <div class="feature-card">
+        <h4>3. 협업이 중심</h4>
+        <p>팀원 초대, 실시간 수정, 히스토리 관리까지. 더 똑똑한 협업을 위해 설계되었습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>스타트업들의 실제 모습</h3>
+    <div class="image-grid">
+      <div class="image-placeholder">프로덕트 데모</div>
+      <div class="image-placeholder">팀 회의</div>
+      <div class="image-placeholder">앱 스크린샷</div>
+      <div class="image-placeholder">런칭 이벤트</div>
+      <div class="image-placeholder">디자인 목업</div>
+      <div class="image-placeholder">사용자 피드백</div>
+    </div>
+  </section>
+
+  <section class="contact-section">
+    <h3>moonble과 함께할 준비가 되셨나요?</h3>
+    <button class="cta-button">Contact Us</button>
+  </section>
+
+  <footer class="footer">
+    © 2025 moonble. All rights reserved.
+  </footer>
+
 </body>
 </html>
