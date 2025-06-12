@@ -4,8 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>moonble — 빛나는 아이디어를 현실로</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #0e0e10;
+      --accent-color: #3498db;
+      --header-bg: #f8f9fa;
+      --card-bg: #f0f2f5;
+      --muted-color: #555;
+    }
+    [data-theme="dark"] {
+      --bg-color: #0e0e10;
+      --text-color: #f5f5f7;
+      --accent-color: #3498db;
+      --header-bg: #1a1a1d;
+      --card-bg: #1f1f23;
+      --muted-color: #aaa;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,25 +32,36 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: #0e0e10;
-      color: #f5f5f7;
+      background: var(--bg-color);
+      color: var(--text-color);
       line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
     }
 
     header {
+      position: sticky;
+      top: 0;
+      z-index: 99;
       padding: 1.5rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #1a1a1d;
-      border-bottom: 1px solid #2a2a2e;
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
       flex-wrap: wrap;
+      transition: background 0.3s;
     }
 
     header h1 {
       font-size: 1.75rem;
       font-weight: 800;
-      color: #ffffff;
+      color: var(--text-color);
+      animation: floatLogo 3s ease-in-out infinite;
+    }
+
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     nav {
@@ -43,7 +72,7 @@
 
     nav a {
       margin-left: 1rem;
-      color: #b5b5c2;
+      color: var(--muted-color);
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s;
@@ -51,16 +80,31 @@
     }
 
     nav a:hover {
-      color: #ffffff;
+      color: var(--text-color);
+    }
+
+    .theme-toggle {
+      margin-left: 1rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      transition: background 0.3s;
+    }
+
+    .theme-toggle:hover {
+      background: #2c80b4;
     }
 
     .hero {
       position: relative;
       overflow: hidden;
-      z-index: 1;
       padding: 4rem 2rem;
       text-align: center;
-      background: #1a1a1d;
+      background: var(--header-bg);
     }
 
     .hero::before {
@@ -83,7 +127,7 @@
       );
       background-size: 400% 400%;
       animation: rainbowWave 15s ease-in-out infinite;
-      opacity: 0.15;
+      opacity: 0.1;
       z-index: 0;
       transform: rotate(10deg);
     }
@@ -102,7 +146,7 @@
     }
 
     .hero h2 {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 800;
       margin-bottom: 1rem;
       background: linear-gradient(90deg, #8e44ad, #3498db);
@@ -111,8 +155,8 @@
     }
 
     .hero p {
-      font-size: 1rem;
-      color: #cfcfd9;
+      font-size: 1.05rem;
+      color: var(--muted-color);
       max-width: 700px;
       margin: 0 auto;
     }
@@ -120,7 +164,7 @@
     .cta-button {
       margin-top: 2rem;
       padding: 0.9rem 1.8rem;
-      background: #3498db;
+      background: var(--accent-color);
       border: none;
       border-radius: 30px;
       color: white;
@@ -136,8 +180,8 @@
 
     .badge {
       display: inline-block;
-      background: #2a2a2e;
-      color: #ddd;
+      background: var(--card-bg);
+      color: var(--muted-color);
       padding: 0.3rem 0.7rem;
       font-size: 0.75rem;
       border-radius: 999px;
@@ -145,28 +189,28 @@
     }
 
     .section {
-      padding: 3rem 2rem;
+      padding: 4rem 2rem;
+      background: var(--bg-color);
     }
 
     .section h3 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-      color: #ffffff;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      color: var(--text-color);
       text-align: center;
     }
 
     .features {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 2rem;
-      margin-top: 2rem;
     }
 
     .feature-card {
-      background: #1f1f23;
+      background: var(--card-bg);
       padding: 2rem;
       border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
       transition: transform 0.2s;
     }
 
@@ -176,97 +220,34 @@
 
     .feature-card h4 {
       margin-bottom: 1rem;
-      color: #aabbee;
+      color: var(--accent-color);
       font-size: 1.2rem;
     }
 
     .feature-card p {
       font-size: 0.95rem;
-      color: #c9c9d2;
-    }
-
-    .image-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    .image-placeholder {
-      background: #2b2b31;
-      height: 180px;
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #777;
-      font-size: 0.9rem;
-      font-style: italic;
-    }
-
-    .contact-section {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: #151518;
-    }
-
-    .contact-section h3 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
+      color: var(--muted-color);
     }
 
     .footer {
       padding: 2rem;
       text-align: center;
-      background: #111113;
+      background: var(--header-bg);
       font-size: 0.9rem;
-      color: #666;
+      color: var(--muted-color);
     }
 
-    /* 반응형 스타일 */
     @media (min-width: 600px) {
       nav {
         margin-top: 0;
       }
-
       .hero h2 {
-        font-size: 3rem;
-      }
-
-      .section h3 {
-        font-size: 2rem;
-      }
-
-      .features {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 900px) {
-      .features {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      header {
-        padding: 2rem 4rem;
-      }
-
-      .hero {
-        padding: 6rem 4rem;
-      }
-
-      .section {
-        padding: 4rem 4rem;
-      }
-
-      .hero p {
-        font-size: 1.2rem;
+        font-size: 3.5rem;
       }
     }
   </style>
 </head>
-<body>
-
+<body data-theme="dark">
   <header>
     <h1>moonble</h1>
     <nav>
@@ -274,6 +255,7 @@
       <a href="#">기능</a>
       <a href="#">팀 소개</a>
       <a href="#">문의</a>
+      <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙</button>
     </nav>
   </header>
 
@@ -284,44 +266,37 @@
     <div class="badge">🚀 BETA 출시 중</div>
   </section>
 
-  <section class="section">
-    <h3>무엇이 특별할까요?</h3>
+  <section class="section" data-aos="fade-up">
+    <h3>왜 moonble인가요?</h3>
     <div class="features">
       <div class="feature-card">
-        <h4>1. 번개처럼 빠른 런칭</h4>
-        <p>노코드 기반으로 아이디어를 당일 실행. 이제 MVP는 몇 주가 아니라 몇 시간입니다.</p>
+        <h4>Alex Nam, CEO</h4>
+        <p>실리콘밸리에서 영감을 받은 창업 경험과 실행 중심의 철학으로 이끄는 리더십</p>
       </div>
       <div class="feature-card">
-        <h4>2. 디자인은 기본값</h4>
-        <p>스타일 고민은 그만. 감각적인 UI가 자동 적용되어 당신의 브랜드를 돋보이게 합니다.</p>
+        <h4>즉시 배포</h4>
+        <p>노코드 기반으로 아이디어를 당일 배포. MVP 제작이 몇 시간 만에 완료됩니다.</p>
       </div>
       <div class="feature-card">
-        <h4>3. 협업이 중심</h4>
-        <p>팀원 초대, 실시간 수정, 히스토리 관리까지. 더 똑똑한 협업을 위해 설계되었습니다.</p>
+        <h4>자동화된 브랜딩</h4>
+        <p>감각적인 디자인 시스템이 자동 적용되어 브랜드 일관성을 유지합니다.</p>
       </div>
     </div>
-  </section>
-
-  <section class="section">
-    <h3>스타트업들의 실제 모습</h3>
-    <div class="image-grid">
-      <div class="image-placeholder">프로덕트 데모</div>
-      <div class="image-placeholder">팀 회의</div>
-      <div class="image-placeholder">앱 스크린샷</div>
-      <div class="image-placeholder">런칭 이벤트</div>
-      <div class="image-placeholder">디자인 목업</div>
-      <div class="image-placeholder">사용자 피드백</div>
-    </div>
-  </section>
-
-  <section class="contact-section">
-    <h3>moonble과 함께할 준비가 되셨나요?</h3>
-    <button class="cta-button">Contact Us</button>
   </section>
 
   <footer class="footer">
     © 2025 moonble. All rights reserved.
   </footer>
 
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init();
+    function toggleTheme() {
+      const body = document.body;
+      const current = body.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      body.setAttribute("data-theme", next);
+    }
+  </script>
 </body>
 </html>
