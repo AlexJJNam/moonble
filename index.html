@@ -1,307 +1,350 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>moonble — 빛나는 아이디어를 현실로</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <meta name="description" content="moonble은 대담한 스타트업을 위한 런칭 플랫폼입니다. 아이디어를 빠르게 검증하고 멋지게 공개하세요." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
   <style>
-    :root {
-      --bg-color: #ffffff;
-      --text-color: #0e0e10;
-      --accent-color: #3498db;
-      --header-bg: #f8f9fa;
-      --card-bg: #f0f2f5;
-      --muted-color: #555;
-    }
-    [data-theme="dark"] {
-      --bg-color: #0e0e10;
-      --text-color: #f5f5f7;
-      --accent-color: #3498db;
-      --header-bg: #1a1a1d;
-      --card-bg: #1f1f23;
-      --muted-color: #aaa;
-    }
+    /* ===== Design tokens ===== */
+    :root { --bg:#ffffff; --text:#0e0e10; --muted:#555; --accent:#3b82f6; --accent-press:#2563eb; --surface:#f5f7fb; --surface-2:#eef1f6; --header:#f8f9fa; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.08);} 
+    [data-theme="dark"] { --bg:#0e0e10; --text:#f5f5f7; --muted:#a6a6ab; --accent:#60a5fa; --accent-press:#3b82f6; --surface:#121215; --surface-2:#1a1a1d; --header:#121215; --shadow:0 8px 30px rgba(0,0,0,.35);} 
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{width:min(1180px,92%);margin-inline:auto}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* ===== Header ===== */
+    header{position:sticky;top:0;background:var(--header);z-index:60;border-bottom:1px solid rgba(127,127,127,.15);backdrop-filter:saturate(140%) blur(8px)}
+    .nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 0}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.35rem}
+    .badge-logo{width:26px;height:26px;border-radius:8px;background:conic-gradient(from 0deg,#8e44ad,#3b82f6,#22c55e,#f59e0b,#ef4444,#8b5cf6,#8e44ad);animation:spin 6s linear infinite}
+    @keyframes spin{to{transform:rotate(1turn)}}
+    .links{display:flex;align-items:center;gap:.8rem}
+    .links a{padding:.5rem .8rem;border-radius:999px;color:var(--muted);font-weight:600}
+    .links a:hover,.links a.active{background:var(--surface-2);color:var(--text)}
+    .theme-toggle{border:none;background:transparent;font-size:1.1rem;padding:.35rem .6rem;border-radius:10px;cursor:pointer}
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-      line-height: 1.6;
-      transition: background 0.3s, color 0.3s;
-    }
+    /* ===== Hero with diagonal animated gradient + mascot ===== */
+    .hero{position:relative;overflow:hidden;text-align:center;padding:6.2rem 0 4.6rem;background:var(--header)}
+    .hero::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:repeating-linear-gradient(135deg,#8e44ad 0%,#3b82f6 12%,#22c55e 24%,#f59e0b 36%,#ef4444 48%,#8b5cf6 60%,#8e44ad 72%);background-size:400% 400%;animation:rainbowWave 16s ease-in-out infinite;opacity:.12;transform:rotate(10deg);z-index:0}
+    @keyframes rainbowWave{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:center}
+    @media (max-width: 900px){.hero-inner{grid-template-columns:1fr}}
+    .headline{font-size:clamp(2rem,3.6vw + 1rem,3.6rem);font-weight:800;line-height:1.1;background:linear-gradient(90deg,#8e44ad,#3b82f6);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{max-width:640px;margin:1rem auto 0;color:var(--muted)}
+    .badge{display:inline-block;margin-bottom:1rem;padding:.35rem .7rem;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:.85rem}
+    .cta{margin-top:1.4rem;display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 1.2rem;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;box-shadow:var(--shadow)}
+    .btn.secondary{background:var(--surface-2);color:var(--text)}
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 99;
-      padding: 1.5rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--header-bg);
-      border-bottom: 1px solid rgba(0,0,0,0.1);
-      flex-wrap: wrap;
-      transition: background 0.3s;
-    }
+    /* Mascot: Mooni (SVG) */
+    .mascot-wrap{position:relative;display:flex;justify-content:center}
+    .mascot{width:min(380px,90%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.25));animation:floaty 5.5s ease-in-out infinite}
+    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
-    header h1 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: var(--text-color);
-      animation: floatLogo 3s ease-in-out infinite;
-    }
+    /* ===== Sections ===== */
+    .section{padding:5rem 0}
+    .section h2{font-size:clamp(1.6rem,2.2vw + 1rem,2.4rem);text-align:center;margin-bottom:2rem}
+    .muted{color:var(--muted)}
 
-    @keyframes floatLogo {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem}
+    .feature-card{background:var(--surface-2);padding:1.4rem;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .feature-card h3{font-size:1.05rem;color:var(--accent);margin-bottom:.4rem}
 
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .step{background:var(--surface-2);padding:1.2rem;border-radius:14px;box-shadow:var(--shadow)}
+    .step .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-weight:800;margin-bottom:.4rem}
+    @media (max-width:900px){.steps{grid-template-columns:1fr 1fr}} @media (max-width:560px){.steps{grid-template-columns:1fr}}
 
-    nav a {
-      margin-left: 1rem;
-      color: var(--muted-color);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-      font-size: 0.95rem;
-    }
+    .showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+    .shot{border-radius:14px;background:linear-gradient(180deg,rgba(0,0,0,.06),transparent),var(--surface-2);height:200px;box-shadow:var(--shadow);display:grid;place-items:center;color:var(--muted)}
 
-    nav a:hover {
-      color: var(--text-color);
-    }
+    .integrations{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;align-items:center}
+    .logo-tile{background:var(--surface-2);border-radius:12px;height:72px;display:grid;place-items:center;color:var(--muted);box-shadow:var(--shadow)}
 
-    .theme-toggle {
-      margin-left: 1rem;
-      cursor: pointer;
-      padding: 0.5rem 1rem;
-      background: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      transition: background 0.3s;
-    }
+    .timeline{position:relative;margin:2rem auto;max-width:860px}
+    .timeline::before{content:"";position:absolute;left:calc(50% - 2px);top:0;bottom:0;width:4px;background:linear-gradient(180deg,#8e44ad,#3b82f6,#22c55e,#f59e0b,#ef4444)}
+    .milestone{position:relative;padding:1rem 1.2rem;background:var(--surface-2);border-radius:14px;box-shadow:var(--shadow);width:min(46%,420px)}
+    .milestone.left{margin:1rem auto 1rem 0}
+    .milestone.right{margin:1rem 0 1rem auto}
 
-    .theme-toggle:hover {
-      background: #2c80b4;
-    }
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .kpi{background:var(--surface-2);border-radius:14px;padding:1.2rem;box-shadow:var(--shadow);text-align:center}
+    .kpi .num{font-size:1.8rem;font-weight:800}
+    @media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}} @media (max-width:560px){.kpis{grid-template-columns:1fr}}
 
-    .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 4rem 2rem;
-      text-align: center;
-      background: var(--header-bg);
-    }
+    .testimonials{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+    .quote{background:var(--surface-2);padding:1.3rem;border-radius:14px;box-shadow:var(--shadow)}
+    .quote strong{display:block;margin-top:.6rem}
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: repeating-linear-gradient(
-        135deg,
-        red 0%,
-        orange 14%,
-        yellow 28%,
-        green 42%,
-        blue 56%,
-        indigo 70%,
-        violet 84%,
-        red 100%
-      );
-      background-size: 400% 400%;
-      animation: rainbowWave 15s ease-in-out infinite;
-      opacity: 0.1;
-      z-index: 0;
-      transform: rotate(10deg);
-    }
+    .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+    .plan{background:var(--surface-2);padding:1.4rem;border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.6rem}
+    .plan .price{font-size:1.6rem;font-weight:800}
 
-    @keyframes rainbowWave {
-      0% { background-position: 0% 50%; }
-      25% { background-position: 50% 60%; }
-      50% { background-position: 100% 50%; }
-      75% { background-position: 50% 40%; }
-      100% { background-position: 0% 50%; }
-    }
+    details.faq{background:var(--surface-2);padding:1rem 1.2rem;border-radius:14px;box-shadow:var(--shadow)}
+    details.faq summary{cursor:pointer;font-weight:700}
+    details.faq[open]{outline:1px solid rgba(127,127,127,.15)}
 
-    .hero * {
-      position: relative;
-      z-index: 2;
-    }
+    .contact-card{background:var(--surface-2);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);text-align:center}
+    footer{background:var(--header);text-align:center;padding:2.2rem;color:var(--muted)}
 
-    .hero h2 {
-      font-size: 2.8rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      background: linear-gradient(90deg, #8e44ad, #3498db);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    /* ===== Floating dock (rainbow style) ===== */
+    .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:.5rem;background:color-mix(in hsl,var(--header) 92%, transparent);backdrop-filter:saturate(140%) blur(10px);border:1px solid rgba(127,127,127,.18);box-shadow:var(--shadow);padding:.5rem .6rem;border-radius:22px}
+    .dock::before{content:"";position:absolute;inset:-1px;border-radius:24px;padding:2px;background:linear-gradient(90deg,#ef4444,#f59e0b,#fbbf24,#22c55e,#3b82f6,#8b5cf6,#ef4444);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.9}
+    .dock::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:6px;border-radius:999px;background:linear-gradient(90deg,#ef4444,#f59e0b,#fbbf24,#22c55e,#3b82f6,#8b5cf6,#ef4444);opacity:.85;filter:saturate(120%)}
+    .dock a,.dock button{position:relative;appearance:none;border:none;background:var(--surface-2);color:var(--text);padding:.6rem .9rem;border-radius:14px;font-weight:700;cursor:pointer}
+    .dock a:hover,.dock button:hover{filter:brightness(1.05)}
+    .dock .primary{background:var(--accent);color:#fff}
+    @media (max-width:560px){.dock .hide-sm{display:none}}
 
-    .hero p {
-      font-size: 1.05rem;
-      color: var(--muted-color);
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .cta-button {
-      margin-top: 2rem;
-      padding: 0.9rem 1.8rem;
-      background: var(--accent-color);
-      border: none;
-      border-radius: 30px;
-      color: white;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .cta-button:hover {
-      background: #2c80b4;
-    }
-
-    .badge {
-      display: inline-block;
-      background: var(--card-bg);
-      color: var(--muted-color);
-      padding: 0.3rem 0.7rem;
-      font-size: 0.75rem;
-      border-radius: 999px;
-      margin-top: 1rem;
-    }
-
-    .section {
-      padding: 4rem 2rem;
-      background: var(--bg-color);
-    }
-
-    .section h3 {
-      font-size: 2rem;
-      margin-bottom: 2rem;
-      color: var(--text-color);
-      text-align: center;
-    }
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-
-    .feature-card {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .feature-card h4 {
-      margin-bottom: 1rem;
-      color: var(--accent-color);
-      font-size: 1.2rem;
-    }
-
-    .feature-card p {
-      font-size: 0.95rem;
-      color: var(--muted-color);
-    }
-
-    .footer {
-      padding: 2rem;
-      text-align: center;
-      background: var(--header-bg);
-      font-size: 0.9rem;
-      color: var(--muted-color);
-    }
-
-    @media (min-width: 600px) {
-      nav {
-        margin-top: 0;
-      }
-      .hero h2 {
-        font-size: 3.5rem;
-      }
-    }
+    /* Anchor offset for sticky header */
+    section{scroll-margin-top:88px}
   </style>
 </head>
-<body data-theme="dark">
+<body>
   <header>
-    <h1>moonble</h1>
-    <nav>
-      <a href="#">비전</a>
-      <a href="#">기능</a>
-      <a href="#">팀 소개</a>
-      <a href="#">문의</a>
-      <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙</button>
-    </nav>
+    <div class="container nav">
+      <div class="brand"><span class="badge-logo" aria-hidden="true"></span>moonble</div>
+      <div class="links">
+        <a href="#vision">비전</a>
+        <a href="#features">기능</a>
+        <a href="#how">과정</a>
+        <a href="#showcase">쇼케이스</a>
+        <a href="#integrations">연동</a>
+        <a href="#roadmap">로드맵</a>
+        <a href="#metrics">지표</a>
+        <a href="#testimonials">후기</a>
+        <a href="#pricing">가격</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">문의</a>
+        <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="테마 전환">☀️/🌙</button>
+      </div>
+    </div>
   </header>
 
-  <section class="hero">
-    <h2>당신의 아이디어를 빛나게</h2>
-    <p>moonble은 창의적이고 대담한 스타트업을 위한 런칭 플랫폼입니다. 강력한 도구, 감각적인 설계, 그리고 빠른 실행력을 경험하세요.</p>
-    <button class="cta-button">지금 시작하기</button>
-    <div class="badge">🚀 BETA 출시 중</div>
-  </section>
-
-  <section class="section" data-aos="fade-up">
-    <h3>왜 moonble인가요?</h3>
-    <div class="features">
-      <div class="feature-card">
-        <h4>Alex Nam, CEO</h4>
-        <p>실리콘밸리에서 영감을 받은 창업 경험과 실행 중심의 철학으로 이끄는 리더십</p>
+  <section class="hero" id="home">
+    <div class="container hero-inner">
+      <div data-aos="fade-up">
+        <div class="badge">🚀 BETA 공개</div>
+        <h1 class="headline">당신의 아이디어를 빛나게</h1>
+        <p class="sub">moonble은 창의적이고 대담한 스타트업을 위한 런칭 플랫폼입니다. 노코드 기반의 빠른 MVP 제작, 감각적인 설계, 그리고 Jerry™ AI로 한층 더 빠른 학습을 경험하세요.</p>
+        <div class="cta">
+          <a class="btn" href="#contact">지금 시작하기</a>
+          <a class="btn secondary" href="#features">기능 살펴보기</a>
+        </div>
       </div>
-      <div class="feature-card">
-        <h4>Jimmy Kim, Co-Founder</h4>
-        <p>실리콘밸리 글로벌 기업 투자자문 출신 VC 회사의 대표</p>
-      </div>
-      <div class="feature-card">
-        <h4>MVP Launch</h4>
-        <p>노코드 기반으로 아이디어를 당일 배포. MVP 제작이 몇 시간 만에 완료됩니다.</p>
-      </div>
-      <div class="feature-card">
-        <h4>RAG 기반 챗봇 AI Jerry™</h4>
-        <p>감각적인 할루시네이션 없는 정직한 답변만 제공합니다.</p>
+      <div class="mascot-wrap" data-aos="zoom-in" data-aos-delay="120" aria-hidden="true">
+        <!-- Cute mascot: MOONI -->
+        <svg class="mascot" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="moonble 마스코트 Mooni">
+          <defs>
+            <radialGradient id="g1" cx="50%" cy="40%" r="70%">
+              <stop offset="0%" stop-color="#fff7cc"/>
+              <stop offset="100%" stop-color="#f1e3a8"/>
+            </radialGradient>
+            <linearGradient id="g2" x1="0" x2="1">
+              <stop offset="0%" stop-color="#8e44ad"/>
+              <stop offset="100%" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="120" cy="120" r="84" fill="url(#g1)" stroke="#e7d898" stroke-width="3"/>
+          <circle cx="160" cy="100" r="14" fill="#e9d78f" opacity=".6"/>
+          <circle cx="95" cy="145" r="10" fill="#e9d78f" opacity=".55"/>
+          <circle cx="80" cy="100" r="7" fill="#e9d78f" opacity=".5"/>
+          <circle cx="100" cy="120" r="6" fill="#0e0e10"/>
+          <circle cx="140" cy="120" r="6" fill="#0e0e10"/>
+          <path d="M100 145 Q120 158 140 145" stroke="#0e0e10" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <ellipse cx="120" cy="170" rx="60" ry="16" fill="url(#g2)" opacity=".25"/>
+          <g fill="url(#g2)"><circle cx="40" cy="70" r="4"/><circle cx="200" cy="60" r="3"/><circle cx="190" cy="190" r="4"/></g>
+        </svg>
       </div>
     </div>
   </section>
 
-  <footer class="footer">
-    © 2025 moonble. All rights reserved.
-    <br> This is a ficrional project.
+  <section id="vision" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">왜 moonble인가요?</h2>
+      <p class="muted" style="text-align:center;max-width:760px;margin:0 auto 1.4rem" data-aos="fade-up" data-aos-delay="80">아이디어를 빠르게 시장과 연결하고, 배운 것을 다시 제품으로 반영합니다. moonble은 속도·일관성·정확성을 위해 설계되었습니다.</p>
+      <div class="features" data-aos="fade-up" data-aos-delay="120">
+        <article class="feature-card"><h3>⚡ 초고속 MVP</h3><p>템플릿과 자동 배포로 <strong>하루 만에</strong> 출시. 실사용자 피드백으로 즉시 학습.</p></article>
+        <article class="feature-card"><h3>🤖 Jerry™ RAG 챗봇</h3><p>문서/지식 기반으로 정확한 답변. 팀 위키와 연결해 <em>할루시네이션 최소화</em>.</p></article>
+        <article class="feature-card"><h3>🧩 모듈형 런칭 스택</h3><p>랜딩·온보딩·결제·CRM을 블록처럼 조합. 유지보수는 우리가.</p></article>
+        <article class="feature-card"><h3>🎨 브랜드 일관성</h3><p>디자인 토큰으로 다크/라이트에서도 동일한 경험.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="section" style="padding-top:0;">
+    <div class="container">
+      <h2 data-aos="fade-up">핵심 기능</h2>
+      <div class="features" data-aos="fade-up" data-aos-delay="100">
+        <article class="feature-card"><h3>🚀 배포 자동화</h3><p>Git 연결만으로 미리보기/프로덕션 자동 배포, 원클릭 롤백.</p></article>
+        <article class="feature-card"><h3>📈 실험/분석</h3><p>A/B 테스트, 이벤트 트래킹, 코호트 분석. KPI 중심 대시보드.</p></article>
+        <article class="feature-card"><h3>🔌 외부 연동</h3><p>Stripe, Slack, Notion, Firebase 등과 원클릭 통합.</p></article>
+        <article class="feature-card"><h3>🛡️ 보안/권한</h3><p>SSO, 역할 기반 권한, 감사 로그로 엔터프라이즈 준비.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">런칭 과정</h2>
+      <div class="steps" data-aos="fade-up" data-aos-delay="100">
+        <div class="step"><span class="n">1</span><strong>아이디어 브리프</strong><p class="muted">목표·페르소나·핵심 가설을 정리합니다.</p></div>
+        <div class="step"><span class="n">2</span><strong>MVP 제작</strong><p class="muted">템플릿과 컴포넌트로 하루 내 가동.</p></div>
+        <div class="step"><span class="n">3</span><strong>실험 & 측정</strong><p class="muted">A/B와 이벤트로 사용성·전환을 측정.</p></div>
+        <div class="step"><span class="n">4</span><strong>학습 & 반복</strong><p class="muted">데이터와 Jerry™ 인사이트로 다음 사이클.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="showcase" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">쇼케이스</h2>
+      <div class="showcase" data-aos="fade-up" data-aos-delay="100">
+        <div class="shot">프로젝트 스크린샷 #1</div>
+        <div class="shot">프로젝트 스크린샷 #2</div>
+        <div class="shot">프로젝트 스크린샷 #3</div>
+        <div class="shot">프로젝트 스크린샷 #4</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="integrations" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">연동</h2>
+      <div class="integrations" data-aos="fade-up" data-aos-delay="100">
+        <div class="logo-tile">Stripe</div>
+        <div class="logo-tile">Slack</div>
+        <div class="logo-tile">Notion</div>
+        <div class="logo-tile">Firebase</div>
+        <div class="logo-tile">GitHub</div>
+        <div class="logo-tile">Vercel</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="roadmap" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">로드맵</h2>
+      <div class="timeline" data-aos="fade-up" data-aos-delay="100">
+        <div class="milestone left"><strong>Q3: 베타 확장</strong><p class="muted">초대 기반 온보딩, 핵심 템플릿 추가</p></div>
+        <div class="milestone right"><strong>Q4: 팀 플랜</strong><p class="muted">권한/SSO, 역할 기반 워크플로</p></div>
+        <div class="milestone left"><strong>Q1: 마켓플레이스</strong><p class="muted">컴포넌트/템플릿 공유·거래</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metrics" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">핵심 지표</h2>
+      <div class="kpis" data-aos="fade-up" data-aos-delay="100">
+        <div class="kpi"><div class="num">24h</div><div class="muted">평균 MVP 출시 시간</div></div>
+        <div class="kpi"><div class="num">+38%</div><div class="muted">실험 주기 단축</div></div>
+        <div class="kpi"><div class="num">99.9%</div><div class="muted">가용성</div></div>
+        <div class="kpi"><div class="num">#1</div><div class="muted">온보딩 만족도</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="testimonials">
+    <div class="container">
+      <h2 data-aos="fade-up">사용자 후기</h2>
+      <div class="testimonials" data-aos="fade-up" data-aos-delay="100">
+        <blockquote class="quote">
+          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
+          “24시간 만에 데모를 올리고, 그 주에 첫 유료고객이 생겼어요.”<strong>— A 스타트업 CEO</strong>
+        </blockquote>
+        <blockquote class="quote">
+          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
+          “마케팅과 제품팀이 같은 데이터로 이야기하게 됐습니다.”<strong>— PM, 커머스</strong>
+        </blockquote>
+        <blockquote class="quote">
+          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
+          “Jerry™가 팀 위키를 읽고 정확히 답해줘서 온보딩이 매우 쉬워졌어요.”<strong>— 신규 개발자</strong>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">가격</h2>
+      <div class="pricing" data-aos="fade-up" data-aos-delay="100">
+        <div class="plan">
+          <h3>Starter</h3>
+          <div class="price">₩0</div>
+          <p class="muted">개인/실험용, 기본 템플릿과 배포</p>
+          <a href="#contact" class="btn">시작하기</a>
+        </div>
+        <div class="plan">
+          <h3>Pro</h3>
+          <div class="price">₩49,000 /월</div>
+          <p class="muted">A/B, 이벤트 분석, Jerry™ 기본</p>
+          <a href="#contact" class="btn">시작하기</a>
+        </div>
+        <div class="plan">
+          <h3>Team</h3>
+          <div class="price">맞춤</div>
+          <p class="muted">SSO, 권한, 보안감사 & 컨설팅</p>
+          <a href="#contact" class="btn">상담 문의</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="section">
+    <div class="container">
+      <h2 data-aos="fade-up">FAQ</h2>
+      <div class="features" data-aos="fade-up" data-aos-delay="100">
+        <details class="faq"><summary>정말 하루 만에 출시 가능한가요?</summary><p class="muted">예, 사전 정의된 템플릿과 자동 배포 파이프라인을 활용합니다. 커스텀 범위에 따라 달라질 수 있어요.</p></details>
+        <details class="faq"><summary>Jerry™는 어떤 데이터를 학습하나요?</summary><p class="muted">문서/위키/FAQ 등 연결한 자료를 검색·생성 결합 방식(RAG)으로 활용합니다.</p></details>
+        <details class="faq"><summary>내부 보안은 어떻게 보장되나요?</summary><p class="muted">역할 기반 권한, SSO, 감사 로그 옵션을 제공합니다.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <div class="container" data-aos="fade-up">
+      <h2>문의</h2>
+      <div class="contact-card">
+        <p class="muted">런칭을 함께하고 싶다면 아래로 연락주세요.</p>
+        <div style="margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">
+          <a href="mailto:team@moonble.io" class="btn" aria-label="이메일 보내기">이메일 보내기</a>
+          <a href="#" class="btn secondary" aria-label="데모 요청">데모 요청</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">© 2025 moonble. All rights reserved. — This is a fictional project.</div>
   </footer>
+
+  <!-- Floating Dock (Rainbow) -->
+  <div class="dock" role="toolbar" aria-label="빠른 이동">
+    <a class="hide-sm" href="#home" aria-label="홈">🏠 홈</a>
+    <a href="#features" aria-label="기능">🧩 기능</a>
+    <a class="hide-sm" href="#showcase" aria-label="쇼케이스">🖼️ 쇼케이스</a>
+    <a href="#contact" aria-label="문의">✉️ 문의</a>
+    <button id="themeToggleDock" title="테마 전환" aria-pressed="false">☀️/🌙</button>
+    <a class="primary" href="#contact" aria-label="지금 시작하기">지금 시작</a>
+  </div>
 
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
-    AOS.init();
-    function toggleTheme() {
-      const body = document.body;
-      const current = body.getAttribute("data-theme");
-      const next = current === "dark" ? "light" : "dark";
-      body.setAttribute("data-theme", next);
-    }
+    AOS.init({ once:true, duration:600, easing:'ease-out' });
+    const root = document.documentElement; const KEY='moonble:theme';
+    const saved=localStorage.getItem(KEY); if(saved){root.setAttribute('data-theme',saved)}
+    const t1=document.getElementById('themeToggle'); const t2=document.getElementById('themeToggleDock');
+    function setTheme(next){ root.setAttribute('data-theme',next); localStorage.setItem(KEY,next); const pressed=String(next==='dark'); if(t1) t1.setAttribute('aria-pressed',pressed); if(t2) t2.setAttribute('aria-pressed',pressed); }
+    function toggleTheme(){ const next=root.getAttribute('data-theme')==='dark'?'light':'dark'; setTheme(next); }
+    if(t1) t1.addEventListener('click',toggleTheme); if(t2) t2.addEventListener('click',toggleTheme);
   </script>
 </body>
 </html>
