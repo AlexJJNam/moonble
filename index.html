@@ -183,36 +183,34 @@
       border-color: color-mix(in oklab, var(--primary) 40%, var(--border)); }
     .btn[disabled]{ opacity:.5; cursor:not-allowed; }
 
-    /* ===== Hero (키비주얼 풀폭) ===== */
-    .hero{ padding:0; }
-    .masthead{
-      position:relative; padding: 40px clamp(16px, 4vw, 48px);
-      border-radius:0; /* 풀-블리드라 모서리 라운드 제거 */
-      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, rgba(255,255,255,0) 100%);
-      border-top:1px solid var(--border); border-bottom:1px solid var(--border);
-      box-shadow: var(--shadow);
-      /* container 좌우 여백을 무시하고 뷰포트 풀-블리드 */
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-    }
-    html[data-theme="dark"] .masthead{
-      background: linear-gradient(135deg, #0b2535 0%, #0f3a53 40%, rgba(0,0,0,0) 100%);
-    }
-    .masthead .title{ margin:0 0 6px; font-size: clamp(28px,4.6vw,46px); letter-spacing:-0.3px; }
-    .masthead .subtitle{ margin:0 0 16px; color:var(--muted); }
-    .ribbon{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
-      background: var(--card); border:1px solid var(--border); font-size:12px; box-shadow:var(--shadow); }
-    .feature-grid{ display:grid; gap:14px; grid-template-columns: repeat(12, 1fr); margin-top:14px; }
-    .feature-grid .feature-card{ grid-column: span 4; background:var(--card); border:1px solid var(--border);
-      border-radius:18px; padding:14px; box-shadow:var(--shadow); }
-    @media (max-width:900px){ .feature-grid .feature-card{ grid-column:span 12; } }
+/* === HERO full-bleed without overflow === */
+.masthead{
+  position:relative;
+  padding: 40px clamp(16px, 4vw, 48px);
+  border-radius:0;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, rgba(255,255,255,0) 100%);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  box-shadow: var(--shadow);
 
-    /* CSS-only minimal icons (키비주얼 3개만 사용) */
-    .icon-circle{ width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
-      background: color-mix(in oklab, var(--primary) 20%, var(--card));
-      border:1px solid color-mix(in oklab, var(--primary) 40%, var(--border));
-    }
-    .icon{ width:22px; height:22px; position:relative; display:block; }
+  /* 핵심: 스크롤바 폭을 제외한 안전한 viewport 폭 */
+  --vw: calc(100vw - (100vw - 100%));
+  inline-size: var(--vw);                 /* width */
+  margin-inline: calc(50% - var(--vw)/2); /* 좌우 초월 방지 */
+}
+
+/* 다크 모드 배경 유지 */
+html[data-theme="dark"] .masthead{
+  background: linear-gradient(135deg, #0b2535 0%, #0f3a53 40%, rgba(0,0,0,0) 100%);
+}
+
+/* 최신 브라우저에선 동적 뷰포트 단위로 더 정확히 */
+@supports (width: 100dvw){
+  .masthead{ --vw: 100dvw; }
+}
+
+/* 혹시 모를 가로 스크롤 잔여 이슈 컷 (필요시) */
+html{ overflow-x: clip; }
     /* 차트 */
     .ic-chart{
       border-radius:6px;
