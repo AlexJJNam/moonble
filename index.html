@@ -1,392 +1,802 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>moonble — 빛나는 아이디어를 현실로</title>
-  <meta name="description" content="moonble은 대담한 스타트업을 위한 런칭 플랫폼입니다. 아이디어를 빠르게 검증하고 멋지게 공개하세요." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+  <title>moonble | Google Analytics & Firebase 가이드 + 퀴즈</title>
   <style>
-    /* ===== Design tokens ===== */
-    :root { --bg:#ffffff; --text:#0e0e10; --muted:#555; --accent:#3b82f6; --accent-press:#2563eb; --surface:#f5f7fb; --surface-2:#eef1f6; --header:#f8f9fa; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.08);} 
-    [data-theme="dark"] { --bg:#0e0e10; --text:#f5f5f7; --muted:#a6a6ab; --accent:#60a5fa; --accent-press:#3b82f6; --surface:#121215; --surface-2:#1a1a1d; --header:#121215; --shadow:0 8px 30px rgba(0,0,0,.35);} 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
-    body{font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding-bottom:96px}
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block;height:auto}
-    .container{width:min(1180px,92%);margin-inline:auto}
-
-    /* ===== Header ===== */
-    header{position:sticky;top:0;background:var(--header);z-index:80;border-bottom:1px solid rgba(127,127,127,.15);backdrop-filter:saturate(140%) blur(8px)}
-    .nav{display:flex;justify-content:space-between;align-items:center;padding:.8rem 0}
-    .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.35rem}
-    .badge-logo{width:26px;height:26px;border-radius:8px;background:conic-gradient(from 0deg,#8e44ad,#3b82f6,#22c55e,#f59e0b,#ef4444,#8b5cf6,#8e44ad);animation:spin 6s linear infinite}
-    @keyframes spin{to{transform:rotate(1turn)}}
-    .links{display:flex;align-items:center;gap:.8rem}
-    .links a{padding:.5rem .8rem;border-radius:999px;color:var(--muted);font-weight:600}
-    .links a:hover,.links a.active{background:var(--surface-2);color:var(--text)}
-    .theme-toggle, .menu-toggle{border:none;background:transparent;font-size:1.1rem;padding:.35rem .6rem;border-radius:10px;cursor:pointer}
-    .menu-toggle{display:none}
-
-    /* Mobile nav drawer */
-    @media (max-width: 960px){
-      .menu-toggle{display:inline-flex}
-      .links{position:fixed;inset:64px 0 auto 0;background:var(--header);border-bottom:1px solid rgba(127,127,127,.15);display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:.8rem;transform:translateY(-120%);transition:transform .2s ease}
-      .links.open{transform:translateY(0)}
-      .links a{background:var(--surface-2)}
+    :root { --radius: 14px; --shadow: 0 6px 24px rgba(17, 94, 164, 0.08), 0 1px 2px rgba(0,0,0,0.05); }
+    html[data-theme="light"] {
+      --bg: #f7fbff; --bg-soft: #eef6ff; --text: #0f172a; --muted: #64748b; --caption: #6b7280;
+      --card: #ffffff; --border: #dbeafe; --primary: #38bdf8; --primary-600: #0284c7;
+      --good: #10b981; --bad: #ef4444;
+      --info-bg:#e0f2fe; --info-border:#bae6fd; --info-text:#0c4a6e;
+      --explain-bg:#f3f4f6; --explain-border:#e5e7eb; --explain-text:#374151;
     }
+    html[data-theme="dark"] {
+      --bg: #0b1220; --bg-soft: #0f172a; --text: #e6f1ff; --muted: #98a6be; --caption: #9aa6b2;
+      --card: #101826; --border: #1f2a44; --primary: #38bdf8; --primary-600: #38bdf8;
+      --good: #34d399; --bad: #f87171;
+      --info-bg:#0b2535; --info-border:#134563; --info-text:#c1e8ff;
+      --explain-bg:#1f2937; --explain-border:#374151; --explain-text:#e5e7eb;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Apple SD Gothic Neo, "Helvetica Neue", Arial, "Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,0.15), transparent 50%),
+        radial-gradient(1000px 500px at 90% 20%, rgba(14,165,233,0.12), transparent 50%),
+        var(--bg);
+      color:var(--text); line-height:1.6;
+    }
+    a{ color: var(--primary-600); text-decoration:none; }
+    .container{ width:100%; max-width:1120px; margin:0 auto; padding:24px; }
 
-    /* ===== Hero with diagonal animated gradient + mascot ===== */
-    .hero{position:relative;overflow:hidden;text-align:center;padding:6.2rem 0 4.6rem;background:var(--header)}
-    .hero::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:repeating-linear-gradient(135deg,#8e44ad 0%,#3b82f6 12%,#22c55e 24%,#f59e0b 36%,#ef4444 48%,#8b5cf6 60%,#8e44ad 72%);background-size:400% 400%;animation:rainbowWave 16s ease-in-out infinite;opacity:.12;transform:rotate(10deg);z-index:0}
-    @keyframes rainbowWave{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    .hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:center}
-    @media (max-width: 960px){.hero-inner{grid-template-columns:1fr}}
-    .headline{font-size:clamp(2rem,3.6vw + 1rem,3.6rem);font-weight:800;line-height:1.1;background:linear-gradient(90deg,#8e44ad,#3b82f6);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .sub{max-width:720px;margin:1rem auto 0;color:var(--muted)}
-    .badge{display:inline-block;margin-bottom:1rem;padding:.35rem .7rem;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:.85rem}
-    .cta{margin-top:1.4rem;display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center}
-    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 1.2rem;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;box-shadow:var(--shadow)}
-    .btn.secondary{background:var(--surface-2);color:var(--text)}
+    /* Header */
+    .header { position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
+      background: color-mix(in oklab, var(--bg) 82%, transparent); border-bottom:1px solid var(--border); }
+    .header .inner{ display:flex; align-items:center; gap:16px; justify-content:space-between; padding:14px 24px; }
+    .brand{ display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px; }
+    .brand .logo{ width:36px; height:36px; border-radius:50%;
+      background: linear-gradient(145deg, #7dd3fc, #38bdf8 45%, #0ea5e9);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35), 0 6px 18px rgba(56,189,248,0.35);
+      position:relative;
+    }
+    .brand .logo::after{ content:""; position:absolute; inset:6px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #e0f2fe, rgba(255,255,255,0) 60%);
+    }
+    .nav{ display:flex; gap:12px; align-items:center; }
+    .btn{ border:1px solid var(--border); background:var(--card); color:var(--text);
+      border-radius:999px; padding:10px 14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);
+      transition: transform .12s ease, background .2s ease, border-color .2s ease; }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn-ghost{ background: color-mix(in oklab, var(--card) 70%, transparent); }
+    .btn-primary{ background: linear-gradient(180deg, color-mix(in oklab, var(--primary) 18%, var(--card)), var(--card));
+      border-color: color-mix(in oklab, var(--primary) 40%, var(--border)); }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed; }
 
-    /* Mascot: Mooni (SVG) */
-    .mascot-wrap{position:relative;display:flex;justify-content:center}
-    .mascot{width:min(380px,90%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.25));animation:floaty 5.5s ease-in-out infinite}
-    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    /* ===== Hero (키비주얼 풀폭) ===== */
+    .hero{ padding:0; }
+    .masthead{
+      position:relative; padding: 40px clamp(16px, 4vw, 48px);
+      border-radius:0; /* 풀-블리드라 모서리 라운드 제거 */
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, rgba(255,255,255,0) 100%);
+      border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+      box-shadow: var(--shadow);
+      /* container 좌우 여백을 무시하고 뷰포트 풀-블리드 */
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+    }
+    html[data-theme="dark"] .masthead{
+      background: linear-gradient(135deg, #0b2535 0%, #0f3a53 40%, rgba(0,0,0,0) 100%);
+    }
+    .masthead .title{ margin:0 0 6px; font-size: clamp(28px,4.6vw,46px); letter-spacing:-0.3px; }
+    .masthead .subtitle{ margin:0 0 16px; color:var(--muted); }
+    .ribbon{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
+      background: var(--card); border:1px solid var(--border); font-size:12px; box-shadow:var(--shadow); }
+    .feature-grid{ display:grid; gap:14px; grid-template-columns: repeat(12, 1fr); margin-top:14px; }
+    .feature-grid .feature-card{ grid-column: span 4; background:var(--card); border:1px solid var(--border);
+      border-radius:18px; padding:14px; box-shadow:var(--shadow); }
+    @media (max-width:900px){ .feature-grid .feature-card{ grid-column:span 12; } }
 
-    /* ===== Sections ===== */
-    .section{padding:5rem 0}
-    .section h2{font-size:clamp(1.6rem,2.2vw + 1rem,2.4rem);text-align:center;margin-bottom:2rem}
-    .muted{color:var(--muted)}
+    /* CSS-only minimal icons (키비주얼 3개만 사용) */
+    .icon-circle{ width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+      background: color-mix(in oklab, var(--primary) 20%, var(--card));
+      border:1px solid color-mix(in oklab, var(--primary) 40%, var(--border));
+    }
+    .icon{ width:22px; height:22px; position:relative; display:block; }
+    /* 차트 */
+    .ic-chart{
+      border-radius:6px;
+      background:
+        linear-gradient(to top, var(--primary-600) 0 65%, transparent 65%) 4px 4px/4px 14px no-repeat,
+        linear-gradient(to top, var(--primary-600) 0 40%, transparent 40%) 9px 4px/4px 14px no-repeat,
+        linear-gradient(to top, var(--primary-600) 0 85%, transparent 85%) 14px 4px/4px 14px no-repeat;
+    }
+    .ic-chart::before{ content:""; position:absolute; left:3px; top:3px; bottom:3px; width:1.5px;
+      background: color-mix(in oklab, var(--primary) 45%, var(--border)); border-radius:1px; }
+    .ic-chart::after{ content:""; position:absolute; left:3px; right:3px; bottom:3px; height:1.5px;
+      background: color-mix(in oklab, var(--primary) 45%, var(--border)); border-radius:1px; }
+    /* 기어(미니멀 링) */
+    .ic-gear::before{ content:""; position:absolute; inset:3px; border-radius:50%;
+      border:1.6px solid color-mix(in oklab, var(--primary) 55%, var(--border)); }
+    .ic-gear::after{ content:""; position:absolute; inset:8px; border-radius:50%; background: var(--primary-600); }
+    /* 브레인(타원+세로 분할선) */
+    .ic-brain::before{ content:""; position:absolute; left:3px; right:3px; top:5px; bottom:5px;
+      border-radius:12px; border:1.6px solid color-mix(in oklab, var(--primary) 55%, var(--border)); }
+    .ic-brain::after{ content:""; position:absolute; top:6px; bottom:6px; left:50%; width:1.6px;
+      transform:translateX(-50%); background: color-mix(in oklab, var(--primary) 55%, var(--border)); border-radius:1px; }
 
-    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem}
-    .feature-card{background:var(--surface-2);padding:1.4rem;border-radius:var(--radius);box-shadow:var(--shadow)}
-    .feature-card h3{font-size:1.05rem;color:var(--accent);margin-bottom:.4rem}
+    /* Sections */
+    section{ padding:36px 24px; border-top:1px solid var(--border); }
+    h2{ margin:0 0 14px; font-size: clamp(20px, 3vw, 28px); letter-spacing:-0.2px; }
+    h3{ margin:18px 0 8px; font-size:18px; }
+    .grid{ display:grid; gap:14px; grid-template-columns: repeat(12, 1fr); }
+    .col-6{ grid-column: span 6; } .col-4{ grid-column: span 4; } .col-12{ grid-column: span 12; }
+    @media (max-width:900px){ .col-6, .col-4{ grid-column: span 12; } }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700;
+      color:#0b3b57; background:#dff5ff; border:1px solid #b8ecff; }
+    html[data-theme="dark"] .badge{ color:#052c3f; }
 
-    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
-    .step{background:var(--surface-2);padding:1.2rem;border-radius:14px;box-shadow:var(--shadow)}
-    .step .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-weight:800;margin-bottom:.4rem}
-    @media (max-width:960px){.steps{grid-template-columns:1fr 1fr}} @media (max-width:560px){.steps{grid-template-columns:1fr}}
+    .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+    .section-head .eyebrow{ font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
 
-    /* Showcase with real placeholder thumbnails */
-    .showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
-    .shot{position:relative;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface-2)}
-    .shot img{width:100%;height:200px;object-fit:cover;display:block}
-    .shot .cap{position:absolute;left:0;right:0;bottom:0;padding:.6rem .8rem;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));color:#fff;font-weight:600}
+    .stepper{ display:flex; gap:16px; align-items:stretch; position:relative; counter-reset: step; }
+    .step{ flex:1; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px 12px 12px 48px; position:relative; box-shadow:var(--shadow); }
+    .step::before{ content: counter(step); counter-increment: step; position:absolute; left:12px; top:12px; width:28px; height:28px; border-radius:8px;
+      display:grid; place-items:center; background: color-mix(in oklab, var(--primary) 20%, var(--card)); border:1px solid color-mix(in oklab, var(--primary) 40%, var(--border)); font-weight:800; font-feature-settings:"tnum" on; }
+    @media(max-width:900px){ .stepper{ flex-direction:column; } }
 
-    /* Integrations with SVG logos */
-    .integrations{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;align-items:center}
-    .logo-tile{background:var(--surface-2);border-radius:12px;height:72px;display:grid;place-items:center;color:var(--muted);box-shadow:var(--shadow);padding:.6rem}
-    .logo-tile img{max-height:40px;opacity:.9}
+    details.accordion{ border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow); margin-bottom:10px; }
+    details.accordion>summary{ cursor:pointer; list-style:none; padding:14px 16px; font-weight:800; display:flex; align-items:center; justify-content:space-between; }
+    details.accordion>summary::-webkit-details-marker{ display:none; }
+    details.accordion[open]>summary{ border-bottom:1px solid var(--border); }
+    details.accordion .content{ padding:12px 16px; color:var(--muted); }
+    .chev{ transition: transform .2s ease; }
+    details[open] .chev{ transform: rotate(180deg); }
 
-    /* Roadmap timeline */
-    .timeline{position:relative;margin:2rem auto;max-width:860px}
-    .timeline::before{content:"";position:absolute;left:calc(50% - 2px);top:0;bottom:0;width:4px;background:linear-gradient(180deg,#8e44ad,#3b82f6,#22c55e,#f59e0b,#ef4444)}
-    .milestone{position:relative;padding:1rem 1.2rem;background:var(--surface-2);border-radius:14px;box-shadow:var(--shadow);width:min(46%,420px)}
-    .milestone.left{margin:1rem auto 1rem 0}
-    .milestone.right{margin:1rem 0 1rem auto}
+    /* Wrong/Right badge highlight */
+    .q-title .q-number.wrong{ background:#fee2e2; border:1px solid #fecaca; color:#7f1d1d; }
+    .q-title .q-number.right{ background:#dcfce7; border:1px solid #bbf7d0; color:#14532d; }
 
-    /* KPIs */
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
-    .kpi{background:var(--surface-2);border-radius:14px;padding:1.2rem;box-shadow:var(--shadow);text-align:center}
-    .kpi .num{font-size:1.8rem;font-weight:800}
-    @media (max-width:960px){.kpis{grid-template-columns:1fr 1fr}} @media (max-width:560px){.kpis{grid-template-columns:1fr}}
+    /* Quiz */
+    .quiz-wrap{ margin-top:6px; }
+    .q-card{ position:relative; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:var(--shadow); }
+    .q-title{ font-weight:800; margin-bottom:8px; display:flex; align-items:flex-start; gap:10px; }
+    .q-title .q-number{ font-feature-settings:"tnum" on; }
+    .q-caption{ position:absolute; right:12px; bottom:10px; color:var(--caption); font-size:12px; user-select:none; }
+    .options{ display:grid; gap:10px; grid-template-columns: repeat(12,1fr); margin-top:10px; }
+    .options .opt-col{ grid-column: span 12; }
+    @media (min-width: 640px){ .options .opt-col{ grid-column: span 6; } }
 
-    /* Testimonials */
-    .testimonials{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
-    .quote{background:var(--surface-2);padding:1.3rem;border-radius:14px;box-shadow:var(--shadow)}
-    .quote strong{display:block;margin-top:.6rem}
+    .option-card{
+      position:relative; display:flex; align-items:flex-start; gap:10px;
+      border:1.5px solid var(--border); background: color-mix(in oklab, var(--card) 86%, var(--bg));
+      border-radius:14px; padding:12px; cursor:pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .05s ease;
+    }
+    .option-card:hover{ border-color: color-mix(in oklab, var(--primary) 48%, var(--border)); box-shadow: 0 2px 0 rgba(56,189,248,0.18); }
+    .option-card input{ position:absolute; opacity:0; pointer-events:none; }
+    .tick{ --sz:18px; width:var(--sz); height:var(--sz); border-radius:6px; border:1.5px solid var(--border); margin-top:2px; flex:0 0 var(--sz); display:grid; place-items:center; font-size:14px; color:white; }
 
-    /* Pricing */
-    .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
-    .plan{background:var(--surface-2);padding:1.4rem;border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.6rem}
-    .plan .price{font-size:1.6rem;font-weight:800}
+    .option-card.selected{ border-color: var(--primary-600);
+      background: linear-gradient(180deg, color-mix(in oklab, var(--primary) 14%, var(--card)), var(--card));
+      box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--primary) 45%, transparent);
+    }
+    .option-card.selected .tick{ background: var(--primary-600); border-color: var(--primary-600); }
+    .option-card.correct{ border-color: var(--good); box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--good) 40%, transparent); }
+    .option-card.incorrect{ border-color: var(--bad); box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--bad) 40%, transparent); }
 
-    /* FAQ */
-    details.faq{background:var(--surface-2);padding:1rem 1.2rem;border-radius:14px;box-shadow:var(--shadow)}
-    details.faq summary{cursor:pointer;font-weight:700}
-    details.faq[open]{outline:1px solid rgba(127,127,127,.15)}
+    .explain{ display:none; background:var(--explain-bg); border:1px solid var(--explain-border); color:var(--explain-text);
+      border-radius:12px; padding:12px; margin-top:12px; font-size:14px; }
+    .explain b{ font-weight:800; }
 
-    /* Contact */
-    .contact-card{background:var(--surface-2);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);text-align:center}
+    .quiz-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
+    .result{ margin-top:12px; font-weight:800; }
+    .muted{ color:var(--muted); font-size:14px; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:var(--bg-soft); border:1px solid var(--border); font-size:12px; color:var(--muted); }
+    .history{ margin-top:12px; border-top:1px solid var(--border); padding-top:12px; }
+    .history ul{ margin:6px 0 0; padding-left:18px; }
 
-    footer{background:var(--header);text-align:center;padding:2.2rem;color:var(--muted)}
+    /* Lock state – 제출 후 완전 고정 */
+    .quiz-locked .option-card{
+      opacity:.6; cursor:not-allowed; filter: grayscale(0.2) saturate(0.9);
+      pointer-events: none; /* 호버/클릭/포커스 차단 → 테두리 깜빡임 방지 */
+    }
+    .quiz-locked .option-card:hover{ border-color: inherit; box-shadow:none; transform:none; }
 
-    /* ===== Floating dock (rainbow style) ===== */
-    .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom));z-index:90;display:flex;align-items:center;gap:.5rem;background:color-mix(in hsl,var(--header) 92%, transparent);backdrop-filter:saturate(140%) blur(10px);border:1px solid rgba(127,127,127,.18);box-shadow:var(--shadow);padding:.5rem .6rem;border-radius:22px}
-    .dock::before{content:"";position:absolute;inset:-1px;border-radius:24px;padding:2px;background:linear-gradient(90deg,#ef4444,#f59e0b,#fbbf24,#22c55e,#3b82f6,#8b5cf6,#ef4444);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.9}
-    .dock::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:6px;border-radius:999px;background:linear-gradient(90deg,#ef4444,#f59e0b,#fbbf24,#22c55e,#3b82f6,#8b5cf6,#ef4444);opacity:.85;filter:saturate(120%)}
-    .dock a,.dock button{position:relative;appearance:none;border:none;background:var(--surface-2);color:var(--text);padding:.6rem .9rem;border-radius:14px;font-weight:700;cursor:pointer}
-    .dock a:hover,.dock button:hover{filter:brightness(1.05)}
-    .dock .primary{background:var(--accent);color:#fff}
-    @media (max-width:560px){.dock .hide-sm{display:none}}
-
-    /* Anchor offset for sticky header */
-    section{scroll-margin-top:88px}
+    .footer{ text-align:center; padding:28px; color:var(--muted); }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container nav">
-      <div class="brand"><span class="badge-logo" aria-hidden="true"></span>moonble</div>
-      <button class="menu-toggle" id="menuToggle" aria-controls="navLinks" aria-expanded="false" title="메뉴">☰</button>
-      <div class="links" id="navLinks">
-        <a href="#vision">비전</a>
-        <a href="#features">기능</a>
-        <a href="#how">과정</a>
-        <a href="#showcase">쇼케이스</a>
-        <a href="#integrations">연동</a>
-        <a href="#roadmap">로드맵</a>
-        <a href="#metrics">지표</a>
-        <a href="#testimonials">후기</a>
-        <a href="#pricing">가격</a>
-        <a href="#faq">FAQ</a>
-        <a href="#contact">문의</a>
-        <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="테마 전환">☀️/🌙</button>
+  <header class="header">
+    <div class="inner container">
+      <div class="brand" aria-label="moonble">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div style="font-size:18px; line-height:1;">moonble</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px;">GA & Firebase 가이드 + 실전 퀴즈</div>
+        </div>
       </div>
+      <nav class="nav">
+        <a class="btn btn-ghost" href="#guide">가이드</a>
+        <a class="btn btn-ghost" href="#firebase">Firebase</a>
+        <a class="btn btn-ghost" href="#checklist">체크리스트</a>
+        <a class="btn btn-primary" href="#quiz">문제풀이</a>
+        <button id="themeToggle" class="btn" type="button" aria-label="테마 전환">다크모드</button>
+      </nav>
     </div>
   </header>
 
-  <section class="hero" id="home">
-    <div class="container hero-inner">
-      <div data-aos="fade-up">
-        <div class="badge">🚀 BETA 공개</div>
-        <h1 class="headline">당신의 아이디어를 빛나게</h1>
-        <p class="sub">moonble은 창의적이고 대담한 스타트업을 위한 런칭 플랫폼입니다. 노코드 기반의 빠른 MVP 제작, 감각적인 설계, 그리고 Jerry™ AI로 한층 더 빠른 학습을 경험하세요.</p>
-        <div class="cta">
-          <a class="btn" href="#contact">지금 시작하기</a>
-          <a class="btn secondary" href="#features">기능 살펴보기</a>
+  <main class="container">
+    <!-- HERO (풀폭) -->
+    <section class="hero">
+      <div class="masthead">
+        <div class="ribbon">sky blue · 라이트/다크 지원</div>
+        <h1 class="title">moonble — GA4 & Firebase, 실전 가이드 + 퀴즈</h1>
+        <p class="subtitle">핵심 개념은 간결하게, 실무 팁은 정확하게. 마지막엔 <b>랜덤 20문항</b>으로 실력 점검까지.</p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="icon-circle"><span class="icon ic-chart" aria-hidden="true"></span></div>
+              <div>
+                <h3 style="margin:0 0 6px;">이벤트 기반 분석</h3>
+                <p class="muted" style="margin:0;">사용자·세션·이벤트 중심의 GA4 모델을 한눈에 파악하고 전환 설계까지.</p>
+              </div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="icon-circle"><span class="icon ic-gear" aria-hidden="true"></span></div>
+              <div>
+                <h3 style="margin:0 0 6px;">앱·웹 통합 측정</h3>
+                <p class="muted" style="margin:0;">Firebase SDK와 웹 스니펫, 권장 이벤트 스키마로 동일한 기준 유지.</p>
+              </div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="icon-circle"><span class="icon ic-brain" aria-hidden="true"></span></div>
+              <div>
+                <h3 style="margin:0 0 6px;">데이터 품질/거버넌스</h3>
+                <p class="muted" style="margin:0;">측정 계획서, 내부/봇 필터링, BigQuery로 장기 분석 체계화.</p>
+              </div>
+            </div>
+          </div>
+        </div><!-- /feature-grid -->
+      </div>
+    </section>
+
+    <!-- GUIDE: 이모티콘 제거, 텍스트만 심플 -->
+    <section id="guide">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Overview</div>
+          <h2>Google Analytics 4 (GA4) 요약</h2>
+        </div>
+        <div class="ribbon">핵심 6가지</div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">데이터 모델</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li><b>이벤트 기반</b> 수집</li>
+            <li>사용자·세션·이벤트 중심 리포팅</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">전환</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li>관리 → 이벤트에서 <b>전환 토글</b></li>
+            <li>추천 이벤트 이름 권장</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">DebugView</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li><code>debug_mode</code> 또는 확장 프로그램</li>
+            <li>이벤트 단위 확인</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">BigQuery</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li>원시 이벤트 보관</li>
+            <li>SQL로 퍼널/리텐션/코호트</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">UTM & 어트리뷰션</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li>cpc/email/social 등 표준 사용</li>
+            <li>기본: <b>데이터 기반</b> 모델</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h3 style="margin:0 0 6px;">품질/거버넌스</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li>측정 계획서 · 명명 규칙</li>
+            <li>내부/봇 필터링, 환경 분리</li>
+          </ul>
         </div>
       </div>
-      <div class="mascot-wrap" data-aos="zoom-in" data-aos-delay="120" aria-hidden="true">
-        <!-- Cute mascot: MOONI -->
-        <svg class="mascot" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="moonble 마스코트 Mooni">
-          <defs>
-            <radialGradient id="g1" cx="50%" cy="40%" r="70%">
-              <stop offset="0%" stop-color="#fff7cc"/>
-              <stop offset="100%" stop-color="#f1e3a8"/>
-            </radialGradient>
-            <linearGradient id="g2" x1="0" x2="1">
-              <stop offset="0%" stop-color="#8e44ad"/>
-              <stop offset="100%" stop-color="#3b82f6"/>
-            </linearGradient>
-          </defs>
-          <circle cx="120" cy="120" r="84" fill="url(#g1)" stroke="#e7d898" stroke-width="3"/>
-          <circle cx="160" cy="100" r="14" fill="#e9d78f" opacity=".6"/>
-          <circle cx="95" cy="145" r="10" fill="#e9d78f" opacity=".55"/>
-          <circle cx="80" cy="100" r="7" fill="#e9d78f" opacity=".5"/>
-          <circle cx="100" cy="120" r="6" fill="#0e0e10"/>
-          <circle cx="140" cy="120" r="6" fill="#0e0e10"/>
-          <path d="M100 145 Q120 158 140 145" stroke="#0e0e10" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <ellipse cx="120" cy="170" rx="60" ry="16" fill="url(#g2)" opacity=".25"/>
-          <g fill="url(#g2)"><circle cx="40" cy="70" r="4"/><circle cx="200" cy="60" r="3"/><circle cx="190" cy="190" r="4"/></g>
-        </svg>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="vision" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">왜 moonble인가요?</h2>
-      <p class="muted" style="text-align:center;max-width:760px;margin:0 auto 1.4rem" data-aos="fade-up" data-aos-delay="80">아이디어를 빠르게 시장과 연결하고, 배운 것을 다시 제품으로 반영합니다. moonble은 속도·일관성·정확성을 위해 설계되었습니다.</p>
-      <div class="features" data-aos="fade-up" data-aos-delay="120">
-        <article class="feature-card"><h3>⚡ 초고속 MVP</h3><p>템플릿과 자동 배포로 <strong>하루 만에</strong> 출시. 실사용자 피드백으로 즉시 학습.</p></article>
-        <article class="feature-card"><h3>🤖 Jerry™ RAG 챗봇</h3><p>문서/지식 기반으로 정확한 답변. 팀 위키와 연결해 <em>할루시네이션 최소화</em>.</p></article>
-        <article class="feature-card"><h3>🧩 모듈형 런칭 스택</h3><p>랜딩·온보딩·결제·CRM을 블록처럼 조합. 유지보수는 우리가.</p></article>
-        <article class="feature-card"><h3>🎨 브랜드 일관성</h3><p>디자인 토큰으로 다크/라이트에서도 동일한 경험.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section id="features" class="section" style="padding-top:0;">
-    <div class="container">
-      <h2 data-aos="fade-up">핵심 기능</h2>
-      <div class="features" data-aos="fade-up" data-aos-delay="100">
-        <article class="feature-card"><h3>🚀 배포 자동화</h3><p>Git 연결만으로 미리보기/프로덕션 자동 배포, 원클릭 롤백.</p></article>
-        <article class="feature-card"><h3>📈 실험/분석</h3><p>A/B 테스트, 이벤트 트래킹, 코호트 분석. KPI 중심 대시보드.</p></article>
-        <article class="feature-card"><h3>🔌 외부 연동</h3><p>Stripe, Slack, Notion, Firebase 등과 원클릭 통합.</p></article>
-        <article class="feature-card"><h3>🛡️ 보안/권한</h3><p>SSO, 역할 기반 권한, 감사 로그로 엔터프라이즈 준비.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section id="how" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">런칭 과정</h2>
-      <div class="steps" data-aos="fade-up" data-aos-delay="100">
-        <div class="step"><span class="n">1</span><strong>아이디어 브리프</strong><p class="muted">목표·페르소나·핵심 가설을 정리합니다.</p></div>
-        <div class="step"><span class="n">2</span><strong>MVP 제작</strong><p class="muted">템플릿과 컴포넌트로 하루 내 가동.</p></div>
-        <div class="step"><span class="n">3</span><strong>실험 & 측정</strong><p class="muted">A/B와 이벤트로 사용성·전환을 측정.</p></div>
-        <div class="step"><span class="n">4</span><strong>학습 & 반복</strong><p class="muted">데이터와 Jerry™ 인사이트로 다음 사이클.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="showcase" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">쇼케이스</h2>
-      <div class="showcase" data-aos="fade-up" data-aos-delay="100">
-        <div class="shot">
-          <img loading="lazy" alt="랜딩 페이지 예시" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%238e44ad'/><stop offset='1' stop-color='%233b82f6'/></linearGradient></defs><rect width='100%' height='100%' fill='%23eef1f6'/><rect x='40' y='60' width='1120' height='280' rx='18' fill='url(%23g)'/><rect x='40' y='380' width='720' height='60' rx='12' fill='%23d1d5db'/><rect x='40' y='460' width='560' height='60' rx='12' fill='%23e5e7eb'/><rect x='40' y='540' width='860' height='200' rx='16' fill='%23f3f4f6'/></svg>"/>
-          <div class="cap">프로젝트 스크린샷 — 랜딩</div>
+    <section id="firebase">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Implementation</div>
+          <h2>Firebase Analytics로 앱/웹 통합 측정</h2>
         </div>
-        <div class="shot">
-          <img loading="lazy" alt="대시보드 예시" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23f0f2f5'/><rect x='40' y='40' width='320' height='720' rx='16' fill='%23e5e7eb'/><rect x='380' y='40' width='780' height='220' rx='16' fill='%23dbeafe'/><rect x='380' y='280' width='380' height='220' rx='16' fill='%23fef3c7'/><rect x='780' y='280' width='380' height='220' rx='16' fill='%23dcfce7'/><rect x='380' y='520' width='780' height='240' rx='16' fill='%23fee2e2'/></svg>"/>
-          <div class="cap">프로젝트 스크린샷 — 대시보드</div>
-        </div>
-        <div class="shot">
-          <img loading="lazy" alt="모바일 앱 예시" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23eef2ff'/><rect x='420' y='60' width='360' height='680' rx='36' fill='%23ffffff' stroke='%23c7d2fe' stroke-width='6'/><rect x='450' y='120' width='300' height='60' rx='12' fill='%23e5e7eb'/><rect x='450' y='200' width='300' height='260' rx='18' fill='%23dbeafe'/><rect x='450' y='480' width='300' height='160' rx='18' fill='%23fee2e2'/></svg>"/>
-          <div class="cap">프로젝트 스크린샷 — 모바일</div>
-        </div>
-        <div class="shot">
-          <img loading="lazy" alt="콘텐츠 페이지 예시" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23f8fafc'/><rect x='60' y='60' width='1080' height='120' rx='14' fill='%23e2e8f0'/><rect x='60' y='200' width='1080' height='540' rx='18' fill='%23f1f5f9'/><rect x='100' y='240' width='1000' height='60' rx='12' fill='%23d1d5db'/><rect x='100' y='320' width='760' height='60' rx='12' fill='%23e5e7eb'/><rect x='100' y='400' width='920' height='60' rx='12' fill='%23e5e7eb'/></svg>"/>
-          <div class="cap">프로젝트 스크린샷 — 콘텐츠</div>
+        <div class="ribbon">웹 · 앱 Step-by-step</div>
+      </div>
+
+      <h3>웹 설치 플로우</h3>
+      <div class="stepper" style="margin-bottom:12px;">
+        <div class="step"><b>GA4 속성 생성</b><br><span class="muted">웹 스트림에서 측정ID(G-...)</span></div>
+        <div class="step"><b>스니펫 설치</b><br><span class="muted">gtag.js 또는 GTM</span></div>
+        <div class="step"><b>SPA 라우팅 처리</b><br><span class="muted">라우트 변경 시 <code>page_view</code></span></div>
+      </div>
+
+      <h3>앱 설치 플로우</h3>
+      <div class="stepper">
+        <div class="step"><b>프로젝트 연결</b><br><span class="muted">iOS/Android 앱 추가</span></div>
+        <div class="step"><b>SDK 초기화</b><br><span class="muted"><code>firebase_core</code> → <code>firebase_analytics</code></span></div>
+        <div class="step"><b>권장 이벤트</b><br><span class="muted">전자상거래 스키마 준수</span></div>
+      </div>
+
+      <div class="feature-grid" style="margin-top:16px;">
+        <div class="feature-card" style="grid-column: span 12;">
+          <h3 style="margin:0 0 6px;">운영 팁</h3>
+          <ul style="margin:0; padding-left:18px;">
+            <li>DebugView로 QA → 스테이징 → 프로덕션</li>
+            <li>Remote Config/A-B Testing으로 실험</li>
+            <li>Consent Mode로 동의 기반 측정/모델링</li>
+            <li>BigQuery로 장기 보관 및 고급 분석</li>
+          </ul>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="integrations" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">연동</h2>
-      <div class="integrations" data-aos="fade-up" data-aos-delay="100">
-        <div class="logo-tile"><img loading="lazy" alt="Stripe" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23eef2ff'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%234256d1' font-family='Poppins, Arial'>Stripe</text></svg>"/></div>
-        <div class="logo-tile"><img loading="lazy" alt="Slack" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23f1f5f9'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%230a7ea4' font-family='Poppins, Arial'>Slack</text></svg>"/></div>
-        <div class="logo-tile"><img loading="lazy" alt="Notion" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23ffffff' stroke='%23d1d5db'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%23151515' font-family='Poppins, Arial'>Notion</text></svg>"/></div>
-        <div class="logo-tile"><img loading="lazy" alt="Firebase" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23fff7ed'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%23d97706' font-family='Poppins, Arial'>Firebase</text></svg>"/></div>
-        <div class="logo-tile"><img loading="lazy" alt="GitHub" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23f8fafc'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%23151515' font-family='Poppins, Arial'>GitHub</text></svg>"/></div>
-        <div class="logo-tile"><img loading="lazy" alt="Vercel" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='80'><rect width='100%' height='100%' rx='10' fill='%23f8fafc'/><text x='50%' y='54%' text-anchor='middle' font-size='28' fill='%23151515' font-family='Poppins, Arial'>Vercel</text></svg>"/></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="roadmap" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">로드맵</h2>
-      <div class="timeline" data-aos="fade-up" data-aos-delay="100">
-        <div class="milestone left"><strong>Q3: 베타 확장</strong><p class="muted">초대 기반 온보딩, 핵심 템플릿 추가</p></div>
-        <div class="milestone right"><strong>Q4: 팀 플랜</strong><p class="muted">권한/SSO, 역할 기반 워크플로</p></div>
-        <div class="milestone left"><strong>Q1: 마켓플레이스</strong><p class="muted">컴포넌트/템플릿 공유·거래</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="metrics" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">핵심 지표</h2>
-      <div class="kpis" data-aos="fade-up" data-aos-delay="100">
-        <div class="kpi"><div class="num">24h</div><div class="muted">평균 MVP 출시 시간</div></div>
-        <div class="kpi"><div class="num">+38%</div><div class="muted">실험 주기 단축</div></div>
-        <div class="kpi"><div class="num">99.9%</div><div class="muted">가용성</div></div>
-        <div class="kpi"><div class="num">#1</div><div class="muted">온보딩 만족도</div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="testimonials">
-    <div class="container">
-      <h2 data-aos="fade-up">사용자 후기</h2>
-      <div class="testimonials" data-aos="fade-up" data-aos-delay="100">
-        <blockquote class="quote">
-          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
-          “24시간 만에 데모를 올리고, 그 주에 첫 유료고객이 생겼어요.”<strong>— A 스타트업 CEO</strong>
-        </blockquote>
-        <blockquote class="quote">
-          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
-          “마케팅과 제품팀이 같은 데이터로 이야기하게 됐습니다.”<strong>— PM, 커머스</strong>
-        </blockquote>
-        <blockquote class="quote">
-          <div style="color:#fbbf24; font-size:1.2rem; margin-bottom:.4rem">⭐⭐⭐⭐⭐</div>
-          “Jerry™가 팀 위키를 읽고 정확히 답해줘서 온보딩이 매우 쉬워졌어요.”<strong>— 신규 개발자</strong>
-        </blockquote>
-      </div>
-    </div>
-  </section>
-
-  <section id="pricing" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">가격</h2>
-      <div class="pricing" data-aos="fade-up" data-aos-delay="100">
-        <div class="plan">
-          <h3>Starter</h3>
-          <div class="price">₩0</div>
-          <p class="muted">개인/실험용, 기본 템플릿과 배포</p>
-          <a href="#contact" class="btn">시작하기</a>
+    <section id="checklist">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Operations</div>
+          <h2>실무 체크리스트</h2>
         </div>
-        <div class="plan">
-          <h3>Pro</h3>
-          <div class="price">₩49,000 /월</div>
-          <p class="muted">A/B, 이벤트 분석, Jerry™ 기본</p>
-          <a href="#contact" class="btn">시작하기</a>
-        </div>
-        <div class="plan">
-          <h3>Team</h3>
-          <div class="price">맞춤</div>
-          <p class="muted">SSO, 권한, 보안감사 & 컨설팅</p>
-          <a href="#contact" class="btn">상담 문의</a>
-        </div>
+        <div class="ribbon">접었다 펴는 가이드</div>
       </div>
-    </div>
-  </section>
 
-  <section id="faq" class="section">
-    <div class="container">
-      <h2 data-aos="fade-up">FAQ</h2>
-      <div class="features" data-aos="fade-up" data-aos-delay="100">
-        <details class="faq"><summary>정말 하루 만에 출시 가능한가요?</summary><p class="muted">예, 사전 정의된 템플릿과 자동 배포 파이프라인을 활용합니다. 커스텀 범위에 따라 달라질 수 있어요.</p></details>
-        <details class="faq"><summary>Jerry™는 어떤 데이터를 학습하나요?</summary><p class="muted">문서/위키/FAQ 등 연결한 자료를 검색·생성 결합 방식(RAG)으로 활용합니다.</p></details>
-        <details class="faq"><summary>내부 보안은 어떻게 보장되나요?</summary><p class="muted">역할 기반 권한, SSO, 감사 로그 옵션을 제공합니다.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="section">
-    <div class="container" data-aos="fade-up">
-      <h2>문의</h2>
-      <div class="contact-card">
-        <p class="muted">런칭을 함께하고 싶다면 아래로 연락주세요.</p>
-        <div style="margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">
-          <a href="mailto:team@moonble.io" class="btn" aria-label="이메일 보내기">이메일 보내기</a>
-          <a href="#" class="btn secondary" aria-label="데모 요청">데모 요청</a>
+      <details class="accordion" open>
+        <summary>도입 <span class="chev">⌄</span></summary>
+        <div class="content">
+          <ul>
+            <li>측정 계획서/이벤트 맵 정의</li>
+            <li>명명 규칙: <code>snake_case</code>, 영문, 의미 명확</li>
+            <li>개발/스테이징/프로덕션 분리</li>
+            <li>내부 트래픽/봇 필터링</li>
+          </ul>
         </div>
+      </details>
+
+      <details class="accordion">
+        <summary>구현 <span class="chev">⌄</span></summary>
+        <div class="content">
+          <ul>
+            <li>추천 이벤트/전자상거래 스키마 준수</li>
+            <li>SPA 라우팅 <code>page_view</code> 처리</li>
+            <li>DebugView로 QA, 이벤트/파라미터 검증</li>
+            <li>전환 토글/맞춤 정의 등록</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>운영 <span class="chev">⌄</span></summary>
+        <div class="content">
+          <ul>
+            <li>탐색(Explorations)로 퍼널/리텐션 분석</li>
+            <li>BigQuery 내보내기 및 SQL 분석 파이프라인</li>
+            <li>Remote Config · A/B Testing</li>
+            <li>정기 점검: 명명, 파라미터, 데이터 품질</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <section id="quiz">
+      <h2>문제풀이</h2>
+      <p class="muted" style="margin-top:-6px">문항은 <b>카드형 선택지</b>입니다. 복수 선택 문제에는 우측 하단에 <em>*복수 선택</em> 캡션이 표시됩니다. 매회 <b>랜덤 20문항</b>을 풉니다.</p>
+      <div id="modePill" class="pill" style="display:none;">오답 재도전 모드</div>
+      <div id="quizContainer" class="quiz-wrap"></div>
+
+      <div class="quiz-actions">
+        <button id="submitBtn" class="btn btn-primary" type="button">제출하기</button>
+        <button id="retryWrongBtn" class="btn" type="button" disabled>오답만 다시 풀기</button>
+        <button id="retryBtn" class="btn" type="button">다시하기</button>
+        <button id="csvBtn" class="btn" type="button" disabled>CSV 내보내기 (80↑)</button>
       </div>
-    </div>
-  </section>
 
-  <footer>
-    <div class="container">© 2025 moonble. All rights reserved. — This is a fictional project.</div>
-  </footer>
+      <div id="resultBox" class="result" aria-live="polite"></div>
+      <div id="historyBox" class="history"></div>
+    </section>
 
-  <!-- Floating Dock (Rainbow) -->
-  <div class="dock" role="toolbar" aria-label="빠른 이동">
-    <a class="hide-sm" href="#home" aria-label="홈">🏠 홈</a>
-    <a href="#features" aria-label="기능">🧩 기능</a>
-    <a class="hide-sm" href="#showcase" aria-label="쇼케이스">🖼️ 쇼케이스</a>
-    <a href="#contact" aria-label="문의">✉️ 문의</a>
-    <button id="themeToggleDock" title="테마 전환" aria-pressed="false">☀️/🌙</button>
-    <a class="primary" href="#contact" aria-label="지금 시작하기">지금 시작</a>
-  </div>
+    <div class="footer">© <span id="year"></span> moonble. Sky-blue themed. 라이트/다크 지원.</div>
+  </main>
 
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
-    AOS.init({ once:true, duration:600, easing:'ease-out' });
-    const root = document.documentElement; const KEY='moonble:theme';
-    const saved=localStorage.getItem(KEY); if(saved){root.setAttribute('data-theme',saved)}
+    // ===== Theme toggle =====
+    const themeBtn = document.getElementById('themeToggle');
+    function getStoredTheme(){ try { return localStorage.getItem('moonble-theme') } catch { return null } }
+    function setStoredTheme(v){ try { localStorage.setItem('moonble-theme', v); } catch {} }
+    function applyTheme(theme){
+      document.documentElement.setAttribute('data-theme', theme);
+      themeBtn.textContent = theme === 'light' ? '다크모드' : '라이트모드';
+    }
+    const initialTheme = getStoredTheme() || 'light';
+    applyTheme(initialTheme);
+    themeBtn.addEventListener('click', () => {
+      const now = document.documentElement.getAttribute('data-theme');
+      const next = now === 'light' ? 'dark' : 'light';
+      applyTheme(next); setStoredTheme(next);
+    });
 
-    // Theme toggle (header + dock)
-    const t1=document.getElementById('themeToggle'); const t2=document.getElementById('themeToggleDock');
-    function setTheme(next){ root.setAttribute('data-theme',next); localStorage.setItem(KEY,next); const pressed=String(next==='dark'); if(t1) t1.setAttribute('aria-pressed',pressed); if(t2) t2.setAttribute('aria-pressed',pressed); }
-    function toggleTheme(){ const next=root.getAttribute('data-theme')==='dark'?'light':'dark'; setTheme(next); }
-    if(t1) t1.addEventListener('click',toggleTheme); if(t2) t2.addEventListener('click',toggleTheme);
+    // ===== Utilities =====
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+    const byId = id => document.getElementById(id);
+    byId('year').textContent = new Date().getFullYear();
 
-    // Mobile menu
-    const menuBtn=document.getElementById('menuToggle');
-    const nav=document.getElementById('navLinks');
-    if(menuBtn && nav){ menuBtn.addEventListener('click',()=>{ const open=nav.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', String(open)); }); }
+    // ===== Anchor smooth scroll & active nav =====
+    const headerEl = document.querySelector('.header');
+    const navLinks = Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+    function headerH(){ return headerEl ? headerEl.getBoundingClientRect().height : 0; }
+    function setActiveNav(id){
+      navLinks.forEach(a => {
+        const isActive = a.getAttribute('href') === `#${id}`;
+        a.classList.toggle('btn-primary', isActive);
+        a.classList.toggle('btn-ghost', !isActive);
+      });
+    }
+    function scrollToHash(hash, replace=false){
+      const el = document.querySelector(hash);
+      if (!el) return;
+      const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerH() - 8);
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      if (replace) history.replaceState(null, '', hash);
+      else history.pushState(null, '', hash);
+    }
+    navLinks.forEach(a => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const hash = a.getAttribute('href');
+      setActiveNav(hash.slice(1));
+      scrollToHash(hash);
+      if (typeof updateActiveByVisibility === 'function') setTimeout(updateActiveByVisibility, 200);
+    }));
+
+    // Active nav by visibility
+    const sectionIds = ['guide','firebase','checklist','quiz'];
+    const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+    function updateActiveByVisibility(){
+      const vh = window.innerHeight; const hh = headerH();
+      let bestId = sectionIds[0]; let bestRatio = -1;
+      sections.forEach(sec => {
+        const r = sec.getBoundingClientRect();
+        const visible = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, hh));
+        const ratio = visible / Math.max(1, r.height);
+        if (ratio > bestRatio){ bestRatio = ratio; bestId = sec.id; }
+      });
+      setActiveNav(bestId);
+    }
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => { updateActiveByVisibility(); ticking = false; });
+      }
+    }, { passive:true });
+    window.addEventListener('resize', updateActiveByVisibility);
+    window.addEventListener('load', () => {
+      if (location.hash) setTimeout(() => scrollToHash(location.hash, true), 0);
+      updateActiveByVisibility();
+    });
+    window.addEventListener('hashchange', () => {
+      if (location.hash) setActiveNav(location.hash.slice(1));
+    });
+
+    // ===== Question bank (60) =====
+    const BANK = [
+      {id:1,q:'GA4의 데이터 모델은 무엇인가요?',options:['세션 기반','페이지뷰 기반','이벤트 기반'],correct:[2],explain:'GA4는 모든 상호작용을 이벤트와 파라미터로 수집하는 이벤트 기반 모델을 사용합니다.'},
+      {id:2,q:'GA4에서 전환을 설정하는 올바른 방법은 무엇인가요?',options:['관리 → 이벤트에서 전환으로 표시 토글','관리 → 목표 만들기(UA 방식)','보고서에서 세그먼트 저장'],correct:[0],explain:'UA의 목표 생성 대신, GA4에서는 이벤트를 전환으로 표시하여 사용합니다.'},
+      {id:3,q:'DebugView를 활성화/확인하는 방법으로 옳은 것을 모두 고르세요.',options:['gtag에서 debug_mode 설정','Chrome GA Debugger 확장 사용','서버에서만 확인 가능'],correct:[0,1],explain:'debug_mode 플래그나 브라우저 확장으로 디버그 스트림을 보낼 수 있으며 서버 전용 기능이 아닙니다.'},
+      {id:4,q:'웹에 GA4를 직접 설치할 때 최소로 필요한 것은?',options:['측정 ID(G-....)','gtag.js 스니펫 또는 GTM','UA-로 시작하는 추적 ID'],correct:[0,1],explain:'GA4는 G-로 시작하는 측정 ID와 gtag.js 또는 GTM 중 하나가 필요합니다.'},
+      {id:5,q:'GA4↔BigQuery 연결로 가능한 일을 고르세요.',options:['원시 이벤트 테이블 조회','SQL로 맞춤 퍼널/리텐션 분석','실시간 보고서만 제공'],correct:[0,1],explain:'BigQuery로 내보내면 원시 데이터를 SQL로 자유롭게 분석할 수 있습니다.'},
+      {id:6,q:'Firebase Analytics와 GA4의 관계로 옳은 것은?',options:['동일한 측정 백엔드를 공유한다','완전히 별개라 연계 불가','두 시스템 간 데이터 이동이 불가능하다'],correct:[0],explain:'Firebase와 GA4는 동일한 측정 인프라 위에서 동작합니다.'},
+      {id:7,q:'권장되는 UTM medium 값을 모두 고르세요.',options:['cpc','email','social','keyword'],correct:[0,1,2],explain:'표준 medium 예시는 cpc/email/social 등이며 keyword는 매체가 아닙니다.'},
+      {id:8,q:'SPA(싱글페이지앱)에서 정확한 페이지뷰 측정 방법은?',options:['라우트 변경 시 page_view를 수동 전송한다','브라우저 새로고침에만 의존한다','screen_view만 전송하면 충분하다'],correct:[0],explain:'URL이 바뀌어도 페이지가 재로딩되지 않으므로 라우트 변경 시 page_view를 수동 전송해야 합니다.'},
+      {id:9,q:'사용자 속성과 이벤트 파라미터의 차이를 고르세요.',options:['사용자 레벨 vs 이벤트 레벨','전환 전용 vs 세션 전용','장기 특성 vs 순간 맥락'],correct:[0,2],explain:'사용자 속성은 사용자 레벨의 장기 특성, 이벤트 파라미터는 개별 이벤트의 맥락 값입니다.'},
+      {id:10,q:'User-ID 기능의 주된 목적은?',options:['멀티 디바이스 사용자를 결합','봇 트래픽 제거','광고 자동 집행'],correct:[0],explain:'로그인 기반 ID로 여러 기기에서의 동일 사용자를 연결해 분석 정확도를 높입니다.'},
+      {id:11,q:'Google Signals에 대한 설명을 모두 고르세요.',options:['로그인 기반 교차기기 보고에 활용된다','일부 개인화 광고 기능과 연계된다','데이터 임계값이 적용될 수 있다'],correct:[0,1,2],explain:'Signals 사용 시 교차기기 통찰과 광고 기능이 가능하지만 개인정보 보호를 위해 임계값 제한이 적용될 수 있습니다.'},
+      {id:12,q:'Consent Mode(동의 모드)에 대한 설명으로 옳은 것은?',options:['동의 상태에 맞춰 gtag 동작을 제어한다','동의가 없을 때 대체 모델링이 적용될 수 있다','쿠키 없이도 1:1 사용자 식별을 보장한다'],correct:[0,1],explain:'Consent Mode는 동의 기반으로 동작·모델링을 조정하지만 개인 식별을 보장하지는 않습니다.'},
+      {id:13,q:'전자상거래 웹 구매에서 권장되는 이벤트 이름은?',options:['purchase','buy','order_complete'],correct:[0],explain:'GA4 권장 이벤트 이름은 purchase입니다.'},
+      {id:14,q:'purchase 이벤트에 포함해야 할 필수 정보(키)를 모두 고르세요.',options:['value','currency','items[]','utm_campaign'],correct:[0,1,2],explain:'구매 가치를 계산하기 위한 value, currency, items 배열이 필수입니다.'},
+      {id:15,q:'Firebase Analytics logEvent 제약/권장에 대한 설명을 고르세요.',options:['이벤트 이름은 소문자/언더스코어 권장','매 이벤트 파라미터 수에는 제한이 없다','예약어 파라미터가 존재한다'],correct:[0,2],explain:'네이밍 규칙을 지키고 예약어 파라미터를 피해야 합니다. 파라미터 수에는 제약이 있습니다.'},
+      {id:16,q:'Flutter 앱에서 Firebase Analytics를 시작하는 올바른 순서는?',options:['firebase_core 초기화 후 analytics 패키지 사용','Info.plist/AndroidManifest 설정','Xcode/Gradle에 UA ID 입력'],correct:[0,1],explain:'SDK 초기화와 플랫폼 설정이 선행되며 UA ID는 GA4에서 사용하지 않습니다.'},
+      {id:17,q:'전자상거래 파라미터의 타입으로 옳은 것을 고르세요.',options:['value는 숫자','currency는 ISO 4217 코드(예: KRW, USD)','둘 다 문자열'],correct:[0,1],explain:'value는 숫자, currency는 국제 통화 코드 문자열을 사용합니다.'},
+      {id:18,q:'GA4에서 세션이 시작될 때 자동으로 수집되는 이벤트는?',options:['session_start','first_visit','page_view'],correct:[0],explain:'새 세션이 시작되면 session_start가 기록됩니다.'},
+      {id:19,q:'웹에서 first_visit 이벤트는 언제 발생하나요?',options:['해당 속성에 대한 첫 방문 시','매 세션마다','페이지 이동 시마다'],correct:[0],explain:'해당 속성에 처음 방문한 브라우저에서 1회 발생합니다.'},
+      {id:20,q:'샘플링/임계값이 적용될 수 있는 영역을 고르세요.',options:['탐색(Explorations)','실시간 보고서','일부 표준 보고서(데이터 임계값)'],correct:[0,2],explain:'탐색과 일부 표준 보고서에 샘플링/임계값이 적용될 수 있습니다.'},
+      {id:21,q:'실시간(Realtime) 보고서가 기본으로 보여주는 시간 범위는?',options:['지난 30분','지난 24시간','지난 5분'],correct:[0],explain:'실시간 보고서는 기본적으로 최근 30분 데이터를 보여줍니다.'},
+      {id:22,q:'참여율(Engagement rate) 정의에 가장 가까운 것은?',options:['참여 세션 / 전체 세션','전환 / 사용자','이탈률의 역수와 항상 같다'],correct:[0],explain:'참여율은 참여 세션 비율이며 이탈률과 항상 역관계는 아닙니다.'},
+      {id:23,q:'참여 세션(Engaged session)의 조건을 모두 고르세요.',options:['10초 이상 지속','전환 발생','2개 이상 페이지/스크린 조회'],correct:[0,1,2],explain:'세 조건 중 하나라도 만족하면 참여 세션으로 간주됩니다.'},
+      {id:24,q:'사용자 획득 보고서의 "첫 사용자 매체"는 무엇을 의미하나요?',options:['최초 방문이 발생한 medium','전일의 medium','전환이 발생한 medium'],correct:[0],explain:'첫 방문 트래픽의 medium을 의미합니다.'},
+      {id:25,q:'사용자 식별 방법 설정 옵션을 모두 고르세요.',options:['혼합(Blended)','관측(Observed)','디바이스 기준(Device-based)'],correct:[0,1,2],explain:'속성 설정에서 세 가지 사용자 식별 전략을 선택할 수 있습니다.'},
+      {id:26,q:'앱 화면 측정에 대한 올바른 설명을 고르세요.',options:['자동 수집 외에 현재 화면 이름을 이벤트 파라미터로 기록할 수 있다','page_view만 전송하면 충분하다','setCurrentScreen(또는 동등 API)을 사용할 수 있다'],correct:[0,2],explain:'모바일은 screen_view를 사용하고 필요 시 현재 화면 이름을 명시적으로 설정합니다.'},
+      {id:27,q:'서버사이드 측정(Server-side tagging)의 장점을 고르세요.',options:['광고 차단기 영향 감소','중복 제어/검증 유리','사용자 단말 CPU 절약'],correct:[0,1,2],explain:'태깅을 서버로 이전해 안정성과 성능을 개선합니다.'},
+      {id:28,q:'GTM 사용의 장점을 고르세요.',options:['태그/트리거/변수로 무코드 변경','게시 전 미리보기/버전관리','브라우저 없이 서버만 필요'],correct:[0,1],explain:'GTM은 미리보기와 버전관리를 제공하지만 클라이언트 태그는 브라우저가 필요합니다.'},
+      {id:29,q:'측정 계획서에 반드시 포함될 항목을 고르세요.',options:['비즈니스 목표','핵심 이벤트/파라미터 정의','서버 비용 견적만'],correct:[0,1],explain:'측정은 비즈 목표에서 출발해 이벤트·파라미터 정의로 이어져야 합니다.'},
+      {id:30,q:'크로스도메인 측정이 필요한 상황을 고르세요.',options:['결제 리다이렉트로 다른 도메인 이동','하위 도메인 간 이동','한 페이지 내 앵커 이동'],correct:[0,1],explain:'도메인 간 이동 시 링크 데코레이션 등으로 세션 단절을 방지합니다.'},
+      {id:31,q:'맞춤 정의(커스텀 디멘션/지표) 등록이 필요한 경우를 고르세요.',options:['새 파라미터를 UI 보고서에서 쓰려는 경우','기본 제공 파라미터만 쓸 때','BigQuery에서만 분석할 때는 필수는 아님'],correct:[0,2],explain:'UI 리포트에 노출하려면 맞춤 정의 등록이 필요합니다.'},
+      {id:32,q:'Firebase Remote Config를 분석/운영에 활용하는 예시는?',options:['A/B 테스트 변형 제어','릴리스 없이 버튼 텍스트 교체','사용자 삭제'],correct:[0,1],explain:'원격으로 UI/기능을 제어하지만 사용자 삭제 기능은 아닙니다.'},
+      {id:33,q:'A/B 테스트에서 최소 샘플 수가 필요한 이유를 고르세요.',options:['통계적 유의성 확보','과적합 방지','보고서 UI 속도 개선'],correct:[0,1],explain:'충분한 표본이 있어야 우연에 의한 오판을 줄일 수 있습니다.'},
+      {id:34,q:'표준 GA4 속성의 최대 데이터 보존 기간은?',options:['14개월','26개월','무제한'],correct:[0],explain:'무료 GA4 속성의 이벤트 데이터 보존은 최대 14개월입니다.'},
+      {id:35,q:'전자상거래 items 배열 요소에 포함되는 정보를 모두 고르세요.',options:['item_id / item_name','price / quantity','coupon 또는 discount'],correct:[0,1,2],explain:'아이템 ID·이름, 가격·수량, 할인 관련 정보 등을 포함합니다.'},
+      {id:36,q:'쿠키 없는 환경에서 정확도를 높이는 전략을 고르세요.',options:['서버사이드 태깅','모델링/Consent Mode 활용','더 많은 팝업 노출'],correct:[0,1],explain:'서버사이드·모델링 전략이 도움이 되며 팝업 증가는 해결책이 아닙니다.'},
+      {id:37,q:'실시간/집계 지연에 대한 올바른 인식은?',options:['실시간이라도 처리 지연이 발생할 수 있다','항상 즉시 확정 수치로 반영된다'],correct:[0],explain:'실시간 스트림도 처리 지연이나 임계값으로 수치가 달라질 수 있습니다.'},
+      {id:38,q:'Firebase Analytics는 오프라인에서도 이벤트를 버퍼링 후 전송할 수 있다.',options:['예','아니오'],correct:[0],explain:'네트워크가 복구되면 버퍼된 이벤트가 전송됩니다.'},
+      {id:39,q:'GA4의 기본 어트리뷰션 모델(속성 기본값)은 무엇인가요?',options:['데이터 기반','마지막 비직접 클릭','첫 클릭'],correct:[0],explain:'속성 기본 어트리뷰션은 데이터 기반(Data-driven)입니다.'},
+      {id:40,q:'내부 트래픽 필터링을 위해 필요한 설정을 고르세요.',options:['내부 트래픽 규칙 정의','트래픽 레이블 파라미터 사용','보고서에서 수동 제외 체크만 하면 끝'],correct:[0,1],explain:'IP 규칙과 트래픽 레이블 등을 통해 내부 트래픽을 제외합니다.'},
+      {id:41,q:'이벤트 이름 명명 규칙으로 권장되는 것은?',options:['소문자/언더스코어 사용','하이픈 사용','국문/특수문자 위주'],correct:[0],explain:'일관된 소문자_snake_case 명명이 권장됩니다.'},
+      {id:42,q:'사용자 속성(User property)으로 적절한 예를 고르세요.',options:['회원 등급','마케팅 동의 여부','페이지 제목'],correct:[0,1],explain:'회원 등급/동의 여부는 사용자 레벨 특성이며 페이지 제목은 이벤트 맥락입니다.'},
+      {id:43,q:'자동 수집 이벤트가 아닌 것은?',options:['first_open','session_start','screen_view','bounce'],correct:[3],explain:'bounce는 GA4에서 자동 이벤트가 아닙니다.'},
+      {id:44,q:'사용자 식별 방법 중 "관측(Observed)"의 설명으로 옳은 것은?',options:['User-ID가 없는 트래픽에서 관측 가능한 신호만 사용','추정/모델링까지 포함한다','항상 User-ID만 사용한다'],correct:[0],explain:'Observed는 관측 신호만, Blended는 모델링을 포함합니다.'},
+      {id:45,q:'데이터 품질 모범 사례를 고르세요.',options:['측정 계획 수립','개발/스테이징 분리','프로퍼티당 하나의 데이터 스트림만 사용'],correct:[0,1],explain:'환경 분리와 계획 수립이 핵심이며 스트림은 필요에 맞게 여러 개를 둘 수 있습니다.'},
+      {id:46,q:'탐색(Explorations)에서 제공하는 분석 유형을 모두 고르세요.',options:['퍼널 탐색','경로 탐색','코호트 분석','키워드 플래너'],correct:[0,1,2],explain:'탐색은 퍼널·경로·코호트 등 심층 분석을 제공합니다.'},
+      {id:47,q:'향상된 측정(Enhanced Measurement)으로 자동 수집 가능한 항목은?',options:['스크롤','파일 다운로드','사이트 검색','SMS 발송'],correct:[0,1,2],explain:'스크롤/다운로드/사이트 검색/아웃바운드 클릭 등이 자동 수집 대상입니다.'},
+      {id:48,q:'GA4 기본 세션 타임아웃 값은?',options:['30분','5분','60분'],correct:[0],explain:'기본 세션 만료 시간은 30분이며 속성에서 조정 가능합니다.'},
+      {id:49,q:'크로스도메인 측정 설정의 올바른 절차를 고르세요.',options:['허용 링크(allowLinker)와 측정 도메인 목록 설정','두 도메인에 동일 측정 ID/구성 적용','보고서에서 수동 합치기만 하면 된다'],correct:[0,1],explain:'두 도메인 모두 설정하고 링크 데코레이션으로 세션 단절을 방지합니다.'},
+      {id:50,q:'Google Ads 연결의 이점은 무엇인가요?',options:['오디언스 공유','전환 가져오기','광고비 자동 환불'],correct:[0,1],explain:'Ads와 연결하면 전환/오디언스 연동이 가능하지만 비용 환불 기능은 없습니다.'},
+      {id:51,q:'원치 않는 추천(Referrals) 트래픽 처리는 어디에서 하나요?',options:['데이터 스트림 설정의 원치 않는 추천 목록','보고서에서 수동 제외 토글','BigQuery에서만 처리 가능'],correct:[0],explain:'데이터 스트림의 원치 않는 추천 목록에 도메인을 추가합니다.'},
+      {id:52,q:'전자상거래 여정에서 권장되는 이벤트 흐름은?',options:['view_item → add_to_cart → begin_checkout → purchase','purchase → add_payment_info → view_item','view_item_list → app_update'],correct:[0],explain:'일반적인 구매 퍼널은 상품 조회→장바구니→체크아웃→구매 순서입니다.'},
+      {id:53,q:'체크아웃 단계별 이벤트로 적절한 것은?',options:['add_shipping_info','add_payment_info','add_to_wishlist'],correct:[0,1],explain:'배송/결제 정보 추가 이벤트는 체크아웃 단계에서 사용합니다.'},
+      {id:54,q:'Audience(오디언스) 평가/갱신에 대한 설명으로 옳은 것은?',options:['실시간에 가깝지만 즉시 보장은 아니다','가입 직후 바로 광고 타겟팅에 100% 반영된다'],correct:[0],explain:'오디언스는 근실시간으로 갱신되지만 지연이 있을 수 있습니다.'},
+      {id:55,q:'모바일 앱에서 자동 수집되는 화면 이벤트는?',options:['screen_view','page_view','first_visit'],correct:[0],explain:'앱은 screen_view가 기본이며 웹은 page_view가 기본입니다.'},
+      {id:56,q:'Firebase Analytics 디버그 활성화 방법의 예시는?',options:['adb 명령으로 debug 모드 지정','Xcode 런치 인수로 -FIRAnalyticsDebugEnabled','GTM 미리보기만으로 가능'],correct:[0,1],explain:'모바일 디바이스는 adb/Xcode 인수로 디버그 모드를 켤 수 있습니다.'},
+      {id:57,q:'데이터 필터의 유형으로 적절한 것은?',options:['내부 트래픽','개발자 트래픽','랜덤 샘플 필터'],correct:[0,1],explain:'GA4에는 내부/개발자 트래픽 등의 필터가 있습니다.'},
+      {id:58,q:'봇 필터링 설정에 대한 설명으로 옳은 것은?',options:['알려진 봇/스파이더 제외 옵션을 사용할 수 있다','사용자 정의 이벤트로만 가능하다'],correct:[0],explain:'알려진 봇 제외 기능을 사용할 수 있습니다.'},
+      {id:59,q:'BigQuery로 내보낸 GA4 이벤트 테이블의 일반적 파티션 키는?',options:['event_date','fullVisitorId','utm_source'],correct:[0],explain:'GA4 내보낸 테이블은 event_date로 파티셔닝되는 구성이 일반적입니다.'},
+      {id:60,q:'A/B 테스트 유의수준(α) 권장 값에 가까운 것은?',options:['5% (95% 신뢰수준)','50%','0%'],correct:[0],explain:'일반적으로 95% 신뢰수준(α=0.05)을 기준으로 결과를 해석합니다.'}
+    ].map(item => ({...item, multi: item.correct.length > 1}));
+
+    // ===== State =====
+    const quizEl = byId('quizContainer');
+    const resultEl = byId('resultBox');
+    const submitBtn = byId('submitBtn');
+    const retryBtn = byId('retryBtn');
+    const retryWrongBtn = byId('retryWrongBtn');
+    const csvBtn = byId('csvBtn');
+    const modePill = byId('modePill');
+    const historyBox = byId('historyBox');
+
+    const QUESTION_COUNT = 20; // 매회 20문항
+    const CSV_THRESHOLD = 80;  // 80점 이상일 때 CSV 버튼 활성화
+    const HISTORY_KEY = 'moonble-history-v2';
+
+    function sample(array, n){
+      const copy = array.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy.slice(0, n);
+    }
+
+    let picked = [];
+    let wrongPicked = [];
+    let wrongMode = false;
+    let isLocked = false;
+
+    function lockQuiz(){
+      isLocked = true;
+      quizEl.classList.add('quiz-locked');
+      $$('.option-card', quizEl).forEach(lab => lab.setAttribute('aria-disabled','true'));
+      submitBtn.disabled = true;
+    }
+    function unlockQuiz(){
+      isLocked = false;
+      quizEl.classList.remove('quiz-locked');
+      $$('.option-card', quizEl).forEach(lab => lab.removeAttribute('aria-disabled'));
+      submitBtn.disabled = false;
+    }
+
+    // ===== Render quiz =====
+    function renderQuiz(sourceArray){
+      quizEl.innerHTML = '';
+      resultEl.textContent = '';
+      unlockQuiz();
+      wrongPicked = [];
+      wrongMode = !!sourceArray && sourceArray.length && sourceArray.every(q => q && q.id);
+      modePill.style.display = wrongMode ? 'inline-flex' : 'none';
+
+      picked = sourceArray ? sourceArray.slice() : sample(BANK, QUESTION_COUNT);
+
+      picked.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'q-card';
+        card.dataset.qid = q.id;
+        card.dataset.multi = q.multi ? '1' : '0';
+
+        const title = document.createElement('div');
+        title.className = 'q-title';
+        title.innerHTML = `
+          <span class="badge q-number">Q${idx+1}</span>
+          <div>${q.q}</div>
+        `;
+        card.appendChild(title);
+
+        const optionsWrap = document.createElement('div');
+        optionsWrap.className = 'options';
+
+        q.options.forEach((text, optIdx) => {
+          const col = document.createElement('div');
+          col.className = 'opt-col';
+
+          const lab = document.createElement('label');
+          lab.className = 'option-card';
+          lab.setAttribute('tabindex','0');
+          lab.dataset.index = optIdx;
+
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.setAttribute('aria-hidden','true');
+
+          const tick = document.createElement('div');
+          tick.className = 'tick';
+          tick.innerHTML = '✓';
+
+          const txt = document.createElement('div');
+          txt.innerHTML = text;
+
+          lab.appendChild(input);
+          lab.appendChild(tick);
+          lab.appendChild(txt);
+
+          lab.addEventListener('click', (e) => {
+            if (isLocked) return;
+            e.preventDefault();
+            const isMulti = q.multi;
+            if (!isMulti) {
+              $$('.option-card', optionsWrap).forEach(el => {
+                el.classList.remove('selected');
+                el.querySelector('input').checked = false;
+                el.setAttribute('aria-checked','false');
+              });
+            }
+            const sel = lab.classList.toggle('selected');
+            input.checked = sel;
+            lab.setAttribute('aria-checked', sel ? 'true' : 'false');
+          });
+
+          lab.addEventListener('keydown', (e) => {
+            if (isLocked) return;
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              lab.click();
+            }
+          });
+
+          col.appendChild(lab);
+          optionsWrap.appendChild(col);
+        });
+
+        card.appendChild(optionsWrap);
+
+        if (q.multi) {
+          const cap = document.createElement('div');
+          cap.className = 'q-caption';
+          cap.innerHTML = '<em>*복수 선택</em>';
+          card.appendChild(cap);
+        }
+
+        const exp = document.createElement('div');
+        exp.className = 'explain';
+        exp.id = `exp-${q.id}`;
+        card.appendChild(exp);
+
+        quizEl.appendChild(card);
+      });
+
+      retryWrongBtn.disabled = true;
+      csvBtn.disabled = true;
+
+      if (typeof updateActiveByVisibility === 'function') updateActiveByVisibility();
+    }
+
+    function arraysEqual(a, b){
+      if (a.length !== b.length) return false;
+      const as = [...a].sort((x,y)=>x-y);
+      const bs = [...b].sort((x,y)=>x-y);
+      return as.every((v,i)=>v===bs[i]);
+    }
+
+    // ===== Grade =====
+    function grade(){
+      let correctCount = 0;
+      wrongPicked = [];
+
+      $$('.q-card', quizEl).forEach((card) => {
+        const qid = Number(card.dataset.qid);
+        const q = picked.find(x => x.id === qid);
+        const chosen = $$('.option-card', card).map((el, idx) => el.classList.contains('selected') ? idx : null).filter(v => v !== null);
+        const correct = q.correct;
+        const isRight = arraysEqual(chosen, correct);
+        if (isRight) correctCount += 1; else wrongPicked.push(q);
+
+        const badgeEl = card.querySelector('.q-number');
+        if (badgeEl) {
+          badgeEl.classList.remove('wrong','right');
+          badgeEl.classList.add(isRight ? 'right' : 'wrong');
+        }
+
+        $$('.option-card', card).forEach((el, idx) => {
+          el.classList.remove('correct','incorrect');
+          if (correct.includes(idx)) el.classList.add('correct');
+          if (el.classList.contains('selected') && !correct.includes(idx)) el.classList.add('incorrect');
+        });
+
+        const expEl = byId(`exp-${q.id}`);
+        const answerText = correct.map(i => q.options[i]).join(', ');
+        expEl.innerHTML = `<b>정답</b>: ${answerText}<br><b>해설</b>: ${q.explain}`;
+        expEl.style.display = 'block';
+      });
+
+      lockQuiz();
+
+      const total = picked.length;
+      const score = Math.round((correctCount / total) * 100);
+      resultEl.textContent = `점수: ${score}점 (${correctCount}/${total})`;
+
+      window.scrollTo({ top: resultEl.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
+
+      retryWrongBtn.disabled = wrongPicked.length === 0;
+      pushHistory({ score, correct: correctCount, total, date: new Date().toISOString() });
+      renderHistory();
+
+      csvBtn.disabled = !(score >= CSV_THRESHOLD);
+
+      if (typeof updateActiveByVisibility === 'function') updateActiveByVisibility();
+    }
+
+    submitBtn.addEventListener('click', grade);
+    retryBtn.addEventListener('click', () => { renderQuiz(); });
+    retryWrongBtn.addEventListener('click', () => { if (wrongPicked.length) renderQuiz(wrongPicked); });
+
+    // ===== History & CSV =====
+    function getHistory(){ try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+    function setHistory(arr){ try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); } catch {} }
+    function pushHistory(item){
+      const hist = getHistory();
+      hist.unshift(item);
+      const trimmed = hist.slice(0,10);
+      setHistory(trimmed);
+    }
+    function renderHistory(){
+      const hist = getHistory();
+      if (!hist.length) { historyBox.innerHTML = ''; return; }
+      let html = '<h3 style="margin:6px 0 4px">성취도 (최근 기준, 최대 10회)</h3><ul>';
+      hist.forEach((h, i) => {
+        const d = new Date(h.date);
+        const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        html += `<li>최근 ${i+1}회차 — ${ds} · <b>${h.score}점</b> (${h.correct}/${h.total})</li>`;
+      });
+      html += '</ul>';
+      historyBox.innerHTML = html;
+    }
+    function exportCSV(){
+      const hist = getHistory();
+      if (!hist.length) return;
+      const header = ['회차(최근기준)','날짜','점수','정답수','전체문항'];
+      const rows = hist.map((h,i) => [i+1, h.date, h.score, h.correct, h.total]);
+      const csv = [header, ...rows]
+        .map(r => r.map(v => (typeof v === 'string' && v.includes(',')) ? `"${v}"` : v).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `moonble_성취도_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    csvBtn.addEventListener('click', exportCSV);
+
+    // Initial
+    renderQuiz();
+    renderHistory();
   </script>
 </body>
 </html>
