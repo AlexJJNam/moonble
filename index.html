@@ -1036,6 +1036,115 @@ document.addEventListener('DOMContentLoaded', () => autoTagByText());
 new MutationObserver(muts => muts.forEach(m => autoTagByText(m.target)))
   .observe(document.documentElement, { childList: true, subtree: true });
 </script>
+<script>
+(() => {
+  if (window.__moonbleGAInit) return;  // 중복 방지
+  window.__moonbleGAInit = true;
+
+  // ===== 설정 =====
+  const GA_ID = 'G-EGCXGZ4PXK';
+  const ENABLE_ANCHOR_PAGEVIEW = true; // 섹션(앵커) 이동 시 page_view 전송
+
+  // ===== 공용 이벤트 전송 헬퍼 =====
+  window.track = (name, params = {}) => window.gtag && gtag('event', name, params);
+
+  // ===== [data-evt] 클릭 자동 수집 =====
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-evt]');
+    if (el) track(el.dataset.evt, { label: el.dataset.evtLabel || el.textContent?.trim() });
+  });
+
+  // ===== 링크 클릭: 외부/메일/전화/파일다운로드 구분 =====
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    if (!a) return;
+
+    const proto = a.protocol;                 // 'http:', 'https:', 'mailto:', 'tel:' ...
+    const text  = a.textContent?.trim() || '';
+    const path  = a.pathname || '';
+    const isFile = a.hasAttribute('download') || /\.(pdf|zip|csv|xlsx?)$/i.test(path);
+
+    if (proto === 'mailto:') { track('click_email', { email: a.href.slice(7),  link_text: text }); return; }
+    if (proto === 'tel:')    { track('click_tel',   { tel:   a.href.slice(4),  link_text: text }); return; }
+
+    if (/^https?:$/.test(proto)) {
+      const outbound = a.host && a.host !== location.host;
+      if (outbound) track('click_outbound', { link_url: a.href, link_text: text });
+      if (isFile)   track('file_download',  { file_path: path, link_url: a.href, link_text: text });
+    }
+  });
+
+  // ===== 스크롤 깊이(25/50/75/100%) =====
+  (() => {
+    const marks = [25, 50, 75, 100];
+    const fired = new Set();
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const pct = max <= 0 ? 100 : Math.round((scrollY / max) * 100);
+      for (const p of marks) {
+        if (!fired.has(p) && pct >= p) { fired.add(p); track('scroll_depth', { percent: p }); }
+      }
+      if (fired.size === marks.length) removeEventListener('scroll', onScroll);
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+
+  // ===== 자동 태깅(텍스트 기반: 퀴즈 4버튼) =====
+  const MAP = [
+    { test: /제출하기/,           evt: 'quiz_submit' },
+    { test: /오답만 다시 풀기/,    evt: 'quiz_retry_incorrect' },
+    { test: /^다시하기$/,          evt: 'quiz_reset' },
+    { test: /^CSV\s*내보내기/,     evt: 'quiz_export_csv' },
+  ];
+  const norm = s => (s || '').replace(/\s+/g,' ').trim();
+
+  function tagByText(root = document) {
+    root.querySelectorAll('button, a[role="button"], a').forEach(el => {
+      if (el.dataset.evt) return;
+      const txt = norm(el.textContent);
+      for (const { test, evt } of MAP) {
+        if (test.test(txt)) { el.dataset.evt = evt; el.dataset.evtLabel = txt; break; }
+      }
+    });
+  }
+
+  // ===== 네비 셀렉터 기반 태깅(문구 바뀌어도 안전) =====
+  ([
+    ['a[href="#guide"]',     'nav_click', 'guide'],
+    ['a[href="#firebase"]',  'nav_click', 'firebase'],
+    ['a[href="#checklist"]', 'nav_click', 'checklist'],
+    ['a[href="#quiz"]',      'nav_click', 'quiz'],
+  ]).forEach(([sel, evt, label]) => {
+    const el = document.querySelector(sel);
+    if (el) { el.dataset.evt = evt; el.dataset.evtLabel = label; }
+  });
+
+  // 초기 + 동적 렌더 대응
+  document.addEventListener('DOMContentLoaded', () => tagByText());
+  new MutationObserver(muts => muts.forEach(m => tagByText(m.target)))
+    .observe(document.documentElement, { childList: true, subtree: true });
+
+  // ===== 다크모드 토글 측정(테마 스크립트와 독립) =====
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    // 다른 핸들러가 테마를 바꾼 뒤 값을 읽기 위해 다음 틱에 측정
+    setTimeout(() => {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      track('toggle_theme', { theme });
+    }, 0);
+  });
+
+  // ===== 앵커(해시) 이동 시 page_view 전송(선택 기능; 기본 ON) =====
+  if (ENABLE_ANCHOR_PAGEVIEW && window.gtag) {
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="#"]'); if (!a) return;
+      const path = location.pathname + location.search + a.getAttribute('href');
+      gtag('config', GA_ID, { page_path: path });
+    });
+  }
+})();
+</script>
+
   <header class="header">
     <div class="inner container">
       <div class="brand" aria-label="moonble">
