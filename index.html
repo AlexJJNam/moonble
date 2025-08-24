@@ -954,7 +954,7 @@
 <body>
 <script>
 (() => {
-  if (window.__moonbleGAInit) return;  // 중복 방지
+  if (window.__moonbleGAInit) return;
   window.__moonbleGAInit = true;
 
   // ===== 설정 =====
@@ -1041,7 +1041,7 @@
   new MutationObserver(muts => muts.forEach(m => tagByText(m.target)))
     .observe(document.documentElement, { childList: true, subtree: true });
 
-  // ===== 다크모드 토글 측정(테마 스크립트와 독립) =====
+  // ===== 다크모드 토글 측정 =====
   document.getElementById('themeToggle')?.addEventListener('click', () => {
     setTimeout(() => {
       const theme = document.documentElement.getAttribute('data-theme') || 'light';
@@ -1049,7 +1049,7 @@
     }, 0);
   });
 
-  // ===== 앵커(해시) 이동 시 page_view 전송(선택 기능; 기본 ON) =====
+  // ===== 앵커(해시) 이동 시 page_view 전송 =====
   if (ENABLE_ANCHOR_PAGEVIEW && window.gtag) {
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a[href^="#"]'); if (!a) return;
@@ -1059,6 +1059,7 @@
   }
 })();
 </script>
+
 
   <header class="header">
     <div class="inner container">
