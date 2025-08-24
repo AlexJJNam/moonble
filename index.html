@@ -981,6 +981,37 @@
     addEventListener('scroll', onScroll, { passive: true }); onScroll();
   })();
 </script>
+<script>
+// 텍스트 패턴 -> 이벤트명 (부분매칭/정규식)
+const MAP = [
+  { test: /제출하기/,             evt: 'quiz_submit' },
+  { test: /오답만 다시 풀기/,      evt: 'quiz_retry_incorrect' },
+  { test: /^다시하기$/,            evt: 'quiz_reset' },
+  { test: /^CSV\s*내보내기/,       evt: 'quiz_export_csv' },
+  // 상단 네비 등도 원하면 추가: { test: /^가이드$/, evt:'nav_click' } ...
+];
+
+function normalize(s){ return (s || '').replace(/\s+/g,' ').trim(); }
+
+function autoTagByText(root=document){
+  root.querySelectorAll('button, a[role="button"], a').forEach(el => {
+    if (el.dataset.evt) return; // 이미 태깅된 건 패스
+    const txt = normalize(el.textContent);
+    for (const { test, evt } of MAP) {
+      if (test.test(txt)) {
+        el.dataset.evt = evt;
+        el.dataset.evtLabel = txt; // 보고서에서 라벨로 볼 수 있게
+        break;
+      }
+    }
+  });
+}
+
+// 초기 + SPA/동적 렌더 모두 대응
+document.addEventListener('DOMContentLoaded', () => autoTagByText());
+new MutationObserver(muts => muts.forEach(m => autoTagByText(m.target)))
+  .observe(document.documentElement, { childList: true, subtree: true });
+</script>
   <header class="header">
     <div class="inner container">
       <div class="brand" aria-label="moonble">
