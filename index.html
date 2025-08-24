@@ -953,32 +953,56 @@
 
 <body>
 <script>
-  // gtag 이벤트 헬퍼
-  window.track = (name, params={}) => window.gtag && gtag('event', name, params);
+  // 공용 이벤트 전송 헬퍼
+  window.track = (name, params = {}) => window.gtag && gtag('event', name, params);
 
-  // data-evt 자동 수집: <button data-evt="cta_click" data-evt-label="hero_primary">
+  // [data-evt] 요소 클릭 자동 수집
   document.addEventListener('click', (e) => {
     const el = e.target.closest('[data-evt]');
     if (el) track(el.dataset.evt, { label: el.dataset.evtLabel || el.textContent?.trim() });
   });
 
-  // 외부 링크 자동 수집
+  // 링크 클릭: 외부/메일/전화/파일다운로드 구분
   document.addEventListener('click', (e) => {
-    const a = e.target.closest('a'); if (!a) return;
-    const outbound = a.host && a.host !== location.host;
-    if (outbound) track('click_outbound', { link_url: a.href, link_text: a.textContent?.trim() });
+    const a = e.target.closest('a');
+    if (!a) return;
+
+    const proto = a.protocol; // 'http:', 'https:', 'mailto:', 'tel:' ...
+    const text = a.textContent?.trim() || '';
+    const isFile = a.hasAttribute('download') || /\.(pdf|zip|csv|xlsx?)$/i.test(a.pathname);
+
+    if (proto === 'mailto:') {
+      track('click_email', { email: a.href.slice(7), link_text: text });
+      return;
+    }
+    if (proto === 'tel:') {
+      track('click_tel', { tel: a.href.slice(4), link_text: text });
+      return;
+    }
+    if (/^https?:$/.test(proto)) {
+      const outbound = a.host && a.host !== location.host;
+      if (outbound) track('click_outbound', { link_url: a.href, link_text: text });
+      if (isFile)  track('file_download', { file_path: a.pathname, link_url: a.href, link_text: text });
+    }
   });
 
   // 스크롤 깊이(25/50/75/100%)
-  (function(){
-    const marks = [25,50,75,100], fired = new Set();
+  (() => {
+    const marks = [25, 50, 75, 100];
+    const fired = new Set();
     const onScroll = () => {
-      const maxY = document.documentElement.scrollHeight - innerHeight;
-      const pct = maxY <= 0 ? 100 : Math.round((scrollY / maxY) * 100);
-      marks.forEach(p => { if (!fired.has(p) && pct >= p) { fired.add(p); track('scroll_depth', { percent: p }); } });
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const pct = max <= 0 ? 100 : Math.round((scrollY / max) * 100);
+      for (const p of marks) {
+        if (!fired.has(p) && pct >= p) {
+          fired.add(p);
+          track('scroll_depth', { percent: p });
+        }
+      }
       if (fired.size === marks.length) removeEventListener('scroll', onScroll);
     };
-    addEventListener('scroll', onScroll, { passive: true }); onScroll();
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   })();
 </script>
 <script>
