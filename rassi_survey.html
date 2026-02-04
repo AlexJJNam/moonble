@@ -104,7 +104,7 @@
     /* ✅ FIX: 모바일에서 '필수' 배지만 다음 줄로 떨어지지 않도록 (flex 제거 + inline 흐름) */
     .q h3{
       margin:0 0 10px;
-      font-size: 20px;
+      font-size: 18px;
       letter-spacing:-.1px;
       line-height: 1.35;
       display:block; /* 기존 flex 제거 */
@@ -564,7 +564,7 @@
       h1{ font-size:24px; }
       .sub{ font-size:14px; }
 
-      .q h3{ font-size:20px; }
+      .q h3{ font-size:18px; }
       .hint{ font-size:15px; }
       .scale{ font-size:13px; }
 
@@ -672,10 +672,17 @@
 
     /* Only the last-question textarea */
     #q5_reason{ font-size:18px; }
-    #q5_reason::placeholder{ color: rgba(107,114,128,.65); }
+    #q5_reason::placeholder{ color: rgba(107,114,128,.65); font-size:16px; }
+
+    #q5_reason::-webkit-resizer{
+      border: 2px solid rgba(107,114,128,.35);
+      background: rgba(107,114,128,.12);
+      border-bottom-right-radius: 12px;
+    }
 
     @media (max-width: 480px){
       #q5_reason{ font-size:17px; } /* +2px over mobile textarea(15px) */
+      #q5_reason::placeholder{ font-size:15px; }
     }
 
 </style>
@@ -793,19 +800,19 @@
         </section>
 
         <section class="q">
-          <h3>5) 가장 개선이 시급한 점 1가지를 선택하고, 이유를 적어주세요.&nbsp;<span class="req">필수</span></h3>
+          <h3>5) 가장 개선이 시급한 점 1가지를 선택하고, 이유를 적어주세요.</h3>
           <p class="hint">예: “알림이 너무 자주 와서 끄게 됨”, “매도 근거가 부족해서 따라가기 어려움”</p>
 
           <div class="options" role="group" aria-label="개선 항목 선택">
-            <label class="opt"><input type="radio" name="q5" value="신호 정확도/타이밍" required> 신호 정확도/타이밍</label>
-            <label class="opt"><input type="radio" name="q5" value="신호 근거 설명(왜 매수/매도인지)" required> 신호 근거 설명(왜 매수/매도인지)</label>
-            <label class="opt"><input type="radio" name="q5" value="알림(빈도/내용/도착)" required> 알림(빈도/내용/도착)</label>
-            <label class="opt"><input type="radio" name="q5" value="화면 구성/가독성" required> 화면 구성/가독성</label>
-            <label class="opt"><input type="radio" name="q5" value="종목 탐색/검색/관심종목" required> 종목 탐색/검색/관심종목</label>
-            <label class="opt"><input type="radio" name="q5" value="기타" required> 기타</label>
+            <label class="opt"><input type="radio" name="q5" value="신호 정확도/타이밍"> 신호 정확도/타이밍</label>
+            <label class="opt"><input type="radio" name="q5" value="신호 근거 설명(왜 매수/매도인지)"> 신호 근거 설명(왜 매수/매도인지)</label>
+            <label class="opt"><input type="radio" name="q5" value="알림(빈도/내용/도착)"> 알림(빈도/내용/도착)</label>
+            <label class="opt"><input type="radio" name="q5" value="화면 구성/가독성"> 화면 구성/가독성</label>
+            <label class="opt"><input type="radio" name="q5" value="종목 탐색/검색/관심종목"> 종목 탐색/검색/관심종목</label>
+            <label class="opt"><input type="radio" name="q5" value="기타"> 기타</label>
           </div>
 
-          <textarea id="q5_reason" name="q5_reason" placeholder="어떤 상황에서 불편/아쉬웠는지 구체적으로 적어주세요." required></textarea>
+          <textarea id="q5_reason" name="q5_reason" placeholder="어떤 상황에서 불편/아쉬웠는지 구체적으로 적어주세요."></textarea>
         </section>
 
         <section class="consentBox" aria-label="설문 수집 및 이용 동의">
