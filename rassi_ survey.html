@@ -292,6 +292,8 @@
       display:none !important;
     }
 
+
+    body.submitted #survey{ display:none !important; }
     /* Summary (view page) */
     .summary{
       margin-top: 14px;
@@ -500,6 +502,9 @@
 
     /* ✅ 모바일 폰트 업 (단, 마지막 문항 선택항목(.opt)은 크기 유지) */
     @media (max-width: 480px){
+      .consentRow{ flex-wrap:nowrap; align-items:center; }
+      .consentText{ min-width:0; }
+      .consentRow input[type=\"checkbox\"]{ margin-top:0; }
       :root{ --starSize:38px; --starGap:10px; }
 
       body{ padding:22px 14px 44px; font-size:17px; } /* 전체 기본 글자 약간 ↑ */
@@ -519,8 +524,103 @@
 
       /* ⭐ Q5 선택항목 텍스트는 원래 크기(16px) 유지 */
       .opt{ font-size:16px; }
+    
+      .consentText{ font-size:15px; }
+      .consentHint{ font-size:13px; }
+}
+
+    /* Consent (privacy) */
+    .consentBox{
+      margin-top: 14px;
+      padding: 14px 14px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(17,24,39,.03);
+      border-radius: 14px;
     }
-  </style>
+    .consentRow{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .consentRow input[type="checkbox"]{
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+    .consentText{
+      font-size: 14px;
+      color: rgba(17,24,39,.92);
+      line-height: 1.45;
+    }
+    .consentText .reqInline{
+      color: var(--danger);
+      font-weight: 800;
+      margin-left: 6px;
+    }
+    .consentLink{
+      display:inline-block;
+      margin-left: 8px;
+      color: rgba(107,114,128,.95);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .consentHint{
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: rgba(107,114,128,.95);
+      line-height: 1.5;
+    }
+
+    /* Consent modal content */
+    .modalCard.consentCard{
+      text-align:left;
+      padding: 22px 18px 18px;
+      max-height: 78vh;
+      overflow:auto;
+    }
+    .modalCard.consentCard h2{
+      margin: 2px 0 10px;
+      font-size: 18px;
+      letter-spacing:-0.01em;
+    }
+    .consentDoc{
+      font-size: 13px;
+      color: rgba(17,24,39,.88);
+      line-height: 1.6;
+    }
+    .consentDoc b{color: rgba(17,24,39,.92);}
+    .consentDoc ul{margin: 10px 0 0; padding-left: 18px;}
+    .consentDoc li{margin: 6px 0;}
+
+    /* View-mode font bump (+2px) */
+    body.submitted #summary{ font-size: 15px; }
+    body.submitted #summary .summaryTitle{ font-size: 22px !important; }
+    body.submitted #summary .sumQ{ font-size: 16px !important; }
+    body.submitted #summary .sumHint{ font-size: 14px !important; }
+    body.submitted #summary .scaleView{ font-size: 14px !important; }
+    body.submitted #summary .choicePill{ font-size: 15px !important; }
+    body.submitted #summary .textBox{ font-size: 15px !important; }
+
+    /* Write-mode spacing + Q5 textarea readability */
+    #survey .q{ padding:22px 0 !important; }
+    #survey .q:first-child{ padding-top:0 !important; }
+    #survey .q:last-child{ padding-bottom:0 !important; }
+
+    /* Only the last-question textarea */
+    #q5_reason{ font-size:18px; }
+    #q5_reason::placeholder{ color: rgba(107,114,128,.65); }
+
+    @media (max-width: 480px){
+      #q5_reason{ font-size:17px; } /* +2px over mobile textarea(15px) */
+    }
+
+</style>
 
   <meta name="theme-color" content="#6565FF" />
   <link rel="icon" href="rassi_icon.svg" type="image/svg+xml" />
@@ -650,6 +750,18 @@
           <textarea id="q5_reason" name="q5_reason" placeholder="이유(필수): 어떤 상황에서 불편/아쉬웠는지 구체적으로 적어주세요." required></textarea>
         </section>
 
+        <section class="consentBox" aria-label="설문 수집 및 이용 동의">
+          <div class="consentRow">
+            <input type="checkbox" id="consent" name="consent" required />
+            <div class="consentText">
+              <label for="consent">설문 내용 수집 및 이용에 동의합니다</label>
+              <span class="reqInline">필수</span>
+              <a href="#" class="consentLink" id="openConsent">전문보기</a>
+              <div class="consentHint">응답 내용은 서비스 개선 목적에 한해 내부에서만 활용되며, 외부에 제공되지 않습니다.</div>
+            </div>
+          </div>
+        </section>
+
         <div class="actions">
           <div class="row">
             <button type="submit" class="primary">제출하기</button>
@@ -673,22 +785,12 @@
     <section id="summary" class="summary" style="display:none;" aria-live="polite">
       <div class="summaryHead">
         <div>
-          <div class="summaryKicker">응답 확인</div>
-          <h2 class="summaryTitle">제출이 완료됐습니다.</h2>
-          <p class="summarySub">아래는 방금 제출한 응답 내용입니다.</p>
-        </div>
-        <div class="summaryMeta">
-          <span class="chip" id="submittedAtChip">제출 시각</span>
-          <span class="chip chipPurple" id="avgChip">평균</span>
+          <h2 class="summaryTitle">의견 주셔서 감사합니다.</h2>
         </div>
       </div>
       <div id="summaryBody" class="summaryBody"></div>
     </section>
-
-    <p class="footer">
-      팁) 구글폼 대신 <b>사내 이벤트/공지 페이지</b>에 임베드하거나, 결과를 복사해서 내부 수집 시스템에 붙여넣어도 됩니다.
-    </p>
-  </div>
+</div>
 
   <!-- Success Modal -->
   <div id="successModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="successTitle">
@@ -708,6 +810,31 @@
     </div>
   </div>
 
+<!-- Consent Modal -->
+  <div id="consentModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <div class="modalOverlay" data-close="1"></div>
+
+
+    <div class="modalCard consentCard" role="document">
+      <h2 id="consentTitle">설문 내용 수집 및 이용 안내</h2>
+      <div class="consentDoc">
+        <ul>
+          <li><b>수집 항목</b>: 설문 응답 내용(별점 및 서술형 의견), 제출 시각</li>
+          <li><b>이용 목적</b>: 서비스 품질 개선 및 내부 분석</li>
+          <li><b>보유 및 이용 기간</b>: 수집일로부터 <b>20일</b> 이내 안전하게 파기</li>
+          <li><b>제3자 제공</b>: <b>없음</b> (외부 제공하지 않음)</li>
+          <li><b>동의 거부 권리</b>: 동의하지 않을 권리가 있으며, 동의하지 않는 경우 설문 제출이 제한됩니다(필수).</li>
+        </ul>
+        <p style="margin:12px 0 0;">
+          ※ 본 설문은 내부 개선 목적의 의견 수집이며, 개인을 식별할 수 있는 정보(이름/연락처 등)는 요청하지 않습니다.
+        </p>
+      </div>
+      <div class="modalActions" style="margin-top:14px;">
+        <button type="button" class="btn primary" id="consentCloseBtn">확인</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   const form = document.getElementById('survey');
@@ -718,6 +845,39 @@
   const resultText = document.getElementById('resultText');
   const copyBtn = document.getElementById('copyBtn');
   const downloadBtn = document.getElementById('downloadBtn');
+  // Consent modal
+  const consentLink = document.getElementById('openConsent');
+  const consentModal = document.getElementById('consentModal');
+  const consentCloseBtn = document.getElementById('consentCloseBtn');
+
+  function openConsentModal(){
+    if (!consentModal) return;
+    consentModal.classList.add('show');
+    consentModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modalOpen');
+    if (consentCloseBtn) consentCloseBtn.focus();
+  }
+  function closeConsentModal(){
+    if (!consentModal) return;
+    consentModal.classList.remove('show');
+    consentModal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('modalOpen');
+  }
+
+  if (consentLink) {
+    consentLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openConsentModal();
+    });
+  }
+  if (consentCloseBtn) consentCloseBtn.addEventListener('click', closeConsentModal);
+  if (consentModal) {
+    consentModal.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.close) closeConsentModal();
+    });
+  }
+
 
   // View-page summary
   const summary = document.getElementById('summary');
@@ -791,6 +951,9 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
       });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && consentModal && consentModal.classList.contains('show')) closeConsentModal();
+      });
     }
 
     return modal;
@@ -816,6 +979,10 @@
         const group = el.name;
         if (!form.querySelector(`[name="${group}"]:checked`)) {
           return { ok:false, focus: form.querySelector(`[name="${group}"]`) };
+        }
+      } else if (el.type === 'checkbox') {
+        if (!el.checked) {
+          return { ok:false, focus: el };
         }
       } else if (!el.value.trim()) {
         return { ok:false, focus: el };
@@ -1020,6 +1187,9 @@
   }
 })();
 </script>
+
+
+      
 
 </body>
 </html>
