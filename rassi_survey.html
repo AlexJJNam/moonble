@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>라씨 매매비서 만족도 조사 (1.27 ~ 2.4)</title>
+  <style>
+    :root{
+            --starSize:36px;
+      --starGap:8px;
+--bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#141629;
+      --muted:#6b7280; /* gray caption */
+      --border:rgba(17,24,39,.12);
+
+      /* Bright purple accents */
+      --accent:#6565FF;          /* rassi-like bright purple */
+      --accent2:#B66CFF;         /* violet */
+      --accentGlow:rgba(101,101,255,.18);
+      --accentGlow2:rgba(182,108,255,.14);
+
+      --danger:#e11d48;
+      --radius:16px;
+      --shadow: 0 10px 26px rgba(17,24,39,.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color:var(--text);
+      background: radial-gradient(1100px 650px at 10% 0%, var(--accentGlow), transparent 58%),
+                  radial-gradient(900px 650px at 90% 15%, var(--accentGlow2), transparent 58%),
+                  radial-gradient(900px 700px at 50% 100%, rgba(101,101,255,.10), transparent 60%),
+                  var(--bg);
+      min-height:100vh;
+      padding:28px 16px 48px;
+    }
+    .wrap{max-width:860px; margin:0 auto;}
+    header{
+      margin: 10px 0 18px;
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:6px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .brandIcon{
+      width:44px;
+      height:44px;
+      flex:0 0 auto;
+      border-radius:999px;
+      box-shadow: 0 10px 22px rgba(101,101,255,.18);
+      overflow:hidden;
+    }
+    .brandIcon svg{width:100%; height:100%; display:block;}
+
+    h1{
+      margin:0;
+      font-size: 22px;
+      letter-spacing:-.2px;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size: 13px;
+      line-height:1.45;
+    }
+    .sub strong{color: var(--accent);}
+
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge strong{color:var(--text); font-weight:700;}
+    .card{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .inner{padding:28px 18px 20px;}
+    .q{
+      padding: 16px 0;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .q:first-child{border-top:0; padding-top:0;}
+    .q:last-child{padding-bottom:0;}
+
+    /* ✅ FIX: 모바일에서 '필수' 배지만 다음 줄로 떨어지지 않도록 (flex 제거 + inline 흐름) */
+    .q h3{
+      margin:0 0 10px;
+      font-size: 20px;
+      letter-spacing:-.1px;
+      line-height: 1.35;
+      display:block; /* 기존 flex 제거 */
+    }
+    .req{
+      color: var(--danger);
+      font-size: 12px;
+      border: 1px solid rgba(225,29,72,.22);
+      background: rgba(225,29,72,.06);
+      padding: 2px 8px;
+      border-radius: 999px;
+      display:inline-flex;
+      align-items:center;
+      white-space: nowrap;
+      vertical-align: middle;
+      transform: translateY(-1px);
+    }
+
+    .hint{
+      margin: 6px 0 18px;
+      color:var(--muted);
+      font-size: 14px;
+    }
+
+    /* Star rating (Google in-app style-ish) */
+    .rating{
+      display:inline-flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      flex-wrap:nowrap;
+    
+      max-width:100%;
+    }
+    .stars{
+      display:inline-flex;
+      direction: rtl; /* hover fill trick */
+      gap: var(--starGap);
+      user-select:none;
+    }
+    .stars input{display:none;}
+    .stars label{
+      cursor:pointer;
+      font-size: var(--starSize);
+      line-height: 1;
+      color: rgba(17,24,39,.20);
+      transition: transform .08s ease, color .12s ease;
+      filter: none;
+      }
+    .stars label:hover{transform: scale(1.08);}
+    .stars label:hover,
+    .stars label:hover ~ label{
+      color: rgba(101,101,255,.95);
+    }
+    .stars input:checked ~ label{
+      color: rgba(101,101,255,.95);
+    }
+
+    .scale{display:flex;justify-content:space-between;align-items:center;width:100%;gap:12px;color: var(--muted);font-size: 12px;line-height: 1.4;}
+    .scale span{margin:0; white-space:nowrap;}
+    .scale span{margin:0; white-space:nowrap;}
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (min-width:720px){
+      .options{grid-template-columns: 1fr 1fr;}
+    }
+    .opt{
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(17,24,39,.03);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .opt input{transform: translateY(1px);}
+    textarea{
+      width:100%;
+      min-height: 110px;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(17,24,39,.03);
+      color: var(--text);
+      padding: 12px 12px;
+      outline: none;
+      resize: vertical;
+    }
+    textarea::placeholder{color: rgba(231,236,255,.45);}
+
+    /* Focus + selection polish */
+    .stars label:focus-visible{outline: 3px solid rgba(101,101,255,.28); outline-offset: 4px; border-radius: 8px;}
+    input[type="radio"]:focus-visible, textarea:focus-visible, button:focus-visible{
+      outline: 3px solid rgba(101,101,255,.28);
+      outline-offset: 3px;
+    }
+    .opt:has(input:checked){
+      border-color: rgba(101,101,255,.45);
+      background: rgba(101,101,255,.08);
+      box-shadow: 0 0 0 1px rgba(101,101,255,.14) inset;
+    }
+    .opt input{accent-color: var(--accent);}
+
+    .actions{
+      margin-top:16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    button{
+      appearance:none;
+      border:0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor:pointer;
+      transition: transform .06s ease, filter .15s ease;
+    }
+    button:active{transform: translateY(1px);}
+    .primary{
+      background: linear-gradient(135deg, var(--accent), rgba(182,108,255,.88));
+      color:#fff;
+      box-shadow: 0 10px 26px rgba(106,125,255,.25);
+    }
+    .ghost{
+      background: rgba(255,255,255,.75);
+      color: var(--text);
+      border: 1px solid rgba(17,24,39,.12);
+    }
+    .msg{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 6px 0 0;
+    }
+
+    .result{
+      margin-top:14px;
+      border: 1px solid rgba(17,24,39,.12);
+      border-radius: 12px;
+      background: rgba(17,24,39,.03);
+      padding: 12px;
+      display:none;
+    }
+    .result pre{
+      margin:0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      color: rgba(17,24,39,.90);
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(17,24,39,.03);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill b{color: var(--text);}
+
+    .footer{
+      margin-top: 18px;
+      color: rgba(107,114,128,.95);
+      font-size: 11px;
+      line-height:1.6;
+    }
+    a{color: var(--accent);}
+
+    /* After submit: switch to view page */
+    body.submitted .q,
+    body.submitted .actions{
+      display:none !important;
+    }
+
+
+    body.submitted #survey{ display:none !important; }
+    /* Summary (view page) */
+    .summary{
+      margin-top: 14px;
+      padding: 18px;
+      border: 1px solid rgba(17,24,39,.10);
+      border-radius: 18px;
+      background: rgba(255,255,255,.86);
+      box-shadow: var(--shadow);
+    }
+    .summaryHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(17,24,39,.08);
+      margin-bottom: 14px;
+    }
+    .summaryKicker{
+      font-size: 12px;
+      color: rgba(107,114,128,.95);
+      margin-bottom: 4px;
+    }
+    .summaryTitle{
+      font-size: 20px;
+      margin: 0 0 6px;
+      letter-spacing:-0.02em;
+      color: var(--text);
+          display:flex;
+      align-items:center;
+      gap:10px;
+}
+    .doneIcon{
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 999px;
+      box-shadow: 0 10px 22px rgba(101,101,255,.12);
+    }
+    .doneIcon svg{width:24px; height:24px; display:block;}
+
+    .summarySub{
+      margin:0;
+      color: rgba(107,114,128,.95);
+      font-size: 13px;
+      line-height:1.4;
+    }
+    .summaryMeta{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+      flex: 0 0 auto;
+      min-width: 140px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(255,255,255,.9);
+      color: rgba(17,24,39,.86);
+      white-space: nowrap;
+    }
+    .chipPurple{
+      border-color: rgba(101,101,255,.25);
+      background: rgba(101,101,255,.08);
+      color: rgba(36,39,94,.92);
+    }
+    .summaryBody{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .sumCard{
+      border: 1px solid rgba(101,101,255,.28);
+      background: rgba(255,255,255,.92);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+    }
+    .sumQ{
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 6px;
+      color: rgba(17,24,39,.92);
+    }
+    .sumHint{
+      margin: 0 0 10px;
+      font-size: 12px;
+      color: rgba(107,114,128,.95);
+      line-height: 1.35;
+    }
+    .starsView{
+      display:inline-flex;
+      gap: 6px;
+      align-items:center;
+      user-select:none;
+    }
+    .starSvg{
+      width: 22px;
+      height: 22px;
+      opacity: .25;
+    }
+    .starSvg.filled{
+      opacity: 1;
+      filter: drop-shadow(0 8px 18px rgba(101,101,255,.18));
+    }
+    .starSvg path{
+      fill: rgba(101,101,255,.95);
+    }
+    .scaleView{
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(107,114,128,.95);
+    }
+    .choiceGrid{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+    }
+    .choicePill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(17,24,39,.03);
+      font-size: 13px;
+      color: rgba(17,24,39,.88);
+    }
+    .choicePill.selected{
+      border-color: rgba(101,101,255,.35);
+      background: rgba(101,101,255,.08);
+      color: rgba(36,39,94,.92);
+    }
+    .checkMini{
+      width: 16px;
+      height: 16px;
+      display:inline-block;
+      border-radius: 999px;
+      background: rgba(101,101,255,.12);
+      position: relative;
+    }
+    .checkMini:after{
+      content:"";
+      position:absolute;
+      left: 4px; top: 4px;
+      width: 7px; height: 4px;
+      border-left: 2px solid var(--accent);
+      border-bottom: 2px solid var(--accent);
+      transform: rotate(-45deg);
+    }
+    .textBox{
+      margin-top: 10px;
+      border: 1px solid rgba(17,24,39,.10);
+      background: rgba(17,24,39,.03);
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 13px;
+      color: rgba(17,24,39,.88);
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+
+    /* Success modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+    .modal.show{display:flex;}
+    .modalOverlay{
+      position:absolute;
+      inset:0;
+      background: rgba(17,24,39,.45);
+      backdrop-filter: blur(6px);
+    }
+    .modalCard{
+      position: relative;
+      width: min(520px, 92vw);
+      background: rgba(255,255,255,.96);
+      border: 1px solid rgba(17,24,39,.12);
+      border-radius: 20px;
+      box-shadow: 0 22px 70px rgba(17,24,39,.22);
+      padding: 26px 22px 22px;
+      text-align: center;
+      animation: pop .18s ease-out;
+    }
+    @keyframes pop{from{transform: translateY(6px) scale(.98); opacity:.6;} to{transform: translateY(0) scale(1); opacity:1;}}
+    .modalIcon{
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 10px;
+      border-radius: 999px;
+      box-shadow: 0 14px 34px rgba(101,101,255,.16);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(120px 120px at 30% 20%, rgba(101,101,255,.16), transparent 60%),
+                  rgba(101,101,255,.06);
+    }
+    .modalIcon svg{width: 64px; height: 64px;}
+    .modalText{
+      margin: 0 0 16px;
+      color: rgba(107,114,128,.95);
+      font-size: 14px;
+    }
+    .modalActions{display:flex; justify-content:center;}
+    body.modalOpen{overflow:hidden;}
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(17,24,39,.92);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      line-height: 1.25;
+      box-shadow: 0 14px 40px rgba(0,0,0,.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 10000;
+      max-width: min(520px, 92vw);
+      text-align: center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+
+
+    /* ✅ 모바일 폰트 업 (단, 마지막 문항 선택항목(.opt)은 크기 유지) */
+    @media (max-width: 480px){
+      .consentRow{ flex-wrap:nowrap; align-items:flex-start; }
+      .consentText{ min-width:0; }
+    .consentLabel{
+      display:inline-flex;
+      align-items:flex-start;
+      gap:10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .consentLabelText{
+      display:inline-block;
+    }
+      .consentRow input[type=\"checkbox\"]{ margin-top:3px; }
+      :root{ --starSize:38px; --starGap:10px; }
+
+      body{ padding:22px 14px 44px; font-size:17px; } /* 전체 기본 글자 약간 ↑ */
+
+      h1{ font-size:24px; }
+      .sub{ font-size:14px; }
+
+      .q h3{ font-size:20px; }
+      .hint{ font-size:15px; }
+      .scale{ font-size:13px; }
+
+      .stars label{ font-size: var(--starSize); }
+
+      textarea{ font-size:15px; }
+      .msg{ font-size:13px; }
+      .footer{ font-size:12px; }
+
+      /* ⭐ Q5 선택항목 텍스트는 원래 크기(16px) 유지 */
+      .opt{ font-size:16px; }
+    
+      .consentText{ font-size:15px; }
+      .consentHint{ font-size:13px; }
+
+      .consentLabel input[type="checkbox"]{ width:14px; height:14px; }}
+
+    /* Consent (privacy) */
+    .consentBox{
+      margin-top: 14px;
+      padding: 14px 14px;
+      border: 1px solid rgba(17,24,39,.12);
+      background: rgba(17,24,39,.03);
+      border-radius: 14px;
+    }
+    .consentRow{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .consentRow input[type="checkbox"]{
+      margin-top: 3px;
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+    .consentText{
+      font-size: 14px;
+      color: rgba(17,24,39,.92);
+      line-height: 1.45;
+    }
+    .consentText .reqInline{
+      color: var(--danger);
+      font-weight: 800;
+      margin-left: 6px;
+    }
+    .consentLink{
+      display:inline-block;
+      margin-left: 8px;
+      color: rgba(107,114,128,.95);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .consentHint{
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: rgba(107,114,128,.95);
+      line-height: 1.5;
+    }
+
+    /* Consent modal content */
+    .modalCard.consentCard{
+      text-align:left;
+      padding: 22px 18px 18px;
+      max-height: 78vh;
+      overflow:auto;
+    }
+    .modalCard.consentCard h2{
+      margin: 2px 0 10px;
+      font-size: 18px;
+      letter-spacing:-0.01em;
+    }
+    .consentDoc{
+      font-size: 13px;
+      color: rgba(17,24,39,.88);
+      line-height: 1.6;
+    }
+    .consentDoc b{color: rgba(17,24,39,.92);}
+    .consentDoc ul{margin: 10px 0 0; padding-left: 18px;}
+    .consentDoc li{margin: 6px 0;}
+
+    /* View-mode font bump (+2px) */
+    body.submitted #summary{ font-size: 15px; }
+    body.submitted #summary .summaryTitle{ font-size: 22px !important; }
+    body.submitted #summary .sumQ{ font-size: 16px !important; }
+    body.submitted #summary .sumHint{ font-size: 14px !important; }
+    body.submitted #summary .scaleView{ font-size: 14px !important; }
+    body.submitted #summary .choicePill{ font-size: 15px !important; }
+    body.submitted #summary .textBox{ font-size: 15px !important; }
+
+    /* Write-mode spacing + Q5 textarea readability */
+    #survey .q{ padding:30px 0 !important; }
+    #survey .q:first-child{ padding-top:0 !important; }
+    #survey .q:last-child{ padding-bottom:0 !important; }
+
+    /* Write-page: submit button a bit bigger + right aligned */
+    #survey .actions{ justify-content:flex-end; }
+    #survey .actions .primary{ padding: 14px 18px; }
+
+
+    /* Only the last-question textarea */
+    #q5_reason{ font-size:18px; }
+    #q5_reason::placeholder{ color: rgba(107,114,128,.65); }
+
+    @media (max-width: 480px){
+      #q5_reason{ font-size:17px; } /* +2px over mobile textarea(15px) */
+    }
+
+</style>
+
+  <meta name="theme-color" content="#6565FF" />
+  <link rel="icon" href="rassi_icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="data:image/png;base64,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" type="image/png" sizes="64x64" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <div class="brand">
+          <div class="brandIcon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="라씨 매매비서 아이콘">
+              <circle cx="100" cy="100" r="100" fill="#6565FF"/>
+              <!-- Antenna -->
+              <line x1="100" y1="46" x2="100" y2="72" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="100" cy="35" r="9" fill="#ffffff"/>
+
+              <!-- Head arc -->
+              <path d="M43 132 A57 62 0 0 1 156 132" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
+
+              <!-- Eyes -->
+              <circle cx="78" cy="105" r="5.5" fill="#ffffff"/>
+              <circle cx="122" cy="105" r="5.5" fill="#ffffff"/>
+
+              <!-- Smile -->
+              <path d="M94 118 Q100 126 106 118" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+              <!-- Bow tie -->
+              <polygon points="90,138 99,132 99,144" fill="#ffffff"/>
+              <polygon points="110,138 101,132 101,144" fill="#ffffff"/>
+              <rect x="97" y="135" width="6" height="6" rx="1.5" fill="#ffffff"/>
+            </svg>
+          </div>
+          <div>
+            <h1>라씨 매매비서 만족도 조사</h1>
+            <p class="sub">기간: <strong>2026-01-27 ~ 2026-02-04</strong><br>응답은 내부 개선 목적으로만 활용됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <form id="survey" class="card" novalidate onsubmit="return false;">
+      <div class="inner">
+
+        <section class="q">
+          <h3>1) 종합 만족도는 어느 정도인가요?&nbsp;<span class="req">필수</span></h3>
+          <p class="hint">앱 전체 경험을 기준으로 평가해 주세요.</p>
+          <div class="rating">
+            <div class="stars" aria-label="종합 만족도 별점">
+              <!-- direction: rtl 이므로 5->1 순서 -->
+              <input type="radio" id="q1-5" name="q1" value="5" required><label for="q1-5" title="5점">★</label>
+              <input type="radio" id="q1-4" name="q1" value="4"><label for="q1-4" title="4점">★</label>
+              <input type="radio" id="q1-3" name="q1" value="3"><label for="q1-3" title="3점">★</label>
+              <input type="radio" id="q1-2" name="q1" value="2"><label for="q1-2" title="2점">★</label>
+              <input type="radio" id="q1-1" name="q1" value="1"><label for="q1-1" title="1점">★</label>
+            </div>
+            <div class="scale" aria-hidden="true">
+              <span>1. 매우 불만족</span><span>5. 매우 만족</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="q">
+          <h3>2) 매매신호(매수/매도/보유)가 투자 판단에 도움이 되었나요?&nbsp;<span class="req">필수</span></h3>
+          <p class="hint">최근 사용 경험을 떠올려 답해주세요.</p>
+          <div class="rating">
+            <div class="stars" aria-label="도움 여부 별점">
+              <input type="radio" id="q2-5" name="q2" value="5" required><label for="q2-5" title="5점">★</label>
+              <input type="radio" id="q2-4" name="q2" value="4"><label for="q2-4" title="4점">★</label>
+              <input type="radio" id="q2-3" name="q2" value="3"><label for="q2-3" title="3점">★</label>
+              <input type="radio" id="q2-2" name="q2" value="2"><label for="q2-2" title="2점">★</label>
+              <input type="radio" id="q2-1" name="q2" value="1"><label for="q2-1" title="1점">★</label>
+            </div>
+            <div class="scale" aria-hidden="true">
+              <span>1. 전혀 도움 안 됨</span><span>5. 매우 도움 됨</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="q">
+          <h3>3) 정보의 신뢰도(타이밍/근거/일관성)를 어떻게 평가하시나요?&nbsp;<span class="req">필수</span></h3>
+          <p class="hint">매수/매도 타이밍과 근거 설명의 납득 정도를 포함합니다.</p>
+          <div class="rating">
+            <div class="stars" aria-label="신뢰도 별점">
+              <input type="radio" id="q3-5" name="q3" value="5" required><label for="q3-5" title="5점">★</label>
+              <input type="radio" id="q3-4" name="q3" value="4"><label for="q3-4" title="4점">★</label>
+              <input type="radio" id="q3-3" name="q3" value="3"><label for="q3-3" title="3점">★</label>
+              <input type="radio" id="q3-2" name="q3" value="2"><label for="q3-2" title="2점">★</label>
+              <input type="radio" id="q3-1" name="q3" value="1"><label for="q3-1" title="1점">★</label>
+            </div>
+            <div class="scale" aria-hidden="true">
+              <span>1. 전혀 신뢰 안 됨</span><span>5. 매우 신뢰함</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="q">
+          <h3>4) 앱 사용성(찾기 쉬움/가독성/알림/속도)에 대한 만족도는?&nbsp;<span class="req">필수</span></h3>
+          <p class="hint">탭 이동, 검색/관심종목, 알림 설정, 속도/안정성 등을 기준으로 평가해 주세요.</p>
+          <div class="rating">
+            <div class="stars" aria-label="사용성 별점">
+              <input type="radio" id="q4-5" name="q4" value="5" required><label for="q4-5" title="5점">★</label>
+              <input type="radio" id="q4-4" name="q4" value="4"><label for="q4-4" title="4점">★</label>
+              <input type="radio" id="q4-3" name="q4" value="3"><label for="q4-3" title="3점">★</label>
+              <input type="radio" id="q4-2" name="q4" value="2"><label for="q4-2" title="2점">★</label>
+              <input type="radio" id="q4-1" name="q4" value="1"><label for="q4-1" title="1점">★</label>
+            </div>
+            <div class="scale" aria-hidden="true">
+              <span>1. 매우 불편</span><span>5. 매우 편함</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="q">
+          <h3>5) 가장 개선이 시급한 점 1가지를 선택하고, 이유를 적어주세요.&nbsp;<span class="req">필수</span></h3>
+          <p class="hint">예: “알림이 너무 자주 와서 끄게 됨”, “매도 근거가 부족해서 따라가기 어려움”</p>
+
+          <div class="options" role="group" aria-label="개선 항목 선택">
+            <label class="opt"><input type="radio" name="q5" value="신호 정확도/타이밍" required> 신호 정확도/타이밍</label>
+            <label class="opt"><input type="radio" name="q5" value="신호 근거 설명(왜 매수/매도인지)" required> 신호 근거 설명(왜 매수/매도인지)</label>
+            <label class="opt"><input type="radio" name="q5" value="알림(빈도/내용/도착)" required> 알림(빈도/내용/도착)</label>
+            <label class="opt"><input type="radio" name="q5" value="화면 구성/가독성" required> 화면 구성/가독성</label>
+            <label class="opt"><input type="radio" name="q5" value="종목 탐색/검색/관심종목" required> 종목 탐색/검색/관심종목</label>
+            <label class="opt"><input type="radio" name="q5" value="기타" required> 기타</label>
+          </div>
+
+          <textarea id="q5_reason" name="q5_reason" placeholder="이유(필수): 어떤 상황에서 불편/아쉬웠는지 구체적으로 적어주세요." required></textarea>
+        </section>
+
+        <section class="consentBox" aria-label="설문 수집 및 이용 동의">
+          <div class="consentRow">
+            <div class="consentText">
+              <label for="consent" class="consentLabel">
+                <input type="checkbox" id="consent" name="consent" required />
+                <span class="consentLabelText">설문 내용 수집 및 이용에 동의합니다</span>
+              </label>
+              <span class="reqInline">필수</span>
+              <a href="#" class="consentLink" id="openConsent">전문보기</a>
+              <div class="consentHint">응답 내용은 서비스 개선 목적에 한해 내부에서만 활용되며, 외부에 제공되지 않습니다.</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="actions">
+          <div class="row">
+            <button type="submit" class="primary">제출하기</button>
+          </div>
+        </div>
+
+        <p class="msg" id="msg"></p>
+
+        <div class="result" id="resultBox" aria-live="polite">
+          <pre id="resultText"></pre>
+          <div class="row" style="margin-top:10px;">
+            <button type="button" class="ghost" id="copyBtn">JSON 복사</button>
+            <button type="button" class="ghost" id="downloadBtn">JSON 파일 저장</button>
+          </div>
+          <p class="footer">※ debug=1에서만 이 영역이 보입니다. 전송 성공 여부는 Apps Script 실행 기록/시트에서 확인하세요.</p>
+        </div>
+
+      </div>
+    </form>
+
+    <section id="summary" class="summary" style="display:none;" aria-live="polite">
+      <div class="summaryHead">
+        <div>
+          <h2 class="summaryTitle"><span class="doneIcon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="rgba(101,101,255,.12)"/><path d="M6.8 12.6l3.1 3.1L17.6 8.3" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>의견 주셔서 감사합니다.</h2>
+        </div>
+      </div>
+      <div id="summaryBody" class="summaryBody"></div>
+    </section>
+</div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+    <div class="modalOverlay" data-close="1"></div>
+    <div class="modalCard" role="document">
+      <div class="modalIcon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="28" fill="rgba(101,101,255,.12)"/>
+          <path d="M20 33.5l8 8 16-20" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 id="successTitle">설문이 완료됐습니다.</h2>
+      <p class="modalText">감사합니다.</p>
+      <div class="modalActions">
+        <button type="button" class="btn primary" id="modalCloseBtn">확인</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Consent Modal -->
+  <div id="consentModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <div class="modalOverlay" data-close="1"></div>
+
+
+    <div class="modalCard consentCard" role="document">
+      <h2 id="consentTitle">설문 내용 수집 및 이용 안내</h2>
+      <div class="consentDoc">
+        <ul>
+          <li><b>수집 항목</b>: 설문 응답 내용(별점 및 서술형 의견), 제출 시각</li>
+          <li><b>이용 목적</b>: 서비스 품질 개선 및 내부 분석</li>
+          <li><b>보유 및 이용 기간</b>: 수집일로부터 <b>20일</b> 이내 안전하게 파기</li>
+          <li><b>제3자 제공</b>: <b>없음</b> (외부 제공하지 않음)</li>
+          <li><b>동의 거부 권리</b>: 동의하지 않을 권리가 있으며, 동의하지 않는 경우 설문 제출이 제한됩니다(필수).</li>
+        </ul>
+        <p style="margin:12px 0 0;">
+          ※ 본 설문은 내부 개선 목적의 의견 수집이며, 개인을 식별할 수 있는 정보(이름/연락처 등)는 요청하지 않습니다.
+        </p>
+      </div>
+      <div class="modalActions" style="margin-top:14px;">
+        <button type="button" class="btn primary" id="consentCloseBtn">확인</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+(() => {
+  const form = document.getElementById('survey');
+  const msg = document.getElementById('msg');
+  const toast = document.getElementById('toast');
+  function showToast(text){
+    if (!toast) return;
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toast.__t);
+    toast.__t = setTimeout(() => toast.classList.remove('show'), 1600);
+  }
+
+
+  // Debug panel (hidden unless ?debug=1)
+  const resultBox = document.getElementById('resultBox');
+  const resultText = document.getElementById('resultText');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  // Consent modal
+  const consentLink = document.getElementById('openConsent');
+  const consentModal = document.getElementById('consentModal');
+  const consentCloseBtn = document.getElementById('consentCloseBtn');
+
+  function openConsentModal(){
+    if (!consentModal) return;
+    consentModal.classList.add('show');
+    consentModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modalOpen');
+    if (consentCloseBtn) consentCloseBtn.focus();
+  }
+  function closeConsentModal(){
+    if (!consentModal) return;
+    consentModal.classList.remove('show');
+    consentModal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('modalOpen');
+  }
+
+  if (consentLink) {
+    consentLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openConsentModal();
+    });
+  }
+  if (consentCloseBtn) consentCloseBtn.addEventListener('click', closeConsentModal);
+  if (consentModal) {
+    consentModal.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.close) closeConsentModal();
+    });
+  }
+
+
+  // View-page summary
+  const summary = document.getElementById('summary');
+  const summaryBody = document.getElementById('summaryBody');
+  const submittedAtChip = document.getElementById('submittedAtChip');
+  const avgChip = document.getElementById('avgChip');
+
+  const DEBUG = new URLSearchParams(window.location.search).has('debug');
+  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbybBNuhCaHetfrmAihsBlEW_5lwjsaugnuzM7JQb834X8v8DmoCrwJxVQvhVwLqdleQ0w/exec";
+
+  let submitted = false;
+
+  // Debug visibility
+  if (resultBox && !DEBUG) {
+    resultBox.style.display = "none";
+  }
+
+  // ===== Modal (bulletproof) =====
+  function ensureModal() {
+    let modal = document.getElementById('successModal');
+    if (!modal) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <div id="successModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+          <div class="modalOverlay" data-close="1"></div>
+          <div class="modalCard" role="document">
+            <div class="modalIcon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="28" fill="rgba(101,101,255,.12)"/>
+                <path d="M20 33.5l8 8 16-20" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2 id="successTitle">설문이 완료됐습니다.</h2>
+            <p class="modalText">감사합니다.</p>
+            <div class="modalActions">
+              <button type="button" class="btn primary" id="modalCloseBtn">확인</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(wrapper.firstElementChild);
+      modal = document.getElementById('successModal');
+    }
+
+    // wire once
+    if (modal && modal.dataset.wired !== "1") {
+      modal.dataset.wired = "1";
+      const closeBtn = document.getElementById('modalCloseBtn');
+
+      const closeModal = () => {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden','true');
+        document.body.classList.remove('modalOpen');
+      };
+
+      const openModal = () => {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden','false');
+        document.body.classList.add('modalOpen');
+        if (closeBtn) closeBtn.focus();
+      };
+
+      modal.__open = openModal;
+      modal.__close = closeModal;
+
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t && t.dataset && t.dataset.close) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && consentModal && consentModal.classList.contains('show')) closeConsentModal();
+      });
+    }
+
+    return modal;
+  }
+
+  function openModal() {
+    const modal = ensureModal();
+    if (modal && modal.__open) modal.__open();
+  }
+
+  // ===== Helpers =====
+  function getValue(name) {
+    const el = form.querySelector(`[name="${name}"]:checked`);
+    return el ? el.value : "";
+  }
+
+  function validate() {
+    msg.textContent = "";
+    msg.style.color = "";
+    const required = form.querySelectorAll('[required]');
+    for (const el of required) {
+      if (el.type === 'radio') {
+        const group = el.name;
+        if (!form.querySelector(`[name="${group}"]:checked`)) {
+          return { ok:false, focus: form.querySelector(`[name="${group}"]`) };
+        }
+      } else if (el.type === 'checkbox') {
+        if (!el.checked) {
+          return { ok:false, focus: el };
+        }
+      } else if (!el.value.trim()) {
+        return { ok:false, focus: el };
+      }
+    }
+    return { ok:true };
+  }
+
+  function buildResult() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+    const data = {
+      survey: "라씨 매매비서 만족도 조사",
+      period: "2026-01-27 ~ 2026-02-04",
+      submitted_at: ts,
+      answers: {
+        q1_overall: Number(getValue("q1")),
+        q2_helpful: Number(getValue("q2")),
+        q3_trust: Number(getValue("q3")),
+        q4_usability: Number(getValue("q4")),
+        q5_improvement_area: getValue("q5"),
+        q5_reason: (form.q5_reason.value || "").trim()
+      }
+    };
+
+    const avg = (data.answers.q1_overall + data.answers.q2_helpful + data.answers.q3_trust + data.answers.q4_usability) / 4;
+    data.metrics = { rating_average_4q: Number(avg.toFixed(2)) };
+    return data;
+  }
+
+  function sendToWebhook(data) {
+    if (!WEBHOOK_URL) return null;
+    const payload = JSON.stringify(data);
+
+    try {
+      if (navigator.sendBeacon) {
+        // Apps Script doPost(e)에서 e.postData.contents로 읽을 수 있도록 plain text로 전송
+        const blob = new Blob([payload], { type: "text/plain;charset=UTF-8" });
+        const ok = navigator.sendBeacon(WEBHOOK_URL, blob);
+        if (ok) return "sendBeacon";
+      }
+    } catch (_) {}
+
+    try {
+      fetch(WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: payload
+      });
+      return "fetch(no-cors)";
+    } catch (_) {}
+
+    return null;
+  }
+
+  function lockForm() {
+    document.body.classList.add('submitted');
+    // Disable everything to prevent edits
+    form.querySelectorAll('input, textarea, button').forEach(el => {
+      // keep debug buttons usable in debug mode
+      if (DEBUG && (el === copyBtn || el === downloadBtn)) return;
+      el.disabled = true;
+    });
+  }
+
+  function starIcons(score) {
+    const s = Number(score || 0);
+    const svg = (filled) => `
+      <svg class="starSvg ${filled ? 'filled' : ''}" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+      </svg>`;
+    let out = '';
+    for (let i=1;i<=5;i++) out += svg(i<=s);
+    return out;
+  }
+
+  function renderSummary(data) {
+    const a = data.answers || {};
+    const areaLabels = [
+      "신호 정확도/타이밍",
+      "신호 근거 설명(왜 매수/매도인지)",
+      "알림(빈도/내용/도착)",
+      "화면 구성/가독성",
+      "종목 탐색/검색/관심종목",
+      "기타"
+    ];
+    const selected = a.q5_improvement_area || "";
+    const pills = areaLabels.map(lbl => `
+      <span class="choicePill ${lbl===selected ? 'selected' : ''}">
+        ${lbl===selected ? '<span class="checkMini" aria-hidden="true"></span>' : ''}
+        ${lbl}
+      </span>
+    `).join("");
+
+    return `
+      <div class="sumCard">
+        <div class="sumQ">1) 종합 만족도는 어느 정도인가요?</div>
+        <div class="sumHint">앱 전체 경험을 기준으로 평가해 주세요.</div>
+        <div class="starsView" aria-label="별점 ${a.q1_overall || 0}점">${starIcons(a.q1_overall)}</div>
+        <div class="scaleView">1. 매우 불만족  ·  5. 매우 만족</div>
+      </div>
+
+      <div class="sumCard">
+        <div class="sumQ">2) 매매신호(매수/매도/보유)가 투자 판단에 도움이 되었나요?</div>
+        <div class="sumHint">최근 사용 경험을 떠올려 답해주세요.</div>
+        <div class="starsView" aria-label="별점 ${a.q2_helpful || 0}점">${starIcons(a.q2_helpful)}</div>
+        <div class="scaleView">1. 전혀 도움 안 됨  ·  5. 매우 도움 됨</div>
+      </div>
+
+      <div class="sumCard">
+        <div class="sumQ">3) 정보의 신뢰도(타이밍/근거/일관성)를 어떻게 평가하시나요?</div>
+        <div class="sumHint">매수/매도 타이밍과 근거 설명의 납득 정도를 포함합니다.</div>
+        <div class="starsView" aria-label="별점 ${a.q3_trust || 0}점">${starIcons(a.q3_trust)}</div>
+        <div class="scaleView">1. 전혀 신뢰 안 됨  ·  5. 매우 신뢰함</div>
+      </div>
+
+      <div class="sumCard">
+        <div class="sumQ">4) 앱 사용성(찾기 쉬움/가독성/알림/속도)에 대한 만족도는?</div>
+        <div class="sumHint">탭 이동, 검색/관심종목, 알림 설정, 속도/안정성 등을 기준으로 평가해 주세요.</div>
+        <div class="starsView" aria-label="별점 ${a.q4_usability || 0}점">${starIcons(a.q4_usability)}</div>
+        <div class="scaleView">1. 매우 불편  ·  5. 매우 편함</div>
+      </div>
+
+      <div class="sumCard">
+        <div class="sumQ">5) 가장 개선이 시급한 점 1가지를 선택하고, 이유를 적어주세요.</div>
+        <div class="sumHint">선택한 항목과 함께, 구체적인 상황을 적어주시면 개선에 큰 도움이 됩니다.</div>
+        <div class="choiceGrid" aria-label="선택 항목">${pills}</div>
+        ${a.q5_reason ? `<div class="textBox">${String(a.q5_reason)}</div>` : ``}
+      </div>
+    `;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (submitted) return;
+
+    const v = validate();
+    if (!v.ok) {
+      msg.textContent = "필수 문항을 모두 입력해 주세요.";
+      msg.style.color = "rgba(225,29,72,1)";
+      showToast("필수 문항을 모두 입력해 주세요.");
+if (v.focus) v.focus.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+
+    const data = buildResult();
+    const sentVia = sendToWebhook(data);
+
+    // View-page switch
+    lockForm();
+    if (summary && summaryBody) {
+      summaryBody.innerHTML = renderSummary(data);
+      summary.style.display = "block";
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    if (submittedAtChip) submittedAtChip.textContent = "제출 시각 · " + (data.submitted_at || "");
+    if (avgChip) avgChip.textContent = "평균 · " + ((data.metrics && data.metrics.rating_average_4q) ? data.metrics.rating_average_4q : "-") + "/5";
+
+    // Debug panel
+    if (DEBUG && resultBox && resultText) {
+      resultText.textContent = JSON.stringify(data, null, 2);
+      resultBox.style.display = "block";
+      msg.textContent = sentVia ? `제출 완료! (debug) 전송 시도됨: ${sentVia}` : "제출 완료! (debug)";
+      msg.style.color = "rgba(107,114,128,.95)";
+    } else {
+      // 일반 사용자에겐 텍스트 안내 대신 모달로만 피드백
+      msg.textContent = "";
+    }
+
+    openModal();
+    submitted = true;
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      if (!DEBUG || !resultText) return;
+      try {
+        await navigator.clipboard.writeText(resultText.textContent);
+        msg.textContent = "JSON을 클립보드에 복사했어요.";
+        msg.style.color = "rgba(107,114,128,.95)";
+      } catch (err) {
+        msg.textContent = "복사 실패: 브라우저 권한을 확인해 주세요.";
+        msg.style.color = "rgba(225,29,72,1)";
+      }
+    });
+  }
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      if (!DEBUG || !resultText) return;
+      const blob = new Blob([resultText.textContent], {type: "application/json;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "rassi_survey_2026-01-27_2026-02-04.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  }
+})();
+</script>
+
+
+      
+
+</body>
+</html>
