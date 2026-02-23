@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>엑스퍼트 반값 프로모션</title>
+
+  <link rel="preload" as="image" href="https://moonble.com/expertpromo.jpg"/>
+
+  <style>
+    :root{
+      --maxW: 720px;
+      --sideGap: 20px;
+
+      /* 레퍼런스(bubjaant_app.html) 느낌에 맞춘 메인버튼 높이 */
+      --mainBtnH: 56px;
+
+      --primary: #6565ff;
+    }
+
+    html, body { margin:0; padding:0; }
+    body {
+      background:#fff;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+
+    /* ✅ 이미지 하단 공백 없애기 */
+    .wrap {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+
+    img {
+      display:block;
+      width:100%;
+      height:auto;
+      user-select:none;
+      -webkit-user-drag:none;
+      touch-action:manipulation;
+      transition: height 200ms ease;
+    }
+
+    ::-webkit-scrollbar { width: 0; height: 0; }
+    html { scroll-behavior: smooth; }
+
+    /* ===== 하단 고정 UI 전체 영역 ===== */
+    .fixed-area{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      width: calc(100% - (var(--sideGap) * 2));
+      max-width: var(--maxW);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .fixed-area a{ pointer-events: auto; }
+
+    /* ===== 메인 플로팅 버튼 (레퍼런스 스타일) ===== */
+    .floating-btn {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      width: 100%;
+      height: var(--mainBtnH);
+      background: var(--primary);
+      color: #fff;
+
+      text-align: center;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: -0.2px;
+
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    .floating-btn:active { opacity: 0.85; }
+
+    /* ===== 세로 알약 퀵버튼 (크기 고정) ===== */
+    .quick-pill{
+      position:absolute;
+      right: 0;
+      bottom: calc(var(--mainBtnH) + 14px);
+      width: 74px;
+      border-radius: 999px;
+      background:#fff;
+      overflow:hidden;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+
+      /* ✅ 더 부드럽고 느리게 */
+      transition:
+        transform 360ms cubic-bezier(.2,.8,.2,1),
+        opacity 360ms cubic-bezier(.2,.8,.2,1);
+      transition-delay: 0ms; /* 표시할 때는 딜레이 없음 */
+      will-change: transform, opacity;
+    }
+
+    /* ✅ 다운스크롤 시: 아래로 천천히 빠지며 사라짐(딜레이 포함) */
+    .quick-pill.is-hidden{
+      opacity: 0;
+      transform: translate3d(0, 24px, 0) scale(0.965);
+      pointer-events: none;
+      transition-delay: 120ms; /* 숨길 때만 살짝 늦게 반응 */
+    }
+
+    .quick-item{
+      display:flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 8px;
+      text-decoration:none;
+      color:#111;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.05;
+    }
+    .quick-item:active{ opacity: 0.86; }
+    .quick-item + .quick-item{
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* ✅ 퀵버튼 자체 크기는 고정, 아이콘 "영역"만 1.5배 확대 */
+    .quick-icon{
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display:grid;
+      place-items:center;
+      flex: none;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.10);
+    }
+    .quick-icon.kakao{ background:#FEE500; }
+    .quick-icon.call{ background:#21C65A; }
+
+    .quick-icon svg{
+      width: 30px;
+      height: 30px;
+      display:block;
+    }
+
+    /* 전화 SVG 미세 중앙 보정(필요시) */
+    .quick-icon.call svg{ transform: translateY(0.5px); }
+  </style>
+</head>
+<body>
+
+  <main class="wrap">
+    <img
+      id="hero"
+      src="https://files.thinkpool.com/rassi_signal/bujatvant_app.jpg"
+      alt="이벤트/콘텐츠 전체 이미지"
+      loading="eager"
+    />
+  </main>
+
+  <div class="fixed-area">
+    <div class="quick-pill" aria-label="빠른 상담 버튼">
+      <!-- 카카오 상담: 새창 -->
+      <a class="quick-item" href="https://pf.kakao.com/_swxiLxb/chat" target="_blank" rel="noopener">
+        <span class="quick-icon kakao" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 4.2c-4.6 0-8.3 2.9-8.3 6.5 0 2.3 1.5 4.3 3.8 5.4l-.8 3.2c-.1.4.3.8.7.6l3.8-2.1c.3 0 .5.1.8.1 4.6 0 8.3-2.9 8.3-6.5S16.6 4.2 12 4.2Z" fill="#111"/>
+          </svg>
+        </span>
+        <span>카톡상담</span>
+      </a>
+    </div>
+
+    <a href="https://thinkpool.onelink.me/fY6D/BujaTV" class="floating-btn" target="_blank" rel="noopener">
+      부자티비 혜택 받기
+    </a>
+  </div>
+
+  <script>
+  (() => {
+    const img = document.getElementById('hero');
+    const quickPill = document.querySelector('.quick-pill');
+    if (!img) return;
+
+    const MAX_SCALE_Y = 1.03;
+    const TRIGGER_START = 0.80;
+
+    let baseHeight = null;
+
+    img.addEventListener("load", () => {
+      baseHeight = img.naturalHeight / (img.naturalWidth / img.offsetWidth);
+    });
+
+    let ticking = false;
+
+    // ===== ✅ 퀵알약: 스크롤 방향 감지(누적 기준) =====
+    let lastScrollTop = window.scrollY || window.pageYOffset;
+    let pillHidden = false;
+
+    const DIR_DELTA = 4;         // 작은 흔들림 무시
+    const TOP_ALWAYS_SHOW = 8;
+
+    const HIDE_AFTER = 80;       // 아래로 총 80px 이상 내려야 숨김
+    const SHOW_AFTER = 18;       // 위로 18px 올리면 표시
+
+    let downAcc = 0;
+    let upAcc = 0;
+
+    function setPillVisible(visible){
+      if (!quickPill) return;
+
+      if (visible) {
+        if (!pillHidden) return;
+        quickPill.classList.remove('is-hidden');
+        pillHidden = false;
+      } else {
+        if (pillHidden) return;
+        quickPill.classList.add('is-hidden');
+        pillHidden = true;
+      }
+    }
+
+    function onScroll() {
+      // 이미지가 이미 로드된 경우(타이밍 이슈 방지)
+      if (!baseHeight && img.complete) {
+        baseHeight = img.naturalHeight / (img.naturalWidth / img.offsetWidth);
+      }
+
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY || window.pageYOffset;
+        const doc = document.documentElement;
+        const docHeight = doc.scrollHeight;
+        const winHeight = window.innerHeight;
+
+        // ===== (기존) 이미지 하단 늘림 =====
+        if (baseHeight) {
+          const progress = (scrollTop + winHeight) / docHeight;
+
+          if (progress >= TRIGGER_START) {
+            const t = Math.min(1, (progress - TRIGGER_START) / (1 - TRIGGER_START));
+            const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+            const scaleY = 1 + (MAX_SCALE_Y - 1) * eased;
+            img.style.height = (baseHeight * scaleY) + "px";
+          } else {
+            img.style.height = baseHeight + "px";
+          }
+        }
+
+        // ===== ✅ (추가) 퀵알약: 다운스크롤 숨김 / 업스크롤 표시(누적 기준) =====
+        const diff = scrollTop - lastScrollTop;
+
+        if (scrollTop <= TOP_ALWAYS_SHOW) {
+          setPillVisible(true);
+          downAcc = 0; upAcc = 0;
+        } else if (Math.abs(diff) >= DIR_DELTA) {
+          if (diff > 0) {
+            // down
+            downAcc += diff;
+            upAcc = 0;
+            if (downAcc >= HIDE_AFTER) setPillVisible(false);
+          } else {
+            // up
+            upAcc += (-diff);
+            downAcc = 0;
+            if (upAcc >= SHOW_AFTER) setPillVisible(true);
+          }
+        }
+
+        lastScrollTop = scrollTop;
+        ticking = false;
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+  })();
+  </script>
+
+</body>
+</html>
+
