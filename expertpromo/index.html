@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Expert 프로모션</title>
+<style>
+:root{
+  --maxW: 720px;
+  --sideGap: 20px;
+  --mainBtnH: 0px;   /* 메인(보라) 고정 버튼 없음 */
+  --bottomInset: 0px;/* 하단 고정바(타이머 등) 높이 자동 반영 */
+}
+html, body { margin:0; padding:0; overflow-x:hidden; width:100%; }
+body{
+background:#06160f;
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+}
+
+.wrap{max-width:768px;margin:0 auto;position:relative;}
+.wrap, main.wrap{overflow-x:hidden;}
+html{scroll-behavior:smooth;}
+::-webkit-scrollbar{width:0;height:0;}
+
+section.block{position:relative;width:100%;margin:0;scroll-margin-top:16px;scroll-margin-bottom:90px;}
+section.block img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
+
+/* ===== S3 버튼(정밀 좌표) ===== */
+.btn-overlay{
+    position:relative;
+position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:var(--w);
+  height:var(--h);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+
+  /* ✅ 디자인: #141414 70% + 흰 테두리/글자 */
+  background:rgba(20,20,20,0.7);
+  border:1.5px solid #ffffff;
+  color:#ffffff;
+
+  /* ✅ 모바일에서 글자 조금 더 큼 */
+  font-weight:800;
+  font-size:clamp(15px, 4.4vw, 18px);
+  text-decoration:none;
+
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+
+  /* ✅ 버튼 크기(이미지 버튼에 맞춰) 살짝 축소: 중심 기준으로 줄어들게 */
+  transform-origin:center center;
+  transform: translate3d(0,0,0) scaleX(0.92) scaleY(0.86);
+
+  transition:transform .18s ease, background .18s ease, opacity .18s ease;
+  -webkit-tap-highlight-color: transparent;
+  line-height:1;
+  white-space:nowrap;
+}
+.btn-overlay:active{
+  /* 눌림은 동일 방향으로 살짝 더 */
+  transform: translate3d(0,0,0) scaleX(0.90) scaleY(0.83);
+  background:rgba(20,20,20,0.85);
+}
+.btn-overlay:focus-visible{
+  outline: 3px solid rgba(66, 255, 180, .75);
+  outline-offset: 2px;
+}
+
+
+
+
+
+
+
+
+/* ✅ 버튼 사선 연초록 그라데이션: iOS에서도 둥근 마스킹 확실 + 자연스러운 반복(더 자주) */
+.btn-overlay{
+  overflow:hidden;
+  isolation:isolate; /* 합성/블렌딩이 요소 밖으로 번지는 현상 방지 */
+  -webkit-mask-image: -webkit-radial-gradient(white, black); /* iOS 클리핑 버그 대응 */
+}
+
+.btn-overlay::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  pointer-events:none;
+
+  /* ✅ 요소 내부에서만 움직이게: 배경 위치만 애니메이션 */
+  background: linear-gradient(120deg,
+    rgba(0,0,0,0) 0%,
+    rgba(76,255,200,0.00) 42%,
+    rgba(76,255,200,0.30) 50%,
+    rgba(76,255,200,0.00) 58%,
+    rgba(0,0,0,0) 100%);
+  background-size: 240% 100%;
+  background-position: 0% 0%;
+  opacity: 0;
+
+  /* 블렌드/스크린 제거(사각 아티팩트 원인) → 대신 은은한 투명+블러 */
+  filter: blur(0.2px);
+
+  animation: sheenBG 2.6s linear infinite;
+}
+
+/* ✅ 지나가고 잠깐 쉬는 자연스러운 루프(인지 가능) */
+@keyframes sheenBG{
+  /* ✅ iOS에서 보이는 방향 기준: 배경 포지션을 '큰 값 → 작은 값'으로 두면 하이라이트가 좌→우로 흐르는 느낌 */
+  0%   { background-position: 140% 0%; opacity: 0; }
+  8%   { opacity: 0; }
+  18%  { opacity: 0.95; }
+  60%  { background-position: -40% 0%; opacity: 0.95; }
+  75%  { opacity: 0; }
+  100% { background-position: -40% 0%; opacity: 0; }
+}
+  8%   { opacity: 0; }
+  18%  { opacity: 0.95; }
+  60%  { background-position: 140% 0%; opacity: 0.95; }
+  75%  { opacity: 0; }
+  100% { background-position: 140% 0%; opacity: 0; }
+}
+  10%  { opacity: 0; }
+  22%  { opacity: 0.95; }
+  46%  { background-position: 100% 0%; opacity: 0.95; }
+  58%  { opacity: 0; }
+  100% { background-position: 100% 0%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .btn-overlay::before{ animation:none; opacity:0.18; background-position:50% 0%; }
+}
+
+}
+
+}
+
+}
+
+/* ===== 카톡 퀵알약(원본 로직 유지) ===== */
+.fixed-area{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom: calc(var(--bottomInset) + 20px + env(safe-area-inset-bottom));
+  width:calc(100% - (var(--sideGap) * 2));
+  max-width:720px;
+  z-index:9999;
+  pointer-events:none;
+}
+.fixed-area a{pointer-events:auto;}
+
+.quick-pill{
+  position:absolute;
+  right:0;
+  bottom:calc(var(--mainBtnH) + 14px);
+  width:74px;
+  border-radius:999px;
+  background:#fff;
+  overflow:hidden;
+  border:1px solid rgba(0,0,0,0.06);
+  box-shadow:0 6px 18px rgba(0,0,0,0.14);
+  transition:
+    transform 360ms cubic-bezier(.2,.8,.2,1),
+    opacity 360ms cubic-bezier(.2,.8,.2,1);
+  transition-delay:0ms;
+  will-change:transform, opacity;
+}
+.quick-pill.is-hidden{
+  opacity:0;
+  transform:translate3d(0,24px,0) scale(0.965);
+  pointer-events:none;
+  transition-delay:120ms;
+}
+.quick-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:14px 8px;
+  text-decoration:none;
+  color:#111;
+  font-size:clamp(15px, 4.4vw, 18px);
+  font-weight:900;
+  letter-spacing:-0.2px;
+  white-space:nowrap;
+  -webkit-tap-highlight-color: transparent;
+  line-height:1.05;
+}
+.quick-item:active{opacity:.86;}
+.quick-icon{
+  width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;
+  flex:none;
+  box-shadow:0 5px 12px rgba(0,0,0,0.10);
+  background:#FEE500;
+}
+.quick-icon svg{width: 26px;height: 26px;display:block;}
+
+/* ===== 하단 반투명 이벤트 마감 타이머 ===== */
+.countdown-bar{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:0;
+  width:100%;
+  max-width:720px;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  color:#e5e5e5;
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  text-align:center;
+  font-weight:600;
+  font-size:16px;
+  letter-spacing:0.4px;
+  z-index:9998;
+}
+
+.countdown-time{
+  font-size:28px;        /* 숫자 크게 */
+  font-weight:900;
+  margin-left:8px;
+  color:#4cffc8;
+}
+
+
+.cd-num{
+  font-size: 30px;
+  font-weight:900;
+  color:inherit;
+}
+
+.cd-unit{
+  font-size:16px;
+  font-weight:400;
+  margin-right:2px;
+  color:#bdbdbd;
+}
+
+
+/* ===== S2 '나의 엑스퍼트 찾기' 영역 클릭 → S3로 스무스 스크롤 ===== */
+.hotspot-s2-to-s3{
+  position:absolute;
+  left:5.33%;
+  top:37.81%;
+  width:89.07%;
+  height:57.61%;
+  display:block;
+  border-radius:22px; /* 카드 라운드 비슷하게 */
+  text-decoration:none;
+  -webkit-tap-highlight-color: transparent;
+  background:transparent;
+}
+.hotspot-s2-to-s3:active{
+  background:rgba(255,255,255,0.03); /* 아주 은은한 터치 피드백 */
+}
+
+
+/* ===== 카톡상담 스태틱 플로팅 퀵메뉴 (뷰포트 고정) ===== */
+.kakao-quick{
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--bottomInset, 0px) + 16px + env(safe-area-inset-bottom));
+  z-index: 9999;
+
+  width: 72px;
+  height: 96px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.18),
+    0 2px 8px rgba(0,0,0,0.10);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  /* 스크롤 모션 */
+  transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform, opacity;
+}
+
+.kakao-quick.is-hidden{
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.98);
+  pointer-events: none;
+  transition-duration: 520ms; /* 다운스크롤: 더 천천히 사라짐 */
+}
+
+.kakao-quick.is-shown{
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-duration: 220ms; /* 업스크롤: 빠르게 올라옴 */
+}
+
+
+.kakao-quick__inner{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+  padding: 10px 10px 12px;
+}
+
+.kakao-quick__icon{
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #FEE500;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.14);
+}
+
+.kakao-quick__icon svg{
+  width: 30px;
+  height: 30px;
+  display:block;
+}
+
+.kakao-quick__label{
+  font-size: 14px;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.kakao-quick:active{
+  transform: scale(0.98);
+  box-shadow:
+    0 14px 32px rgba(0,0,0,0.16),
+    0 2px 8px rgba(0,0,0,0.10);
+}
+
+@media (max-width: 360px){
+  .kakao-quick{ width: 66px; height: 90px; border-radius: 999px; right: 12px; }
+  .kakao-quick__label{ font-size: 10px; }
+  .kakao-quick__icon{ width: 42px; height: 42px; }
+}
+
+
+/* ===== WebView 확대 방지 강화 ===== */
+html, body {
+  overflow-x: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+}
+
+
+/* ===== 이미지 복사/선택/드래그/길게눌러 메뉴 방지 ===== */
+body{
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+img{
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none; /* iOS 길게눌러 메뉴 */
+  pointer-events: none;        /* 이미지 자체 터치/롱프레스 차단 (오버레이/버튼은 동작) */
+}
+
+
+/* ===== 평생반값 카드 반짝(버튼 sheen과 동일 계열) ===== */
+.card-sheen{
+  position:absolute;
+  pointer-events:none;
+  overflow:hidden;
+  border-radius:16px;
+  /* 살짝 빛 번짐 */
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+
+.card-sheen::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  transform: translateX(-60%) skewX(-18deg);
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0) 0%,
+    rgba(150,255,210,0.00) 35%,
+    rgba(150,255,210,0.22) 50%,
+    rgba(150,255,210,0.00) 65%,
+    rgba(0,0,0,0) 100%
+  );
+  filter: blur(0.2px);
+  animation: cardSheen 2.2s linear infinite;
+}
+
+@keyframes cardSheen{
+  0%   { transform: translateX(-75%) skewX(-18deg); }
+  100% { transform: translateX(75%)  skewX(-18deg); }
+}
+
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<section class="block" id="s1"><img alt="s1" src="assets/section1.png" /></section>
+<section class="block" id="s2"><img alt="s2" src="assets/section2.png" />  
+  <div class="card-sheen" style="left:12.0%; top:33.0%; width:75.7%; height:15.9%;"></div>
+<a class="hotspot-s2-to-s3" href="#s3" data-scroll-to="s3" aria-label="나의 엑스퍼트 찾기 영역: 엑스퍼트 선택 섹션으로 이동"></a>
+</section>
+
+<section class="block" id="s3">
+  <img alt="s3" src="assets/section3.png" />
+
+  <a class="btn-overlay" href="#purchase" style="--x:8.533%;--y:21.693%;--w:42.667%;--h:3.028%;">평생 반값 혜택받기</a>
+  <a class="btn-overlay" href="#purchase" style="--x:8.533%;--y:37.824%;--w:42.667%;--h:3.028%;">평생 반값 혜택받기</a>
+  <a class="btn-overlay" href="#purchase" style="--x:8.533%;--y:53.894%;--w:42.667%;--h:3.028%;">평생 반값 혜택받기</a>
+  <a class="btn-overlay" href="#purchase" style="--x:8.533%;--y:69.963%;--w:42.667%;--h:3.028%;">평생 반값 혜택받기</a>
+  <a class="btn-overlay" href="#purchase" style="--x:8.533%;--y:86.032%;--w:42.667%;--h:3.028%;">평생 반값 혜택받기</a>
+</section>
+
+<section class="block" id="s4"><img alt="s4" src="assets/section4.png" /></section>
+<section class="block" id="s5"><img alt="s5" src="assets/section5.png" /></section>
+<section class="block" id="footer"><img alt="footer" src="assets/footer.png" /></section>
+
+<div id="purchase" hidden></div>
+</main>
+
+<script>
+</script>
+
+
+<div class="countdown-bar">
+  이벤트 마감까지
+  <span id="countdown" class="countdown-time">--d --h --m --s</span>
+</div>
+
+
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  const el = document.getElementById("countdown");
+  if(!el) return;
+
+  // ✅ 2026년 2월 27일 23:59:59 (한국시간)
+  const end = new Date("2026-02-27T23:59:59+09:00").getTime();
+
+  function pad(n){ return String(n).padStart(2,"0"); }
+
+  function updateCountdown(){
+    const now = Date.now();
+    let diff = end - now;
+
+    if(diff <= 0){
+      el.textContent = "종료됨";
+      el.style.color = "#ff4d4f";
+      return;
+    }
+
+    const totalHours = diff / (1000*60*60);
+
+    const d = Math.floor(diff / (1000*60*60*24));
+    diff -= d * (1000*60*60*24);
+
+    const h = Math.floor(diff / (1000*60*60));
+    diff -= h * (1000*60*60);
+
+    const m = Math.floor(diff / (1000*60));
+    diff -= m * (1000*60);
+
+    const s = Math.floor(diff / 1000);
+
+    el.innerHTML = "<span class=\"cd-num\">"+d+"</span><span class=\"cd-unit\">일</span> "    + "<span class=\"cd-num\">"+pad(h)+"</span><span class=\"cd-unit\">시간</span> "    + "<span class=\"cd-num\">"+pad(m)+"</span><span class=\"cd-unit\">분</span> "    + "<span class=\"cd-num\">"+pad(s)+"</span><span class=\"cd-unit\">초</span>";
+
+    if(totalHours < 24){
+      el.style.color = "#ff4d4f";
+    }else{
+      el.style.color = "#4cffc8";
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+});
+</script>
+
+
+<script>
+// ✅ 앵커 스무스 스크롤(파일 미리보기/iOS에서도 안정적으로)
+(function(){
+  function smoothTo(id){
+    const t = document.getElementById(id);
+    if(!t) return;
+    // scroll-behavior:smooth + JS 이중 적용
+    try{
+      t.scrollIntoView({ behavior: "smooth", block: "start" });
+    }catch(e){
+      location.hash = "#" + id;
+    }
+  }
+
+  document.addEventListener("click", function(e){
+    const a = e.target.closest("[data-scroll-to]");
+    if(!a) return;
+    e.preventDefault();
+    smoothTo(a.getAttribute("data-scroll-to"));
+  }, { passive:false });
+})();
+</script>
+
+
+<script>
+// ✅ 하단 고정바(타이머 등) 높이만큼 퀵버튼 전체를 위로 올림 (레퍼런스 레이아웃 유지)
+(function(){
+  function applyInset(){
+    const bar = document.querySelector('.countdown-bar');
+    const h = bar ? Math.ceil(bar.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--bottomInset', h + 'px');
+  }
+  window.addEventListener('load', applyInset);
+  window.addEventListener('resize', applyInset);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) applyInset(); });
+  applyInset();
+})();
+</script>
+
+
+<a class="kakao-quick" href="https://pf.kakao.com/_swxiLxb/chat" target="_blank" rel="noopener" aria-label="카카오톡 상담하기">
+  <span class="kakao-quick__inner" aria-hidden="true">
+    <span class="kakao-quick__icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 4.2c-4.6 0-8.3 2.9-8.3 6.5 0 2.3 1.5 4.3 3.8 5.4l-.8 3.2c-.1.4.3.8.7.6l3.8-2.1c.3 0 .5.1.8.1 4.6 0 8.3-2.9 8.3-6.5S16.6 4.2 12 4.2Z" fill="#111"/>
+      </svg>
+    </span>
+    <span class="kakao-quick__label">카톡상담</span>
+  </span>
+</a>
+
+
+<script>
+// ✅ 카톡 퀵버튼: 다운스크롤 시 천천히 내려가며 사라짐 / 업스크롤 시 빠르게 등장
+(function(){
+  const btn = document.querySelector('.kakao-quick');
+  if(!btn) return;
+
+  let ticking = false;
+  let lastScrollTop = window.scrollY || window.pageYOffset;
+
+  const DIR_DELTA = 4;
+  const TOP_ALWAYS_SHOW = 8;
+
+  const HIDE_AFTER = 70;   // 아래로 누적 70px 이상
+  const SHOW_AFTER = 16;   // 위로 누적 16px 이상
+
+  let downAcc = 0;
+  let upAcc = 0;
+
+  function show(){
+    btn.classList.remove('is-hidden');
+    btn.classList.add('is-shown');
+  }
+  function hide(){
+    btn.classList.remove('is-shown');
+    btn.classList.add('is-hidden');
+  }
+
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(()=>{
+      const st = window.scrollY || window.pageYOffset;
+      const diff = st - lastScrollTop;
+
+      if(st <= TOP_ALWAYS_SHOW){
+        show();
+        downAcc = 0; upAcc = 0;
+      }else if(Math.abs(diff) >= DIR_DELTA){
+        if(diff > 0){
+          downAcc += diff;
+          upAcc = 0;
+          if(downAcc >= HIDE_AFTER) hide();
+        }else{
+          upAcc += (-diff);
+          downAcc = 0;
+          if(upAcc >= SHOW_AFTER) show();
+        }
+      }
+
+      lastScrollTop = st;
+      ticking = false;
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onScroll);
+  show();
+  onScroll();
+})();
+</script>
+
+
+<script>
+// ===== WebView 핀치 확대 차단 (보조용) =====
+document.addEventListener('gesturestart', function (e) {
+  e.preventDefault();
+});
+document.addEventListener('gesturechange', function (e) {
+  e.preventDefault();
+});
+document.addEventListener('gestureend', function (e) {
+  e.preventDefault();
+});
+
+document.addEventListener('touchmove', function(e){
+  if (e.scale && e.scale !== 1) {
+    e.preventDefault();
+  }
+}, { passive:false });
+</script>
+
+
+<script>
+// ===== 우클릭/롱프레스 컨텍스트 메뉴 차단 =====
+document.addEventListener('contextmenu', function(e){
+  e.preventDefault();
+}, { capture: true });
+
+// 드래그 선택 차단
+document.addEventListener('selectstart', function(e){
+  e.preventDefault();
+}, { capture: true });
+
+// 드래그 시작 차단(이미지 등)
+document.addEventListener('dragstart', function(e){
+  e.preventDefault();
+}, { capture: true });
+</script>
+
+</body>
+</html>
