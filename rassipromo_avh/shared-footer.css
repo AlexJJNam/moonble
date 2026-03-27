@@ -1,0 +1,61 @@
+.shared-footer {
+  background: #e9ecf2;
+  padding: 30px 20px 160px;
+}
+.shared-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.shared-footer-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.shared-footer-title-text {
+  font-family: 'Pretendard Variable', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #141414;
+  line-height: 1.5;
+}
+.shared-footer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.shared-footer-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.shared-footer-bullet {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.shared-footer-item-text {
+  font-family: 'Pretendard Variable', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #141414;
+  line-height: 26px;
+  flex: 1;
+}
+.shared-footer-contact {
+  background: #f8f8f8;
+  border-radius: 6px;
+  padding: 12px 14px;
+  width: 100%;
+}
+.shared-footer-contact ul {
+  list-style: disc;
+  padding-left: 18px;
+}
+.shared-footer-contact li {
+  font-family: 'Pretendard Variable', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #686868;
+  line-height: 24px;
+}
