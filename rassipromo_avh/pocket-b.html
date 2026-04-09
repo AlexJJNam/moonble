@@ -30,7 +30,16 @@
         <!-- Title -->
         <div class="pocket-title-area">
           <div class="pocket-badge-dark">포켓 선택 내역 조회</div>
-          <h1 class="pocket-title">나의 최종 선택 포켓<br><span style="font-size:18px;font-weight:400">(이벤트 참가에 성공하셨습니다)</span></h1>
+          <h1 class="pocket-title">
+            <span style="font-size:18px;font-weight:400;color:#0065e1">이벤트 참가에 성공하셨습니다</span><br>
+            <span class="pocket-title-inner">
+              <svg class="pocket-title-check" width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="14" cy="14" r="13" fill="#404040" stroke="#404040" stroke-width="1"/>
+                <polyline points="7,14 12,19 21,9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+              나의 최종 선택 포켓
+            </span>
+          </h1>
         </div>
 
         <!-- ABC Circles: B selected -->
@@ -120,7 +129,7 @@
     setTimeout(function () {
       var b = document.querySelector('.floating-chat-bubble');
       if (b) b.classList.add('is-visible');
-    }, 5000);
+    }, 1000);
   </script>
 
   <!-- Floating Chat Button -->

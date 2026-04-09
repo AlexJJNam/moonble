@@ -1,5 +1,11 @@
 'use strict';
 
+// ===== STOCK LIST TOGGLE =====
+function expandStocks(el) {
+  var list = el.closest('ul');
+  list.classList.remove('collapsed');
+}
+
 // ===== POCKET SELECTION =====
 const modalOverlay = document.getElementById('modalOverlay');
 const modalMessage = document.getElementById('modalMessage');

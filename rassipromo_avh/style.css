@@ -770,6 +770,38 @@ ul { list-style: none; }
   gap: 9px;
 }
 
+.stock-list.collapsed li:nth-child(n+9) {
+  display: none;
+}
+
+.stock-ellipsis {
+  font-size: 15px;
+  padding-left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stock-ellipsis-dots {
+  color: #000;
+  letter-spacing: 3px;
+}
+.stock-ellipsis-label {
+  font-size: 16px;
+}
+
+.portfolio-card--a .stock-ellipsis-label { color: #00cf41; }
+.portfolio-card--b .stock-ellipsis-label { color: #0065e1; }
+.portfolio-card--c .stock-ellipsis-label { color: #6f65ff; }
+
+.stock-list:not(.collapsed) .stock-ellipsis {
+  display: none;
+}
+
+.stock-ellipsis {
+  cursor: pointer;
+}
+
+
 .stock-list li {
   display: flex;
   align-items: center;
