@@ -820,6 +820,7 @@ ul { list-style: none; }
   font-size: clamp(15px, 4.5vw, 18px);
   color: #000;
   line-height: 1.35;
+  white-space: nowrap;
 }
 
 .sc {
