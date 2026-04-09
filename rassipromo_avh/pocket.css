@@ -512,19 +512,16 @@ body {
   text-align: center;
   white-space: nowrap;
   pointer-events: auto;
-  animation: bubble-rise 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 5s both;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 
-@keyframes bubble-rise {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.floating-chat-bubble.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .floating-chat-btn {

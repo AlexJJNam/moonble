@@ -116,6 +116,12 @@
 
   </div>
   <script src="footer.js"></script>
+  <script>
+    setTimeout(function () {
+      var b = document.querySelector('.floating-chat-bubble');
+      if (b) b.classList.add('is-visible');
+    }, 5000);
+  </script>
 
   <!-- Floating Chat Button -->
   <div class="floating-chat">
