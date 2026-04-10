@@ -255,7 +255,7 @@ ul { list-style: none; }
 /* ===== INTRO SECTION ===== */
 .intro-section {
   background: #fff;
-  padding: 45px var(--gutter) var(--section-v);
+  padding: var(--section-v) var(--gutter);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -770,8 +770,62 @@ ul { list-style: none; }
   gap: 9px;
 }
 
-.stock-list.collapsed li:nth-child(n+9) {
+.stock-list.collapsed li:nth-child(n+6) {
+  display: none !important;
+}
+
+/* 스켈레톤 */
+.stock-list.is-expanding li:nth-child(n+6) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  margin-bottom: 6px;
+  position: relative;
+}
+.stock-list.is-expanding li:nth-child(n+6) > * {
   display: none;
+}
+/* 아이콘 자리 */
+.stock-list.is-expanding li:nth-child(n+6)::before {
+  content: '';
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 0%, #fafafa 45%, #ffffff 60%, #f0f0f0 100%);
+  background-size: 300% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+/* 종목명 자리 */
+.stock-list.is-expanding li:nth-child(n+6)::after {
+  content: '';
+  height: 18px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #f0f0f0 0%, #fafafa 45%, #ffffff 60%, #f0f0f0 100%);
+  background-size: 300% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+/* 들쑥날쑥 너비 */
+.stock-list.is-expanding li:nth-child(6)::after  { width: 52%; }
+.stock-list.is-expanding li:nth-child(7)::after  { width: 68%; }
+.stock-list.is-expanding li:nth-child(8)::after  { width: 44%; }
+.stock-list.is-expanding li:nth-child(9)::after  { width: 60%; }
+.stock-list.is-expanding li:nth-child(10)::after { width: 72%; }
+.stock-list.is-expanding li:nth-child(11)::after { width: 48%; }
+
+@keyframes skel-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* 실제 종목 fade-in */
+.stock-list.has-expanded li:nth-child(n+6) {
+  animation: stock-fadein 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes stock-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .stock-ellipsis {
@@ -799,7 +853,10 @@ ul { list-style: none; }
 
 .stock-ellipsis {
   cursor: pointer;
+  position: relative;
 }
+
+
 
 
 .stock-list li {

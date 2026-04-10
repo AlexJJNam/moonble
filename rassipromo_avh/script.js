@@ -4,6 +4,11 @@
 function expandStocks(el) {
   var list = el.closest('ul');
   list.classList.remove('collapsed');
+  list.classList.add('is-expanding');
+  setTimeout(function() {
+    list.classList.remove('is-expanding');
+    list.classList.add('has-expanded');
+  }, 200);
 }
 
 // ===== POCKET SELECTION =====
