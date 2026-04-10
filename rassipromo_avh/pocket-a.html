@@ -132,12 +132,44 @@
       var b = document.querySelector('.floating-chat-bubble');
       if (b) b.classList.add('is-visible');
     }, 2000);
+
+    var SUBSCRIPTION_URL = {
+      ios: 'https://apps.apple.com/account/subscriptions',
+      android: 'https://play.google.com/store/account/subscriptions'
+    };
+
+    function detectPlatform() {
+      var ua = navigator.userAgent || '';
+      var isAndroid = /Android/i.test(ua);
+      var isIOS = /iPhone|iPad|iPod/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+      if (isIOS) return 'ios';
+      if (isAndroid) return 'android';
+      return 'android';
+    }
+
+    function openSubscriptionManagement() {
+      var url = SUBSCRIPTION_URL[detectPlatform()];
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_EXTERNAL_URL', url: url }));
+        return;
+      }
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openExternalUrl) {
+        window.webkit.messageHandlers.openExternalUrl.postMessage({ url: url });
+        return;
+      }
+      if (window.NativeBridge && window.NativeBridge.openExternalUrl) {
+        window.NativeBridge.openExternalUrl(url);
+        return;
+      }
+      window.location.href = url;
+    }
   </script>
 
   <!-- Floating Chat Button -->
   <div class="floating-chat">
     <div class="floating-chat-bubble">*6만원 페이백 이벤트 상품 수령은<br>구독 재개가 필요해요!<br><span style="color:#fff;font-weight:400">(터치 시 상품 구독관리 이동)</span></div>
-    <a class="floating-chat-btn" href="https://play.google.com/store/account/subscriptions" target="_blank" rel="noopener" aria-label="구독 재개 안내">
+    <a class="floating-chat-btn" href="#" onclick="openSubscriptionManagement(); return false;" aria-label="구독 재개 안내">
       <img src="assets/floatbutton_logo.png" alt="" width="36" height="36" style="object-fit:contain;">
     </a>
   </div>
