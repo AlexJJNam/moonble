@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Inline Card Widget</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :root {
+      --tp: #0d0d0d;
+      --ts: #5d5d5d;
+      --bl: rgba(13,13,13,0.05);
+    }
+
+    /* ListRow */
+    .list-row {
+      display: flex; flex-direction: column; gap: 12px;
+      align-items: flex-start; justify-content: center;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--bl);
+      width: 100%;
+    }
+    .list-row:not(:first-child) { padding-top: 12px; }
+    .list-row:last-child { border-bottom: none; padding-bottom: 16px; }
+
+    /* Image + title row */
+    .list-row__content { display: flex; gap: 8px; align-items: center; width: 100%; }
+    .list-row__img-content { display: flex; flex: 1; gap: 12px; align-items: center; min-width: 0; }
+
+    /* Thumbnail 44×44, radius 10 */
+    .list-row__image {
+      width: 44px; height: 44px; border-radius: 10px;
+      flex-shrink: 0; overflow: hidden; background: #f0f0f0;
+      position: relative;
+    }
+    .list-row__image img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 10px;
+      display: block;
+    }
+
+    /* Title + price */
+    .list-row__title-wrap {
+      display: flex; flex: 1; flex-direction: column;
+      justify-content: center; min-width: 0;
+    }
+    .list-row__title {
+      font-size: 16px; font-weight: 400; line-height: 26px;
+      letter-spacing: -0.4px; color: var(--tp);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .list-row__price {
+      font-size: 14px; font-weight: 400; line-height: 20px;
+      letter-spacing: -0.18px; color: var(--ts);
+    }
+
+    /* Description */
+    .list-row__desc {
+      font-size: 14px; font-weight: 400; line-height: 20px;
+      letter-spacing: -0.3px; color: var(--tp);
+      width: 100%; overflow-wrap: break-word; word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Row 01: Pepperoni — imgImage1 on top -->
+  <div class="list-row">
+    <div class="list-row__content">
+      <div class="list-row__img-content">
+        <div class="list-row__image">
+          <img src="https://www.figma.com/api/mcp/asset/1a4d1779-5c32-45b7-b3ad-9ea62b4893a9" alt="" />
+          <img src="https://www.figma.com/api/mcp/asset/9cc7b70c-cdd0-4364-b6e8-b4493bb4e131" alt="Pepperoni" />
+        </div>
+        <div class="list-row__title-wrap">
+          <p class="list-row__title">Pepperoni</p>
+          <p class="list-row__price">$21.50</p>
+        </div>
+      </div>
+    </div>
+    <p class="list-row__desc">
+      Cupped pepperoni that curls and pools just the right amount of spicy oil.
+      Finished with a sprinkle of oregano and a drizzle of extra-virgin olive oil.
+    </p>
+  </div>
+
+  <!-- Row 02: Mushroom & Taleggio — imgImage2 on top -->
+  <div class="list-row">
+    <div class="list-row__content">
+      <div class="list-row__img-content">
+        <div class="list-row__image">
+          <img src="https://www.figma.com/api/mcp/asset/1a4d1779-5c32-45b7-b3ad-9ea62b4893a9" alt="" />
+          <img src="https://www.figma.com/api/mcp/asset/b1ffb308-31dc-4c37-a1f1-36da96690c6a" alt="Mushroom &amp; Taleggio" />
+        </div>
+        <div class="list-row__title-wrap">
+          <p class="list-row__title">Mushroom &amp; Taleggio</p>
+          <p class="list-row__price">$20.00</p>
+        </div>
+      </div>
+    </div>
+    <p class="list-row__desc">
+      This one's quieter and more layered — earthy mushrooms roasted until golden,
+      creamy taleggio that melts into the sauce, and a finish of thyme and olive oil.
+      It's a more "thinky" pie.
+    </p>
+  </div>
+
+  <!-- Row 03: Anchovy & Calabrian Chili — imgImage1 -->
+  <div class="list-row">
+    <div class="list-row__content">
+      <div class="list-row__img-content">
+        <div class="list-row__image">
+          <img src="https://www.figma.com/api/mcp/asset/9cc7b70c-cdd0-4364-b6e8-b4493bb4e131" alt="Anchovy &amp; Calabrian Chili" />
+        </div>
+        <div class="list-row__title-wrap">
+          <p class="list-row__title">Anchovy &amp; Calabrian Chili</p>
+          <p class="list-row__price">$20.00</p>
+        </div>
+      </div>
+    </div>
+    <p class="list-row__desc">
+      If you want something you haven't had a hundred times, go for the punchy,
+      umami-packed anchovy pie with Calabrian chilies and lemon zest.
+      It's bright, salty, and surprising.
+    </p>
+  </div>
+
+<script>
+  function reportHeight() {
+    var h = document.body.scrollHeight;
+    window.parent.postMessage({ type: 'resize', height: h }, '*');
+  }
+  window.addEventListener('load', reportHeight);
+  document.querySelectorAll('img').forEach(function(img) {
+    img.addEventListener('load', reportHeight);
+  });
+  setTimeout(reportHeight, 400);
+</script>
+</body>
+</html>

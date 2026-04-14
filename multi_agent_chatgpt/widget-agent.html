@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>멀티에이전트 위젯</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; background: transparent; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Shimmer ────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .sh {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+
+    /* ── Waveform (로딩) ────────────────────── */
+    @keyframes wv {
+      0%, 100% { transform: scaleY(0.35); }
+      50%       { transform: scaleY(1); }
+    }
+    .wf { display: flex; align-items: center; gap: 2.5px; }
+    .wf i {
+      display: block; width: 3px; border-radius: 2px;
+      background: #a0a0a0; transform-origin: center;
+      animation: wv 0.85s ease-in-out infinite;
+      font-style: normal;
+    }
+    .wf i:nth-child(1) { height: 8px;  animation-delay: 0s; }
+    .wf i:nth-child(2) { height: 14px; animation-delay: 0.12s; }
+    .wf i:nth-child(3) { height: 10px; animation-delay: 0.24s; }
+    .wf i:nth-child(4) { height: 16px; animation-delay: 0.36s; }
+    .wf i:nth-child(5) { height: 8px;  animation-delay: 0.48s; }
+
+    /* ── 카드 헤더 ──────────────────────────── */
+    .card-header {
+      display: flex; align-items: center;
+      height: 56px; padding: 0 8px 0 16px; gap: 8px;
+    }
+    .card-title {
+      flex: 1; min-width: 0;
+      font-size: 17px; font-weight: 510;
+      line-height: 23px; letter-spacing: -0.43px; color: #000;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-counter {
+      width: 44px; height: 44px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 510;
+      line-height: 20px; letter-spacing: -0.3px; color: #0d0d0d;
+    }
+
+    /* ── 에이전트 row ────────────────────────── */
+    .agent-row {
+      display: flex; flex-direction: column;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(13,13,13,0.05);
+    }
+    .agent-row:last-child { border-bottom: none; }
+
+    .row-top {
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* 썸네일 */
+    .row-thumb {
+      width: 44px; height: 44px; border-radius: 10px;
+      flex-shrink: 0; overflow: hidden; background: #f0f0f0;
+      position: relative;
+    }
+    .row-thumb img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .row-thumb-ph { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
+
+    /* 에이전트 정보 */
+    .row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .row-info-ph {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 8px; justify-content: center;
+    }
+    .info-ph-bar { height: 9px; border-radius: 12px; }
+
+    .name-wrap { display: flex; align-items: center; gap: 3px; min-width: 0; }
+    .agent-badge {
+      width: 24px; height: 24px; border-radius: 100px;
+      padding: 2px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .agent-badge img { width: 18px; height: 18px; display: block; }
+    .agent-name {
+      font-size: 17px; font-weight: 400;
+      line-height: 18px; letter-spacing: -0.8px; color: #0d0d0d;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .agent-status {
+      font-size: 14px; font-weight: 400;
+      line-height: 20px; letter-spacing: -0.18px; color: #5d5d5d;
+    }
+
+    /* 액션 버튼 */
+    .row-action {
+      width: 44px; height: 44px; border-radius: 999px;
+      flex-shrink: 0; border: none; cursor: default;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .row-action-ph { width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0; }
+    .row-action.is-loading { background: #f3f3f3; }
+    .row-action.is-done    { background: #dbffd2; }
+
+    /* 설명 */
+    .row-desc { padding: 12px 3px 10px; }
+    .row-desc p {
+      font-size: 14px; font-weight: 400;
+      line-height: 20px; letter-spacing: -0.3px; color: #0d0d0d;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .row-desc p.is-expanded {
+      display: block; overflow: visible; -webkit-line-clamp: unset;
+    }
+    .row-desc .more { color: #808080; cursor: pointer; }
+
+    .row-desc-ph { padding: 12px 3px 10px; display: flex; flex-direction: column; gap: 12px; }
+    .desc-ph-bar { height: 9px; border-radius: 12px; }
+
+    /* ── 푸터 ────────────────────────────────── */
+    .card-footer { padding: 16px; }
+    .footer-btn {
+      width: 100%; height: 44px; border-radius: 999px;
+      border: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: inherit;
+      font-size: 15px; font-weight: 510;
+      line-height: 24px; letter-spacing: -0.24px;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .footer-btn:active { opacity: 0.75; }
+    .footer-btn.is-loading {
+      background: #f3f3f3; color: #0d0d0d; cursor: default;
+    }
+    .footer-btn.is-done {
+      background: #0d0d0d; color: #fff;
+    }
+    .footer-btn svg { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div id="card">
+  <!-- 카드 헤더 -->
+  <div class="card-header">
+    <span class="card-title" id="cardTitle">멀티에이전트 실행 모듈</span>
+    <span class="card-counter" id="cardCounter">0/4</span>
+  </div>
+
+  <!-- 에이전트 목록 (JS로 렌더링) -->
+  <div id="agentList"></div>
+
+  <!-- 푸터 -->
+  <div class="card-footer">
+    <div class="footer-btn sh" id="footerBtn" style="height:44px"></div>
+  </div>
+</div>
+
+<script>
+/* ──────────────────────────────────────────
+   에이전트 데이터
+────────────────────────────────────────── */
+var AGENTS = [
+  {
+    name: '밸류에이션 에이전트',
+    color: '#ffcaca',
+    icon: 'https://www.figma.com/api/mcp/asset/25192f09-c699-4859-9bce-f9ca95448f33',
+    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    desc: '데이터 확인 결과, 조일알미늄과 호르무즈 해협 이슈(해상운임·원자재 조달·유가 등)의 연관성을 구체적으로 분석할 수 있을 만큼의 최근 공시·실적·리포트...'
+  },
+  {
+    name: '뉴스 에이전트',
+    color: '#dbffd2',
+    icon: 'https://www.figma.com/api/mcp/asset/f5c3549a-1813-41ba-b083-adab1208667c',
+    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    desc: '데이터 확인 결과, 조일알미늄과 호르무즈 해협 이슈(해상운임·원자재 조달·유가 등)의 연관성을 구체적으로 분석할 수 있을 만큼의 최근 공시·실적·리포트...'
+  },
+  {
+    name: '팩터 에이전트',
+    color: '#c7eeff',
+    icon: 'https://www.figma.com/api/mcp/asset/cc4d5994-b849-4bc9-ac82-20fdcc6d4be4',
+    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    desc: '데이터 확인 결과, 조일알미늄과 호르무즈 해협 이슈(해상운임·원자재 조달·유가 등)의 연관성을 구체적으로 분석할 수 있을 만큼의 최근 공시·실적·리포트...'
+  },
+  {
+    name: '리포트 에이전트',
+    color: '#c0c6ff',
+    icon: 'https://www.figma.com/api/mcp/asset/2519e611-3077-4d8f-b755-a9679abe6390',
+    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    desc: '데이터 확인 결과, 조일알미늄과 호르무즈 해협 이슈(해상운임·원자재 조달·유가 등)의 연관성을 구체적으로 분석할 수 있을 만큼의 최근 공시·실적·리포트...'
+  }
+];
+
+var SVG_CHECK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2da040" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+var SVG_VOICE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><line x1="8" y1="7" x2="8" y2="17"/><line x1="16" y1="7" x2="16" y2="17"/><line x1="4" y1="10" x2="4" y2="14"/><line x1="20" y1="10" x2="20" y2="14"/></svg>';
+
+/* ──────────────────────────────────────────
+   더보기 확장 상태 (에이전트 인덱스별)
+────────────────────────────────────────── */
+var expanded = [false, false, false, false];
+
+/* ──────────────────────────────────────────
+   row 렌더 함수  (state: 'shimmer'|'pending'|'done', idx: 0~3)
+────────────────────────────────────────── */
+function rowHTML(a, state, idx) {
+  var thumb, info, action, desc;
+
+  if (state === 'shimmer') {
+    thumb  = '<div class="row-thumb-ph sh"></div>';
+    info   = '<div class="row-info-ph"><div class="info-ph-bar sh" style="width:160px"></div><div class="info-ph-bar sh" style="width:107px"></div></div>';
+    action = '<div class="row-action-ph sh"></div>';
+    desc   = '<div class="row-desc-ph"><div class="desc-ph-bar sh" style="width:100%"></div><div class="desc-ph-bar sh" style="width:67%"></div></div>';
+
+  } else if (state === 'pending') {
+    thumb  = '<div class="row-thumb"><img src="' + a.thumb + '" alt="" loading="lazy"></div>';
+    info   = '<div class="row-info">'
+           +   '<div class="name-wrap">'
+           +     '<div class="agent-badge" style="background:' + a.color + '"><img src="' + a.icon + '" alt="" loading="lazy"></div>'
+           +     '<span class="agent-name">' + a.name + '</span>'
+           +   '</div>'
+           +   '<span class="agent-status">생각중...</span>'
+           + '</div>';
+    action = '<button class="row-action is-loading"><div class="wf"><i></i><i></i><i></i><i></i><i></i></div></button>';
+    desc   = '<div class="row-desc-ph"><div class="desc-ph-bar sh" style="width:100%"></div><div class="desc-ph-bar sh" style="width:67%"></div></div>';
+
+  } else { // done
+    thumb  = '<div class="row-thumb"><img src="' + a.thumb + '" alt="" loading="lazy"></div>';
+    info   = '<div class="row-info">'
+           +   '<div class="name-wrap">'
+           +     '<div class="agent-badge" style="background:' + a.color + '"><img src="' + a.icon + '" alt="" loading="lazy"></div>'
+           +     '<span class="agent-name">' + a.name + '</span>'
+           +   '</div>'
+           +   '<span class="agent-status">답변완료</span>'
+           + '</div>';
+    action = '<button class="row-action is-done">' + SVG_CHECK + '</button>';
+    var isExp = expanded[idx];
+    desc = '<div class="row-desc">'
+         +   '<p class="' + (isExp ? 'is-expanded' : '') + '">'
+         +     a.desc
+         +     (isExp ? '' : ' <span class="more" data-idx="' + idx + '">[더보기]</span>')
+         +   '</p>'
+         + '</div>';
+  }
+
+  return '<div class="agent-row"><div class="row-top">' + thumb + info + action + '</div>' + desc + '</div>';
+}
+
+/* ──────────────────────────────────────────
+   전체 카드 렌더
+   state: 0=전체shimmer, 1~4=N번째 pending(나머지shimmer), 5~8=N번째 done(이후pending), 9=전체done
+   단순화: doneCount 0~5
+     0: 전체 shimmer
+     1: [0]=pending, [1-3]=shimmer
+     2: [0]=done,    [1]=pending, [2-3]=shimmer
+     3: [0-1]=done,  [2]=pending, [3]=shimmer
+     4: [0-2]=done,  [3]=pending
+     5: 전체 done
+────────────────────────────────────────── */
+var doneCount = 0;
+
+function render() {
+  var finishedCount = Math.max(0, doneCount - 1); // 완료된 에이전트 수
+  document.getElementById('cardTitle').textContent =
+    doneCount <= 1 ? '멀티에이전트 실행 모듈' : '최근 데이터 기반 삼성전자 주가';
+  document.getElementById('cardCounter').textContent = finishedCount + '/4';
+
+  var html = '';
+  for (var i = 0; i < 4; i++) {
+    var s;
+    if (doneCount === 0) {
+      s = 'shimmer';
+    } else if (i < doneCount - 1) {
+      s = 'done';
+    } else if (i === doneCount - 1) {
+      s = 'pending';
+    } else {
+      s = 'shimmer';
+    }
+    html += rowHTML(AGENTS[i], s, i);
+  }
+  document.getElementById('agentList').innerHTML = html;
+
+  // 푸터
+  var btn = document.getElementById('footerBtn');
+  btn.className = 'footer-btn';
+  btn.removeAttribute('style');
+  btn.removeAttribute('onclick');
+
+  if (doneCount === 0) {
+    btn.outerHTML = '<div class="footer-btn sh" id="footerBtn" style="height:44px"></div>';
+    btn = document.getElementById('footerBtn');
+  } else if (doneCount < 5) {
+    btn.className = 'footer-btn is-loading';
+    btn.innerHTML = '데이터 조회중..';
+  } else {
+    btn.className = 'footer-btn is-done';
+    btn.innerHTML = SVG_VOICE + '결과 생성하기';
+  }
+
+  reportHeight();
+}
+
+/* ──────────────────────────────────────────
+   postMessage resize
+────────────────────────────────────────── */
+function reportHeight() {
+  window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+}
+
+/* ──────────────────────────────────────────
+   데모 자동 진행 (실제 앱에서는 API 이벤트로 교체)
+   0(shimmer) → 1(1번 pending) → 2(1번 done, 2번 pending) → ... → 5(전체 done, 정지)
+────────────────────────────────────────── */
+var DELAYS = [1800, 2000, 2000, 2000, 2000]; // state 0→1, 1→2, 2→3, 3→4, 4→5
+
+function step() {
+  doneCount += 1;
+  render();
+  if (doneCount < 5) setTimeout(step, DELAYS[doneCount]);
+}
+
+window.addEventListener('load', function() {
+  render();
+  setTimeout(step, DELAYS[0]);
+
+  // 더보기 클릭 — 이벤트 위임
+  document.getElementById('agentList').addEventListener('click', function(e) {
+    var more = e.target.closest('.more');
+    if (!more) return;
+    var idx = parseInt(more.dataset.idx, 10);
+    expanded[idx] = true;
+    render();
+  });
+});
+
+setTimeout(reportHeight, 500);
+</script>
+
+</body>
+</html>
