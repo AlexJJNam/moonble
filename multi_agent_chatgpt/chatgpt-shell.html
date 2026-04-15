@@ -478,6 +478,138 @@
     /* 헤더 모델 버튼 — open 상태 */
     .header-model.is-open .hm-chev svg { transform: rotate(180deg); }
     .hm-chev svg { transition: transform 0.15s; }
+
+    /* ══════════════════════════════════════
+       MOBILE  (≤ 767px)
+    ══════════════════════════════════════ */
+    @media (max-width: 767px) {
+
+      /* 사이드바 완전히 숨김 */
+      .sidebar { display: none !important; }
+
+      /* 데스크탑 헤더 숨김 */
+      .chat-header { display: none; }
+
+      /* 모바일 네비게이션 바 */
+      .mob-nav {
+        flex-shrink: 0;
+        height: 44px;
+        display: flex; align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: var(--bgp);
+      }
+      .mob-nav-leading {
+        display: flex; align-items: center; gap: 12px;
+      }
+      .mob-hamburger {
+        width: 24px; height: 24px; padding: 0;
+        border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--tp);
+      }
+      .mob-hamburger svg { width: 24px; height: 24px; }
+      .mob-title {
+        display: flex; align-items: center; gap: 2px;
+        font-size: 17px; font-weight: 510; letter-spacing: -0.43px;
+        color: var(--tp); cursor: pointer;
+      }
+      .mob-title-ver { color: var(--tt); font-weight: 400; }
+      .mob-title-chev { width: 14px; height: 14px; color: var(--tt); display: flex; align-items: center; }
+      .mob-title-chev svg { width: 14px; height: 14px; }
+      .mob-nav-trailing {
+        display: flex; align-items: center; gap: 20px;
+      }
+      .mob-nav-btn {
+        width: 24px; height: 24px; padding: 0;
+        border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--tp);
+      }
+      .mob-nav-btn svg { width: 24px; height: 24px; }
+
+      /* 채팅 컨텐츠 패딩 조정 */
+      .chat-content {
+        padding: 20px 20px 120px;
+        gap: 16px;
+      }
+      .msg-bubble { max-width: 289px; border-radius: 20px; }
+      .msg-bubble p { font-size: 17px; line-height: 23px; letter-spacing: -0.43px; }
+
+      /* 데스크탑 컴포저 숨김 */
+      .composer-wrap { display: none; }
+
+      /* 모바일 컴포저 */
+      .mob-composer-wrap {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--bgp);
+        border-radius: 24px 24px 0 0;
+        display: flex; flex-direction: column;
+      }
+      .mob-composer-row {
+        display: flex; align-items: flex-end; gap: 8px;
+        padding: 12px 12px 6px;
+      }
+      .mob-add {
+        width: 44px; height: 44px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border: none; background: var(--bgt); border-radius: 128px;
+        cursor: pointer; color: var(--tp);
+      }
+      .mob-add svg { width: 24px; height: 24px; }
+      .mob-input-pill {
+        flex: 1; min-width: 0;
+        display: flex; align-items: flex-end;
+        background: var(--bgt); border-radius: 22px;
+        padding: 0 0 0 16px;
+        min-height: 44px;
+      }
+      .mob-input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-size: 17px; font-weight: 400; line-height: 24px;
+        letter-spacing: -0.32px; color: var(--tp); font-family: inherit;
+        resize: none; overflow: hidden; max-height: 140px;
+        padding: 10px 0; align-self: center;
+      }
+      .mob-input::placeholder { color: var(--tt); }
+      .mob-input-actions {
+        display: flex; align-items: flex-end;
+        padding-bottom: 6px;
+      }
+      .mob-mic {
+        width: 32px; height: 44px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 6px;
+        border: none; background: transparent; cursor: pointer; color: var(--ts);
+      }
+      .mob-mic svg { width: 24px; height: 24px; }
+      .mob-send {
+        width: 44px; height: 44px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 6px;
+        border: none; background: transparent; cursor: pointer;
+      }
+      .mob-send-icon {
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--tp); border-radius: 999px; color: #fff;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      }
+      .mob-send-icon svg { width: 18px; height: 18px; }
+      .mob-home-bar {
+        height: 34px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 8px;
+      }
+      .mob-home-indicator {
+        width: 144px; height: 5px;
+        background: #000; border-radius: 100px;
+      }
+    }
+
+    /* 데스크탑에서 모바일 전용 요소 숨김 */
+    .mob-nav,
+    .mob-composer-wrap { display: none; }
   </style>
 </head>
 <body>
@@ -671,6 +803,40 @@
   <!-- ══ MAIN ════════════════════════════════════════════ -->
   <div class="main">
 
+    <!-- 모바일 네비게이션 바 -->
+    <nav class="mob-nav">
+      <div class="mob-nav-leading">
+        <button class="mob-hamburger" aria-label="메뉴">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="3" y1="7" x2="21" y2="7"/>
+            <line x1="3" y1="12" x2="15" y2="12"/>
+            <line x1="3" y1="17" x2="21" y2="17"/>
+          </svg>
+        </button>
+        <div class="mob-title">
+          <span>ChatGPT</span>
+          <span class="mob-title-ver">&nbsp;5</span>
+          <span class="mob-title-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div class="mob-nav-trailing">
+        <button class="mob-nav-btn" aria-label="새 채팅">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="mob-nav-btn" aria-label="더보기">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
     <!-- Chat header: pl-4px pr-12px py-8px -->
     <header class="chat-header">
       <div class="header-left">
@@ -746,14 +912,12 @@
         <!-- AI response -->
         <div class="msg-ai">
 
-          <!-- App attribution: AI 주식분석 icon + name, pb-12 -->
+          <!-- App attribution: 펀더먼탈 에이전트 -->
           <div class="app-attr">
-            <div class="app-attr-icon" style="background:#0d0d0d;display:flex;align-items:center;justify-content:center;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
+            <div class="app-attr-icon" style="background:#fbf7f6; display:flex; align-items:center; justify-content:center;">
+              <img src="https://www.figma.com/api/mcp/asset/53336b5c-e9d5-4ed9-98bb-3fd24a5b9d74" alt="" style="width:16px;height:9px;object-fit:contain;display:block;" />
             </div>
-            <span class="app-attr-name">AI 주식분석</span>
+            <span class="app-attr-name">펀더먼탈 에이전트</span>
           </div>
 
           <!-- Widget iframe (card border handled by .widget-frame) -->
@@ -912,6 +1076,44 @@
       </div>
     </div>
 
+    <!-- 모바일 컴포저 -->
+    <div class="mob-composer-wrap">
+      <div class="mob-composer-row">
+        <button class="mob-add" aria-label="추가">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="mob-input-pill">
+          <textarea id="mobInput" class="mob-input" placeholder="Ask anything" rows="1"></textarea>
+          <div class="mob-input-actions">
+            <button class="mob-mic" aria-label="음성 입력">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <button class="mob-send" aria-label="전송">
+              <div class="mob-send-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="12" y1="4" x2="12" y2="20"/>
+                  <line x1="8" y1="7" x2="8" y2="17"/>
+                  <line x1="16" y1="7" x2="16" y2="17"/>
+                  <line x1="4" y1="10" x2="4" y2="14"/>
+                  <line x1="20" y1="10" x2="20" y2="14"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="mob-home-bar">
+        <div class="mob-home-indicator"></div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 
 </div><!-- /app -->
@@ -1064,6 +1266,15 @@
       iframe.style.height = e.data.height + 'px';
     }
   });
+
+  // ── 모바일 textarea 자동 높이 ──────────────
+  var mobInput = document.getElementById('mobInput');
+  if (mobInput) {
+    mobInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+    });
+  }
 </script>
 
 </body>
