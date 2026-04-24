@@ -225,32 +225,32 @@ var AGENTS = [
     name: '밸류에이션 에이전트',
     pending: '밸류에이션 측정 중',
     color: '#ffcaca',
-    icon: 'https://www.figma.com/api/mcp/asset/25192f09-c699-4859-9bce-f9ca95448f33',
-    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    icon: 'assets/icon-agent-valuation.svg',
+    thumb: 'assets/samsung-thumb.jpg',
     desc: '삼성전자의 현재 PER은 약 12.4배로, 반도체 섹터 평균(14.8배) 대비 약 16% 할인된 수준입니다. PBR 1.2배, 최근 3개년 평균 ROE 11.3%를 감안하면 현 주가는 적정가치 대비 저평가 구간으로 판단됩니다. HBM 수요 회복과 파운드리 수주 확대가 주요 재평가 촉매로 작용할 수 있습니다.'
   },
   {
     name: '뉴스 에이전트',
     pending: '뉴스 분석 중',
     color: '#dbffd2',
-    icon: 'https://www.figma.com/api/mcp/asset/f5c3549a-1813-41ba-b083-adab1208667c',
-    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    icon: 'assets/icon-agent-news.svg',
+    thumb: 'assets/samsung-thumb.jpg',
     desc: '최근 7일 내 주요 부정 뉴스 없음. 시장 영향도 중립으로 판단됩니다.'
   },
   {
     name: '팩터 에이전트',
     pending: '팩터 분석 중',
     color: '#c7eeff',
-    icon: 'https://www.figma.com/api/mcp/asset/cc4d5994-b849-4bc9-ac82-20fdcc6d4be4',
-    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    icon: 'assets/icon-agent-factor.svg',
+    thumb: 'assets/samsung-thumb.jpg',
     desc: '모멘텀 팩터 -0.34(하위 30%), 퀄리티 팩터 +0.62(상위 40%), 밸류 팩터 +0.81(상위 25%)로 집계됩니다. 복합 팩터 스코어는 0.43으로 시장 대비 중립 우위이며, 저변동성 팩터에서 두드러진 강점이 확인됩니다.'
   },
   {
     name: '리포트 에이전트',
     pending: '리포트 생성 중',
     color: '#c0c6ff',
-    icon: 'https://www.figma.com/api/mcp/asset/2519e611-3077-4d8f-b755-a9679abe6390',
-    thumb: 'https://www.figma.com/api/mcp/asset/f4463801-d335-40c3-a1b3-99a78ef2188d',
+    icon: 'assets/icon-agent-report.svg',
+    thumb: 'assets/samsung-thumb.jpg',
     desc: '최근 12개 증권사 리포트 종합 결과, 목표주가 평균 82,400원(현재가 대비 +18.3% 상승 여력)이며 매수 9건·중립 3건·매도 0건으로 컨센서스는 긍정적입니다. 주요 리스크 요인으로 메모리 가격 하락 사이클 재진입, 미·중 반도체 규제 강화, 원화 강세 기조가 지목되었으며, 하반기 HBM3E 양산 확대 여부가 핵심 모니터링 포인트로 제시됩니다.'
   }
 ];
@@ -451,6 +451,12 @@ window.addEventListener('load', function() {
     reportHeight();
     setTimeout(function() { step(0); }, DELAYS[0]); // 3단계: 순서대로 완료
   }, 1500);
+
+  // 결과 생성하기 버튼 클릭 → 쉘에 결과 전송
+  document.getElementById('footerBtn').addEventListener('click', function() {
+    if (!this.classList.contains('is-done')) return;
+    window.parent.postMessage({ type: 'agent-result' }, '*');
+  });
 
   // 더보기 클릭 — desc-text에 is-expanded 추가
   document.getElementById('agentList').addEventListener('click', function(e) {

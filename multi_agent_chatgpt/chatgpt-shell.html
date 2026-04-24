@@ -262,6 +262,51 @@
     .hdr-icon:hover { background: rgba(13,13,13,0.05); color: var(--tp); }
     .hdr-icon svg { width: 20px; height: 20px; }
 
+    /* ══════════════════════════════════════
+       WELCOME HERO — 초기 빈 상태
+       실제 ChatGPT처럼 컴포저가 화면 중앙,
+       제목 위 / 제안 칩 아래
+    ══════════════════════════════════════ */
+    .welcome-hero {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px; padding: 0 20px 120px;
+    }
+    .welcome-title {
+      font-size: 28px; font-weight: 300;
+      letter-spacing: -0.5px; color: var(--tp);
+      text-align: center; line-height: 1.25;
+    }
+
+    /* hero 컴포저 — bottom 컴포저와 동일한 클래스 재사용 */
+    .welcome-hero .composer-inner {
+      width: 100%; max-width: 680px;
+    }
+
+    /* 제안 칩 */
+    .hero-chips {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      justify-content: center;
+    }
+    .hero-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 16px;
+      border: 1px solid rgba(13,13,13,0.12);
+      border-radius: 999px; background: #fff;
+      cursor: pointer; font-size: 14px;
+      font-family: inherit; color: var(--tp);
+      transition: background 0.1s;
+    }
+    .hero-chip:hover { background: rgba(13,13,13,0.05); }
+    .hero-chip svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--ts); }
+
+    /* 상태: .main에 .is-active 없으면 → 빈 상태 */
+    .main:not(.is-active) .chat-scroll  { display: none; }
+    .main:not(.is-active) .composer-wrap { display: none; }
+    /* 상태: .main에 .is-active 있으면 → 대화 상태 */
+    .main.is-active .welcome-hero { display: none; }
+
     /* ── Chat scroll ─────────────────────── */
     .chat-scroll {
       flex: 1; min-height: 0;
@@ -319,6 +364,23 @@
       font-size: 16px; font-weight: 400;
       line-height: 26px; letter-spacing: -0.4px;
       color: var(--tp); overflow-wrap: break-word;
+    }
+
+    /* 결과 텍스트 마크다운 스타일 */
+    .result-text strong { font-weight: 600; color: var(--tp); }
+    .result-text ul { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+    .result-text li { font-size: 16px; line-height: 26px; letter-spacing: -0.4px; color: var(--tp); }
+    .result-text br { display: block; content: ''; margin: 4px 0; }
+
+    /* 스트리밍 단어 애니메이션 */
+    @keyframes wordIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .stream-word {
+      display: inline;
+      opacity: 0;
+      animation: wordIn 0.12s ease-out forwards;
     }
 
     /* Action icons */
@@ -629,7 +691,7 @@
     <!-- 헤더: 로고(좌) + spacer + □(우) — □는 52px 초과분이라 overflow:hidden으로 클립 -->
     <div class="sb-head">
       <div class="sb-logo" id="sbLogo" role="button" aria-label="사이드바 열기">
-        <img src="https://www.figma.com/api/mcp/asset/38758024-e663-4daa-81b3-fd0cf04c17af" alt="OpenAI" />
+        <img src="assets/openai-logo.svg" alt="OpenAI" />
       </div>
       <div class="sb-head-spacer"></div>
       <button class="sb-toggle-inside" id="sbToggleInside" aria-label="사이드바 닫기">
@@ -801,7 +863,7 @@
   <!-- /sidebar -->
 
   <!-- ══ MAIN ════════════════════════════════════════════ -->
-  <div class="main">
+  <div class="main" id="main">
 
     <!-- 모바일 네비게이션 바 -->
     <nav class="mob-nav">
@@ -898,87 +960,91 @@
       </div>
     </header>
 
-    <!-- Chat scroll area -->
-    <div class="chat-scroll">
-      <div class="chat-content">
+    <!-- ══ WELCOME HERO (빈 상태) ══════════════ -->
+    <div class="welcome-hero" id="welcomeHero">
+      <h2 class="welcome-title">무슨 작업을 하고 계세요?</h2>
 
-        <!-- User message -->
-        <div class="msg-user">
-          <div class="msg-bubble">
-            <p>조일알미늄, 최근 호르무즈 해협 이슈가 주가에 어떤 영향을 미칠지 분석해줘</p>
+      <!-- 히어로 컴포저 (bottom 컴포저와 동일 구조) -->
+      <div class="composer-inner">
+        <div class="composer">
+          <div class="composer-text-row">
+            <textarea
+              id="heroInput"
+              class="composer-input"
+              placeholder="무엇이든 물어보세요"
+              rows="1"
+              aria-label="Message"
+            ></textarea>
+          </div>
+          <div class="composer-tool-row">
+            <button class="composer-add" aria-label="Attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <button class="composer-thinking" aria-label="Thinking mode">
+              <svg class="thinking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Thinking</span>
+              <svg class="thinking-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="composer-spacer"></div>
+            <button class="composer-mic" aria-label="Voice input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <button class="composer-send" id="heroSend" aria-label="Send">
+              <svg id="heroSendWave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="12" y1="4" x2="12" y2="20"/>
+                <line x1="8" y1="7" x2="8" y2="17"/>
+                <line x1="16" y1="7" x2="16" y2="17"/>
+                <line x1="4" y1="10" x2="4" y2="14"/>
+                <line x1="20" y1="10" x2="20" y2="14"/>
+              </svg>
+              <svg id="heroSendArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </button>
           </div>
         </div>
-
-        <!-- AI response -->
-        <div class="msg-ai">
-
-          <!-- App attribution: 펀더먼탈 에이전트 -->
-          <div class="app-attr">
-            <div class="app-attr-icon" style="background:#fbf7f6; display:flex; align-items:center; justify-content:center;">
-              <img src="https://www.figma.com/api/mcp/asset/53336b5c-e9d5-4ed9-98bb-3fd24a5b9d74" alt="" style="width:16px;height:9px;object-fit:contain;display:block;" />
-            </div>
-            <span class="app-attr-name">펀더먼탈 에이전트</span>
-          </div>
-
-          <!-- Widget iframe (card border handled by .widget-frame) -->
-          <div class="widget-wrap">
-            <div class="widget-frame">
-              <iframe
-                id="widgetIframe"
-                src="widget-agent.html"
-                title="멀티에이전트 분석"
-                sandbox="allow-scripts allow-same-origin"
-                scrolling="no"
-              ></iframe>
-            </div>
-          </div>
-
-          <!-- Model text responses -->
-          <div class="model-text">
-            <p>호르무즈 해협 긴장 고조는 원자재 조달 비용과 해상운임에 직접적인 영향을 미칩니다. 조일알미늄은 알루미늄 원재료를 중동 경유 해상 루트로 일부 조달하고 있어, 운임 상승과 공급 불확실성이 단기 마진 압박 요인으로 작용할 수 있습니다.</p>
-          </div>
-          <div class="model-text">
-            <p>다만 유가 상승 시 알루미늄 스크랩 재활용 비중이 높은 기업에 상대적으로 유리한 측면도 있어, 조일알미늄의 원재료 믹스와 고객사 납품 조건을 함께 검토할 필요가 있습니다.</p>
-          </div>
-
-          <!-- Action icons: copy / thumb-up / thumb-down / share / regenerate -->
-          <div class="msg-actions">
-            <button class="msg-action" title="Copy">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-            <button class="msg-action" title="Good response">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-                <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-              </svg>
-            </button>
-            <button class="msg-action" title="Bad response">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
-                <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
-              </svg>
-            </button>
-            <button class="msg-action" title="Share">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-            </button>
-            <button class="msg-action" title="Regenerate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 4v6h-6"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-              </svg>
-            </button>
-          </div>
-
-        </div><!-- /msg-ai -->
-
       </div>
+
+      <!-- 제안 칩 -->
+      <div class="hero-chips">
+        <button class="hero-chip" data-prompt="이미지를 만들어줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          이미지 만들기
+        </button>
+        <button class="hero-chip" data-prompt="글쓰기 또는 편집을 도와줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          글쓰기 또는 편집
+        </button>
+        <button class="hero-chip" data-prompt="필요한 항목을 찾아줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          필요한 항목 찾기
+        </button>
+      </div>
+    </div><!-- /welcome-hero -->
+
+    <!-- ══ CHAT SCROLL (대화 상태) ═══════════ -->
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-content" id="chatContent"></div>
     </div><!-- /chat-scroll -->
 
     <!-- Composer footer -->
@@ -1149,27 +1215,66 @@
     });
   });
 
-  // ── Textarea 자동 높이 + 전송버튼 아이콘 ──
+  // ── Textarea 자동 높이 + 전송버튼 아이콘 ──────────────
+  var main          = document.getElementById('main');
   var composerInput = document.getElementById('composerInput');
   var sendIconWave  = document.getElementById('sendIconWave');
   var sendIconArrow = document.getElementById('sendIconArrow');
+  var heroInput     = document.getElementById('heroInput');
+  var heroSendWave  = document.getElementById('heroSendWave');
+  var heroSendArrow = document.getElementById('heroSendArrow');
 
+  // ── 하단 컴포저 아이콘 업데이트 ──
   function updateSendIcon() {
     var hasText = composerInput.value.trim().length > 0;
-    sendIconWave.style.display  = hasText ? 'none'  : '';
-    sendIconArrow.style.display = hasText ? ''      : 'none';
+    sendIconWave.style.display  = hasText ? 'none' : '';
+    sendIconArrow.style.display = hasText ? ''     : 'none';
   }
 
+  // ── 히어로 컴포저 아이콘 업데이트 ──
+  function updateHeroIcon() {
+    var hasText = heroInput.value.trim().length > 0;
+    heroSendWave.style.display  = hasText ? 'none' : '';
+    heroSendArrow.style.display = hasText ? ''     : 'none';
+  }
+
+  // ── 하단 컴포저 이벤트 ──
   composerInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 200) + 'px';
     updateSendIcon();
   });
-  // Enter = 전송(줄바꿈은 Shift+Enter)
   composerInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // 실제 전송 로직은 여기에
+      e.preventDefault();
+      sendMessage(composerInput.value);
     }
+  });
+  document.getElementById('composerSend').addEventListener('click', function() {
+    sendMessage(composerInput.value);
+  });
+
+  // ── 히어로 컴포저 이벤트 ──
+  heroInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    updateHeroIcon();
+  });
+  heroInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(heroInput.value);
+    }
+  });
+  document.getElementById('heroSend').addEventListener('click', function() {
+    sendMessage(heroInput.value);
+  });
+
+  // ── 제안 칩 클릭 → 히어로 입력란에 채우고 전송 ──
+  document.querySelectorAll('.hero-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      sendMessage(this.dataset.prompt);
+    });
   });
 
   // ── 드롭다운 공통 ────────────────────────
@@ -1244,28 +1349,255 @@
     });
   });
 
-  // ── iframe auto-height ──────────────────
-  var iframe = document.getElementById('widgetIframe');
+  // ══════════════════════════════════════════════════
+  //  오케스트레이션 — 모든 위젯 흐름 로직은 여기에 있음
+  //  iframe 위젯은 UI만 담당, 로직은 shell이 외주화
+  // ══════════════════════════════════════════════════
 
-  function resizeIframe() {
-    try {
-      var doc = iframe.contentDocument || iframe.contentWindow.document;
-      var h = doc.body.scrollHeight;
-      if (h > 0) iframe.style.height = h + 'px';
-    } catch(e) {}
-  }
+  var chatContent = document.getElementById('chatContent');
+  var chatScroll  = document.getElementById('chatScroll');
 
-  iframe.addEventListener('load', function() {
-    resizeIframe();
-    setTimeout(resizeIframe, 300);
-    setTimeout(resizeIframe, 800);
-  });
-
+  // ── postMessage 수신 (iframe → shell) ──────────────
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'resize' && e.data.height) {
-      iframe.style.height = e.data.height + 'px';
+    if (!e.data || typeof e.data !== 'object') return;
+    var data = e.data;
+
+    // 높이 동기화: 어느 iframe이 보냈는지 source로 매칭
+    if (data.type === 'resize' && data.height) {
+      document.querySelectorAll('.widget-frame iframe').forEach(function(f) {
+        try { if (f.contentWindow === e.source) f.style.height = data.height + 'px'; }
+        catch(err) {}
+      });
+    }
+
+    // 에이전트 선택 — 게이트 → 에이전트 위젯으로 전환
+    if (data.type === 'gate-select') {
+      onGateSelect(e.source, data.agent);
+    }
+
+    // 결과 생성하기 클릭 → 마크다운 텍스트 렌더링
+    if (data.type === 'agent-result') {
+      onAgentResult(e.source);
     }
   });
+
+  // ── 게이트 선택 처리 ───────────────────────────────
+  function onGateSelect(sourceWindow, agentId) {
+    // 어느 대화 블록의 게이트인지 source window로 찾기
+    var gateIframe = null;
+    document.querySelectorAll('.gate-iframe').forEach(function(f) {
+      try { if (f.contentWindow === sourceWindow) gateIframe = f; } catch(err) {}
+    });
+    if (!gateIframe) return;
+
+    var msgAi     = gateIframe.closest('.msg-ai');
+    var gateWrap  = msgAi.querySelector('.gate-wrap');
+    var agentWrap = msgAi.querySelector('.agent-wrap');
+    if (!gateWrap || !agentWrap) return;
+
+    // 현재는 '펀더멘탈' 에이전트만 구현 — 나머지는 준비중
+    if (agentId !== 'fundamental') return;
+
+    // 게이트 숨기고 에이전트 위젯 활성화
+    gateWrap.style.display = 'none';
+    agentWrap.style.display = '';
+
+    var agentIframe = agentWrap.querySelector('iframe');
+    agentIframe.src = 'widget-agent.html';
+    agentIframe.style.height = '380px';
+
+    setTimeout(function() {
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    }, 100);
+  }
+
+  // ── 에이전트 결과 렌더링 ──────────────────────────
+  var RESULT_MD = `확인 결과, 삼성전자(005930)에 대한 현재 투자의견은 **"비중확대"** 로 해석하는 것이 가장 무난합니다.
+다만 이는 밸류에이션 기준 판단이며, 성격은 공격적 매수보다는 실적 모멘텀 회복을 전제로 한 매수 우위에 가깝습니다.
+
+**기준일:** 2026년 4월 22일 종가 217,500원, 25개 증권사 컨센서스 기준
+**종합 밸류에이션 매력도:** 높음
+**최종 의견:** 비중확대
+
+이렇게 보는 근거는 다음과 같습니다.
+
+**선행 PER이 매우 낮습니다.**
+최근 12개월 예상실적 기준 PER이 5.54배이고, 다음 연간 기준 PER도 5.92배로 낮습니다. 데이터 해석상 이는 업종 대비 저평가 매력이 높다는 의미입니다.
+
+**다만 '싼 이유'도 분명합니다.**
+해석상 삼성전자는 저PER + 저성장 구간으로 분류됩니다. 즉, 낮은 PER이 단순한 저평가라기보다 성장 프리미엄 부재를 반영한 합리적 수준일 수 있어, 이익 모멘텀이 회복되지 않으면 재평가 폭은 제한적입니다.
+
+**PBR 기준으로는 매력이 약합니다.**
+최근 PBR은 3.00배로, 시계열 비교상 과거 대비 매력도 매우 낮음으로 평가되었습니다. 실제 3년 시계열 해석에서도 최근 PBR은 과거 평균보다 높은 구간으로 읽혀 보수적 접근 필요 신호가 있습니다.
+
+**동종업계 대비로는 우위가 있습니다.**
+업계 비교에서는 PER 매력도 매우 높음, PSR 매력도 높음, PBR 매력도 낮음으로 나타났고, 이를 종합한 업종 상대 매력은 높음입니다.
+
+정리하면, 삼성전자는 절대적으로 아주 싸다고 단정하기보다, 업종 대비로는 매수 우위가 있는 종목입니다.
+따라서 현재 시점의 표현은 **"중립"보다는 "비중확대"**, 그러나 **"강한 공격적 매수"까지는 아님** 이 적절합니다.
+핵심 체크포인트는 실적 회복이 실제로 이어지는지, 그리고 낮은 선행 PER이 정당한 리레이팅으로 연결되는지입니다.`;
+
+  // ── 마크다운 스트리밍 렌더러 ─────────────────────
+  function streamMarkdown(container, md, onDone) {
+    var WORD_MS = 28; // 단어 간격
+    var wordIdx = 0;
+
+    // 한 줄을 DOM으로 변환 (볼드 파싱 + 단어 스팬화)
+    function appendLine(parent, text) {
+      // **bold** 기준으로 분할
+      var parts = text.split(/(\*\*[^*]+\*\*)/g);
+      parts.forEach(function(part) {
+        var isBold = /^\*\*/.test(part);
+        var raw = isBold ? part.slice(2, -2) : part;
+        var wrapper = isBold ? document.createElement('strong') : null;
+        var target = wrapper || parent;
+
+        var words = raw.split(' ');
+        words.forEach(function(word, i) {
+          if (!word) return;
+          if (i > 0) target.appendChild(document.createTextNode(' '));
+          var span = document.createElement('span');
+          span.className = 'stream-word';
+          span.textContent = word;
+          span.style.animationDelay = (wordIdx++ * WORD_MS) + 'ms';
+          target.appendChild(span);
+        });
+
+        if (wrapper) parent.appendChild(wrapper);
+      });
+    }
+
+    var lines = md.split('\n');
+    var inList = false;
+    var ul;
+
+    lines.forEach(function(line) {
+      if (!line.trim()) {
+        if (inList) { container.appendChild(ul); inList = false; }
+        return;
+      }
+      if (/^[-•]\s/.test(line)) {
+        if (!inList) { ul = document.createElement('ul'); inList = true; }
+        var li = document.createElement('li');
+        appendLine(li, line.replace(/^[-•]\s/, ''));
+        ul.appendChild(li);
+        return;
+      }
+      if (inList) { container.appendChild(ul); inList = false; }
+      var p = document.createElement('p');
+      appendLine(p, line);
+      container.appendChild(p);
+    });
+    if (inList) container.appendChild(ul);
+
+    // 마지막 단어 애니메이션 끝난 뒤 콜백
+    if (onDone) {
+      setTimeout(onDone, wordIdx * WORD_MS + 200);
+    }
+  }
+
+  function onAgentResult(sourceWindow) {
+    var agentIframe = null;
+    document.querySelectorAll('.agent-wrap iframe').forEach(function(f) {
+      try { if (f.contentWindow === sourceWindow) agentIframe = f; } catch(err) {}
+    });
+    if (!agentIframe) return;
+
+    var msgAi = agentIframe.closest('.msg-ai');
+    if (!msgAi) return;
+
+    if (msgAi.querySelector('.result-text')) return;
+
+    // 스트리밍 컨테이너 추가
+    var div = document.createElement('div');
+    div.className = 'result-text model-text';
+    msgAi.appendChild(div);
+
+    streamMarkdown(div, RESULT_MD, function() {
+      // 스트리밍 완료 후 스크롤
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    });
+
+    // 액션 버튼 행 추가
+    var actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML =
+      '<button class="msg-action" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+      '<button class="msg-action" title="Good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>' +
+      '<button class="msg-action" title="Bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>' +
+      '<button class="msg-action" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>';
+    msgAi.appendChild(actions);
+
+    setTimeout(function() { chatScroll.scrollTop = chatScroll.scrollHeight; }, 100);
+  }
+
+  // ── 질문에서 티커 추출 (간단 휴리스틱) ───────────
+  function extractTicker(q) {
+    // "삼성전자, 분석해줘" → "삼성전자"
+    var comma = q.indexOf(',');
+    if (comma > 0 && comma <= 10) return q.substring(0, comma).trim();
+    // 첫 단어가 짧으면 티커로 간주
+    var space = q.indexOf(' ');
+    if (space > 0 && space <= 8) return q.substring(0, space).trim();
+    return '';
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── 메시지 전송 (컴포저 → 대화 + 게이트 표시) ────
+  function sendMessage(text) {
+    text = (text || '').trim();
+    if (!text) return;
+
+    // 첫 메시지 시 welcome-hero → is-active 전환
+    main.classList.add('is-active');
+
+    // 1. 유저 말풍선
+    var userDiv = document.createElement('div');
+    userDiv.className = 'msg-user';
+    userDiv.innerHTML = '<div class="msg-bubble"><p>' + escHtml(text) + '</p></div>';
+    chatContent.appendChild(userDiv);
+
+    // 2. AI 블록: 어트리뷰션 + 게이트 위젯 + 에이전트 위젯(hidden)
+    var ticker  = extractTicker(text);
+    var gateUrl = 'widget-gate.html?q=' + encodeURIComponent(text)
+                + (ticker ? '&ticker=' + encodeURIComponent(ticker) : '');
+
+    var aiDiv = document.createElement('div');
+    aiDiv.className = 'msg-ai';
+    aiDiv.innerHTML =
+      '<div class="app-attr">' +
+        '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+          '<img src="assets/logo1.png" alt="" style="width:16px;height:9px;object-fit:contain;display:block;">' +
+        '</div>' +
+        '<span class="app-attr-name">펀더먼탈 에이전트</span>' +
+      '</div>' +
+      /* ── STEP 1: 게이트 ── */
+      '<div class="widget-wrap gate-wrap">' +
+        '<div class="widget-frame">' +
+          '<iframe class="gate-iframe" src="' + gateUrl + '" ' +
+            'sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
+        '</div>' +
+      '</div>' +
+      /* ── STEP 2: 에이전트 (선택 후 표시) ── */
+      '<div class="widget-wrap agent-wrap" style="display:none">' +
+        '<div class="widget-frame">' +
+          '<iframe sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
+        '</div>' +
+      '</div>';
+
+    chatContent.appendChild(aiDiv);
+
+    // 인풋 초기화
+    composerInput.value = '';
+    composerInput.style.height = 'auto';
+    updateSendIcon();
+
+    // 스크롤 하단
+    setTimeout(function() { chatScroll.scrollTop = chatScroll.scrollHeight; }, 80);
+  }
 
   // ── 모바일 textarea 자동 높이 ──────────────
   var mobInput = document.getElementById('mobInput');
