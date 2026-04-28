@@ -358,21 +358,10 @@
     }
     .widget-frame iframe { display: block; width: 100%; border: none; height: 380px; }
 
-    /* Model text — pb-16 */
-    .model-text { padding-bottom: 16px; width: 100%; }
-    .model-text p {
-      font-size: 16px; font-weight: 400;
-      line-height: 26px; letter-spacing: -0.4px;
       color: var(--tp); overflow-wrap: break-word;
     }
 
-    /* 결과 텍스트 마크다운 스타일 */
-    .result-text strong { font-weight: 600; color: var(--tp); }
-    .result-text ul { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
-    .result-text li { font-size: 16px; line-height: 26px; letter-spacing: -0.4px; color: var(--tp); }
-    .result-text br { display: block; content: ''; margin: 4px 0; }
 
-    /* 스트리밍 단어 애니메이션 */
     @keyframes wordIn {
       from { opacity: 0; }
       to   { opacity: 1; }
@@ -384,7 +373,7 @@
     }
 
     /* Action icons */
-    .msg-actions { display: flex; align-items: center; gap: 12px; }
+    .msg-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
     .msg-action {
       display: flex; align-items: center; justify-content: center;
       width: 20px; height: 24px;
@@ -396,6 +385,81 @@
     .msg-action svg { width: 18px; height: 18px; }
     .msg-action { color: var(--ts); }
     .msg-action:hover { color: var(--tp); }
+
+
+
+    /* Model text */
+    .model-text { padding-bottom: 16px; width: 100%; }
+    .model-text p { font-size: 16px; font-weight: 400; line-height: 26px; letter-spacing: -0.4px; color: #0d0d0d; margin-bottom: 0; }
+    .model-text strong { font-weight: 600; color: var(--tp); }
+    @keyframes wordIn { from { opacity: 0; } to { opacity: 1; } }
+    .stream-word { display: inline; opacity: 0; animation: wordIn 0.25s ease-out forwards; }
+
+    /* 칩 캐러셀 스켈레톤 */
+    .agent-chip.is-skeleton { pointer-events: none; }
+    .sk-chip-header { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+    .sk-chip-circle { width:24px; height:24px; border-radius:100px; flex-shrink:0; }
+    .sk-chip-name-bar { height:13px; border-radius:6px; flex:1; }
+    .sk-chip-line { height:10px; border-radius:6px; margin-top:7px; }
+    @keyframes chipFadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .agent-chip.chip-reveal { animation: chipFadeIn 0.25s ease forwards; }
+
+
+
+    /* Debating card 스켈레톤 */
+    .sk-db-title   { height: 16px; border-radius: 8px; width: 70%; }
+    .sk-db-circle  { width: 22px; height: 22px; border-radius: 499px; flex-shrink: 0; margin-top: 2px; }
+    .sk-db-line    { height: 13px; border-radius: 6px; }
+    .sk-db-btn     { height: 44px; border-radius: 384px; width: 100%; }
+    .sk-db-section { height: 16px; border-radius: 8px; width: 50%; }
+    .sk-db-chip    { width: 200px; height: 88px; border-radius: 16px; flex-shrink: 0; }
+    @keyframes dbFadeIn { from { opacity:0; } to { opacity:1; } }
+    .debating-card.is-revealed { animation: dbFadeIn 0.25s ease forwards; }
+    /* Debating card */
+    .debating-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 12px 0; margin-top: 16px; width: 100%;
+    }
+    .debating-header { padding: 0 16px; font-size: 16px; font-weight: 600; color: #0d0d0d; line-height: 22px; }
+    .debating-item { display: flex; gap: 12px; align-items: flex-start; padding: 0 16px; }
+    .debating-check {
+      width: 22px; height: 22px; border-radius: 499px; background: #dbffd2;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .debating-check svg { width: 12px; height: 12px; }
+    .debating-content { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .debating-action-title { font-size: 16px; font-weight: 500; color: #0d0d0d; line-height: 22px; }
+    .debating-bullets { padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+    .debating-bullets li { font-size: 14px; color: #5d5d5d; line-height: 18px; }
+    .debating-btn {
+      width: 100%; background: #0285ff; color: #fff; border: none; border-radius: 384px;
+      padding: 12px 16px; font-size: 14px; font-weight: 500; font-family: inherit;
+      cursor: pointer; line-height: 20px; letter-spacing: -0.084px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .debating-btn:hover { opacity: 0.88; }
+    .debating-divider { border: none; border-top: 1px solid #e8e8e8; margin: 0; }
+    .debating-section-title { padding: 0 16px; font-size: 16px; font-weight: 600; color: #0d0d0d; line-height: 22px; }
+    .debating-chips-wrap { padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .debating-chips-wrap::-webkit-scrollbar { display: none; }
+    .debating-chips-inner { display: flex; gap: 12px; flex-wrap: nowrap; }
+    .debating-footer { padding: 0 16px 4px; font-size: 14px; color: #0d0d0d; line-height: 20px; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Agent chip carousel */
+    .agent-chips-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:16px; cursor:grab; user-select:none; }
+    .agent-chips-wrap.is-dragging { cursor:grabbing; }
+    .agent-chips-wrap::-webkit-scrollbar { display:none; }
+    .agent-chips { display:flex; gap:12px; flex-wrap:nowrap; min-height:101px; align-items:flex-start; overflow:hidden; }
+    .agent-chip { background:#f3f3f3; border-radius:16px; padding:14px 16px; width:200px; flex-shrink:0; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:background 0.15s; }
+    .agent-chip:hover { background:#ececec; }
+    .agent-chip.is-selected { background:#e4e4e4; }
+    .chip-header { display:flex; align-items:center; gap:3px; }
+    .chip-badge { width:24px; height:24px; border-radius:100px; padding:2px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .chip-badge img { width:18px; height:18px; display:block; }
+    .chip-name { font-size:17px; font-weight:400; line-height:18px; letter-spacing:-1px; color:#0d0d0d; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+    .chip-desc { font-size:14px; font-weight:400; line-height:20px; letter-spacing:-0.3px; color:#5d5d5d; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 
     /* ── Composer footer ─────────────────── */
     .composer-wrap { flex-shrink: 0; padding: 0 20px 8px; background: var(--bgp); }
@@ -1412,46 +1476,34 @@
   }
 
   // ── 에이전트 결과 렌더링 ──────────────────────────
-  var RESULT_MD = `확인 결과, 삼성전자(005930)에 대한 현재 투자의견은 **"비중확대"** 로 해석하는 것이 가장 무난합니다.
-다만 이는 밸류에이션 기준 판단이며, 성격은 공격적 매수보다는 실적 모멘텀 회복을 전제로 한 매수 우위에 가깝습니다.
+  var RESULT_MD = '1. 투자 판단\n\n현재 삼성전자는 **"보유 또는 분할 매수 우위"** 로 판단됩니다. 다만 이미 AI 메모리 기대와 실적 개선이 주가에 상당 부분 반영된 구간이므로, 신규 진입은 일괄 매수보다 분할 접근, 기존 보유자는 실적·메모리 가격·컨센서스 상향이 유지되는지 확인하며 보유하는 전략이 적절합니다.\n\n삼성전자가 발표한 2026년 1분기 잠정 실적은 매출 약 133조원, 영업이익 약 57.2조원으로, 전년 대비 실적 체급이 크게 달라졌습니다. 전년도 2025년 연간 영업이익이 43.6조원이었던 점을 감안하면, 2026년 1분기만으로 직전 연간 이익을 넘어선 구조입니다.';
 
-**기준일:** 2026년 4월 22일 종가 217,500원, 25개 증권사 컨센서스 기준
-**종합 밸류에이션 매력도:** 높음
-**최종 의견:** 비중확대
+  var CHIP_MD = {
+    valuation: '**밸류에이션 관점**\n\n삼성전자의 현재 PER은 약 12.4배로, 반도체 섹터 평균(14.8배) 대비 약 16% 할인된 수준입니다. PBR 1.2배, 최근 3개년 평균 ROE 11.3%를 감안하면 현 주가는 적정가치 대비 저평가 구간으로 판단됩니다. HBM 수요 회복과 파운드리 수주 확대가 주요 재평가 촉매로 작용할 수 있습니다.',
+    news:      '**뉴스 관점**\n\n최근 7일 내 삼성전자 관련 주요 부정 뉴스는 확인되지 않았습니다. 시장 영향도는 중립으로 판단되며, HBM3E 공급 확대 관련 긍정적 보도가 다수 포착되었습니다. 전반적 센티멘트는 소폭 개선 추세입니다.',
+    factor:    '**팩터 관점**\n\n모멘텀 팩터 -0.34(하위 30%), 퀄리티 팩터 +0.62(상위 40%), 밸류 팩터 +0.81(상위 25%)로 집계됩니다. 복합 팩터 스코어는 0.43으로 시장 대비 중립 우위이며, 저변동성 팩터에서 두드러진 강점이 확인됩니다.',
+    report:    '**리포트 관점**\n\n최근 12개 증권사 리포트 종합 결과, 목표주가 평균 82,400원(현재가 대비 +18.3% 상승 여력)이며 매수 9건·중립 3건·매도 0건으로 컨센서스는 긍정적입니다. 주요 리스크 요인으로 메모리 가격 하락 사이클 재진입, 미·중 반도체 규제 강화가 지목되었습니다.'
+  };
 
-이렇게 보는 근거는 다음과 같습니다.
+  var AGENT_CHIPS = [
+    { id: 'valuation', name: '밸류에이션 에이전트', color: '#ffcaca', icon: 'assets/icon-agent-valuation.svg', desc: '삼성전자 PER 12.4배로 섹터 평균 대비 저평가, HBM 수요 회복이 핵심 재평가 촉매.' },
+    { id: 'news',      name: '뉴스 에이전트',       color: '#dbffd2', icon: 'assets/icon-agent-news.svg',      desc: '최근 7일 내 주요 부정 뉴스 없음. 시장 영향도 중립으로 판단됩니다.' },
+    { id: 'factor',    name: '팩터 에이전트',       color: '#c7eeff', icon: 'assets/icon-agent-factor.svg',    desc: '복합 팩터 스코어 0.43, 시장 대비 중립 우위이며 저변동성 팩터 강점 확인.' },
+    { id: 'report',    name: '리포트 에이전트',     color: '#c0c6ff', icon: 'assets/icon-agent-report.svg',    desc: '증권사 12곳 목표주가 평균 82,400원, 매수 9건·중립 3건·매도 0건.' }
+  ];
 
-**선행 PER이 매우 낮습니다.**
-최근 12개월 예상실적 기준 PER이 5.54배이고, 다음 연간 기준 PER도 5.92배로 낮습니다. 데이터 해석상 이는 업종 대비 저평가 매력이 높다는 의미입니다.
+  var answerCount = 0; // 총 AI 답변 횟수 추적
 
-**다만 '싼 이유'도 분명합니다.**
-해석상 삼성전자는 저PER + 저성장 구간으로 분류됩니다. 즉, 낮은 PER이 단순한 저평가라기보다 성장 프리미엄 부재를 반영한 합리적 수준일 수 있어, 이익 모멘텀이 회복되지 않으면 재평가 폭은 제한적입니다.
-
-**PBR 기준으로는 매력이 약합니다.**
-최근 PBR은 3.00배로, 시계열 비교상 과거 대비 매력도 매우 낮음으로 평가되었습니다. 실제 3년 시계열 해석에서도 최근 PBR은 과거 평균보다 높은 구간으로 읽혀 보수적 접근 필요 신호가 있습니다.
-
-**동종업계 대비로는 우위가 있습니다.**
-업계 비교에서는 PER 매력도 매우 높음, PSR 매력도 높음, PBR 매력도 낮음으로 나타났고, 이를 종합한 업종 상대 매력은 높음입니다.
-
-정리하면, 삼성전자는 절대적으로 아주 싸다고 단정하기보다, 업종 대비로는 매수 우위가 있는 종목입니다.
-따라서 현재 시점의 표현은 **"중립"보다는 "비중확대"**, 그러나 **"강한 공격적 매수"까지는 아님** 이 적절합니다.
-핵심 체크포인트는 실적 회복이 실제로 이어지는지, 그리고 낮은 선행 PER이 정당한 리레이팅으로 연결되는지입니다.`;
-
-  // ── 마크다운 스트리밍 렌더러 ─────────────────────
   function streamMarkdown(container, md, onDone) {
-    var WORD_MS = 28; // 단어 간격
+    var WORD_MS = 28;
     var wordIdx = 0;
-
-    // 한 줄을 DOM으로 변환 (볼드 파싱 + 단어 스팬화)
     function appendLine(parent, text) {
-      // **bold** 기준으로 분할
       var parts = text.split(/(\*\*[^*]+\*\*)/g);
       parts.forEach(function(part) {
         var isBold = /^\*\*/.test(part);
         var raw = isBold ? part.slice(2, -2) : part;
         var wrapper = isBold ? document.createElement('strong') : null;
         var target = wrapper || parent;
-
         var words = raw.split(' ');
         words.forEach(function(word, i) {
           if (!word) return;
@@ -1462,38 +1514,17 @@
           span.style.animationDelay = (wordIdx++ * WORD_MS) + 'ms';
           target.appendChild(span);
         });
-
         if (wrapper) parent.appendChild(wrapper);
       });
     }
-
     var lines = md.split('\n');
-    var inList = false;
-    var ul;
-
     lines.forEach(function(line) {
-      if (!line.trim()) {
-        if (inList) { container.appendChild(ul); inList = false; }
-        return;
-      }
-      if (/^[-•]\s/.test(line)) {
-        if (!inList) { ul = document.createElement('ul'); inList = true; }
-        var li = document.createElement('li');
-        appendLine(li, line.replace(/^[-•]\s/, ''));
-        ul.appendChild(li);
-        return;
-      }
-      if (inList) { container.appendChild(ul); inList = false; }
+      if (!line.trim()) return;
       var p = document.createElement('p');
       appendLine(p, line);
       container.appendChild(p);
     });
-    if (inList) container.appendChild(ul);
-
-    // 마지막 단어 애니메이션 끝난 뒤 콜백
-    if (onDone) {
-      setTimeout(onDone, wordIdx * WORD_MS + 200);
-    }
+    if (onDone) setTimeout(onDone, wordIdx * WORD_MS + 200);
   }
 
   function onAgentResult(sourceWindow) {
@@ -1502,33 +1533,260 @@
       try { if (f.contentWindow === sourceWindow) agentIframe = f; } catch(err) {}
     });
     if (!agentIframe) return;
-
     var msgAi = agentIframe.closest('.msg-ai');
     if (!msgAi) return;
-
     if (msgAi.querySelector('.result-text')) return;
+    answerCount++;
 
-    // 스트리밍 컨테이너 추가
     var div = document.createElement('div');
     div.className = 'result-text model-text';
     msgAi.appendChild(div);
 
     streamMarkdown(div, RESULT_MD, function() {
-      // 스트리밍 완료 후 스크롤
+      // ① 스켈레톤 칩 먼저 표시
+      var cw = document.createElement('div');
+      cw.className = 'agent-chips-wrap';
+      var ci = document.createElement('div');
+      ci.className = 'agent-chips';
+      AGENT_CHIPS.forEach(function() {
+        var sk = document.createElement('div');
+        sk.className = 'agent-chip is-skeleton';
+        sk.innerHTML =
+          '<div class="sk-chip-header">' +
+            '<div class="sk-chip-circle sh"></div>' +
+            '<div class="sk-chip-name-bar sh"></div>' +
+          '</div>' +
+          '<div class="sk-chip-line sh" style="width:88%"></div>' +
+          '<div class="sk-chip-line sh" style="width:65%"></div>';
+        ci.appendChild(sk);
+      });
+      cw.appendChild(ci);
+      msgAi.appendChild(cw);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+
+      // ② 700ms 후 실제 칩으로 교체
+      setTimeout(function() {
+        ci.innerHTML = '';
+        AGENT_CHIPS.forEach(function(ch) {
+        var chip = document.createElement('div');
+        chip.className = 'agent-chip chip-reveal';
+        chip.innerHTML =
+          '<div class="chip-header">' +
+            '<div class="chip-badge" style="background:' + ch.color + '"><img src="' + ch.icon + '" alt=""></div>' +
+            '<span class="chip-name">' + ch.name + '</span>' +
+          '</div>' +
+          '<p class="chip-desc">' + ch.desc + '</p>';
+        // 선택 + 칩 답변 스트리밍
+        (function(chipEl, agentId) {
+          chipEl.addEventListener('click', function() {
+            if (chipEl.classList.contains('is-selected')) return;
+            ci.querySelectorAll('.agent-chip').forEach(function(c) { c.classList.remove('is-selected'); });
+            chipEl.classList.add('is-selected');
+
+            var md = CHIP_MD[agentId];
+            if (!md) return;
+
+            answerCount++;
+
+            // 채팅 하단에 새 AI 답변 턴 추가
+            var newAi = document.createElement('div');
+            newAi.className = 'msg-ai';
+            newAi.innerHTML =
+              '<div class="app-attr">' +
+                '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+                  '<img src="assets/logo1.png" alt="" style="width:16px;height:9px;object-fit:contain;display:block;">' +
+                '</div>' +
+                '<span class="app-attr-name">AI 허브 BNK</span>' +
+              '</div>';
+            chatContent.appendChild(newAi);
+
+            var textDiv = document.createElement('div');
+            textDiv.className = 'result-text model-text';
+            newAi.appendChild(textDiv);
+
+            chatScroll.scrollTop = chatScroll.scrollHeight;
+
+            streamMarkdown(textDiv, md, function() {
+              // 3번째 답변부터 디베이팅 카드 추가
+              if (answerCount >= 2) {
+                var dc = buildDebatingCard(newAi);
+                newAi.appendChild(dc);
+              }
+              chatScroll.scrollTop = chatScroll.scrollHeight;
+            });
+          });
+        }(chip, ch.id));
+          ci.appendChild(chip);
+        });
+        // 칩 하단 안내 문구 — 칩 바로 뒤(액션 아이콘 앞)에 삽입
+        var chipFooter = document.createElement('p');
+        chipFooter.style.cssText = 'font-size:16px;color:#0d0d0d;line-height:26px;letter-spacing:-0.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:4px;';
+        chipFooter.textContent = '또는 입력창에 에이전트명 + 질문 내용을 작성하여 선택 질의하기';
+        cw.insertAdjacentElement('afterend', chipFooter);
+
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+      }, 700);
+
+      // 마우스 드래그 슬라이드
+      var dragStartX = 0, dragScrollLeft = 0, dragging = false;
+      cw.addEventListener('mousedown', function(e) {
+        dragging = true;
+        dragStartX = e.pageX - cw.offsetLeft;
+        dragScrollLeft = cw.scrollLeft;
+        cw.classList.add('is-dragging');
+      });
+      window.addEventListener('mouseup', function() {
+        dragging = false;
+        cw.classList.remove('is-dragging');
+      });
+      cw.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        cw.scrollLeft = dragScrollLeft - (e.pageX - cw.offsetLeft - dragStartX) * 1.2;
+      });
+      // 드래그 중엔 클릭 억제
+      cw.addEventListener('click', function(e) {
+        if (Math.abs(cw.scrollLeft - dragScrollLeft) > 4) e.stopPropagation();
+      }, true);
+
+      // 액션 버튼
+      var actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      actions.innerHTML =
+        '<button class="msg-action" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+        '<button class="msg-action" title="Good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>' +
+        '<button class="msg-action" title="Bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>' +
+        '<button class="msg-action" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>';
+      msgAi.appendChild(actions);
       chatScroll.scrollTop = chatScroll.scrollHeight;
     });
+  }
 
-    // 액션 버튼 행 추가
-    var actions = document.createElement('div');
-    actions.className = 'msg-actions';
-    actions.innerHTML =
-      '<button class="msg-action" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
-      '<button class="msg-action" title="Good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>' +
-      '<button class="msg-action" title="Bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>' +
-      '<button class="msg-action" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>';
-    msgAi.appendChild(actions);
+  // ── 디베이팅 카드 빌더 ──────────────────────────────
+  function buildDebatingCard(container) {
+    var card = document.createElement('div');
+    card.className = 'debating-card';
 
-    setTimeout(function() { chatScroll.scrollTop = chatScroll.scrollHeight; }, 100);
+    // ① 스켈레톤 먼저 표시
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 16px 4px">' +
+        '<div class="sk-db-title sh"></div>' +
+        '<div style="display:flex;gap:12px;align-items:flex-start">' +
+          '<div class="sk-db-circle sh"></div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;gap:8px">' +
+            '<div class="sk-db-line sh" style="width:55%"></div>' +
+            '<div class="sk-db-line sh" style="width:80%"></div>' +
+            '<div class="sk-db-line sh" style="width:65%"></div>' +
+            '<div class="sk-db-btn sh"></div>' +
+          '</div>' +
+        '</div>' +
+        '<hr class="debating-divider">' +
+        '<div class="sk-db-section sh"></div>' +
+        '<div style="display:flex;gap:12px">' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+        '</div>' +
+        '<div class="sk-db-line sh" style="width:85%"></div>' +
+      '</div>';
+
+    // ② 700ms 후 실제 카드로 교체
+    setTimeout(function() {
+      card.innerHTML = '';
+      card.classList.add('is-revealed');
+      _fillDebatingCard(card);
+    }, 700);
+
+    return card;
+  }
+
+  function _fillDebatingCard(card) {
+
+    // 헤더
+    var header = document.createElement('p');
+    header.className = 'debating-header';
+    header.textContent = '디베이팅 멀티 에이전트에게 물어보세요!';
+    card.appendChild(header);
+
+    // 아이템 (체크 + 설명 + 버튼)
+    var item = document.createElement('div');
+    item.className = 'debating-item';
+    item.innerHTML =
+      '<div class="debating-check">' +
+        '<svg viewBox="0 0 12 12" fill="none" stroke="#2da040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<polyline points="10 3 5 8.5 2 5.5"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="debating-content">' +
+        '<p class="debating-action-title">아래 버튼을 눌러서 이동</p>' +
+        '<ul class="debating-bullets">' +
+          '<li>디베이팅 모델 사용 시 시간이 소요됩니다.</li>' +
+          '<li>새로운 질의로 시작해야합니다.</li>' +
+        '</ul>' +
+        '<button class="debating-btn"><img src="assets/icon-debating-stack.svg" alt="" style="width:20px;height:20px;flex-shrink:0;">디베이팅 모델 사용해 보기</button>' +
+      '</div>';
+    card.appendChild(item);
+
+    // 구분선
+    var hr = document.createElement('hr');
+    hr.className = 'debating-divider';
+    card.appendChild(hr);
+
+    // 단일 에이전트 재질의 제목
+    var secTitle = document.createElement('p');
+    secTitle.className = 'debating-section-title';
+    secTitle.textContent = '또는 단일 에이전트 재질의';
+    card.appendChild(secTitle);
+
+    // 칩 캐러셀
+    var chipsSection = document.createElement('div');
+    chipsSection.className = 'debating-chips-wrap';
+    var chipsInner = document.createElement('div');
+    chipsInner.className = 'debating-chips-inner';
+    AGENT_CHIPS.forEach(function(ch) {
+      var chip = document.createElement('div');
+      chip.className = 'agent-chip';
+      chip.innerHTML =
+        '<div class="chip-header">' +
+          '<div class="chip-badge" style="background:' + ch.color + '"><img src="' + ch.icon + '" alt=""></div>' +
+          '<span class="chip-name">' + ch.name + '</span>' +
+        '</div>' +
+        '<p class="chip-desc">' + ch.desc + '</p>';
+      chip.addEventListener('click', function() {
+        var md = CHIP_MD[ch.id];
+        if (!md) return;
+        answerCount++;
+        var newAi = document.createElement('div');
+        newAi.className = 'msg-ai';
+        newAi.innerHTML =
+          '<div class="app-attr">' +
+            '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+              '<img src="assets/logo1.png" alt="" style="width:16px;height:9px;object-fit:contain;display:block;">' +
+            '</div>' +
+            '<span class="app-attr-name">AI 허브 BNK</span>' +
+          '</div>';
+        chatContent.appendChild(newAi);
+        var textDiv = document.createElement('div');
+        textDiv.className = 'result-text model-text';
+        newAi.appendChild(textDiv);
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+        streamMarkdown(textDiv, md, function() {
+          if (answerCount >= 2) newAi.appendChild(buildDebatingCard(newAi));
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+        });
+      });
+      chipsInner.appendChild(chip);
+    });
+    chipsSection.appendChild(chipsInner);
+    card.appendChild(chipsSection);
+
+    // 하단 안내 문구
+    var footer = document.createElement('p');
+    footer.className = 'debating-footer';
+    footer.textContent = '또는 입력창에 에이전트명 + 질문 내용을 작성하여 선택 질의하기';
+    card.appendChild(footer);
+
   }
 
   // ── 질문에서 티커 추출 (간단 휴리스틱) ───────────
@@ -1560,11 +1818,7 @@
     userDiv.innerHTML = '<div class="msg-bubble"><p>' + escHtml(text) + '</p></div>';
     chatContent.appendChild(userDiv);
 
-    // 2. AI 블록: 어트리뷰션 + 게이트 위젯 + 에이전트 위젯(hidden)
-    var ticker  = extractTicker(text);
-    var gateUrl = 'widget-gate.html?q=' + encodeURIComponent(text)
-                + (ticker ? '&ticker=' + encodeURIComponent(ticker) : '');
-
+    // 2. AI 블록: 어트리뷰션 + 에이전트 위젯 (바로 표시)
     var aiDiv = document.createElement('div');
     aiDiv.className = 'msg-ai';
     aiDiv.innerHTML =
@@ -1572,19 +1826,12 @@
         '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
           '<img src="assets/logo1.png" alt="" style="width:16px;height:9px;object-fit:contain;display:block;">' +
         '</div>' +
-        '<span class="app-attr-name">펀더먼탈 에이전트</span>' +
+        '<span class="app-attr-name">AI 허브 BNK</span>' +
       '</div>' +
-      /* ── STEP 1: 게이트 ── */
-      '<div class="widget-wrap gate-wrap">' +
+      '<div class="widget-wrap agent-wrap">' +
         '<div class="widget-frame">' +
-          '<iframe class="gate-iframe" src="' + gateUrl + '" ' +
+          '<iframe src="widget-agent.html" ' +
             'sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
-        '</div>' +
-      '</div>' +
-      /* ── STEP 2: 에이전트 (선택 후 표시) ── */
-      '<div class="widget-wrap agent-wrap" style="display:none">' +
-        '<div class="widget-frame">' +
-          '<iframe sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
         '</div>' +
       '</div>';
 
