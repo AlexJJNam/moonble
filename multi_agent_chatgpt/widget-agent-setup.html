@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>에이전트 분석 설정</title>
+  <style>
+    @font-face { font-family:'Pretendard'; font-weight:400; font-style:normal; src:url('fonts/Pretendard-Regular.woff2') format('woff2'); }
+    @font-face { font-family:'Pretendard'; font-weight:500; font-style:normal; src:url('fonts/Pretendard-Medium.woff2')  format('woff2'); }
+    @font-face { font-family:'Pretendard'; font-weight:600; font-style:normal; src:url('fonts/Pretendard-SemiBold.woff2') format('woff2'); }
+    @font-face { font-family:'Pretendard'; font-weight:700; font-style:normal; src:url('fonts/Pretendard-Bold.woff2')    format('woff2'); }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      width: 100%; background: transparent; overflow: visible;
+    }
+    body {
+      width: 100%; box-sizing: border-box;
+      background: transparent; overflow-x: clip; overflow-y: visible;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 16px 16px 20px;
+    }
+
+    /* ── 카드 컨테이너 ─────────────────────── */
+    .card {
+      background: #fff;
+      border: 0.5px solid rgba(13,13,13,0.15);
+      border-radius: 24px;
+      box-shadow: 0px 4px 16px 0px rgba(0,0,0,0.05);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* ── 카드 헤더 ─────────────────────────── */
+    .card-header {
+      height: 56px;
+      display: flex; align-items: center;
+      padding: 0 8px 0 16px;
+    }
+    .card-header-inner {
+      display: flex; align-items: center; gap: 4px;
+    }
+    .header-icon { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+    .card-header-title {
+      font-size: 17px; font-weight: 510;
+      line-height: 23px; letter-spacing: -0.43px; color: #000;
+    }
+
+    /* ── 섹션 행 ───────────────────────────── */
+    .section-row {
+      border-bottom: 1px solid rgba(13,13,13,0.05);
+      padding: 12px 16px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .section-row:last-child { border-bottom: none; }
+    .section-title {
+      font-size: 17px; font-weight: 500;
+      line-height: 18px; letter-spacing: -1px; color: #0d0d0d;
+    }
+
+    /* ── 분석방법 칩 ────────────────────────── */
+    .method-chips {
+      display: flex; gap: 8px; overflow-x: auto;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .method-chips::-webkit-scrollbar { display: none; }
+
+    .method-chip {
+      flex: 1; min-width: 0;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      padding: 14px 16px; border-radius: 10px;
+      border: 1.6px solid transparent;
+      background: #f3f3f3;
+      cursor: pointer; font-family: inherit;
+      font-size: 17px; line-height: 18px; letter-spacing: -1px;
+      color: #0d0d0d; white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .method-chip .chip-badge {
+      width: 24px; height: 24px; border-radius: 100px;
+      padding: 2px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .method-chip .chip-badge img {
+      width: 18px; height: 18px; display: block;
+    }
+
+    /* ── 투자성향 서브카드 ──────────────────── */
+    .sub-cards { display: flex; flex-direction: column; gap: 8px; }
+    .sub-card {
+      background: #fafbfd; border: 1px solid #eaecf0;
+      border-radius: 12px; padding: 24px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .sub-card-head { display: flex; flex-direction: column; gap: 6px; }
+    .sub-card-title {
+      font-size: 16px; font-weight: 500;
+      line-height: 18px; letter-spacing: -1px; color: #0d0d0d;
+    }
+    .sub-card-desc {
+      font-size: 14px; font-weight: 400;
+      line-height: 20px; letter-spacing: -0.18px; color: #5d5d5d;
+    }
+
+    /* ── 슬라이더 공통 ──────────────────────── */
+    .seg-tabs, .mode-tabs { position: relative; }
+    .tab-slider {
+      position: absolute; top: 4px; bottom: 4px;
+      border-radius: 10px; pointer-events: none; z-index: 0;
+      transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+    .seg-tabs  .tab-slider { background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.1); }
+    .mode-tabs .tab-slider { background:#fff; box-shadow:0 1px 3px rgba(136,0,255,.1),0 1px 2px rgba(136,0,255,.1); }
+    .mode-tabs .tab-slider.debate { box-shadow:0 1px 3px rgba(0,102,255,.1),0 1px 2px rgba(0,102,255,.1); }
+
+    /* ── 세그먼티드 탭 (2탭, 스타일/투자기간) ── */
+    .seg-tabs {
+      background: #f2f3f5; border-radius: 14px;
+      padding: 4px; display: flex; height: 42px;
+    }
+    .seg-btn {
+      flex: 1; border: none; border-radius: 10px;
+      background: transparent;
+      font-family: inherit; font-size: 15px; font-weight: 400;
+      line-height: 22px; color: #71717b;
+      cursor: pointer; padding: 6px 4px;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      position: relative; z-index: 1;
+      transition: color 0.22s, font-weight 0.1s;
+    }
+    .seg-btn.is-active { color: #141414; font-weight: 500; }
+    .seg-btn img { width: 20px; height: 20px; display: block; flex-shrink: 0; }
+
+    /* ── 위험성향 5탭 ───────────────────────── */
+    .risk-tabs {
+      background: #f2f3f5; border-radius: 14px;
+      padding: 4px; display: flex; gap: 6px; height: 42px;
+    }
+    .risk-btn {
+      flex: 1; border: none; border-radius: 10px;
+      background: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 400;
+      line-height: 22px; color: #71717b;
+      cursor: pointer; padding: 6px 2px;
+      position: relative; z-index: 1;
+      transition: color 0.22s, font-weight 0.1s, background 0.22s;
+    }
+    .risk-btn.is-active {
+      background: #404040; color: #fff; font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    /* ── 스테퍼 ─────────────────────────────── */
+    .stepper-row { display: flex; gap: 4px; align-items: center; }
+    .stepper-val-wrap {
+      flex: 1; background: #f2f3f5; border-radius: 14px; padding: 4px;
+    }
+    .stepper-val-wrap {
+      flex: 1; background: #f2f3f5; border-radius: 14px; padding: 4px;
+    }
+    .stepper-val-inner {
+      background: #fff; border: 1px solid #e0e0e0;
+      border-radius: 10px; height: 42px;
+      display: flex; align-items: center;
+      padding: 0 12px;
+      transition: border-color 0.15s;
+    }
+    .stepper-val-inner:focus-within {
+      border-color: #131313;
+    }
+    .stepper-val-inner input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-size: 15px; font-weight: 400; color: #131313;
+      font-family: inherit; text-align: left; padding: 0;
+      -moz-appearance: textfield;
+    }
+    .stepper-val-inner input::-webkit-outer-spin-button,
+    .stepper-val-inner input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .stepper-val-inner .unit {
+      font-size: 15px; font-weight: 400; color: #131313;
+      flex-shrink: 0; margin-left: 4px;
+    }
+    .stepper-val-inner.is-error { border-color: #ff4e4e; }
+    .risk-error-msg {
+      display: none; font-size: 14px; font-family: 'Pretendard', sans-serif; color: #ff4e4e;
+      margin-top: 2px; letter-spacing: -0.2px;
+    }
+    .risk-error-msg.is-visible { display: block; }
+    .stepper-btns {
+      background: #f2f4f6; border-radius: 6px;
+      height: 42px; display: flex; align-items: center; flex-shrink: 0;
+    }
+    .stepper-btn {
+      width: 36px; height: 36px; background: transparent; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 0; position: relative;
+    }
+    .stepper-btn::before {
+      content: '';
+      position: absolute;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      transition: background 0.15s;
+    }
+    .stepper-btn:hover::before  { background: rgba(13,13,13,0.08); }
+    .stepper-btn:active::before { background: rgba(13,13,13,0.15); }
+    .stepper-btn img { position: relative; z-index: 1; display: block; }
+    .stepper-btn.minus img { width: 12px; height: 1.6px; }
+    .stepper-btn.plus  img { width: 12px; height: 12px; }
+    .stepper-sep {
+      width: 1px; height: 17px;
+      background: rgba(139,149,161,0.6); flex-shrink: 0;
+    }
+
+    /* ── 추론방식 탭 ────────────────────────── */
+    .mode-tabs {
+      background: #f2f3f5; border-radius: 14px;
+      padding: 4px; display: flex; height: 60px;
+    }
+    .mode-btn {
+      flex: 1; border: none; border-radius: 10px;
+      background: transparent;
+      font-family: inherit; font-size: 15px; font-weight: 400;
+      line-height: 22px; color: #71717b;
+      cursor: pointer; padding: 6px 4px;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      position: relative; z-index: 1;
+      transition: color 0.22s, font-weight 0.1s;
+    }
+    .mode-btn.is-active { color: #8800ff; font-weight: 500; }
+    .mode-btn.is-active.debate { color: #0066ff; }
+    .mode-btn svg { width: 20px; height: 20px; display: block; flex-shrink: 0; fill: currentColor; }
+
+    /* ── 카드 푸터 ──────────────────────────── */
+    .card-footer { padding: 16px; }
+    .submit-btn {
+      width: 100%; height: 44px; background: #0285ff;
+      border: none; border-radius: 999px;
+      color: #fff; font-family: inherit;
+      font-size: 15px; font-weight: 510; line-height: 24px; letter-spacing: -0.24px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      transition: opacity 0.15s;
+    }
+    .submit-btn:active { opacity: 0.75; }
+    .submit-btn .voice-wrap {
+      width: 24px; height: 24px; position: relative; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .submit-btn .voice-wrap img {
+      width: 18px; height: 16px; display: block;
+    }
+
+    /* ── 모바일 반응형 ──────────────────────── */
+    @media (max-width: 600px) {
+      .method-chips {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px; overflow: visible;
+      }
+      .method-chip { max-width: none; white-space: normal; }
+      /* 위험성향 5탭: 좁은 화면에서 폰트 축소 */
+      .risk-btn { font-size: 12px; padding: 6px 2px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+
+  <!-- 헤더 -->
+  <div class="card-header">
+    <div class="card-header-inner">
+      <img src="assets/widget-setup/settings-cog.svg" class="header-icon" alt="">
+      <span class="card-header-title">에이전트 분석 설정</span>
+    </div>
+  </div>
+
+  <!-- ① 투자성향 -->
+  <div class="section-row">
+    <div class="section-title">투자성향</div>
+    <div class="sub-cards">
+
+      <!-- 위험성향 (1순위) -->
+      <div class="sub-card">
+        <div class="sub-card-head">
+          <div class="sub-card-title">위험성향</div>
+          <div class="sub-card-desc">낮을수록 보수적, 높을수록 공격적 성향입니다.</div>
+        </div>
+        <div class="risk-tabs" id="riskTab">
+          <button class="risk-btn" data-val="10%">10%</button>
+          <button class="risk-btn" data-val="25%">25%</button>
+          <button class="risk-btn is-active" data-val="50%">50%</button>
+          <button class="risk-btn" data-val="75%">75%</button>
+          <button class="risk-btn" data-val="최대">최대</button>
+        </div>
+        <div class="stepper-row">
+          <div class="stepper-val-wrap">
+            <div class="stepper-val-inner">
+              <input id="riskNum" type="number" min="0" max="100" value="50">
+              <span class="unit">%</span>
+            </div>
+          </div>
+          <div class="stepper-btns">
+            <button class="stepper-btn minus" id="btnMinus" aria-label="감소">
+              <img src="assets/widget-setup/minus.svg" alt="-">
+            </button>
+            <div class="stepper-sep"></div>
+            <button class="stepper-btn plus" id="btnPlus" aria-label="증가">
+              <img src="assets/widget-setup/plus.svg" alt="+">
+            </button>
+          </div>
+        </div>
+        <p class="risk-error-msg" id="riskError">0~100까지의 범위로 입력해 주세요.</p>
+      </div>
+
+      <!-- 스타일 선호도 (2순위) -->
+      <div class="sub-card">
+        <div class="sub-card-head">
+          <div class="sub-card-title">스타일 선호도</div>
+          <div class="sub-card-desc">어떤 투자 스타일을 더 선호 하시나요?</div>
+        </div>
+        <div class="seg-tabs" id="styleTab">
+          <div class="tab-slider"></div>
+          <button class="seg-btn is-active" data-val="밸류에이션">밸류에이션</button>
+          <button class="seg-btn" data-val="균형">균형</button>
+          <button class="seg-btn" data-val="성장">성장</button>
+        </div>
+      </div>
+
+      <!-- 투자기간 (3순위) -->
+      <div class="sub-card">
+        <div class="sub-card-head">
+          <div class="sub-card-title">투자기간</div>
+          <div class="sub-card-desc">투자 관점의 기간을 선택해 주세요.</div>
+        </div>
+        <div class="seg-tabs" id="periodTab">
+          <div class="tab-slider"></div>
+          <button class="seg-btn is-active" data-val="단기 (~1M)">단기 (~1M)</button>
+          <button class="seg-btn" data-val="중기 (~3M)">중기 (~3M)</button>
+          <button class="seg-btn" data-val="장기 (~12M)">장기 (~12M)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ② 분석방법 선호도 -->
+  <div class="section-row">
+    <div class="section-title">분석방법 선호도</div>
+    <div class="method-chips" id="methodChips"></div>
+  </div>
+
+  <!-- ③ 추론방식 -->
+  <div class="section-row" style="border-bottom:none">
+    <div class="section-title">추론방식</div>
+    <div class="mode-tabs" id="modeTab">
+      <div class="tab-slider"></div>
+      <button class="mode-btn is-active normal" data-val="일반모드 (~2분)">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.0625 6.57143C9.0625 7.28151 8.4329 7.85714 7.65625 7.85714C6.8796 7.85714 6.25 7.28151 6.25 6.57143C6.25 5.86135 6.8796 5.28571 7.65625 5.28571C8.4329 5.28571 9.0625 5.86135 9.0625 6.57143Z" fill="currentColor"/>
+          <path d="M12.3438 7.85714C13.1204 7.85714 13.75 7.28151 13.75 6.57143C13.75 5.86135 13.1204 5.28571 12.3438 5.28571C11.5671 5.28571 10.9375 5.86135 10.9375 6.57143C10.9375 7.28151 11.5671 7.85714 12.3438 7.85714Z" fill="currentColor"/>
+          <path d="M10 1C10.5178 1 10.9375 1.38376 10.9375 1.85714V2.28571L13.6289 2.28571C14.1092 2.2857 14.5236 2.28569 14.8652 2.31051C15.2256 2.33669 15.5845 2.39447 15.9314 2.5509C16.4867 2.80126 16.9361 3.21215 17.21 3.71983C17.3811 4.03704 17.4442 4.36513 17.4729 4.69465C17.5 5.00697 17.5 5.38583 17.5 5.82497V5.89278C17.5 6.79569 17.5 7.52396 17.4487 8.11424C17.3959 8.72185 17.2844 9.2562 17.0166 9.75267C16.5602 10.5988 15.8112 11.2836 14.8857 11.7009C14.3427 11.9457 13.7583 12.0477 13.0937 12.096C12.4481 12.1429 11.6515 12.1429 10.664 12.1429H9.33602C8.34847 12.1429 7.55192 12.1429 6.90631 12.096C6.24173 12.0477 5.65728 11.9457 5.11428 11.7009C4.18881 11.2836 3.4398 10.5988 2.98341 9.75267C2.71563 9.25621 2.6041 8.72186 2.55129 8.11424C2.49999 7.52398 2.49999 6.79573 2.5 5.89287V5.82505C2.49999 5.38589 2.49997 5.00698 2.52712 4.69465C2.55576 4.36513 2.61895 4.03704 2.79005 3.71983C3.06388 3.21215 3.51329 2.80126 4.06856 2.5509C4.41552 2.39447 4.77436 2.33669 5.13477 2.31051C5.4764 2.28569 5.8908 2.2857 6.37115 2.28571L9.0625 2.28571V1.85714C9.0625 1.38376 9.48223 1 10 1ZM5.2833 4.01941C5.03537 4.03742 4.94301 4.06804 4.89786 4.0884C4.71276 4.17185 4.56296 4.30881 4.47168 4.47804C4.44942 4.51932 4.41593 4.60377 4.39623 4.83044C4.37569 5.06671 4.375 5.37683 4.375 5.85714C4.375 6.80403 4.37569 7.46408 4.4204 7.97844C4.46427 8.48322 4.5461 8.77393 4.66505 8.99446C4.93888 9.50214 5.38829 9.91303 5.94357 10.1634C6.18477 10.1721 6.50274 10.347 7.05483 10.3871C7.61742 10.4279 8.33935 10.4286 9.375 10.4286H10.625C11.6607 10.4286 12.3826 10.4279 12.9452 10.3871C13.4973 10.347 13.8152 10.1721 14.0564 10.1634C14.6117 9.91302 15.0611 9.50214 15.335 8.99446C15.4539 8.77393 15.5357 8.48321 15.5796 7.97844C15.6243 7.46407 15.625 6.80402 15.625 5.85714C15.625 5.37683 15.6243 5.06671 15.6038 4.83044C15.5841 4.60377 15.5506 4.51932 15.5283 4.47804C15.437 4.30881 15.2872 4.17185 15.1021 4.08839C15.057 4.06804 14.9646 4.03742 14.7167 4.01941C14.4583 4.00063 14.1191 4 13.5938 4H6.40625C5.88091 4 5.54172 4.00063 5.2833 4.01941Z" fill="currentColor"/>
+          <path d="M4.375 18.1429C4.375 17.3081 4.89155 16.4714 5.90455 15.8099C6.91574 15.1495 8.36074 14.7143 10 14.7143C11.6393 14.7143 13.0843 15.1495 14.0955 15.8099C15.1085 16.4714 15.625 17.3081 15.625 18.1429C15.625 18.6162 16.0447 19 16.5625 19C17.0803 19 17.5 18.6162 17.5 18.1429C17.5 16.6107 16.5475 15.3045 15.1853 14.4149C13.8213 13.5242 11.9851 13 10.0001 13C8.01501 13 6.17873 13.5241 4.81473 14.4149C3.45254 15.3045 2.5 16.6107 2.5 18.1429C2.5 18.6162 2.91973 19 3.4375 19C3.95527 19 4.375 18.6162 4.375 18.1429Z" fill="currentColor"/>
+        </svg>
+        일반모드 (~2분)
+      </button>
+      <button class="mode-btn debate" data-val="토론모드 (~10분)">
+        <svg viewBox="0 0 18.4169 13.3333" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.33228 0.569158C3.64876 0.207467 4.10597 0 4.58658 0H13.8303C14.3109 0 14.7681 0.207468 15.0846 0.569159L18.0013 3.90249C18.9442 4.98013 18.1789 6.66667 16.747 6.66667H1.66991C0.237977 6.66667 -0.527318 4.98013 0.415615 3.90249L3.33228 0.569158ZM13.8303 1.66667L4.58658 1.66667L1.66991 5H16.747L13.8303 1.66667ZM0.875103 9.16667C0.875103 8.70643 1.2482 8.33333 1.70844 8.33333H16.7084C17.1687 8.33333 17.5418 8.70643 17.5418 9.16667C17.5418 9.6269 17.1687 10 16.7084 10H1.70844C1.2482 10 0.875103 9.6269 0.875103 9.16667ZM1.70844 12.5C1.70844 12.0398 2.08153 11.6667 2.54177 11.6667H15.8751C16.3353 11.6667 16.7084 12.0398 16.7084 12.5C16.7084 12.9602 16.3353 13.3333 15.8751 13.3333H2.54177C2.08153 13.3333 1.70844 12.9602 1.70844 12.5Z" fill="currentColor"/>
+        </svg>
+        토론모드 (~10분)
+      </button>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="card-footer">
+    <button class="submit-btn" id="submitBtn">
+      <span class="voice-wrap">
+        <img src="assets/widget-setup/voice.svg" alt="">
+      </span>
+      결과 생성하기
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* ────────────────────────────────────────
+   에이전트 칩 데이터
+──────────────────────────────────────── */
+var CHIPS = [
+  { id: 'analyst',   label: '리포트',     badge: '#ffcaca',
+    color: '#ff4e4e', bg: '#fff6f6', icon: 'assets/widget-setup/analyst.svg' },
+  { id: 'style',     label: '스타일',     badge: '#dbffd2',
+    color: '#0aae49', bg: '#f1fff5', icon: 'assets/widget-setup/style.svg' },
+  { id: 'valuation', label: '밸류에이션', badge: '#c7eeff',
+    color: '#25a1d7', bg: '#f2fbff', icon: 'assets/widget-setup/valuation.svg' },
+  { id: 'news',      label: '뉴스플로우',       badge: '#c0c6ff',
+    color: '#2734c4', bg: '#f3f4ff', icon: 'assets/widget-setup/news.svg' }
+];
+
+var selectedMethod = 'analyst';
+
+/* ────────────────────────────────────────
+   칩 렌더링
+──────────────────────────────────────── */
+function renderChips() {
+  var wrap = document.getElementById('methodChips');
+  wrap.innerHTML = '';
+  CHIPS.forEach(function(c) {
+    var btn = document.createElement('button');
+    btn.className = 'method-chip';
+    btn.dataset.id = c.id;
+    btn.innerHTML =
+      '<span class="chip-badge" style="background:' + c.badge + '">' +
+        '<img src="' + c.icon + '" alt="">' +
+      '</span>' +
+      c.label;
+    applyChipState(btn, c, c.id === selectedMethod);
+    btn.addEventListener('click', function() {
+      selectedMethod = c.id;
+      wrap.querySelectorAll('.method-chip').forEach(function(b) {
+        var chip = CHIPS.find(function(x){ return x.id === b.dataset.id; });
+        applyChipState(b, chip, b.dataset.id === selectedMethod);
+      });
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function applyChipState(btn, chip, active) {
+  if (active) {
+    btn.style.background   = chip.bg;
+    btn.style.borderColor  = chip.color;
+    btn.style.color        = chip.color;
+  } else {
+    btn.style.background   = '#f3f3f3';
+    btn.style.borderColor  = 'transparent';
+    btn.style.color        = '#0d0d0d';
+  }
+}
+
+/* ────────────────────────────────────────
+   슬라이더 — 퍼센트 기반 (항상 반응형)
+──────────────────────────────────────── */
+function moveSlider(group, btn) {
+  var slider = group.querySelector('.tab-slider');
+  if (!slider) return;
+  var btns  = Array.prototype.slice.call(group.querySelectorAll('button'));
+  var idx   = btns.indexOf(btn);
+  var n     = btns.length;
+  slider.style.width     = 'calc((100% - 8px) / ' + n + ')';
+  slider.style.left      = '4px';
+  slider.style.transform = 'translateX(calc(' + idx + ' * 100%))';
+  if (group.classList.contains('mode-tabs')) {
+    slider.classList.toggle('debate', btn.classList.contains('debate'));
+  }
+}
+
+/* ────────────────────────────────────────
+   세그먼티드 탭 공통 토글
+──────────────────────────────────────── */
+function bindSegTabs(groupId, btnClass) {
+  var group = document.getElementById(groupId);
+  var btns  = group.querySelectorAll('.' + btnClass);
+  // 초기 슬라이더 위치
+  requestAnimationFrame(function() {
+    var active = group.querySelector('.' + btnClass + '.is-active');
+    if (active) moveSlider(group, active);
+  });
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btns.forEach(function(b) { b.classList.remove('is-active'); });
+      this.classList.add('is-active');
+      moveSlider(group, this);
+      reportHeight();
+    });
+  });
+}
+
+/* ────────────────────────────────────────
+   위험성향 스테퍼
+──────────────────────────────────────── */
+var riskVal = 50;
+var riskNumEl = document.getElementById('riskNum');
+
+var riskErrorEl = document.getElementById('riskError');
+var riskInnerEl = riskNumEl.closest('.stepper-val-inner');
+
+function showRiskError(show) {
+  riskErrorEl.classList.toggle('is-visible', show);
+  riskInnerEl.classList.toggle('is-error', show);
+}
+
+var RISK_PRESET = { 10: '10%', 25: '25%', 50: '50%', 75: '75%', 100: '최대' };
+
+function syncRiskTab(v) {
+  var matched = RISK_PRESET[v];
+  document.querySelectorAll('#riskTab .risk-btn').forEach(function(b) {
+    b.classList.toggle('is-active', !!matched && b.dataset.val === matched);
+  });
+}
+
+function setRisk(val) {
+  riskVal = Math.min(100, Math.max(0, val));
+  riskNumEl.value = riskVal;
+  showRiskError(false);
+  syncRiskTab(riskVal);
+}
+
+document.getElementById('btnMinus').addEventListener('click', function() { setRisk(riskVal - 1); });
+document.getElementById('btnPlus').addEventListener('click',  function() { setRisk(riskVal + 1); });
+
+riskNumEl.addEventListener('input', function() {
+  var v = parseInt(this.value, 10);
+  var outOfRange = isNaN(v) || v < 0 || v > 100;
+  showRiskError(outOfRange);
+  if (!outOfRange) {
+    riskVal = v;
+    syncRiskTab(v);
+  }
+});
+
+riskNumEl.addEventListener('blur', function() {
+  var v = parseInt(this.value, 10);
+  if (isNaN(v) || v < 0 || v > 100) {
+    setRisk(riskVal);
+  } else {
+    syncRiskTab(v);
+  }
+});
+
+/* ────────────────────────────────────────
+   제출 버튼
+──────────────────────────────────────── */
+document.getElementById('submitBtn').addEventListener('click', function() {
+  var method  = selectedMethod;
+  var style   = (document.querySelector('#styleTab  .seg-btn.is-active')  || {}).dataset.val || '밸류에이션';
+  var period  = (document.querySelector('#periodTab .seg-btn.is-active')  || {}).dataset.val || '단기';
+  var risk    = (document.querySelector('#riskTab   .risk-btn.is-active') || {}).dataset.val || '10%';
+  var mode    = (document.querySelector('#modeTab   .mode-btn.is-active') || {}).dataset.val || '일반모드';
+
+  window.parent.postMessage({
+    type:   'setup-result',
+    method: method,
+    style:  style,
+    period: period,
+    risk:   risk,
+    riskCustom: riskVal,
+    mode:   mode
+  }, '*');
+});
+
+/* ────────────────────────────────────────
+   iframe 높이 리포트
+──────────────────────────────────────── */
+function reportHeight() {
+  window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+}
+
+/* ────────────────────────────────────────
+   초기화
+──────────────────────────────────────── */
+renderChips();
+bindSegTabs('styleTab',  'seg-btn');
+bindSegTabs('periodTab', 'seg-btn');
+bindSegTabs('modeTab',   'mode-btn');
+
+// 위험성향: 프리셋 클릭 시 입력창 숫자 동기화
+(function() {
+  var PRESET = { '10%': 10, '25%': 25, '50%': 50, '75%': 75, '최대': 100 };
+  var group  = document.getElementById('riskTab');
+  var btns   = group.querySelectorAll('.risk-btn');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btns.forEach(function(b) { b.classList.remove('is-active'); });
+      this.classList.add('is-active');
+      var preset = PRESET[this.dataset.val];
+      if (preset !== undefined) { setRisk(preset); }
+      reportHeight();
+    });
+  });
+})();
+
+// 로드 후 높이 리포트
+window.addEventListener('load', reportHeight);
+setTimeout(reportHeight, 100);
+</script>
+</body>
+</html>
