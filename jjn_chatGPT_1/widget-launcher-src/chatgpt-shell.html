@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChatGPT</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :root {
+      --tp:  #0d0d0d;
+      --ts:  #5d5d5d;
+      --tt:  #8f8f8f;
+      --bgp: #ffffff;
+      --bgt: #f3f3f3;
+      --bh:  rgba(13,13,13,0.15);
+      --bl:  rgba(13,13,13,0.05);
+      --sh:  0px 4px 16px 0px rgba(0,0,0,0.05);
+      --sbw: 52px;   /* collapsed width */
+      --sbo: 260px;  /* expanded width  */
+    }
+
+    /* ─────────────────────────
+       App shell
+    ───────────────────────── */
+    .app {
+      display: flex;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════
+       SIDEBAR
+       Flexbox child — transitions width.
+       overflow:hidden clips content during
+       collapse so no absolute hackery needed.
+    ═══════════════════════════════════════ */
+    .sidebar {
+      width: var(--sbw);
+      min-width: var(--sbw);   /* prevents flex squish */
+      height: 100%;
+      background: #ffffff;
+      border-right: 1px solid var(--bl);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1),
+                  min-width 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sidebar.is-open {
+      width: var(--sbo);
+      min-width: var(--sbo);
+      background: #f9f9f9;
+    }
+
+    /* ── Sidebar header (52px) ───────────────────────────
+       logo 고정 13px 좌측, spacer, toggle 우측 11px
+       overflow:hidden → 52px 폭에서 toggle이 안 보임
+       → 260px로 넓어지면 자연스럽게 슬라이드인
+    ──────────────────────────────────────────────────── */
+    .sb-head {
+      height: 52px; min-height: 52px;
+      display: flex; align-items: center;
+      padding: 0 11px 0 13px;
+      flex-shrink: 0; overflow: hidden;
+    }
+
+    .sb-logo {
+      width: 26px; min-width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; cursor: pointer;
+      border-radius: 6px; transition: opacity 0.1s;
+    }
+    .sb-logo:hover { opacity: 0.65; }
+    .sidebar.is-open .sb-logo { cursor: default; }
+    .sidebar.is-open .sb-logo:hover { opacity: 1; }
+    .sb-logo img { width: 26px; height: 26px; display: block; }
+
+    /* 헤더 내 빈 공간 — toggle을 우측으로 밀기 */
+    .sb-head-spacer { flex: 1; min-width: 0; }
+
+    /* Toggle inside sidebar (확장 시 우측에 나타남) */
+    .sb-toggle-inside {
+      width: 30px; height: 30px; min-width: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent;
+      border-radius: 8px; cursor: pointer;
+      color: var(--ts); flex-shrink: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.15s, background 0.1s, color 0.1s;
+    }
+    .sidebar.is-open .sb-toggle-inside { opacity: 1; pointer-events: auto; }
+    .sb-toggle-inside:hover { background: rgba(13,13,13,0.06); color: var(--tp); }
+    .sb-toggle-inside svg { width: 17px; height: 17px; }
+
+    /* ── Narrow body (52px 상태) ─────────────────────── */
+    .sb-narrow {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between;
+      padding: 2px 6px 14px;
+      opacity: 1; transition: opacity 0.12s;
+    }
+    .sidebar.is-open .sb-narrow { opacity: 0; pointer-events: none; }
+
+    .sb-icon-col { display: flex; flex-direction: column; width: 100%; }
+    .sb-icon-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 8px;
+      border: none; background: transparent;
+      border-radius: 10px; cursor: pointer; color: var(--ts);
+      transition: background 0.1s, color 0.1s;
+    }
+    .sb-icon-btn:hover { background: rgba(13,13,13,0.06); color: var(--tp); }
+    .sb-icon-btn svg { width: 20px; height: 20px; }
+
+    /* 이니셜 아바타 (좁은/넓은 공용) */
+    .sb-avatar-init {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #19c37d; color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; user-select: none;
+    }
+    .sb-avatar-sm-wrap { display: flex; align-items: center; justify-content: center; }
+
+    /* ── Full body (260px 상태) ──────────────────────── */
+    .sb-full {
+      position: absolute;
+      top: 52px; left: 0; right: 0; bottom: 0;
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s 0.07s;
+      overflow: hidden;
+    }
+    .sidebar.is-open .sb-full { opacity: 1; pointer-events: auto; }
+    .sidebar { position: relative; }
+
+    /* 네비게이션 아이템 */
+    .sb-nav { padding: 4px 8px; flex-shrink: 0; }
+    .sb-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 8px 10px;
+      border: none; background: transparent; border-radius: 10px;
+      cursor: pointer; text-align: left;
+      font-size: 14px; font-weight: 400; color: var(--tp);
+      letter-spacing: -0.18px; white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .sb-nav-item:hover { background: rgba(13,13,13,0.06); }
+    .sb-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--ts); }
+
+    /* 스크롤 가능한 중간 영역 */
+    .sb-scroll {
+      flex: 1; min-height: 0;
+      overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13,13,13,0.1) transparent;
+      padding: 0 8px;
+    }
+    .sb-scroll::-webkit-scrollbar { width: 4px; }
+    .sb-scroll::-webkit-scrollbar-thumb { background: rgba(13,13,13,0.1); border-radius: 2px; }
+
+    /* 접히는 섹션 헤더 (GPT ›, 프로젝트 ›, 최근 ›) */
+    .sb-section-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px 4px; cursor: pointer;
+      font-size: 12px; font-weight: 500; color: var(--tt);
+      letter-spacing: -0.1px; user-select: none;
+      transition: color 0.1s;
+    }
+    .sb-section-hd:hover { color: var(--ts); }
+    .sb-section-hd svg { width: 12px; height: 12px; transition: transform 0.2s; }
+    .sb-section-hd.open svg { transform: rotate(90deg); }
+
+    /* 섹션 내부 아이템 */
+    .sb-section-body { display: none; }
+    .sb-section-body.open { display: block; }
+    .sb-chat-item {
+      display: flex; align-items: center;
+      padding: 6px 10px; border-radius: 8px;
+      cursor: pointer; font-size: 14px; color: var(--tp);
+      letter-spacing: -0.18px; transition: background 0.1s; overflow: hidden;
+    }
+    .sb-chat-item:hover { background: rgba(13,13,13,0.05); }
+    .sb-chat-item.active { background: rgba(13,13,13,0.07); font-weight: 500; }
+    .sb-chat-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 하단 유저 영역 */
+    .sb-user { flex-shrink: 0; border-top: 1px solid var(--bl); padding: 6px 8px 14px; }
+    .sb-user-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 8px; border-radius: 10px;
+      border: none; background: transparent;
+      width: 100%; cursor: pointer; transition: background 0.1s;
+    }
+    .sb-user-btn:hover { background: rgba(13,13,13,0.05); }
+    .sb-user-info { flex: 1; text-align: left; min-width: 0; }
+    .sb-user-name {
+      font-size: 14px; font-weight: 500; color: var(--tp);
+      letter-spacing: -0.18px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-user-plan { font-size: 12px; color: var(--tt); letter-spacing: -0.1px; }
+
+    /* ═══════════════════════════════════════
+       MAIN
+    ═══════════════════════════════════════ */
+    .main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      overflow: hidden; background: var(--bgp);
+    }
+
+    /* ── Chat header ────────────────────────
+       pl-4 pr-12 py-8 h-52px (Figma spec)   */
+    .chat-header {
+      height: 52px; min-height: 52px; flex-shrink: 0;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px 8px 16px;
+    }
+    .header-left { display: flex; align-items: center; }
+
+    /* 메인 헤더에는 토글 없음 — 로고 클릭으로 사이드바 열기 */
+
+    /* Model dropdown */
+    .header-model {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border: none; background: transparent;
+      border-radius: 8px; cursor: pointer; transition: background 0.1s;
+    }
+    .header-model:hover { background: rgba(13,13,13,0.05); }
+    .hm-name { font-size: 18px; font-weight: 400; letter-spacing: -0.4px; line-height: 28px; color: var(--tp); white-space: nowrap; }
+    .hm-ver  { color: var(--tt); }
+    .hm-chev { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; color: var(--tt); }
+    .hm-chev svg { width: 14px; height: 14px; }
+
+    /* Right header buttons */
+    .header-right { display: flex; align-items: center; }
+    .hdr-share {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border: none; background: transparent;
+      border-radius: 999px; cursor: pointer; transition: background 0.1s;
+    }
+    .hdr-share:hover { background: rgba(13,13,13,0.05); }
+    .hdr-share svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .hdr-share-lbl { font-size: 14px; font-weight: 510; line-height: 20px; letter-spacing: -0.18px; color: var(--tp); white-space: nowrap; }
+    .hdr-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; padding: 8px; border: none; background: transparent;
+      border-radius: 8px; cursor: pointer; color: var(--ts); transition: background 0.1s;
+    }
+    .hdr-icon:hover { background: rgba(13,13,13,0.05); color: var(--tp); }
+    .hdr-icon svg { width: 20px; height: 20px; }
+
+    /* ══════════════════════════════════════
+       WELCOME HERO — 초기 빈 상태
+       실제 ChatGPT처럼 컴포저가 화면 중앙,
+       제목 위 / 제안 칩 아래
+    ══════════════════════════════════════ */
+    .welcome-hero {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px; padding: 0 20px 120px;
+    }
+    .welcome-title {
+      font-size: 28px; font-weight: 300;
+      letter-spacing: -0.5px; color: var(--tp);
+      text-align: center; line-height: 1.25;
+    }
+
+    /* hero 컴포저 — bottom 컴포저와 동일한 클래스 재사용 */
+    .welcome-hero .composer-inner {
+      width: 100%; max-width: 680px;
+    }
+
+    /* 제안 칩 */
+    .hero-chips {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      justify-content: center;
+    }
+    .hero-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 16px;
+      border: 1px solid rgba(13,13,13,0.12);
+      border-radius: 999px; background: #fff;
+      cursor: pointer; font-size: 14px;
+      font-family: inherit; color: var(--tp);
+      transition: background 0.1s;
+    }
+    .hero-chip:hover { background: rgba(13,13,13,0.05); }
+    .hero-chip svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--ts); }
+
+    /* 상태: .main에 .is-active 없으면 → 빈 상태 */
+    .main:not(.is-active) .chat-scroll  { display: none; }
+    .main:not(.is-active) .composer-wrap { display: none; }
+    /* 상태: .main에 .is-active 있으면 → 대화 상태 */
+    .main.is-active .welcome-hero { display: none; }
+
+    /* ── Chat scroll ─────────────────────── */
+    .chat-scroll {
+      flex: 1; min-height: 0;
+      overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(13,13,13,0.15) transparent;
+    }
+    .chat-scroll::-webkit-scrollbar { width: 6px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(13,13,13,0.15); border-radius: 3px; }
+
+    /* Figma: max-w-768, pt-16, pb-40, px-20, gap-24 */
+    .chat-content {
+      max-width: 768px; margin: 0 auto;
+      padding: 16px 20px 40px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+
+    /* User bubble — bg #f3f3f3, rounded-24, px-20 py-10, max-w-456 */
+    .msg-user { display: flex; justify-content: flex-end; }
+    .msg-bubble {
+      background: var(--bgt); padding: 10px 20px;
+      border-radius: 24px; max-width: 456px;
+    }
+    .msg-bubble p {
+      font-size: 16px; font-weight: 400;
+      line-height: 24px; letter-spacing: -0.32px; color: var(--tp);
+    }
+
+    /* AI response block */
+    .msg-ai { display: flex; flex-direction: column; align-items: flex-start; }
+
+    /* App attribution — pb-12 */
+    .app-attr { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
+    .app-attr-icon { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+    .app-attr-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .app-attr-name {
+      font-size: 17px; font-weight: 400;
+      line-height: 23px; letter-spacing: -0.43px; color: var(--ts);
+    }
+
+    /* Widget card — pb-24 */
+    .widget-wrap { width: 100%; padding-bottom: 24px; }
+    .widget-frame {
+      overflow: visible; width: 100%;
+    }
+    .widget-frame iframe { display: block; width: 100%; border: none; height: 380px; }
+    .launcher-wrap .widget-frame iframe { height: 600px; }
+
+      color: var(--tp); overflow-wrap: break-word;
+    }
+
+
+    @keyframes wordIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .stream-word {
+      display: inline;
+      opacity: 0;
+      animation: wordIn 0.12s ease-out forwards;
+    }
+
+    /* Action icons */
+    .msg-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+    .msg-action {
+      display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 24px;
+      border: none; background: transparent;
+      border-radius: 6px; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .msg-action:hover { background: rgba(13,13,13,0.05); }
+    .msg-action svg { width: 18px; height: 18px; }
+    .msg-action { color: var(--ts); }
+    .msg-action:hover { color: var(--tp); }
+
+
+
+    /* Model text */
+    .model-text { padding-bottom: 16px; width: 100%; }
+    .model-text p { font-size: 16px; font-weight: 400; line-height: 26px; letter-spacing: -0.4px; color: #0d0d0d; margin-bottom: 0; }
+    .model-text strong { font-weight: 600; color: var(--tp); }
+    @keyframes wordIn { from { opacity: 0; } to { opacity: 1; } }
+    .stream-word { display: inline; opacity: 0; animation: wordIn 0.25s ease-out forwards; }
+
+    /* 칩 캐러셀 스켈레톤 */
+    .agent-chip.is-skeleton { pointer-events: none; }
+    .sk-chip-header { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+    .sk-chip-circle { width:24px; height:24px; border-radius:100px; flex-shrink:0; }
+    .sk-chip-name-bar { height:13px; border-radius:6px; flex:1; }
+    .sk-chip-line { height:10px; border-radius:6px; margin-top:7px; }
+    @keyframes chipFadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .agent-chip.chip-reveal { animation: chipFadeIn 0.25s ease forwards; }
+
+
+
+    /* Debating card 스켈레톤 */
+    .sk-db-title   { height: 16px; border-radius: 8px; width: 70%; }
+    .sk-db-circle  { width: 22px; height: 22px; border-radius: 499px; flex-shrink: 0; margin-top: 2px; }
+    .sk-db-line    { height: 13px; border-radius: 6px; }
+    .sk-db-btn     { height: 44px; border-radius: 384px; width: 100%; }
+    .sk-db-section { height: 16px; border-radius: 8px; width: 50%; }
+    .sk-db-chip    { width: 200px; height: 88px; border-radius: 16px; flex-shrink: 0; }
+    @keyframes dbFadeIn { from { opacity:0; } to { opacity:1; } }
+    .debating-card.is-revealed { animation: dbFadeIn 0.25s ease forwards; }
+    /* Debating card */
+    .debating-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 12px 0; margin-top: 16px; width: 100%;
+    }
+    .debating-header { padding: 0 16px; font-size: 16px; font-weight: 600; color: #0d0d0d; line-height: 22px; }
+    .debating-item { display: flex; gap: 12px; align-items: flex-start; padding: 0 16px; }
+    .debating-check {
+      width: 22px; height: 22px; border-radius: 499px; background: #dbffd2;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .debating-check svg { width: 12px; height: 12px; }
+    .debating-content { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .debating-action-title { font-size: 16px; font-weight: 500; color: #0d0d0d; line-height: 22px; }
+    .debating-bullets { padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+    .debating-bullets li { font-size: 14px; color: #5d5d5d; line-height: 18px; }
+    .debating-btn {
+      width: 100%; background: #0285ff; color: #fff; border: none; border-radius: 384px;
+      padding: 12px 16px; font-size: 14px; font-weight: 500; font-family: inherit;
+      cursor: pointer; line-height: 20px; letter-spacing: -0.084px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .debating-btn:hover { opacity: 0.88; }
+    .debating-divider { border: none; border-top: 1px solid #e8e8e8; margin: 0; }
+    .debating-section-title { padding: 0 16px; font-size: 16px; font-weight: 600; color: #0d0d0d; line-height: 22px; }
+    .debating-chips-wrap { padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .debating-chips-wrap::-webkit-scrollbar { display: none; }
+    .debating-chips-inner { display: flex; gap: 12px; flex-wrap: nowrap; }
+    .debating-footer { padding: 0 16px 4px; font-size: 14px; color: #0d0d0d; line-height: 20px; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Agent chip carousel */
+    .agent-chips-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:16px; cursor:grab; user-select:none; }
+    .agent-chips-wrap.is-dragging { cursor:grabbing; }
+    .agent-chips-wrap::-webkit-scrollbar { display:none; }
+    .agent-chips { display:flex; gap:12px; flex-wrap:nowrap; min-height:101px; align-items:flex-start; overflow:hidden; }
+    .agent-chip { background:#f3f3f3; border-radius:16px; padding:14px 16px; width:200px; flex-shrink:0; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:background 0.15s; }
+    .agent-chip:hover { background:#ececec; }
+    .agent-chip.is-selected { background:#e4e4e4; }
+    .chip-header { display:flex; align-items:center; gap:3px; }
+    .chip-badge { width:24px; height:24px; border-radius:100px; padding:2px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .chip-badge img { width:18px; height:18px; display:block; }
+    .chip-name { font-size:17px; font-weight:400; line-height:18px; letter-spacing:-1px; color:#0d0d0d; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+    .chip-desc { font-size:14px; font-weight:400; line-height:20px; letter-spacing:-0.3px; color:#5d5d5d; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+
+    /* ── Composer footer ─────────────────── */
+    .composer-wrap { flex-shrink: 0; padding: 0 20px 8px; background: var(--bgp); }
+    .composer-inner {
+      max-width: 768px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 8px;
+      padding-top: 8px;
+    }
+    .composer {
+      background: var(--bgp);
+      border: 1px solid var(--bh);
+      border-radius: 28px;
+      box-shadow: var(--sh);
+      overflow: visible;
+      padding: 14px 12px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    /* Top row: textarea */
+    .composer-text-row {
+      display: flex; align-items: flex-start;
+      padding: 0 4px;
+    }
+
+    /* 실제 입력 가능한 textarea */
+    .composer-input {
+      flex: 1; border: none; outline: none;
+      background: transparent; resize: none; overflow: hidden;
+      font-size: 16px; font-weight: 400;
+      line-height: 24px; letter-spacing: -0.32px;
+      color: var(--tp); font-family: inherit;
+      padding: 0; max-height: 200px;
+    }
+    .composer-input::placeholder { color: var(--tt); }
+
+    /* Bottom toolbar row */
+    .composer-tool-row {
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .composer-add {
+      width: 34px; height: 34px; min-width: 34px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: 26px;
+      cursor: pointer; color: var(--ts); transition: background 0.1s, color 0.1s;
+    }
+    .composer-add:hover { background: rgba(13,13,13,0.06); color: var(--tp); }
+    .composer-add svg { width: 20px; height: 20px; }
+
+    /* Thinking chip */
+    .composer-thinking {
+      display: flex; align-items: center; gap: 5px;
+      height: 32px; padding: 0 10px;
+      border: none; border-radius: 999px;
+      background: transparent; cursor: pointer;
+      font-size: 13px; font-weight: 400; color: #1a7cfc;
+      letter-spacing: -0.1px; white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .composer-thinking:hover { background: rgba(26,124,252,0.07); }
+    .composer-thinking .thinking-icon { width: 15px; height: 15px; flex-shrink: 0; color: #1a7cfc; }
+    .composer-thinking .thinking-chev { width: 12px; height: 12px; flex-shrink: 0; color: var(--ts); }
+
+    .composer-spacer { flex: 1; }
+
+    .composer-mic {
+      width: 34px; height: 34px; min-width: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: 26px;
+      cursor: pointer; color: var(--tp); transition: background 0.1s;
+    }
+    .composer-mic:hover { background: rgba(13,13,13,0.06); }
+    .composer-mic svg { width: 20px; height: 20px; }
+
+    /* Send button — filled black circle, icon swaps on input */
+    .composer-send {
+      width: 36px; height: 36px; min-width: 36px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: var(--tp); border-radius: 999px;
+      cursor: pointer; color: #fff;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .composer-send:hover { background: #1a1a1a; transform: scale(1.05); }
+    .composer-send svg { width: 18px; height: 18px; }
+
+    .composer-disc {
+      font-size: 12px; font-weight: 400; line-height: 16px;
+      color: var(--ts); text-align: center;
+    }
+
+    /* ── Dropdown 공통 ───────────────────── */
+    .dd-anchor { position: relative; display: inline-flex; }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px); left: 0;
+      background: #fff;
+      border: 1px solid rgba(13,13,13,0.09);
+      border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+      padding: 6px;
+      min-width: 210px;
+      z-index: 300;
+      display: none;
+    }
+    .dropdown.is-open { display: block; animation: ddIn 0.12s ease; }
+    @keyframes ddIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* 아래에서 위로 열리는 드롭다운 (대화창 Thinking 칩) */
+    .dropdown--up {
+      top: auto; bottom: calc(100% + 8px);
+    }
+    .dropdown--up.is-open { animation: ddInUp 0.12s ease; }
+    @keyframes ddInUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .dd-section-label {
+      font-size: 11px; font-weight: 500; color: var(--tt);
+      letter-spacing: 0.01em; padding: 6px 10px 4px;
+      pointer-events: none;
+    }
+    .dd-item {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 7px 10px;
+      border: none; background: transparent; border-radius: 10px;
+      cursor: pointer; text-align: left;
+      transition: background 0.1s;
+    }
+    .dd-item:hover { background: rgba(13,13,13,0.05); }
+    .dd-item-text { flex: 1; min-width: 0; }
+    .dd-item-name { font-size: 14px; font-weight: 400; color: var(--tp); letter-spacing: -0.18px; line-height: 20px; }
+    .dd-item-sub  { font-size: 12px; color: var(--tt); letter-spacing: -0.1px; line-height: 17px; }
+    .dd-item-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--ts); }
+    .dd-check { width: 16px; height: 16px; flex-shrink: 0; color: var(--tp); }
+    .dd-check--hidden { visibility: hidden; }
+    .dd-divider { height: 1px; background: var(--bl); margin: 4px 2px; }
+
+    /* 헤더 모델 버튼 — open 상태 */
+    .header-model.is-open .hm-chev svg { transform: rotate(180deg); }
+    .hm-chev svg { transition: transform 0.15s; }
+
+    /* ══════════════════════════════════════
+       MOBILE  (≤ 767px)
+    ══════════════════════════════════════ */
+    @media (max-width: 767px) {
+
+      /* 사이드바 완전히 숨김 */
+      .sidebar { display: none !important; }
+
+      /* 데스크탑 헤더 숨김 */
+      .chat-header { display: none; }
+
+      /* 모바일 네비게이션 바 */
+      .mob-nav {
+        flex-shrink: 0;
+        height: 44px;
+        display: flex; align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: var(--bgp);
+      }
+      .mob-nav-leading {
+        display: flex; align-items: center; gap: 12px;
+      }
+      .mob-hamburger {
+        width: 24px; height: 24px; padding: 0;
+        border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--tp);
+      }
+      .mob-hamburger svg { width: 24px; height: 24px; }
+      .mob-title {
+        display: flex; align-items: center; gap: 2px;
+        font-size: 17px; font-weight: 510; letter-spacing: -0.43px;
+        color: var(--tp); cursor: pointer;
+      }
+      .mob-title-ver { color: var(--tt); font-weight: 400; }
+      .mob-title-chev { width: 14px; height: 14px; color: var(--tt); display: flex; align-items: center; }
+      .mob-title-chev svg { width: 14px; height: 14px; }
+      .mob-nav-trailing {
+        display: flex; align-items: center; gap: 20px;
+      }
+      .mob-nav-btn {
+        width: 24px; height: 24px; padding: 0;
+        border: none; background: transparent; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--tp);
+      }
+      .mob-nav-btn svg { width: 24px; height: 24px; }
+
+      /* 채팅 컨텐츠 패딩 조정 */
+      .chat-content {
+        padding: 20px 20px 120px;
+        gap: 16px;
+      }
+      .msg-bubble { max-width: 289px; border-radius: 20px; }
+      .msg-bubble p { font-size: 17px; line-height: 23px; letter-spacing: -0.43px; }
+
+      /* 데스크탑 컴포저 숨김 */
+      .composer-wrap { display: none; }
+
+      /* 모바일 컴포저 */
+      .mob-composer-wrap {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--bgp);
+        border-radius: 24px 24px 0 0;
+        display: flex; flex-direction: column;
+      }
+      .mob-composer-row {
+        display: flex; align-items: flex-end; gap: 8px;
+        padding: 12px 12px 6px;
+      }
+      .mob-add {
+        width: 44px; height: 44px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border: none; background: var(--bgt); border-radius: 128px;
+        cursor: pointer; color: var(--tp);
+      }
+      .mob-add svg { width: 24px; height: 24px; }
+      .mob-input-pill {
+        flex: 1; min-width: 0;
+        display: flex; align-items: flex-end;
+        background: var(--bgt); border-radius: 22px;
+        padding: 0 0 0 16px;
+        min-height: 44px;
+      }
+      .mob-input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-size: 17px; font-weight: 400; line-height: 24px;
+        letter-spacing: -0.32px; color: var(--tp); font-family: inherit;
+        resize: none; overflow: hidden; max-height: 140px;
+        padding: 10px 0; align-self: center;
+      }
+      .mob-input::placeholder { color: var(--tt); }
+      .mob-input-actions {
+        display: flex; align-items: flex-end;
+        padding-bottom: 6px;
+      }
+      .mob-mic {
+        width: 32px; height: 44px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 6px;
+        border: none; background: transparent; cursor: pointer; color: var(--ts);
+      }
+      .mob-mic svg { width: 24px; height: 24px; }
+      .mob-send {
+        width: 44px; height: 44px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 6px;
+        border: none; background: transparent; cursor: pointer;
+      }
+      .mob-send-icon {
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--tp); border-radius: 999px; color: #fff;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      }
+      .mob-send-icon svg { width: 18px; height: 18px; }
+      .mob-home-bar {
+        height: 34px;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding-bottom: 8px;
+      }
+      .mob-home-indicator {
+        width: 144px; height: 5px;
+        background: #000; border-radius: 100px;
+      }
+    }
+
+    /* 데스크탑에서 모바일 전용 요소 숨김 */
+    .mob-nav,
+    .mob-composer-wrap { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!--
+      Sidebar header (52px tall).
+      Layout: [logo 26px][sb-title flex:1][sb-new 30px][sb-toggle-inside 30px]
+      Total natural width > 52px → items to the right of logo
+      are clipped by overflow:hidden when collapsed.
+      They slide into view as sidebar width transitions to 260px.
+    -->
+    <!-- 헤더: 로고(좌) + spacer + □(우) — □는 52px 초과분이라 overflow:hidden으로 클립 -->
+    <div class="sb-head">
+      <div class="sb-logo" id="sbLogo" role="button" aria-label="사이드바 열기">
+        <img src="assets/common/openai-logo.svg" alt="OpenAI" />
+      </div>
+      <div class="sb-head-spacer"></div>
+      <button class="sb-toggle-inside" id="sbToggleInside" aria-label="사이드바 닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 좁은 상태: 아이콘 7개 + 이니셜 아바타 -->
+    <div class="sb-narrow">
+      <div class="sb-icon-col">
+        <button class="sb-icon-btn" title="새 채팅">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="채팅 검색">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="이미지">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="라이브러리">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="앱">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="심층 리서치">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+        </button>
+        <button class="sb-icon-btn" title="Codex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sb-avatar-sm-wrap">
+        <div class="sb-avatar-init">RA</div>
+      </div>
+    </div>
+
+    <!-- 넓은 상태: 실제 사이드바 컨텐츠 -->
+    <div class="sb-full">
+      <!-- 네비게이션 항목 -->
+      <nav class="sb-nav">
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          새 채팅
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          채팅 검색
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          이미지
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          라이브러리
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          앱
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+          심층 리서치
+        </button>
+        <button class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Codex
+        </button>
+      </nav>
+
+      <!-- 스크롤 섹션 -->
+      <div class="sb-scroll">
+        <!-- GPT › -->
+        <div class="sb-section-hd" id="sec-gpt">
+          <span>GPT</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+        <div class="sb-section-body" id="sec-gpt-body">
+          <div class="sb-chat-item"><span>챗</span></div>
+          <div class="sb-chat-item"><span>GPT 탐색</span></div>
+        </div>
+
+        <!-- 프로젝트 › -->
+        <div class="sb-section-hd" id="sec-proj">
+          <span>프로젝트</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+        <div class="sb-section-body" id="sec-proj-body">
+          <div class="sb-chat-item"><span>새 프로젝트</span></div>
+          <div class="sb-chat-item"><span>ai세팅</span></div>
+        </div>
+
+        <!-- 최근 › -->
+        <div class="sb-section-hd open" id="sec-rec">
+          <span>최근</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+        <div class="sb-section-body open" id="sec-rec-body">
+          <div class="sb-chat-item active"><span>조일알미늄 호르무즈 이슈 주가 분석</span></div>
+          <div class="sb-chat-item"><span>삼성전자 2분기 실적 전망</span></div>
+          <div class="sb-chat-item"><span>코스피 200 팩터 분석 요청</span></div>
+          <div class="sb-chat-item"><span>반도체 업황 사이클 리뷰</span></div>
+          <div class="sb-chat-item"><span>원달러 환율 상승 수혜주</span></div>
+          <div class="sb-chat-item"><span>LG에너지솔루션 밸류에이션</span></div>
+          <div class="sb-chat-item"><span>AI 인프라 수혜 종목 스크리닝</span></div>
+          <div class="sb-chat-item"><span>국내 리츠 배당수익률 비교</span></div>
+        </div>
+      </div>
+
+      <!-- 하단 유저 -->
+      <div class="sb-user">
+        <button class="sb-user-btn">
+          <div class="sb-avatar-init">RA</div>
+          <div class="sb-user-info">
+            <div class="sb-user-name">rassi_tp</div>
+            <div class="sb-user-plan">Plus</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+  <!-- /sidebar -->
+
+  <!-- ══ MAIN ════════════════════════════════════════════ -->
+  <div class="main" id="main">
+
+    <!-- 모바일 네비게이션 바 -->
+    <nav class="mob-nav">
+      <div class="mob-nav-leading">
+        <button class="mob-hamburger" aria-label="메뉴">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="3" y1="7" x2="21" y2="7"/>
+            <line x1="3" y1="12" x2="15" y2="12"/>
+            <line x1="3" y1="17" x2="21" y2="17"/>
+          </svg>
+        </button>
+        <div class="mob-title">
+          <span>ChatGPT</span>
+          <span class="mob-title-ver">&nbsp;5</span>
+          <span class="mob-title-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div class="mob-nav-trailing">
+        <button class="mob-nav-btn" aria-label="새 채팅">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="mob-nav-btn" aria-label="더보기">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Chat header: pl-4px pr-12px py-8px -->
+    <header class="chat-header">
+      <div class="header-left">
+        <div class="dd-anchor">
+          <button class="header-model" id="headerModelBtn" aria-haspopup="true">
+            <span class="hm-name">ChatGPT</span>
+            <span class="hm-chev">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </span>
+          </button>
+          <!-- 모델 선택 드롭다운 -->
+          <div class="dropdown" id="modelDropdown">
+            <div class="dd-section-label">최신</div>
+            <button class="dd-item" data-model="instant">
+              <div class="dd-item-text">
+                <div class="dd-item-name">Instant</div>
+                <div class="dd-item-sub">모든 채팅</div>
+              </div>
+              <svg class="dd-check dd-check--hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+            <button class="dd-item" data-model="thinking">
+              <div class="dd-item-text">
+                <div class="dd-item-name">Thinking</div>
+                <div class="dd-item-sub">복잡한 질문</div>
+              </div>
+              <svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+            <div class="dd-divider"></div>
+            <button class="dd-item" data-model="settings">
+              <div class="dd-item-text">
+                <div class="dd-item-name">구성...</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="hdr-share">
+          <!-- share / upload icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+          <span class="hdr-share-lbl">Share</span>
+        </button>
+        <button class="hdr-icon">
+          <!-- dots horizontal -->
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ══ WELCOME HERO (빈 상태) ══════════════ -->
+    <div class="welcome-hero" id="welcomeHero">
+      <h2 class="welcome-title">무슨 작업을 하고 계세요?</h2>
+
+      <!-- 히어로 컴포저 (bottom 컴포저와 동일 구조) -->
+      <div class="composer-inner">
+        <div class="composer">
+          <div class="composer-text-row">
+            <textarea
+              id="heroInput"
+              class="composer-input"
+              placeholder="무엇이든 물어보세요"
+              rows="1"
+              aria-label="Message"
+            ></textarea>
+          </div>
+          <div class="composer-tool-row">
+            <button class="composer-add" aria-label="Attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <button class="composer-thinking" aria-label="Thinking mode">
+              <svg class="thinking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Thinking</span>
+              <svg class="thinking-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="composer-spacer"></div>
+            <button class="composer-mic" aria-label="Voice input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <button class="composer-send" id="heroSend" aria-label="Send">
+              <svg id="heroSendWave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="12" y1="4" x2="12" y2="20"/>
+                <line x1="8" y1="7" x2="8" y2="17"/>
+                <line x1="16" y1="7" x2="16" y2="17"/>
+                <line x1="4" y1="10" x2="4" y2="14"/>
+                <line x1="20" y1="10" x2="20" y2="14"/>
+              </svg>
+              <svg id="heroSendArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 제안 칩 -->
+      <div class="hero-chips">
+        <button class="hero-chip" data-prompt="이미지를 만들어줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          이미지 만들기
+        </button>
+        <button class="hero-chip" data-prompt="글쓰기 또는 편집을 도와줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          글쓰기 또는 편집
+        </button>
+        <button class="hero-chip" data-prompt="필요한 항목을 찾아줘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          필요한 항목 찾기
+        </button>
+      </div>
+    </div><!-- /welcome-hero -->
+
+    <!-- ══ CHAT SCROLL (대화 상태) ═══════════ -->
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-content" id="chatContent"></div>
+    </div><!-- /chat-scroll -->
+
+    <!-- Composer footer -->
+    <div class="composer-wrap">
+      <div class="composer-inner">
+        <div class="composer">
+          <!-- Row 1: textarea -->
+          <div class="composer-text-row">
+            <textarea
+              id="composerInput"
+              class="composer-input"
+              placeholder="무엇이든 물어보세요"
+              rows="1"
+              aria-label="Message"
+            ></textarea>
+          </div>
+          <!-- Row 2: toolbar -->
+          <div class="composer-tool-row">
+            <button class="composer-add" aria-label="Attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <div class="dd-anchor">
+              <button class="composer-thinking" id="thinkingBtn" aria-label="Thinking mode">
+                <svg class="thinking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span id="thinkingLabel">확장 추론</span>
+                <svg class="thinking-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              <!-- 생각 수준 드롭다운 (위로 열림) -->
+              <div class="dropdown dropdown--up" id="thinkingDropdown">
+                <div class="dd-section-label">생각 수준</div>
+                <button class="dd-item" data-think="standard">
+                  <!-- 표준: clock icon -->
+                  <svg class="dd-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  <div class="dd-item-text">
+                    <div class="dd-item-name">표준</div>
+                  </div>
+                  <svg class="dd-check dd-check--hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+                <button class="dd-item" data-think="extended">
+                  <!-- 확장: layers / depth icon -->
+                  <svg class="dd-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                  </svg>
+                  <div class="dd-item-text">
+                    <div class="dd-item-name">확장</div>
+                  </div>
+                  <svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="composer-spacer"></div>
+            <button class="composer-mic" aria-label="Voice input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <!-- Send button: waveform (empty) → up-arrow (has text) -->
+            <button class="composer-send" id="composerSend" aria-label="Send">
+              <!-- waveform (default, shown when input empty) -->
+              <svg id="sendIconWave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="12" y1="4" x2="12" y2="20"/>
+                <line x1="8"  y1="7" x2="8"  y2="17"/>
+                <line x1="16" y1="7" x2="16" y2="17"/>
+                <line x1="4"  y1="10" x2="4"  y2="14"/>
+                <line x1="20" y1="10" x2="20" y2="14"/>
+              </svg>
+              <!-- up-arrow (shown when input has text) -->
+              <svg id="sendIconArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p class="composer-disc">ChatGPT can make mistakes. Check important info.</p>
+      </div>
+    </div>
+
+    <!-- 모바일 컴포저 -->
+    <div class="mob-composer-wrap">
+      <div class="mob-composer-row">
+        <button class="mob-add" aria-label="추가">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="mob-input-pill">
+          <textarea id="mobInput" class="mob-input" placeholder="Ask anything" rows="1"></textarea>
+          <div class="mob-input-actions">
+            <button class="mob-mic" aria-label="음성 입력">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <button class="mob-send" aria-label="전송">
+              <div class="mob-send-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="12" y1="4" x2="12" y2="20"/>
+                  <line x1="8" y1="7" x2="8" y2="17"/>
+                  <line x1="16" y1="7" x2="16" y2="17"/>
+                  <line x1="4" y1="10" x2="4" y2="14"/>
+                  <line x1="20" y1="10" x2="20" y2="14"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="mob-home-bar">
+        <div class="mob-home-indicator"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+</div><!-- /app -->
+
+<script>
+  var sidebar = document.getElementById('sidebar');
+
+  function openSidebar()  { sidebar.classList.add('is-open'); }
+  function closeSidebar() { sidebar.classList.remove('is-open'); }
+  function toggleSidebar(){ sidebar.classList.toggle('is-open'); }
+
+  // 로고: 닫힌 상태에서만 열기
+  document.getElementById('sbLogo').addEventListener('click', function() {
+    if (!sidebar.classList.contains('is-open')) openSidebar();
+  });
+
+  // 사이드바 내부 토글(□): 열린 상태에서 닫기
+  document.getElementById('sbToggleInside').addEventListener('click', closeSidebar);
+
+  // Ctrl / Cmd + B
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+    }
+  });
+
+  // ── 섹션 토글 (GPT / 프로젝트 / 최근) ──
+  [['sec-gpt','sec-gpt-body'],['sec-proj','sec-proj-body'],['sec-rec','sec-rec-body']].forEach(function(pair) {
+    document.getElementById(pair[0]).addEventListener('click', function() {
+      this.classList.toggle('open');
+      document.getElementById(pair[1]).classList.toggle('open');
+    });
+  });
+
+  // ── Textarea 자동 높이 + 전송버튼 아이콘 ──────────────
+  var main          = document.getElementById('main');
+  var composerInput = document.getElementById('composerInput');
+  var sendIconWave  = document.getElementById('sendIconWave');
+  var sendIconArrow = document.getElementById('sendIconArrow');
+  var heroInput     = document.getElementById('heroInput');
+  var heroSendWave  = document.getElementById('heroSendWave');
+  var heroSendArrow = document.getElementById('heroSendArrow');
+
+  // ── 하단 컴포저 아이콘 업데이트 ──
+  function updateSendIcon() {
+    var hasText = composerInput.value.trim().length > 0;
+    sendIconWave.style.display  = hasText ? 'none' : '';
+    sendIconArrow.style.display = hasText ? ''     : 'none';
+  }
+
+  // ── 히어로 컴포저 아이콘 업데이트 ──
+  function updateHeroIcon() {
+    var hasText = heroInput.value.trim().length > 0;
+    heroSendWave.style.display  = hasText ? 'none' : '';
+    heroSendArrow.style.display = hasText ? ''     : 'none';
+  }
+
+  // ── 하단 컴포저 이벤트 ──
+  composerInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    updateSendIcon();
+  });
+  composerInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(composerInput.value);
+    }
+  });
+  document.getElementById('composerSend').addEventListener('click', function() {
+    sendMessage(composerInput.value);
+  });
+
+  // ── 히어로 컴포저 이벤트 ──
+  heroInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    updateHeroIcon();
+  });
+  heroInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(heroInput.value);
+    }
+  });
+  document.getElementById('heroSend').addEventListener('click', function() {
+    sendMessage(heroInput.value);
+  });
+
+  // ── 제안 칩 클릭 → 히어로 입력란에 채우고 전송 ──
+  document.querySelectorAll('.hero-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      sendMessage(this.dataset.prompt);
+    });
+  });
+
+  // ── 드롭다운 공통 ────────────────────────
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown.is-open').forEach(function(d) {
+      d.classList.remove('is-open');
+    });
+    document.querySelectorAll('.header-model.is-open').forEach(function(b) {
+      b.classList.remove('is-open');
+    });
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dd-anchor')) closeAllDropdowns();
+  });
+
+  // ── 모델 드롭다운 ────────────────────────
+  var headerModelBtn = document.getElementById('headerModelBtn');
+  var modelDropdown  = document.getElementById('modelDropdown');
+  var currentModel   = 'thinking';
+
+  headerModelBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isOpen = modelDropdown.classList.contains('is-open');
+    closeAllDropdowns();
+    if (!isOpen) {
+      modelDropdown.classList.add('is-open');
+      headerModelBtn.classList.add('is-open');
+    }
+  });
+
+  modelDropdown.querySelectorAll('[data-model]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var model = this.dataset.model;
+      if (model === 'settings') { closeAllDropdowns(); return; }
+      currentModel = model;
+      // 체크마크 갱신
+      modelDropdown.querySelectorAll('[data-model] .dd-check').forEach(function(c) {
+        c.classList.add('dd-check--hidden');
+      });
+      this.querySelector('.dd-check').classList.remove('dd-check--hidden');
+      closeAllDropdowns();
+    });
+  });
+
+  // ── 생각 수준 드롭다운 ───────────────────
+  var thinkingBtn      = document.getElementById('thinkingBtn');
+  var thinkingDropdown = document.getElementById('thinkingDropdown');
+  var thinkingLabel    = document.getElementById('thinkingLabel');
+  var currentThink     = 'extended';
+
+  var thinkLabels = { standard: '표준 추론', extended: '확장 추론' };
+
+  thinkingBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isOpen = thinkingDropdown.classList.contains('is-open');
+    closeAllDropdowns();
+    if (!isOpen) thinkingDropdown.classList.add('is-open');
+  });
+
+  thinkingDropdown.querySelectorAll('[data-think]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      currentThink = this.dataset.think;
+      thinkingLabel.textContent = thinkLabels[currentThink];
+      // 체크마크 갱신
+      thinkingDropdown.querySelectorAll('[data-think] .dd-check').forEach(function(c) {
+        c.classList.add('dd-check--hidden');
+      });
+      this.querySelector('.dd-check').classList.remove('dd-check--hidden');
+      closeAllDropdowns();
+    });
+  });
+
+  // ══════════════════════════════════════════════════
+  //  오케스트레이션 — 모든 위젯 흐름 로직은 여기에 있음
+  //  iframe 위젯은 UI만 담당, 로직은 shell이 외주화
+  // ══════════════════════════════════════════════════
+
+  var chatContent = document.getElementById('chatContent');
+  var chatScroll  = document.getElementById('chatScroll');
+
+  // ── postMessage 수신 (iframe → shell) ──────────────
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data !== 'object') return;
+    var data = e.data;
+
+    // 높이 동기화: 어느 iframe이 보냈는지 source로 매칭
+    if (data.type === 'resize' && data.height) {
+      document.querySelectorAll('.widget-frame iframe').forEach(function(f) {
+        try { if (f.contentWindow === e.source) f.style.height = data.height + 'px'; }
+        catch(err) {}
+      });
+    }
+
+    // 에이전트 선택 — 게이트 → 에이전트 위젯으로 전환
+    if (data.type === 'gate-select') {
+      onGateSelect(e.source, data.agent);
+    }
+
+    // 에이전트 초기 세팅 완료 → widget-agent.html 띄우기
+    if (data.type === 'setup-result') {
+      onSetupResult(e.source, data);
+    }
+
+    // 결과 생성하기 클릭 → 마크다운 텍스트 렌더링
+    if (data.type === 'agent-result') {
+      onAgentResult(e.source);
+    }
+
+    // 런처 위젯 → 분석 요청 전송
+    if (data.type === 'launcher-submit') {
+      onLauncherSubmit(e.source, data);
+    }
+  });
+
+  // ── 게이트 선택 처리 ───────────────────────────────
+  function onGateSelect(sourceWindow, agentId) {
+    // 어느 대화 블록의 게이트인지 source window로 찾기
+    var gateIframe = null;
+    document.querySelectorAll('.gate-iframe').forEach(function(f) {
+      try { if (f.contentWindow === sourceWindow) gateIframe = f; } catch(err) {}
+    });
+    if (!gateIframe) return;
+
+    var msgAi     = gateIframe.closest('.msg-ai');
+    var gateWrap  = msgAi.querySelector('.gate-wrap');
+    var agentWrap = msgAi.querySelector('.agent-wrap');
+    if (!gateWrap || !agentWrap) return;
+
+    // 현재는 '펀더멘탈' 에이전트만 구현 — 나머지는 준비중
+    if (agentId !== 'fundamental') return;
+
+    // 게이트 숨기고 에이전트 위젯 활성화
+    gateWrap.style.display = 'none';
+    agentWrap.style.display = '';
+
+    var agentIframe = agentWrap.querySelector('iframe');
+    agentIframe.src = 'widget-agent.html';
+    agentIframe.style.height = '380px';
+
+    setTimeout(function() {
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    }, 100);
+  }
+
+  // ── 에이전트 결과 렌더링 ──────────────────────────
+  var RESULT_MD = '1. 투자 판단\n\n현재 삼성전자는 **"보유 또는 분할 매수 우위"** 로 판단됩니다. 다만 이미 AI 메모리 기대와 실적 개선이 주가에 상당 부분 반영된 구간이므로, 신규 진입은 일괄 매수보다 분할 접근, 기존 보유자는 실적·메모리 가격·컨센서스 상향이 유지되는지 확인하며 보유하는 전략이 적절합니다.\n\n삼성전자가 발표한 2026년 1분기 잠정 실적은 매출 약 133조원, 영업이익 약 57.2조원으로, 전년 대비 실적 체급이 크게 달라졌습니다. 전년도 2025년 연간 영업이익이 43.6조원이었던 점을 감안하면, 2026년 1분기만으로 직전 연간 이익을 넘어선 구조입니다.';
+
+  var CHIP_MD = {
+    valuation: '**밸류에이션 관점**\n\n삼성전자의 현재 PER은 약 12.4배로, 반도체 섹터 평균(14.8배) 대비 약 16% 할인된 수준입니다. PBR 1.2배, 최근 3개년 평균 ROE 11.3%를 감안하면 현 주가는 적정가치 대비 저평가 구간으로 판단됩니다. HBM 수요 회복과 파운드리 수주 확대가 주요 재평가 촉매로 작용할 수 있습니다.',
+    news:      '**뉴스 관점**\n\n최근 7일 내 삼성전자 관련 주요 부정 뉴스는 확인되지 않았습니다. 시장 영향도는 중립으로 판단되며, HBM3E 공급 확대 관련 긍정적 보도가 다수 포착되었습니다. 전반적 센티멘트는 소폭 개선 추세입니다.',
+    factor:    '**팩터 관점**\n\n모멘텀 팩터 -0.34(하위 30%), 퀄리티 팩터 +0.62(상위 40%), 밸류 팩터 +0.81(상위 25%)로 집계됩니다. 복합 팩터 스코어는 0.43으로 시장 대비 중립 우위이며, 저변동성 팩터에서 두드러진 강점이 확인됩니다.',
+    report:    '**리포트 관점**\n\n최근 12개 증권사 리포트 종합 결과, 목표주가 평균 82,400원(현재가 대비 +18.3% 상승 여력)이며 매수 9건·중립 3건·매도 0건으로 컨센서스는 긍정적입니다. 주요 리스크 요인으로 메모리 가격 하락 사이클 재진입, 미·중 반도체 규제 강화가 지목되었습니다.'
+  };
+
+  var AGENT_CHIPS = [
+    { id: 'valuation', name: '밸류에이션 에이전트', color: '#ffcaca', icon: 'assets/widget-agent/icon-agent-valuation.svg', desc: '삼성전자 PER 12.4배로 섹터 평균 대비 저평가, HBM 수요 회복이 핵심 재평가 촉매.' },
+    { id: 'news',      name: '뉴스 에이전트',       color: '#dbffd2', icon: 'assets/widget-agent/icon-agent-news.svg',      desc: '최근 7일 내 주요 부정 뉴스 없음. 시장 영향도 중립으로 판단됩니다.' },
+    { id: 'factor',    name: '팩터 에이전트',       color: '#c7eeff', icon: 'assets/widget-agent/icon-agent-factor.svg',    desc: '복합 팩터 스코어 0.43, 시장 대비 중립 우위이며 저변동성 팩터 강점 확인.' },
+    { id: 'report',    name: '리포트 에이전트',     color: '#c0c6ff', icon: 'assets/widget-agent/icon-agent-report.svg',    desc: '증권사 12곳 목표주가 평균 82,400원, 매수 9건·중립 3건·매도 0건.' }
+  ];
+
+  var answerCount = 0; // 총 AI 답변 횟수 추적
+
+  function streamMarkdown(container, md, onDone) {
+    var WORD_MS = 28;
+    var wordIdx = 0;
+    function appendLine(parent, text) {
+      var parts = text.split(/(\*\*[^*]+\*\*)/g);
+      parts.forEach(function(part) {
+        var isBold = /^\*\*/.test(part);
+        var raw = isBold ? part.slice(2, -2) : part;
+        var wrapper = isBold ? document.createElement('strong') : null;
+        var target = wrapper || parent;
+        var words = raw.split(' ');
+        words.forEach(function(word, i) {
+          if (!word) return;
+          if (i > 0) target.appendChild(document.createTextNode(' '));
+          var span = document.createElement('span');
+          span.className = 'stream-word';
+          span.textContent = word;
+          span.style.animationDelay = (wordIdx++ * WORD_MS) + 'ms';
+          target.appendChild(span);
+        });
+        if (wrapper) parent.appendChild(wrapper);
+      });
+    }
+    var lines = md.split('\n');
+    lines.forEach(function(line) {
+      if (!line.trim()) return;
+      var p = document.createElement('p');
+      appendLine(p, line);
+      container.appendChild(p);
+    });
+    if (onDone) setTimeout(onDone, wordIdx * WORD_MS + 200);
+  }
+
+  // ── 런처 위젯 → 분석 요청 처리 ──────────────────────
+  function onLauncherSubmit(sourceWindow, data) {
+    // 사용자 쿼리 말풍선 추가
+    var userDiv = document.createElement('div');
+    userDiv.className = 'msg-user';
+    userDiv.innerHTML = '<div class="msg-bubble"><p>' + escHtml(data.query || '') + '</p></div>';
+    chatContent.appendChild(userDiv);
+
+    // 에이전트 위젯 블록 추가
+    var agentDiv = document.createElement('div');
+    agentDiv.className = 'msg-ai';
+    agentDiv.innerHTML =
+      '<div class="app-attr">' +
+        '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+          '<img src="assets/common/bnk-logo.png" alt="" style="width:20px;height:auto;object-fit:contain;display:block;">' +
+        '</div>' +
+        '<span class="app-attr-name">AI 허브 BNK</span>' +
+      '</div>' +
+      '<div class="widget-wrap agent-wrap">' +
+        '<div class="widget-frame">' +
+          '<iframe src="widget-agent.html" sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
+        '</div>' +
+      '</div>';
+    chatContent.appendChild(agentDiv);
+
+    setTimeout(function() { chatScroll.scrollTop = chatScroll.scrollHeight; }, 100);
+  }
+
+  // ── 에이전트 초기 세팅 완료 → widget-agent.html 추가 ──
+  function onSetupResult(sourceWindow, data) {
+    // setup iframe 찾기
+    var setupIframe = null;
+    document.querySelectorAll('.setup-wrap iframe').forEach(function(f) {
+      try { if (f.contentWindow === sourceWindow) setupIframe = f; } catch(err) {}
+    });
+    if (!setupIframe) return;
+
+    // setup 위젯이 속한 .msg-ai 블록
+    var msgAi = setupIframe.closest('.msg-ai');
+    if (!msgAi) return;
+
+    // widget-agent.html 새 블록 추가
+    var agentDiv = document.createElement('div');
+    agentDiv.className = 'msg-ai';
+    agentDiv.innerHTML =
+      '<div class="app-attr">' +
+        '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+          '<img src="assets/common/bnk-logo.png" alt="" style="width:20px;height:auto;object-fit:contain;display:block;">' +
+        '</div>' +
+        '<span class="app-attr-name">AI 허브 BNK</span>' +
+      '</div>' +
+      '<div class="widget-wrap agent-wrap">' +
+        '<div class="widget-frame">' +
+          '<iframe src="widget-agent.html" ' +
+            'sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
+        '</div>' +
+      '</div>';
+
+    msgAi.insertAdjacentElement('afterend', agentDiv);
+
+    // 스크롤 아래로
+    var cs = document.getElementById('chatScroll');
+    if (cs) setTimeout(function() { cs.scrollTop = cs.scrollHeight; }, 100);
+  }
+
+  function onAgentResult(sourceWindow) {
+    var agentIframe = null;
+    document.querySelectorAll('.agent-wrap iframe').forEach(function(f) {
+      try { if (f.contentWindow === sourceWindow) agentIframe = f; } catch(err) {}
+    });
+    if (!agentIframe) return;
+    var msgAi = agentIframe.closest('.msg-ai');
+    if (!msgAi) return;
+    if (msgAi.querySelector('.result-text')) return;
+    answerCount++;
+
+    var div = document.createElement('div');
+    div.className = 'result-text model-text';
+    msgAi.appendChild(div);
+
+    streamMarkdown(div, RESULT_MD, function() {
+      // ① 스켈레톤 칩 먼저 표시
+      var cw = document.createElement('div');
+      cw.className = 'agent-chips-wrap';
+      var ci = document.createElement('div');
+      ci.className = 'agent-chips';
+      AGENT_CHIPS.forEach(function() {
+        var sk = document.createElement('div');
+        sk.className = 'agent-chip is-skeleton';
+        sk.innerHTML =
+          '<div class="sk-chip-header">' +
+            '<div class="sk-chip-circle sh"></div>' +
+            '<div class="sk-chip-name-bar sh"></div>' +
+          '</div>' +
+          '<div class="sk-chip-line sh" style="width:88%"></div>' +
+          '<div class="sk-chip-line sh" style="width:65%"></div>';
+        ci.appendChild(sk);
+      });
+      cw.appendChild(ci);
+      msgAi.appendChild(cw);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+
+      // ② 700ms 후 실제 칩으로 교체
+      setTimeout(function() {
+        ci.innerHTML = '';
+        AGENT_CHIPS.forEach(function(ch) {
+        var chip = document.createElement('div');
+        chip.className = 'agent-chip chip-reveal';
+        chip.innerHTML =
+          '<div class="chip-header">' +
+            '<div class="chip-badge" style="background:' + ch.color + '"><img src="' + ch.icon + '" alt=""></div>' +
+            '<span class="chip-name">' + ch.name + '</span>' +
+          '</div>' +
+          '<p class="chip-desc">' + ch.desc + '</p>';
+        // 선택 + 칩 답변 스트리밍
+        (function(chipEl, agentId) {
+          chipEl.addEventListener('click', function() {
+            if (chipEl.classList.contains('is-selected')) return;
+            ci.querySelectorAll('.agent-chip').forEach(function(c) { c.classList.remove('is-selected'); });
+            chipEl.classList.add('is-selected');
+
+            var md = CHIP_MD[agentId];
+            if (!md) return;
+
+            answerCount++;
+
+            // 채팅 하단에 새 AI 답변 턴 추가
+            var newAi = document.createElement('div');
+            newAi.className = 'msg-ai';
+            newAi.innerHTML =
+              '<div class="app-attr">' +
+                '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+                  '<img src="assets/common/bnk-logo.png" alt="" style="width:20px;height:auto;object-fit:contain;display:block;">' +
+                '</div>' +
+                '<span class="app-attr-name">AI 허브 BNK</span>' +
+              '</div>';
+            chatContent.appendChild(newAi);
+
+            var textDiv = document.createElement('div');
+            textDiv.className = 'result-text model-text';
+            newAi.appendChild(textDiv);
+
+            chatScroll.scrollTop = chatScroll.scrollHeight;
+
+            streamMarkdown(textDiv, md, function() {
+              // 3번째 답변부터 디베이팅 카드 추가
+              if (answerCount >= 2) {
+                var dc = buildDebatingCard(newAi);
+                newAi.appendChild(dc);
+              }
+              chatScroll.scrollTop = chatScroll.scrollHeight;
+            });
+          });
+        }(chip, ch.id));
+          ci.appendChild(chip);
+        });
+        // 칩 하단 안내 문구 — 칩 바로 뒤(액션 아이콘 앞)에 삽입
+        var chipFooter = document.createElement('p');
+        chipFooter.style.cssText = 'font-size:16px;color:#0d0d0d;line-height:26px;letter-spacing:-0.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:4px;';
+        chipFooter.textContent = '또는 입력창에 에이전트명 + 질문 내용을 작성하여 선택 질의하기';
+        cw.insertAdjacentElement('afterend', chipFooter);
+
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+      }, 700);
+
+      // 마우스 드래그 슬라이드
+      var dragStartX = 0, dragScrollLeft = 0, dragging = false;
+      cw.addEventListener('mousedown', function(e) {
+        dragging = true;
+        dragStartX = e.pageX - cw.offsetLeft;
+        dragScrollLeft = cw.scrollLeft;
+        cw.classList.add('is-dragging');
+      });
+      window.addEventListener('mouseup', function() {
+        dragging = false;
+        cw.classList.remove('is-dragging');
+      });
+      cw.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        cw.scrollLeft = dragScrollLeft - (e.pageX - cw.offsetLeft - dragStartX) * 1.2;
+      });
+      // 드래그 중엔 클릭 억제
+      cw.addEventListener('click', function(e) {
+        if (Math.abs(cw.scrollLeft - dragScrollLeft) > 4) e.stopPropagation();
+      }, true);
+
+      // 액션 버튼
+      var actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      actions.innerHTML =
+        '<button class="msg-action" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+        '<button class="msg-action" title="Good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>' +
+        '<button class="msg-action" title="Bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>' +
+        '<button class="msg-action" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>';
+      msgAi.appendChild(actions);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    });
+  }
+
+  // ── 디베이팅 카드 빌더 ──────────────────────────────
+  function buildDebatingCard(container) {
+    var card = document.createElement('div');
+    card.className = 'debating-card';
+
+    // ① 스켈레톤 먼저 표시
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 16px 4px">' +
+        '<div class="sk-db-title sh"></div>' +
+        '<div style="display:flex;gap:12px;align-items:flex-start">' +
+          '<div class="sk-db-circle sh"></div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;gap:8px">' +
+            '<div class="sk-db-line sh" style="width:55%"></div>' +
+            '<div class="sk-db-line sh" style="width:80%"></div>' +
+            '<div class="sk-db-line sh" style="width:65%"></div>' +
+            '<div class="sk-db-btn sh"></div>' +
+          '</div>' +
+        '</div>' +
+        '<hr class="debating-divider">' +
+        '<div class="sk-db-section sh"></div>' +
+        '<div style="display:flex;gap:12px">' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+          '<div class="sk-db-chip sh"></div>' +
+        '</div>' +
+        '<div class="sk-db-line sh" style="width:85%"></div>' +
+      '</div>';
+
+    // ② 700ms 후 실제 카드로 교체
+    setTimeout(function() {
+      card.innerHTML = '';
+      card.classList.add('is-revealed');
+      _fillDebatingCard(card);
+    }, 700);
+
+    return card;
+  }
+
+  function _fillDebatingCard(card) {
+
+    // 헤더
+    var header = document.createElement('p');
+    header.className = 'debating-header';
+    header.textContent = '디베이팅 멀티 에이전트에게 물어보세요!';
+    card.appendChild(header);
+
+    // 아이템 (체크 + 설명 + 버튼)
+    var item = document.createElement('div');
+    item.className = 'debating-item';
+    item.innerHTML =
+      '<div class="debating-check">' +
+        '<svg viewBox="0 0 12 12" fill="none" stroke="#2da040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<polyline points="10 3 5 8.5 2 5.5"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="debating-content">' +
+        '<p class="debating-action-title">아래 버튼을 눌러서 이동</p>' +
+        '<ul class="debating-bullets">' +
+          '<li>디베이팅 모델 사용 시 시간이 소요됩니다.</li>' +
+          '<li>새로운 질의로 시작해야합니다.</li>' +
+        '</ul>' +
+        '<button class="debating-btn"><img src="assets/widget-debating/icon-debating-stack.svg" alt="" style="width:20px;height:20px;flex-shrink:0;">디베이팅 모델 사용해 보기</button>' +
+      '</div>';
+    card.appendChild(item);
+
+    // 구분선
+    var hr = document.createElement('hr');
+    hr.className = 'debating-divider';
+    card.appendChild(hr);
+
+    // 단일 에이전트 재질의 제목
+    var secTitle = document.createElement('p');
+    secTitle.className = 'debating-section-title';
+    secTitle.textContent = '또는 단일 에이전트 재질의';
+    card.appendChild(secTitle);
+
+    // 칩 캐러셀
+    var chipsSection = document.createElement('div');
+    chipsSection.className = 'debating-chips-wrap';
+    var chipsInner = document.createElement('div');
+    chipsInner.className = 'debating-chips-inner';
+    AGENT_CHIPS.forEach(function(ch) {
+      var chip = document.createElement('div');
+      chip.className = 'agent-chip';
+      chip.innerHTML =
+        '<div class="chip-header">' +
+          '<div class="chip-badge" style="background:' + ch.color + '"><img src="' + ch.icon + '" alt=""></div>' +
+          '<span class="chip-name">' + ch.name + '</span>' +
+        '</div>' +
+        '<p class="chip-desc">' + ch.desc + '</p>';
+      chip.addEventListener('click', function() {
+        var md = CHIP_MD[ch.id];
+        if (!md) return;
+        answerCount++;
+        var newAi = document.createElement('div');
+        newAi.className = 'msg-ai';
+        newAi.innerHTML =
+          '<div class="app-attr">' +
+            '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+              '<img src="assets/common/bnk-logo.png" alt="" style="width:20px;height:auto;object-fit:contain;display:block;">' +
+            '</div>' +
+            '<span class="app-attr-name">AI 허브 BNK</span>' +
+          '</div>';
+        chatContent.appendChild(newAi);
+        var textDiv = document.createElement('div');
+        textDiv.className = 'result-text model-text';
+        newAi.appendChild(textDiv);
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+        streamMarkdown(textDiv, md, function() {
+          if (answerCount >= 2) newAi.appendChild(buildDebatingCard(newAi));
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+        });
+      });
+      chipsInner.appendChild(chip);
+    });
+    chipsSection.appendChild(chipsInner);
+    card.appendChild(chipsSection);
+
+    // 하단 안내 문구
+    var footer = document.createElement('p');
+    footer.className = 'debating-footer';
+    footer.textContent = '또는 입력창에 에이전트명 + 질문 내용을 작성하여 선택 질의하기';
+    card.appendChild(footer);
+
+  }
+
+  // ── 질문에서 티커 추출 (간단 휴리스틱) ───────────
+  function extractTicker(q) {
+    // "삼성전자, 분석해줘" → "삼성전자"
+    var comma = q.indexOf(',');
+    if (comma > 0 && comma <= 10) return q.substring(0, comma).trim();
+    // 첫 단어가 짧으면 티커로 간주
+    var space = q.indexOf(' ');
+    if (space > 0 && space <= 8) return q.substring(0, space).trim();
+    return '';
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── 메시지 전송 (컴포저 → 대화 + 게이트 표시) ────
+  function sendMessage(text) {
+    text = (text || '').trim();
+    if (!text) return;
+
+    // 첫 메시지 시 welcome-hero → is-active 전환
+    main.classList.add('is-active');
+
+    // 1. 유저 말풍선
+    var userDiv = document.createElement('div');
+    userDiv.className = 'msg-user';
+    userDiv.innerHTML = '<div class="msg-bubble"><p>' + escHtml(text) + '</p></div>';
+    chatContent.appendChild(userDiv);
+
+    // 2. AI 블록: 어트리뷰션 + 위젯
+    var isStart   = text.trim() === '시작';
+    var widgetSrc = isStart ? 'widget-launcher.html' : 'widget-agent-setup.html';
+    var wrapClass = isStart ? 'launcher-wrap'     : 'setup-wrap';
+
+    var aiDiv = document.createElement('div');
+    aiDiv.className = 'msg-ai';
+    aiDiv.innerHTML =
+      '<div class="app-attr">' +
+        '<div class="app-attr-icon" style="background:#fbf7f6;display:flex;align-items:center;justify-content:center;">' +
+          '<img src="assets/common/bnk-logo.png" alt="" style="width:20px;height:auto;object-fit:contain;display:block;">' +
+        '</div>' +
+        '<span class="app-attr-name">AI 허브 BNK</span>' +
+      '</div>' +
+      '<div class="widget-wrap ' + wrapClass + '">' +
+        '<div class="widget-frame">' +
+          '<iframe src="' + widgetSrc + '" ' +
+            'sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>' +
+        '</div>' +
+      '</div>';
+
+    chatContent.appendChild(aiDiv);
+
+    // 인풋 초기화
+    composerInput.value = '';
+    composerInput.style.height = 'auto';
+    updateSendIcon();
+
+    // 스크롤 하단
+    setTimeout(function() { chatScroll.scrollTop = chatScroll.scrollHeight; }, 80);
+  }
+
+  // ── 모바일 textarea 자동 높이 ──────────────
+  var mobInput = document.getElementById('mobInput');
+  if (mobInput) {
+    mobInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+    });
+  }
+</script>
+
+</body>
+</html>
