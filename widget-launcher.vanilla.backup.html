@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>런처 위젯</title>
+  <link rel="stylesheet" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: transparent; font-family: 'Pretendard', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    button { font-family: inherit; }
+    .lw-ta::placeholder { color: #8f8f8f; }
+    .lw-ta::-webkit-scrollbar { display: none; }
+    .lw-ta { scrollbar-width: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ─── 피그마 inset 값 (node-id 255-2113 기준, 수정 금지) ─── */
+const ICON_INSET = {
+  help:      '8.33%',                        // 24px 컨테이너
+  stock:     '10.42% 9.3% 8.33% 16.67%',    // 18px 컨테이너
+  compare:   '8.33% 0 12.5% 0',
+  valuation: '8.33%',
+  sentiment: '12.5% 10.42% 14.58% 8.55%',
+  screening: '12.34% 8.33% 16.67% 8.33%',
+  close:     '22.26%',                       // 24px 컨테이너
+  send:      '15% 20%',                      // 20px 컨테이너
+  settings:  '7.29% 10.63%',                // 24px 컨테이너
+  chevron:   '37.5% 20.83% 29.17% 20.83%',  // 24px 컨테이너
+};
+
+/* 피그마 구조 그대로: relative 컨테이너 → absolute inset div → img 100% */
+function IconBox({ src, size, inset, alt = '' }) {
+  return (
+    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+      <div style={{ position:'absolute', inset, overflow:'hidden' }}>
+        <img src={src} alt={alt} style={{
+          position:'absolute', display:'block',
+          top:0, left:0, right:0, bottom:0,
+          maxWidth:'none', width:'100%', height:'100%',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── 데이터 ─── */
+const ROWS = [
+  { id:'stock',     label:'개별종목 분석',  iconSrc:'assets/widget-launcher/icon-stock.svg',     iconInset: ICON_INSET.stock,     showMode:true,  placeholder:'삼성전자의 투자포인트와 리스크를 정리해줘' },
+  { id:'compare',   label:'종목간 비교분석', iconSrc:'assets/widget-launcher/icon-compare.svg',   iconInset: ICON_INSET.compare,   showMode:true,  placeholder:'NAVER와 카카오를 투자매력도 관점에서 비교해줘' },
+  { id:'valuation', label:'밸류에이션',     iconSrc:'assets/widget-launcher/icon-valuation.svg', iconInset: ICON_INSET.valuation, showMode:false, placeholder:'삼성전자의 밸류에이션을 분석해줘' },
+  { id:'sentiment', label:'마켓 센티멘트',  iconSrc:'assets/widget-launcher/icon-sentiment.svg', iconInset: ICON_INSET.sentiment, showMode:false, placeholder:'주식시장의 투자 센티멘트를 분석해줘' },
+  { id:'screening', label:'종목 스크리닝',  iconSrc:'assets/widget-launcher/icon-screening.svg', iconInset: ICON_INSET.screening, showMode:false, placeholder:'원하는 조건에 맞는 종목을 찾아줘' },
+];
+const RISK_OPTS   = ['매우 보수적','보수적','중간','공격적','매우 공격적'];
+const STYLE_OPTS  = ['밸류에이션','균형','성장'];
+const PERIOD_OPTS = ['단기 (~1M)','중기 (~3M)','장기 (~12M)'];
+const METHOD_CHIPS = [
+  { id:'report',    label:'리포트',    bg:'#ffeeee', color:'#ff4e4e' },
+  { id:'style',     label:'스타일',    bg:'#d6f2e0', color:'#0aae49' },
+  { id:'valuation', label:'밸류에이션', bg:'#daeff9', color:'#25a1d7' },
+  { id:'news',      label:'뉴스플로우', bg:'#dbddf5', color:'#2734c4' },
+];
+const DOT_COLORS = ['#ff6b6b','#0aae49','#25a1d7','#9b59b6'];
+
+/* ─── CardHeader ─── */
+function CardHeader() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 16px 8px', flexShrink:0 }}>
+      <div>
+        <p style={{ fontSize:15, fontWeight:500, color:'#000', lineHeight:1.45 }}>BNK 애널리스트AI</p>
+        <p style={{ fontSize:14, fontWeight:400, color:'#5d5d5d', lineHeight:1.45, letterSpacing:'-0.014px' }}>무엇을 분석할까요?</p>
+      </div>
+      {/* help 아이콘: 32px 버튼 → 24px absolute 컨테이너 → inset 8.33% */}
+      <button aria-label="도움말" style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', background:'none', border:'none', cursor:'pointer', padding:4, flexShrink:0 }}>
+        <div style={{ position:'relative', width:24, height:24, overflow:'hidden' }}>
+          <div style={{ position:'absolute', inset: ICON_INSET.help }}>
+            <img src="assets/widget-launcher/icon-help.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+          </div>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+/* ─── ModeToggle ─── */
+function ModeToggle({ mode, onChange }) {
+  return (
+    <div style={{ display:'flex', background:'#f2f3f5', borderRadius:14, padding:4, height:36, minWidth:177, maxWidth:272, flexShrink:0 }}>
+      {[{v:'normal',l:'일반모드 (~2분)'},{v:'debate',l:'토론모드 (~10분)'}].map(o => {
+        const on = mode === o.v;
+        return (
+          <button key={o.v} onClick={() => onChange(o.v)} style={{
+            flex:'1 0 0', minWidth:0, height:'100%', border:'none', borderRadius:8, cursor:'pointer',
+            background: on ? '#4d4d4d' : '#f2f3f5',
+            color: on ? '#fff' : '#71717b',
+            fontSize:12, fontWeight: on ? 700 : 400,
+            letterSpacing: on ? '-0.5px' : '-0.012px',
+            lineHeight:1.45, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+            padding:'0 8px', transition:'background 0.15s,color 0.15s',
+          }}>{o.l}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── SendButton ─── */
+function SendButton({ active, onClick }) {
+  return (
+    <button onClick={active ? onClick : undefined} aria-label="전송" style={{
+      width:28, height:28, flexShrink:0, border:'none', borderRadius:'50%', padding:4,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      background: active ? '#0285ff' : '#cbcbcb',
+      cursor: active ? 'pointer' : 'default',
+      transition:'background 0.15s',
+    }}>
+      {/* 피그마: 20px 컨테이너, inset 15% 20% */}
+      <div style={{ position:'relative', width:20, height:20, flexShrink:0 }}>
+        <div style={{ position:'absolute', inset: ICON_INSET.send, overflow:'hidden' }}>
+          <img src="assets/widget-launcher/icon-send.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ─── ComposerBox ─── */
+function ComposerBox({ placeholder, showMode, text, onTextChange, mode, onModeChange, onSend }) {
+  const taRef = useRef(null);
+  const hasText = text.trim().length > 0;
+  useEffect(() => {
+    const el = taRef.current; if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, [text]);
+  return (
+    <div style={{ background:'#f8f8f8', borderRadius:16, overflow:'hidden', width:'100%', flexShrink:0 }}>
+      <div style={{ padding:'12px 28px 4px 20px' }}>
+        <textarea ref={taRef} className="lw-ta" value={text}
+          onChange={e => onTextChange(e.target.value)}
+          placeholder={placeholder} rows={1}
+          style={{ width:'100%', display:'block', background:'none', border:'none', outline:'none', resize:'none', overflow:'hidden', fontSize:14, fontWeight:400, lineHeight:1.45, letterSpacing:'-0.014px', color:'#0d0d0d', fontFamily:'inherit', padding:0 }} />
+      </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 16px 12px 18px', gap:8 }}>
+        {showMode ? <ModeToggle mode={mode} onChange={onModeChange} /> : <div style={{ flex:1 }} />}
+        <SendButton active={hasText} onClick={onSend} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── ToggleBtn: 피그마 구조 그대로 ─── */
+/* 열림(X): 24px 컨테이너 → inset 22.26%  */
+/* 닫힘(+): 동일 구조 + -rotate(-45deg) wrapper */
+function ToggleBtn({ isOpen, onToggle }) {
+  return (
+    <button onClick={onToggle} aria-label={isOpen ? '닫기' : '열기'}
+      style={{ width:28, height:28, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:'none', border:'none', cursor:'pointer', padding:0 }}>
+      {isOpen ? (
+        /* 열림 → X 아이콘 (회전 없음) */
+        <div style={{ position:'relative', width:24, height:24 }}>
+          <div style={{ position:'absolute', inset: ICON_INSET.close, overflow:'hidden' }}>
+            <img src="assets/widget-launcher/icon-close.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+          </div>
+        </div>
+      ) : (
+        /* 닫힘 → X를 -45도 회전 = + 아이콘, 33.941px 래퍼 */
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', position:'relative', width:33.941, height:33.941 }}>
+          <div style={{ transform:'rotate(-45deg)', flexShrink:0 }}>
+            <div style={{ position:'relative', width:24, height:24 }}>
+              <div style={{ position:'absolute', inset: ICON_INSET.close, overflow:'hidden' }}>
+                <img src="assets/widget-launcher/icon-close.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </button>
+  );
+}
+
+/* ─── AnalysisRow ─── */
+function AnalysisRow({ id, label, iconSrc, iconInset, placeholder, showMode, isActive, onToggle, text, onTextChange, mode, onModeChange, onSend }) {
+  return (
+    <div style={{ borderBottom:'1px solid rgba(13,13,13,0.05)', padding:'8px 16px', flexShrink:0 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+        {/* 헤더 */}
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ flex:'1 0 0', minWidth:0, display:'flex', alignItems:'center', gap:6 }}>
+            {/* 아이콘 컨테이너: 28px, bg #ffebec, p-4, radius-10 */}
+            <div style={{ width:28, height:28, borderRadius:10, background:'#ffebec', display:'flex', alignItems:'center', justifyContent:'center', padding:4, flexShrink:0, overflow:'hidden' }}>
+              {/* 18px 아이콘 컨테이너 → inset 배치 */}
+              <div style={{ position:'relative', width:18, height:18, flexShrink:0 }}>
+                <div style={{ position:'absolute', inset: iconInset, overflow:'hidden' }}>
+                  <img src={iconSrc} alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize:14, fontWeight:400, color:'#0d0d0d', lineHeight:1.45, letterSpacing:'-0.014px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', minWidth:0 }}>
+              {label}
+            </span>
+          </div>
+          <ToggleBtn isOpen={isActive} onToggle={onToggle} />
+        </div>
+        {/* 컴포저 */}
+        {isActive && (
+          <ComposerBox placeholder={placeholder} showMode={showMode}
+            text={text} onTextChange={onTextChange}
+            mode={mode} onModeChange={onModeChange} onSend={onSend} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── SegmentControl ─── */
+function SegmentControl({ options, value, onChange, variant }) {
+  const dark = variant === 'dark';
+  return (
+    <div style={{ display:'flex', background:'#f2f3f5', borderRadius:14, padding:4, gap:4, width:'100%', alignItems: dark ? 'flex-start' : 'stretch', ...(!dark && { height:42 }) }}>
+      {options.map((opt, i) => {
+        const on = value === i;
+        return (
+          <button key={opt} onClick={() => onChange(i)} style={{
+            flex:'1 0 0', minWidth:0, border:'none', borderRadius:10, cursor:'pointer',
+            padding: dark ? '6px 4px' : '0 4px',
+            fontSize:12, lineHeight:1.45,
+            fontWeight: on ? 500 : 400,
+            whiteSpace:'normal', wordBreak:'keep-all', textAlign:'center',
+            transition:'all 0.15s',
+            ...(dark ? {
+              minHeight:32,
+              background: on ? '#404040' : '#fff',
+              color: on ? '#fff' : '#71717b',
+              boxShadow: on ? '0 1px 1.5px rgba(0,0,0,.1),0 1px 1px rgba(0,0,0,.1)' : 'none',
+            } : {
+              height:'100%',
+              background: on ? '#fff' : '#f2f3f5',
+              color: on ? '#141414' : '#71717b',
+              letterSpacing: on ? '-1px' : '-0.012px',
+              boxShadow: on ? '0 1px 1.5px rgba(0,0,0,.1),0 1px 1px rgba(0,0,0,.1)' : 'none',
+            }),
+          }}>{opt}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── MethodChips ─── */
+function MethodChips({ selected, onChange }) {
+  return (
+    <div style={{ display:'flex', gap:4, width:'100%' }}>
+      {METHOD_CHIPS.map(c => {
+        const on = selected.has(c.id);
+        return (
+          <button key={c.id} onClick={() => { const n = new Set(selected); on ? n.delete(c.id) : n.add(c.id); onChange(n); }}
+            style={{ flex:'1 0 0', minWidth:0, maxWidth:245, height:34, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', overflow:'hidden', padding:'0 16px', background: on ? c.bg : '#f3f3f3', color: on ? c.color : '#0d0d0d', fontSize:12, fontWeight: on ? 700 : 400, letterSpacing: on ? '-1px' : '-0.012px', lineHeight:1.45, whiteSpace:'nowrap', textOverflow:'ellipsis', transition:'all .15s' }}>
+            {c.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── SummaryTag ─── */
+function SummaryTag({ dot, label, value }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:4, background:'#fafbfd', boxShadow:'6px 4px 12px rgba(105,105,105,.1)', borderRadius:100000, padding:'4px 10px', flexShrink:0 }}>
+      <div style={{ width:5, height:5, borderRadius:'50%', background:dot, flexShrink:0 }} />
+      <span style={{ fontSize:12, fontWeight:500, color:'#141414', lineHeight:1.45, whiteSpace:'nowrap' }}>{label}</span>
+      <div style={{ width:1, height:8, background:'rgba(0,0,0,.2)', flexShrink:0 }} />
+      <span style={{ fontSize:12, fontWeight:500, color:'#141414', lineHeight:1.45, whiteSpace:'nowrap' }}>{value}</span>
+    </div>
+  );
+}
+
+/* ─── SettingsSection ─── */
+function SettingsSection({ open, onToggle, risk, onRisk, stylePref, onStylePref, period, onPeriod, methods, onMethods }) {
+  const methodLabel = methods.size > 0
+    ? [...methods].map(id => METHOD_CHIPS.find(c=>c.id===id)?.label).filter(Boolean).join(', ')
+    : null;
+  return (
+    <div style={{ background:'#fff', padding:'8px 16px 16px', flexShrink:0 }}>
+      {/* 설정 헤더 */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, height:36 }}>
+        <div style={{ flex:'1 0 0', display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
+          {/* 설정 아이콘: 28px 컨테이너, bg #f9f9f9, 24px 아이콘, inset 7.29% 10.63% */}
+          <div style={{ width:28, height:28, borderRadius:10, background:'#f9f9f9', display:'flex', alignItems:'center', justifyContent:'center', padding:4, flexShrink:0, overflow:'hidden' }}>
+            <div style={{ position:'relative', width:24, height:24, flexShrink:0 }}>
+              <div style={{ position:'absolute', inset: ICON_INSET.settings, overflow:'hidden' }}>
+                <img src="assets/widget-launcher/icon-settings.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize:14, fontWeight:400, color:'#0d0d0d', lineHeight:1.45, letterSpacing:'-0.014px' }}>설정</span>
+        </div>
+        {/* 체브론 버튼: 24px 아이콘, inset 37.5% 20.83% 29.17% 20.83% */}
+        <button onClick={onToggle} aria-label={open ? '접기' : '펼치기'}
+          style={{ width:28, height:28, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:'none', border:'none', cursor:'pointer', padding:2 }}>
+          <div style={{ position:'relative', width:24, height:24, flexShrink:0, transform: open ? 'scaleY(-1)' : 'none', transition:'transform .2s' }}>
+            <div style={{ position:'absolute', inset: ICON_INSET.chevron, overflow:'hidden' }}>
+              <img src="assets/widget-launcher/icon-chevron.svg" alt="" style={{ position:'absolute', display:'block', inset:0, maxWidth:'none', width:'100%', height:'100%' }} />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {open && (
+        <div style={{ display:'flex', flexDirection:'column' }}>
+          {/* 투자성향 */}
+          <div style={{ padding:'8px 0' }}>
+            <p style={{ fontSize:14, fontWeight:400, color:'#0d0d0d', lineHeight:1.45, letterSpacing:'-0.014px', marginBottom:10 }}>투자성향</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {[
+                { label:'위험성향',   opts:RISK_OPTS,   val:risk,   set:onRisk,   v:'dark'  },
+                { label:'스타일 선호도', opts:STYLE_OPTS, val:stylePref, set:onStylePref, v:'light' },
+                { label:'투자기간',   opts:PERIOD_OPTS, val:period, set:onPeriod, v:'light' },
+              ].map(s => (
+                <div key={s.label} style={{ background:'#fafbfd', borderRadius:12, padding:'12px 16px' }}>
+                  <p style={{ fontSize:14, fontWeight:400, color:'#0d0d0d', lineHeight:1.45, letterSpacing:'-0.014px', marginBottom:6 }}>{s.label}</p>
+                  <SegmentControl options={s.opts} value={s.val} onChange={s.set} variant={s.v} />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* 분석방법 선호도 */}
+          <div style={{ padding:'8px 0 12px' }}>
+            <p style={{ fontSize:14, fontWeight:400, color:'#0d0d0d', lineHeight:1.45, letterSpacing:'-0.014px', marginBottom:10 }}>분석방법 선호도</p>
+            <MethodChips selected={methods} onChange={onMethods} />
+          </div>
+          {/* 요약 태그 */}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            <SummaryTag dot={DOT_COLORS[0]} label="위험성향" value={RISK_OPTS[risk]} />
+            <SummaryTag dot={DOT_COLORS[1]} label="스타일"   value={STYLE_OPTS[stylePref]} />
+            <SummaryTag dot={DOT_COLORS[2]} label="투자기간" value={PERIOD_OPTS[period]} />
+            {methodLabel && <SummaryTag dot={DOT_COLORS[3]} label="선호 분석" value={methodLabel} />}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Root ─── */
+function LauncherWidget() {
+  const [activeRow,  setActiveRow]  = useState(null);
+  const [rowTexts,   setRowTexts]   = useState({});
+  const [rowModes,   setRowModes]   = useState({});
+  const [settOpen,   setSettOpen]   = useState(true);
+  const [risk,       setRisk]       = useState(0);
+  const [stylePref,  setStylePref]  = useState(0);
+  const [period,     setPeriod]     = useState(0);
+  const [methods,    setMethods]    = useState(new Set());
+
+  /* 높이 보고 */
+  useEffect(() => {
+    const report = () => window.parent.postMessage({ type:'resize', height: document.documentElement.scrollHeight }, '*');
+    const ro = new ResizeObserver(report);
+    ro.observe(document.body);
+    report();
+    return () => ro.disconnect();
+  }, []);
+
+  const toggle = id => setActiveRow(p => p === id ? null : id);
+
+  const send = id => {
+    const q = (rowTexts[id] || '').trim();
+    if (!q) return;
+    window.parent.postMessage({ type:'launcher-submit', analysisType:id, query:q, mode:rowModes[id]||'normal', settings:{ risk, stylePref, period, methods:[...methods] } }, '*');
+  };
+
+  return (
+    <div style={{ background:'#fff', border:'0.5px solid rgba(13,13,13,.15)', borderRadius:24, overflow:'hidden', width:'100%' }}>
+      <div style={{ display:'flex', flexDirection:'column' }}>
+        <CardHeader />
+        {ROWS.map(r => (
+          <AnalysisRow key={r.id} {...r}
+            isActive={activeRow === r.id}
+            onToggle={() => toggle(r.id)}
+            text={rowTexts[r.id] || ''}
+            onTextChange={t => setRowTexts(p => ({...p, [r.id]:t}))}
+            mode={rowModes[r.id] || 'normal'}
+            onModeChange={m => setRowModes(p => ({...p, [r.id]:m}))}
+            onSend={() => send(r.id)} />
+        ))}
+        <SettingsSection
+          open={settOpen}       onToggle={() => setSettOpen(p=>!p)}
+          risk={risk}           onRisk={setRisk}
+          stylePref={stylePref} onStylePref={setStylePref}
+          period={period}       onPeriod={setPeriod}
+          methods={methods}     onMethods={setMethods} />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LauncherWidget />);
+</script>
+</body>
+</html>
