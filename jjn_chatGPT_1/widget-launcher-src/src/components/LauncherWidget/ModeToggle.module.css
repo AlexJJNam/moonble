@@ -1,0 +1,21 @@
+.wrap {
+  display: flex;
+  background: #f2f3f5;
+  border-radius: 14px;
+  padding: 4px;
+  height: 36px;
+  flex-shrink: 0;
+  min-width: 200px;
+}
+
+.btn {
+  flex: 1 0 0;
+  min-width: 0;
+  height: 100%;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 0 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}

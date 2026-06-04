@@ -1,0 +1,13 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: transparent;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; border: none; background: none; cursor: pointer; padding: 0; }
+textarea { font-family: inherit; }
+textarea::placeholder { color: #8f8f8f; }
+textarea::-webkit-scrollbar { display: none; }
+textarea { scrollbar-width: none; }
