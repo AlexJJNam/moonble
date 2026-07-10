@@ -14,6 +14,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>moonble | Google Analytics & Firebase 가이드 + 퀴즈</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233182f6'/><text x='16' y='21' font-family='ui-sans-serif,system-ui,sans-serif' font-weight='800' font-size='19' fill='white' text-anchor='middle'>m</text></svg>" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <style>
@@ -286,6 +287,7 @@
       font-weight: 600;
       font-size: var(--text-sm);
       cursor: pointer;
+      white-space: nowrap;
       transition: background .12s ease, border-color .12s ease, color .12s ease, transform .08s ease;
     }
 
@@ -422,11 +424,11 @@
     }
 
     .sky-arc-ring {
-      animation: sky-ring-spin 6s linear infinite;
+      animation: sky-ring-spin 4s linear infinite;
     }
 
     @keyframes sky-ring-spin {
-      to { stroke-dashoffset: -32; }
+      to { stroke-dashoffset: -20; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -653,21 +655,65 @@
       justify-content: center;
     }
 
+    .ai-hero-prompt-placeholder {
+      flex-shrink: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .ai-hero-prompt-bar {
+      position: relative;
       width: 100%;
       max-width: 640px;
       display: flex;
       align-items: center;
       gap: var(--sp-3);
-      background: var(--card);
-      border: 1px solid var(--border);
+      border: none;
       border-radius: 24px;
-      padding: var(--sp-3) var(--sp-5);
-      box-shadow: var(--shadow-strong);
+      background: var(--card);
+      padding: var(--sp-3) var(--sp-4);
+      box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+        0px -8px 8px rgba(184, 166, 224, .54),
+        0px -26px 58px rgba(184, 166, 224, .22),
+        8px 0px 8px rgba(168, 224, 184, .52),
+        26px 0px 58px rgba(168, 224, 184, .21),
+        0px 8px 8px rgba(166, 200, 240, .52),
+        0px 26px 58px rgba(166, 200, 240, .21),
+        -8px 0px 8px rgba(143, 211, 244, .54),
+        -26px 0px 58px rgba(143, 211, 244, .22);
+      animation: ai-halo-shift 5s linear infinite;
     }
 
     .ai-hero-prompt-bar.shake {
       animation: ai-shake .4s ease;
+    }
+
+    @media (max-width: 640px) {
+      .ai-hero-prompt-bar.docked {
+        position: fixed;
+        left: var(--sp-8);
+        right: var(--sp-8);
+        bottom: max(var(--sp-6), env(safe-area-inset-bottom));
+        max-width: none;
+        width: auto;
+        border-radius: 24px;
+        padding: var(--sp-3) var(--sp-4);
+        z-index: 1000;
+      }
+
+      .ai-hero-prompt-bar.flip-animating {
+        transition: transform .32s cubic-bezier(.2, .8, .2, 1);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .ai-hero-prompt-bar.flip-animating {
+          transition: none;
+        }
+      }
+
+      body.hero-prompt-focused .fab {
+        display: none;
+      }
     }
 
     .ai-hero-prompt-icon {
@@ -818,8 +864,15 @@
       gap: var(--sp-3);
     }
 
+    @media (max-width: 640px) {
+      .quiz-top-controls {
+        top: 81px;
+      }
+    }
+
     .col-toggle {
       display: none;
+      position: relative;
       align-items: center;
       gap: var(--sp-05);
       padding: var(--sp-1);
@@ -835,14 +888,38 @@
       }
     }
 
+    .col-toggle-thumb {
+      position: absolute;
+      top: var(--sp-1);
+      left: var(--sp-1);
+      width: 30px;
+      height: 26px;
+      border-radius: 7px;
+      background: var(--primary);
+      transition: transform .25s cubic-bezier(.2, .8, .2, 1);
+      pointer-events: none;
+    }
+
+    .col-toggle-input:checked ~ .quiz-top-controls .col-toggle .col-toggle-thumb {
+      transform: translateX(calc(30px + var(--sp-05)));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .col-toggle-thumb {
+        transition: none;
+      }
+    }
+
     .col-toggle-opt {
+      position: relative;
+      z-index: 1;
       display: grid;
       place-items: center;
       width: 30px;
       height: 26px;
       border-radius: 7px;
       color: var(--muted);
-      transition: background .15s ease, color .15s ease;
+      transition: color .15s ease;
     }
 
     .col-toggle-opt svg {
@@ -852,7 +929,6 @@
 
     .col-toggle-input:not(:checked) ~ .quiz-top-controls .col-toggle .col-toggle-opt[data-opt="1"],
     .col-toggle-input:checked ~ .quiz-top-controls .col-toggle .col-toggle-opt[data-opt="2"] {
-      background: var(--primary);
       color: #fff;
     }
 
@@ -1232,6 +1308,27 @@
       cursor: pointer;
     }
 
+    .history-chart-dot-pulse {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 2;
+      opacity: .55;
+      pointer-events: none;
+      animation: history-chart-pulse 3.5s ease-out infinite;
+    }
+
+    @keyframes history-chart-pulse {
+      0% { transform: scale(1); opacity: .55; }
+      100% { transform: scale(3.4); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .history-chart-dot-pulse {
+        animation: none;
+        opacity: 0;
+      }
+    }
+
     .history-chart-tooltip {
       position: fixed;
       z-index: 1000;
@@ -1533,16 +1630,222 @@
       display: flex;
       flex-direction: column;
       gap: var(--sp-2);
-      padding: var(--sp-4) var(--sp-6);
-      background: var(--card);
-      border: 1px solid var(--border);
+      padding: var(--sp-4) var(--sp-5);
+      border: none;
       border-radius: 24px;
-      box-shadow: var(--shadow-strong);
+      background: var(--card);
+      box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+        0px -8px 8px rgba(184, 166, 224, .54),
+        0px -26px 58px rgba(184, 166, 224, .22),
+        8px 0px 8px rgba(168, 224, 184, .52),
+        26px 0px 58px rgba(168, 224, 184, .21),
+        0px 8px 8px rgba(166, 200, 240, .52),
+        0px 26px 58px rgba(166, 200, 240, .21),
+        -8px 0px 8px rgba(143, 211, 244, .54),
+        -26px 0px 58px rgba(143, 211, 244, .22);
+      animation: ai-halo-shift 5s linear infinite;
       z-index: 950;
       opacity: 0;
       pointer-events: none;
       transition: opacity .3s ease, transform .3s ease;
       width: min(640px, calc(100vw - 48px));
+    }
+
+    @keyframes ai-halo-shift {
+      0% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          0px -8px 8px rgba(184, 166, 224, .54),
+          0px -26px 58px rgba(184, 166, 224, .22),
+          8px 0px 8px rgba(168, 224, 184, .52),
+          26px 0px 58px rgba(168, 224, 184, .21),
+          0px 8px 8px rgba(166, 200, 240, .52),
+          0px 26px 58px rgba(166, 200, 240, .21),
+          -8px 0px 8px rgba(143, 211, 244, .54),
+          -26px 0px 58px rgba(143, 211, 244, .22);
+      }
+      6.25% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          3.1px -7.4px 8px rgba(184, 166, 224, .54),
+          9.9px -24px 58px rgba(184, 166, 224, .22),
+          7.4px 3.1px 8px rgba(168, 224, 184, .52),
+          24px 9.9px 58px rgba(168, 224, 184, .21),
+          -3.1px 7.4px 8px rgba(166, 200, 240, .52),
+          -9.9px 24px 58px rgba(166, 200, 240, .21),
+          -7.4px -3.1px 8px rgba(143, 211, 244, .54),
+          -24px -9.9px 58px rgba(143, 211, 244, .22);
+      }
+      12.5% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          5.7px -5.7px 8px rgba(184, 166, 224, .54),
+          18.4px -18.4px 58px rgba(184, 166, 224, .22),
+          5.7px 5.7px 8px rgba(168, 224, 184, .52),
+          18.4px 18.4px 58px rgba(168, 224, 184, .21),
+          -5.7px 5.7px 8px rgba(166, 200, 240, .52),
+          -18.4px 18.4px 58px rgba(166, 200, 240, .21),
+          -5.7px -5.7px 8px rgba(143, 211, 244, .54),
+          -18.4px -18.4px 58px rgba(143, 211, 244, .22);
+      }
+      18.75% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          7.4px -3.1px 8px rgba(184, 166, 224, .54),
+          24px -9.9px 58px rgba(184, 166, 224, .22),
+          3.1px 7.4px 8px rgba(168, 224, 184, .52),
+          9.9px 24px 58px rgba(168, 224, 184, .21),
+          -7.4px 3.1px 8px rgba(166, 200, 240, .52),
+          -24px 9.9px 58px rgba(166, 200, 240, .21),
+          -3.1px -7.4px 8px rgba(143, 211, 244, .54),
+          -9.9px -24px 58px rgba(143, 211, 244, .22);
+      }
+      25% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          8px 0px 8px rgba(184, 166, 224, .54),
+          26px 0px 58px rgba(184, 166, 224, .22),
+          0px 8px 8px rgba(168, 224, 184, .52),
+          0px 26px 58px rgba(168, 224, 184, .21),
+          -8px 0px 8px rgba(166, 200, 240, .52),
+          -26px 0px 58px rgba(166, 200, 240, .21),
+          0px -8px 8px rgba(143, 211, 244, .54),
+          0px -26px 58px rgba(143, 211, 244, .22);
+      }
+      31.25% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          7.4px 3.1px 8px rgba(184, 166, 224, .54),
+          24px 9.9px 58px rgba(184, 166, 224, .22),
+          -3.1px 7.4px 8px rgba(168, 224, 184, .52),
+          -9.9px 24px 58px rgba(168, 224, 184, .21),
+          -7.4px -3.1px 8px rgba(166, 200, 240, .52),
+          -24px -9.9px 58px rgba(166, 200, 240, .21),
+          3.1px -7.4px 8px rgba(143, 211, 244, .54),
+          9.9px -24px 58px rgba(143, 211, 244, .22);
+      }
+      37.5% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          5.7px 5.7px 8px rgba(184, 166, 224, .54),
+          18.4px 18.4px 58px rgba(184, 166, 224, .22),
+          -5.7px 5.7px 8px rgba(168, 224, 184, .52),
+          -18.4px 18.4px 58px rgba(168, 224, 184, .21),
+          -5.7px -5.7px 8px rgba(166, 200, 240, .52),
+          -18.4px -18.4px 58px rgba(166, 200, 240, .21),
+          5.7px -5.7px 8px rgba(143, 211, 244, .54),
+          18.4px -18.4px 58px rgba(143, 211, 244, .22);
+      }
+      43.75% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          3.1px 7.4px 8px rgba(184, 166, 224, .54),
+          9.9px 24px 58px rgba(184, 166, 224, .22),
+          -7.4px 3.1px 8px rgba(168, 224, 184, .52),
+          -24px 9.9px 58px rgba(168, 224, 184, .21),
+          -3.1px -7.4px 8px rgba(166, 200, 240, .52),
+          -9.9px -24px 58px rgba(166, 200, 240, .21),
+          7.4px -3.1px 8px rgba(143, 211, 244, .54),
+          24px -9.9px 58px rgba(143, 211, 244, .22);
+      }
+      50% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          0px 8px 8px rgba(184, 166, 224, .54),
+          0px 26px 58px rgba(184, 166, 224, .22),
+          -8px 0px 8px rgba(168, 224, 184, .52),
+          -26px 0px 58px rgba(168, 224, 184, .21),
+          0px -8px 8px rgba(166, 200, 240, .52),
+          0px -26px 58px rgba(166, 200, 240, .21),
+          8px 0px 8px rgba(143, 211, 244, .54),
+          26px 0px 58px rgba(143, 211, 244, .22);
+      }
+      56.25% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -3.1px 7.4px 8px rgba(184, 166, 224, .54),
+          -9.9px 24px 58px rgba(184, 166, 224, .22),
+          -7.4px -3.1px 8px rgba(168, 224, 184, .52),
+          -24px -9.9px 58px rgba(168, 224, 184, .21),
+          3.1px -7.4px 8px rgba(166, 200, 240, .52),
+          9.9px -24px 58px rgba(166, 200, 240, .21),
+          7.4px 3.1px 8px rgba(143, 211, 244, .54),
+          24px 9.9px 58px rgba(143, 211, 244, .22);
+      }
+      62.5% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -5.7px 5.7px 8px rgba(184, 166, 224, .54),
+          -18.4px 18.4px 58px rgba(184, 166, 224, .22),
+          -5.7px -5.7px 8px rgba(168, 224, 184, .52),
+          -18.4px -18.4px 58px rgba(168, 224, 184, .21),
+          5.7px -5.7px 8px rgba(166, 200, 240, .52),
+          18.4px -18.4px 58px rgba(166, 200, 240, .21),
+          5.7px 5.7px 8px rgba(143, 211, 244, .54),
+          18.4px 18.4px 58px rgba(143, 211, 244, .22);
+      }
+      68.75% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -7.4px 3.1px 8px rgba(184, 166, 224, .54),
+          -24px 9.9px 58px rgba(184, 166, 224, .22),
+          -3.1px -7.4px 8px rgba(168, 224, 184, .52),
+          -9.9px -24px 58px rgba(168, 224, 184, .21),
+          7.4px -3.1px 8px rgba(166, 200, 240, .52),
+          24px -9.9px 58px rgba(166, 200, 240, .21),
+          3.1px 7.4px 8px rgba(143, 211, 244, .54),
+          9.9px 24px 58px rgba(143, 211, 244, .22);
+      }
+      75% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -8px 0px 8px rgba(184, 166, 224, .54),
+          -26px 0px 58px rgba(184, 166, 224, .22),
+          0px -8px 8px rgba(168, 224, 184, .52),
+          0px -26px 58px rgba(168, 224, 184, .21),
+          8px 0px 8px rgba(166, 200, 240, .52),
+          26px 0px 58px rgba(166, 200, 240, .21),
+          0px 8px 8px rgba(143, 211, 244, .54),
+          0px 26px 58px rgba(143, 211, 244, .22);
+      }
+      81.25% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -7.4px -3.1px 8px rgba(184, 166, 224, .54),
+          -24px -9.9px 58px rgba(184, 166, 224, .22),
+          3.1px -7.4px 8px rgba(168, 224, 184, .52),
+          9.9px -24px 58px rgba(168, 224, 184, .21),
+          7.4px 3.1px 8px rgba(166, 200, 240, .52),
+          24px 9.9px 58px rgba(166, 200, 240, .21),
+          -3.1px 7.4px 8px rgba(143, 211, 244, .54),
+          -9.9px 24px 58px rgba(143, 211, 244, .22);
+      }
+      87.5% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -5.7px -5.7px 8px rgba(184, 166, 224, .54),
+          -18.4px -18.4px 58px rgba(184, 166, 224, .22),
+          5.7px -5.7px 8px rgba(168, 224, 184, .52),
+          18.4px -18.4px 58px rgba(168, 224, 184, .21),
+          5.7px 5.7px 8px rgba(166, 200, 240, .52),
+          18.4px 18.4px 58px rgba(166, 200, 240, .21),
+          -5.7px 5.7px 8px rgba(143, 211, 244, .54),
+          -18.4px 18.4px 58px rgba(143, 211, 244, .22);
+      }
+      93.75% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          -3.1px -7.4px 8px rgba(184, 166, 224, .54),
+          -9.9px -24px 58px rgba(184, 166, 224, .22),
+          7.4px -3.1px 8px rgba(168, 224, 184, .52),
+          24px -9.9px 58px rgba(168, 224, 184, .21),
+          3.1px 7.4px 8px rgba(166, 200, 240, .52),
+          9.9px 24px 58px rgba(166, 200, 240, .21),
+          -7.4px 3.1px 8px rgba(143, 211, 244, .54),
+          -24px 9.9px 58px rgba(143, 211, 244, .22);
+      }
+      100% {
+        box-shadow: 0 8px 28px rgba(255, 255, 255, .55), 0 2px 10px rgba(255, 255, 255, .35),
+          0px -8px 8px rgba(184, 166, 224, .54),
+          0px -26px 58px rgba(184, 166, 224, .22),
+          8px 0px 8px rgba(168, 224, 184, .52),
+          26px 0px 58px rgba(168, 224, 184, .21),
+          0px 8px 8px rgba(166, 200, 240, .52),
+          0px 26px 58px rgba(166, 200, 240, .21),
+          -8px 0px 8px rgba(143, 211, 244, .54),
+          -26px 0px 58px rgba(143, 211, 244, .22);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ai-ask-bar,
+      .ai-hero-prompt-bar {
+        animation: none;
+      }
     }
 
     .ai-ask-field {
@@ -1562,6 +1865,7 @@
       align-items: center;
       gap: var(--sp-1-5);
       margin-left: auto;
+      flex-shrink: 0;
     }
 
     .ai-hint-only {
@@ -1752,6 +2056,16 @@
       display: none;
     }
 
+    .section-tab-anim {
+      transition: opacity .24s ease, transform .24s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .section-tab-anim {
+        transition: none;
+      }
+    }
+
     #historyBox h3 {
       display: flex;
       align-items: center;
@@ -1920,6 +2234,8 @@
     .quiz-actions #retryWrongBtn:not([disabled]),
     .quiz-actions #csvBtn:not([disabled]) {
       display: inline-flex;
+      align-items: center;
+      justify-content: center;
       animation: action-reveal .3s ease;
     }
 
@@ -2092,10 +2408,9 @@
         <svg class="brand-logo" viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" font-family="'Paperlogy', ui-sans-serif, sans-serif" font-weight="800" font-size="28" letter-spacing="-0.6" fill="var(--primary)">moonble</text></svg>
       </div>
       <nav class="nav">
-        <a class="btn btn-ghost" href="#guide" title="가이드">가이드</a>
-        <a class="btn btn-ghost" href="#firebase" title="Firebase">Firebase</a>
-        <a class="btn btn-ghost" href="#checklist" title="체크리스트">체크리스트</a>
+        <a class="btn btn-ghost" href="#guide" title="개요보기">개요보기</a>
         <a class="btn btn-primary" href="#quiz" title="문제풀이">문제풀이</a>
+        <a class="btn btn-ghost" href="#historyBox" title="나의 성취도">나의 성취도</a>
         <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
       </nav>
     </div>
@@ -2265,6 +2580,7 @@
       <div class="quiz-top-controls">
         <button id="quizReissueLink" class="quiz-reissue" type="button">재출제하기</button>
         <label for="quizColToggle" class="col-toggle" aria-label="문제 목록 1열/2열 보기 전환">
+          <span class="col-toggle-thumb" aria-hidden="true"></span>
           <span class="col-toggle-opt" data-opt="1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 12h18"></path></svg></span>
           <span class="col-toggle-opt" data-opt="2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M12 3v18"></path></svg></span>
         </label>
@@ -2651,7 +2967,11 @@
       window.scrollTo({top: resultEl.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth'});
 
       retryWrongBtn.disabled = wrongPicked.length === 0;
-      pushHistory({score, correct: correctCount, total, date: new Date().toISOString()});
+      pushHistory({
+        score, correct: correctCount, total, date: new Date().toISOString(),
+        questionIds: picked.map(q => q.id),
+        wrongIds: wrongPicked.map(q => q.id)
+      });
       renderHistory();
 
       csvBtn.disabled = !(score >= CSV_THRESHOLD);
@@ -2800,7 +3120,7 @@
   var masthead = document.querySelector('.masthead');
   if (!masthead) return;
   var skySvg = null;
-  var SPIN_SEC = 6;
+  var SPIN_SEC = 4;
 
   function lerp(a, b, k) { return a + (b - a) * k; }
   function lerpColor(hexA, hexB, k) {
@@ -2839,9 +3159,14 @@
 
     var cx = 400, cy = 360, r = 280;
     var t = hourFrac / 24;
-    var thetaRad = (180 * (1 - t)) * Math.PI / 180;
+    var thetaDeg = 180 * (1 - t);
+    var sinThreshold = Math.max(0, Math.min(1, (cy - safeMaxDotY) / r));
+    var thetaMinDeg = Math.asin(sinThreshold) * 180 / Math.PI;
+    if (thetaDeg < thetaMinDeg) thetaDeg = thetaMinDeg;
+    if (thetaDeg > 180 - thetaMinDeg) thetaDeg = 180 - thetaMinDeg;
+    var thetaRad = thetaDeg * Math.PI / 180;
     var dotX = cx + r * Math.cos(thetaRad);
-    var dotY = Math.min(cy - r * Math.sin(thetaRad), safeMaxDotY);
+    var dotY = cy - r * Math.sin(thetaRad);
     var elevation = Math.max(0, Math.sin(thetaRad));
 
     var horizonColor = isDay ? '#ff9d5c' : '#a9c6ff';
@@ -2863,15 +3188,23 @@
       }).join('');
     }
 
-    var MARGIN = 36;
-    var cornerX = dotX >= cx ? (leftVB + MARGIN) : (rightVB - MARGIN);
-    var cornerDir = dotX >= cx ? -1 : 1;
-    var flare1X = cornerX;
-    var flare1Y = lerp(safeFlareTop + 22, safeFlareTop, elevation);
-    var flare2X = cornerX + cornerDir * 26;
-    var flare2Y = flare1Y + 9;
-    var flare1R = lerp(22, 14, elevation), flare1Op = lerp(.5, .3, elevation);
-    var flare2R = lerp(11, 7, elevation), flare2Op = lerp(.7, .5, elevation);
+    var accentMarkup;
+    if (isDay) {
+      var MARGIN = 36;
+      var cornerX = dotX >= cx ? (leftVB + MARGIN) : (rightVB - MARGIN);
+      var cornerDir = dotX >= cx ? -1 : 1;
+      var flare1X = cornerX;
+      var flare1Y = lerp(safeFlareTop + 22, safeFlareTop, elevation);
+      var flare2X = cornerX + cornerDir * 26;
+      var flare2Y = flare1Y + 9;
+      var flare1R = lerp(22, 14, elevation), flare1Op = lerp(.5, .3, elevation);
+      var flare2R = lerp(11, 7, elevation), flare2Op = lerp(.7, .5, elevation);
+      accentMarkup = "<circle cx='" + flare1X.toFixed(1) + "' cy='" + flare1Y.toFixed(1) + "' r='" + flare1R.toFixed(1) + "' fill='white' fill-opacity='" + flare1Op.toFixed(2) + "'/>"
+        + "<circle cx='" + flare2X.toFixed(1) + "' cy='" + flare2Y.toFixed(1) + "' r='" + flare2R.toFixed(1) + "' fill='white' fill-opacity='" + flare2Op.toFixed(2) + "'/>";
+    } else {
+      // soft moonlight halo around the moon itself, instead of a lens-flare accent
+      accentMarkup = "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='38' fill='#cfe0ff' fill-opacity='.18'/>";
+    }
 
     var markup = "<defs>"
       + "<linearGradient id='sky-bg' x1='0' y1='0' x2='0' y2='1'>" + skyStops + "</linearGradient>"
@@ -2879,9 +3212,8 @@
       + "</defs>"
       + "<rect width='800' height='260' fill='url(#sky-bg)'/>"
       + stars
-      + "<path class='sky-arc-ring' d='M " + (cx - r) + "," + cy + " A " + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + "' fill='none' stroke='white' stroke-opacity='.35' stroke-width='2' stroke-linecap='round' stroke-dasharray='1 15'/>"
-      + "<circle cx='" + flare1X.toFixed(1) + "' cy='" + flare1Y.toFixed(1) + "' r='" + flare1R.toFixed(1) + "' fill='white' fill-opacity='" + flare1Op.toFixed(2) + "'/>"
-      + "<circle cx='" + flare2X.toFixed(1) + "' cy='" + flare2Y.toFixed(1) + "' r='" + flare2R.toFixed(1) + "' fill='white' fill-opacity='" + flare2Op.toFixed(2) + "'/>"
+      + "<path class='sky-arc-ring' d='M " + (cx - r) + "," + cy + " A " + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + "' fill='none' stroke='white' stroke-opacity='.35' stroke-width='2' stroke-linecap='round' stroke-dasharray='1 9'/>"
+      + accentMarkup
       + "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='25' fill='url(#sky-dot)'/>"
       + "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='10' fill='" + glowColor + "'/>";
 
@@ -2969,13 +3301,35 @@
     return { min: top, max: bottom };
   }
 
-  function clampScroll() {
+  // 휠/트랙패드 스크롤이 실제로 화면을 밀기 전에 가로채서, 경계를 넘는 만큼만 잘라낸다.
+  // scroll 이벤트가 뜬 "뒤"에 되돌리는 방식은 항상 한 번은 경계를 넘었다 되돌아오는 티가 나서
+  // (=바운스) 이 방식으로는 아예 경계를 넘지 않게 막는다.
+  function handleWheel(e) {
     if (!scrollLockActive || !scrollBounds) return;
-    if (window.scrollY < scrollBounds.min) {
-      window.scrollTo({ top: scrollBounds.min, behavior: 'auto' });
-    } else if (window.scrollY > scrollBounds.max) {
-      window.scrollTo({ top: scrollBounds.max, behavior: 'auto' });
+    var next = window.scrollY + e.deltaY;
+    if (next < scrollBounds.min) {
+      e.preventDefault();
+      if (window.scrollY !== scrollBounds.min) window.scrollTo({ top: scrollBounds.min, behavior: 'auto' });
+    } else if (next > scrollBounds.max) {
+      e.preventDefault();
+      if (window.scrollY !== scrollBounds.max) window.scrollTo({ top: scrollBounds.max, behavior: 'auto' });
     }
+  }
+
+  var clampScrollTimer = null;
+  function clampScroll() {
+    // 휠 가로채기로 못 잡는 경로(키보드 스크롤, 스크롤바 드래그 등)를 위한 보조 안전망.
+    // 스크롤 이벤트마다 즉시 보정하면 관성 스크롤과 계속 충돌해서 진동하므로, 잦아든 뒤 한 번만 보정한다.
+    if (!scrollLockActive || !scrollBounds) return;
+    clearTimeout(clampScrollTimer);
+    clampScrollTimer = setTimeout(function () {
+      if (!scrollLockActive || !scrollBounds) return;
+      if (window.scrollY < scrollBounds.min) {
+        window.scrollTo({ top: scrollBounds.min, behavior: 'smooth' });
+      } else if (window.scrollY > scrollBounds.max) {
+        window.scrollTo({ top: scrollBounds.max, behavior: 'smooth' });
+      }
+    }, 120);
   }
 
   function enterPickMode() {
@@ -2986,6 +3340,7 @@
       window.scrollTo({ top: scrollBounds.min, behavior: 'smooth' });
     }
     window.addEventListener('scroll', clampScroll, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: false });
   }
 
   var PLACEHOLDER_BEFORE_SELECT = 'AI에게 물어볼 문제를 선택하세요.';
@@ -2995,6 +3350,7 @@
     document.body.classList.remove('ai-pick-mode');
     scrollLockActive = false;
     window.removeEventListener('scroll', clampScroll);
+    window.removeEventListener('wheel', handleWheel);
     if (selectedCard) {
       selectedCard.classList.remove('ai-selected');
       selectedCard = null;
@@ -3030,6 +3386,84 @@
   }
 
   if (heroPromptInput && heroPromptBtn) {
+    var heroPromptOriginalParent = null;
+    var heroPromptOriginalNext = null;
+    var heroPromptPlaceholder = null;
+    var heroPromptRelocating = false;
+
+    heroPromptInput.addEventListener('focus', function () {
+      document.body.classList.add('hero-prompt-focused');
+      if (heroPromptRelocating) return;
+      if (heroPromptBar && window.matchMedia('(max-width: 640px)').matches && heroPromptBar.parentNode !== document.body) {
+        var firstRect = heroPromptBar.getBoundingClientRect();
+
+        heroPromptOriginalParent = heroPromptBar.parentNode;
+        heroPromptOriginalNext = heroPromptBar.nextSibling;
+        heroPromptPlaceholder = document.createElement('div');
+        heroPromptPlaceholder.className = 'ai-hero-prompt-placeholder';
+        heroPromptPlaceholder.style.width = firstRect.width + 'px';
+        heroPromptPlaceholder.style.height = firstRect.height + 'px';
+        heroPromptOriginalParent.insertBefore(heroPromptPlaceholder, heroPromptOriginalNext);
+        heroPromptRelocating = true;
+        document.body.appendChild(heroPromptBar);
+        heroPromptBar.classList.add('docked');
+        heroPromptInput.focus();
+        heroPromptRelocating = false;
+
+        var lastRect = heroPromptBar.getBoundingClientRect();
+        var gapFromBottom = window.innerHeight - lastRect.bottom;
+        document.body.style.paddingBottom = (lastRect.height + gapFromBottom + 12) + 'px';
+
+        var dx = firstRect.left - lastRect.left;
+        var dy = firstRect.top - lastRect.top;
+        var sx = firstRect.width / lastRect.width;
+        var sy = firstRect.height / lastRect.height;
+        heroPromptBar.classList.remove('flip-animating');
+        heroPromptBar.style.transformOrigin = 'top left';
+        heroPromptBar.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')';
+        heroPromptBar.getBoundingClientRect();
+        requestAnimationFrame(function () {
+          heroPromptBar.classList.add('flip-animating');
+          heroPromptBar.style.transform = 'none';
+        });
+      }
+    });
+    heroPromptInput.addEventListener('blur', function () {
+      document.body.classList.remove('hero-prompt-focused');
+      if (heroPromptRelocating) return;
+      if (heroPromptOriginalParent) {
+        document.body.style.paddingBottom = '';
+
+        var dockedRect = heroPromptBar.getBoundingClientRect();
+        var restoreParent = heroPromptOriginalParent;
+        var restoreNext = heroPromptOriginalNext;
+        heroPromptOriginalParent = null;
+        heroPromptOriginalNext = null;
+
+        heroPromptBar.classList.remove('flip-animating');
+        heroPromptBar.classList.remove('docked');
+        heroPromptBar.style.transform = '';
+        heroPromptBar.style.transformOrigin = '';
+        restoreParent.insertBefore(heroPromptBar, heroPromptPlaceholder || restoreNext);
+        if (heroPromptPlaceholder && heroPromptPlaceholder.parentNode) {
+          heroPromptPlaceholder.parentNode.removeChild(heroPromptPlaceholder);
+        }
+        heroPromptPlaceholder = null;
+
+        var restoredRect = heroPromptBar.getBoundingClientRect();
+        var dx = dockedRect.left - restoredRect.left;
+        var dy = dockedRect.top - restoredRect.top;
+        var sx = dockedRect.width / restoredRect.width;
+        var sy = dockedRect.height / restoredRect.height;
+        heroPromptBar.style.transformOrigin = 'top left';
+        heroPromptBar.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')';
+        heroPromptBar.getBoundingClientRect();
+        requestAnimationFrame(function () {
+          heroPromptBar.classList.add('flip-animating');
+          heroPromptBar.style.transform = 'none';
+        });
+      }
+    });
     heroPromptInput.addEventListener('input', function () {
       heroPromptBtn.classList.toggle('btn-inactive', !heroPromptInput.value.trim());
     });
@@ -3163,13 +3597,67 @@
   var body = document.body;
   if (!tabButtons.length) return;
 
-  function setActiveTab(tab) {
-    body.classList.toggle('tab-quiz', tab === 'quiz');
-    body.classList.toggle('tab-overview', tab === 'overview');
+  var quizPanelEl = document.getElementById('quiz');
+  var overviewPanelEls = Array.prototype.slice.call(document.querySelectorAll('.overview-section'));
+  var currentTab = body.classList.contains('tab-overview') ? 'overview' : 'quiz';
+  var switchToken = 0;
+
+  function updateTabButtons(tab) {
     tabButtons.forEach(function (btn) {
       var isActive = btn.dataset.tab === tab;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  function panelsFor(tab) {
+    return tab === 'quiz' ? [quizPanelEl] : overviewPanelEls;
+  }
+
+  function setActiveTab(tab) {
+    updateTabButtons(tab);
+
+    if (tab === currentTab) return;
+    currentTab = tab;
+
+    // 패널 표시 전환은 항상 즉시(동기) 처리한다.
+    // 같은 클릭 이벤트의 버블 단계에서 곧바로 실행되는 앵커 스크롤 로직이
+    // getBoundingClientRect()로 대상 섹션 위치를 재는데, 이 토글이 비동기로 늦게 일어나면
+    // 그 시점에 섹션이 아직 display:none이라 rect가 전부 0으로 잡혀 엉뚱한 위치로 스크롤된다.
+    body.classList.toggle('tab-quiz', tab === 'quiz');
+    body.classList.toggle('tab-overview', tab === 'overview');
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    var token = ++switchToken;
+    var incomingEls = panelsFor(tab);
+    var dir = tab === 'overview' ? 1 : -1;
+
+    incomingEls.forEach(function (el) {
+      el.classList.add('section-tab-anim');
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(' + (dir * 14) + 'px)';
+    });
+
+    incomingEls.forEach(function (el) { void el.offsetWidth; });
+
+    requestAnimationFrame(function () {
+      if (token !== switchToken) return;
+      incomingEls.forEach(function (el) {
+        el.style.transition = '';
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(0)';
+      });
+      setTimeout(function () {
+        if (token !== switchToken) return;
+        incomingEls.forEach(function (el) {
+          el.classList.remove('section-tab-anim');
+          el.style.opacity = '';
+          el.style.transform = '';
+        });
+      }, 260);
     });
   }
   window.moonbleSetActiveTab = setActiveTab;
@@ -3185,9 +3673,52 @@
   document.querySelectorAll('.nav a[href^="#"]').forEach(function (link) {
     link.addEventListener('click', function () {
       var href = link.getAttribute('href');
-      setActiveTab(href === '#quiz' ? 'quiz' : 'overview');
+      var quizAnchors = ['#quiz', '#historyBox', '#historyChart'];
+      setActiveTab(quizAnchors.indexOf(href) !== -1 ? 'quiz' : 'overview');
     }, true);
   });
+})();
+</script>
+<script>
+(() => {
+  // 개요보기 nav는 가이드/Firebase/체크리스트 3개 섹션을 하나로 묶은 링크(#guide)라서,
+  // 보호된 스크롤-스파이 스크립트(sectionIds 기준 개별 섹션 매칭)만으로는
+  // firebase/checklist 구간으로 스크롤했을 때 대응하는 nav 링크가 없어 개요보기가 꺼져 보인다.
+  // 개요보기 탭에 있는 동안은 스크롤 위치와 무관하게 개요보기 nav를 항상 활성 상태로 보정한다.
+  var overviewLink = document.querySelector('.nav a[href="#guide"]');
+  var otherNavLinks = Array.prototype.slice.call(document.querySelectorAll('.nav a[href^="#"]')).filter(function (a) {
+    return a !== overviewLink;
+  });
+  if (!overviewLink) return;
+
+  function fixOverviewNavHighlight() {
+    if (!document.body.classList.contains('tab-overview')) return;
+    overviewLink.classList.add('btn-primary');
+    overviewLink.classList.remove('btn-ghost');
+    otherNavLinks.forEach(function (a) {
+      a.classList.remove('btn-primary');
+      a.classList.add('btn-ghost');
+    });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      fixOverviewNavHighlight();
+      ticking = false;
+    });
+  }, { passive: true });
+
+  // 클릭으로 탭/앵커가 바뀔 때는 스크롤이 아예 안 일어날 수도 있어서(이미 화면 안이면) 별도로도 보정
+  document.querySelectorAll('.nav a[href^="#"], .section-tab').forEach(function (el) {
+    el.addEventListener('click', function () {
+      setTimeout(fixOverviewNavHighlight, 50);
+    });
+  });
+
+  fixOverviewNavHighlight();
 })();
 </script>
 <script>
@@ -3293,7 +3824,19 @@
     });
   }
 
-  function openRetryPicker() {
+  function questionsByIds(ids) {
+    if (typeof BANK === 'undefined') return [];
+    return (ids || []).map(function (id) {
+      return BANK.find(function (q) { return q.id === id; });
+    }).filter(Boolean);
+  }
+
+  function scrollToQuiz() {
+    var quizSectionEl = document.getElementById('quiz');
+    if (quizSectionEl) quizSectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function openRetryPicker(entry) {
     openConfirm({
       message: '어떻게 다시 풀까요?',
       cancelLabel: '전체 다시풀기',
@@ -3301,12 +3844,26 @@
       variant: 'primary',
       icon: RETRY_ICON_SVG,
       onCancel: function () {
-        var btn = document.getElementById('retryBtn');
-        if (btn) btn.click();
+        var restored = entry ? questionsByIds(entry.questionIds) : [];
+        if (restored.length && typeof renderQuiz === 'function') {
+          renderQuiz(restored);
+          scrollToQuiz();
+        } else {
+          var btn = document.getElementById('retryBtn');
+          if (btn) btn.click();
+        }
       },
       onConfirm: function () {
-        var btn = document.getElementById('retryWrongBtn');
-        if (btn && !btn.disabled) btn.click();
+        var restoredWrong = entry ? questionsByIds(entry.wrongIds) : [];
+        if (restoredWrong.length && typeof renderQuiz === 'function') {
+          renderQuiz(restoredWrong);
+          scrollToQuiz();
+        } else if (entry && entry.wrongIds && entry.wrongIds.length === 0) {
+          alert('이 회차는 만점이라 오답이 없어요.');
+        } else {
+          var btn = document.getElementById('retryWrongBtn');
+          if (btn && !btn.disabled) btn.click();
+        }
       }
     });
   }
@@ -3337,7 +3894,11 @@
         retryItemBtn.setAttribute('aria-label', '다시 풀기');
         retryItemBtn.title = '다시 풀기';
         retryItemBtn.innerHTML = RETRY_ICON_SVG + '<span>다시하기</span>';
-        retryItemBtn.addEventListener('click', openRetryPicker);
+        retryItemBtn.addEventListener('click', function () {
+          var idx = Array.prototype.indexOf.call(li.parentNode.children, li);
+          var hist = typeof getHistory === 'function' ? getHistory() : [];
+          openRetryPicker(hist[idx]);
+        });
 
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -3450,7 +4011,7 @@
       window.moonbleOpenConfirm({
         message: '풀고 있는 문제가 있어요.<br>그래도 재출제할까요?',
         cancelLabel: '계속풀래요.',
-        confirmLabel: '재출제할래요.',
+        confirmLabel: '재출제해주세요.',
         onConfirm: function () {
           retryBtn.click();
         }
@@ -3461,7 +4022,6 @@
   });
 
   var SKELETON_DELAY = 450;
-  var bypassSkeleton = false;
 
   function applySkeleton() {
     var cards = quizContainer.querySelectorAll('.q-card');
@@ -3471,17 +4031,9 @@
     }, SKELETON_DELAY);
   }
 
-  retryBtn.addEventListener('click', function (e) {
-    if (bypassSkeleton) {
-      bypassSkeleton = false;
-      return;
-    }
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    bypassSkeleton = true;
-    retryBtn.click();
-    applySkeleton();
-  }, true);
+  // 버블 단계 리스너: 보호된 renderQuiz() 리스너(더 먼저 등록되어 먼저 실행)가 새 카드를
+  // 다 그린 직후에 실행되므로, 재-디스패치 없이도 새로 렌더링된 카드에 정확히 스켈레톤을 입힐 수 있다.
+  retryBtn.addEventListener('click', applySkeleton);
 
   applySkeleton();
 })();
@@ -3645,6 +4197,20 @@
       .datum(hist)
       .attr('class', 'history-chart-line')
       .attr('d', line);
+
+    var lastIdx = hist.length - 1;
+    var lastCx = x(lastIdx);
+    var lastCy = y(hist[lastIdx].score);
+    var pulseOrigin = lastCx + 'px ' + lastCy + 'px';
+    [0, 1].forEach(function (i) {
+      svg.append('circle')
+        .attr('class', 'history-chart-dot-pulse')
+        .attr('cx', lastCx)
+        .attr('cy', lastCy)
+        .attr('r', 4)
+        .style('transform-origin', pulseOrigin)
+        .style('animation-delay', (i * 1.75) + 's');
+    });
 
     svg.selectAll('.history-chart-dot')
       .data(hist)
