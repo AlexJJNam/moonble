@@ -13,7 +13,7 @@
 </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>moonble | Google Analytics & Firebase 가이드 + 퀴즈</title>
+  <title>moonble</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233182f6'/><text x='16' y='21' font-family='ui-sans-serif,system-ui,sans-serif' font-weight='800' font-size='19' fill='white' text-anchor='middle'>m</text></svg>" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
@@ -691,9 +691,9 @@
     @media (max-width: 640px) {
       .ai-hero-prompt-bar.docked {
         position: fixed;
-        left: var(--sp-8);
-        right: var(--sp-8);
-        bottom: max(var(--sp-6), env(safe-area-inset-bottom));
+        left: var(--sp-4);
+        right: var(--sp-4);
+        bottom: max(var(--sp-2), env(safe-area-inset-bottom));
         max-width: none;
         width: auto;
         border-radius: 24px;
@@ -730,19 +730,21 @@
       outline: none;
       background: transparent;
       font-family: inherit;
-      font-size: var(--text-sm);
+      font-size: 16px;
       color: var(--text);
+      resize: none;
+      overflow: hidden;
+      padding: 0;
+      line-height: 22px;
+      max-height: 140px;
     }
 
     .ai-hero-prompt-input::placeholder {
-      color: var(--muted);
+      color: transparent;
     }
 
-    @media (max-width: 640px) {
-      .ai-hero-prompt-input {
-        /* iOS가 16px 미만 입력창엔 포커스 시 자동으로 화면을 확대하는 걸 막기 위함 */
-        font-size: 16px;
-      }
+    .ai-hero-prompt-input:focus::placeholder {
+      color: var(--muted);
     }
 
     .ai-hero-prompt-btn {
@@ -871,11 +873,7 @@
       gap: var(--sp-3);
     }
 
-    @media (max-width: 640px) {
-      .quiz-top-controls {
-        top: 81px;
-      }
-    }
+
 
     .col-toggle {
       display: none;
@@ -1099,6 +1097,15 @@
       border-color: var(--primary);
     }
 
+    /* 옵션 텍스트(체크박스·틱 다음에 오는, 클래스 없는 div)는 플렉스 아이템 기본값(min-width:auto)
+       때문에 "AndroidManifest" 같은 긴 단어가 줄바꿈 없이 카드 밖으로 튀어나갔다.
+       renderQuiz()가 만드는 보호된 마크업이라 클래스를 못 붙이므로 구조 선택자로 지정한다. */
+    .option-card > div:last-child {
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
     .option-card input {
       position: absolute;
       opacity: 0;
@@ -1238,24 +1245,40 @@
 
     .history ul {
       margin: var(--sp-1-5) 0 0;
-      padding: 0;
+      padding: var(--sp-1) var(--sp-05) var(--sp-3);
       list-style: none;
       display: flex;
-      flex-direction: column;
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
+      flex-direction: row;
+      gap: var(--sp-2);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .history ul::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .history li {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--sp-2);
-      padding: var(--sp-3) var(--sp-4);
-      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: var(--sp-1);
+      padding: var(--sp-5);
       font-size: var(--text-sm);
+      flex: 0 0 auto;
+      min-width: 240px;
+      background: var(--card);
+      border: none;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      scroll-snap-align: start;
     }
 
     .history-chart {
@@ -1312,6 +1335,23 @@
       fill: var(--primary);
       stroke: var(--card);
       stroke-width: 2;
+      pointer-events: none;
+      transition: fill .12s ease;
+    }
+
+    .history-chart-dot.history-chart-dot--active {
+      fill: #6ba6ff;
+    }
+
+    .history-chart-hover-line {
+      stroke: var(--border);
+      stroke-width: 1;
+      stroke-dasharray: 3 3;
+      pointer-events: none;
+      transition: opacity .1s ease;
+    }
+
+    .history-chart-hit {
       cursor: pointer;
     }
 
@@ -1355,6 +1395,7 @@
     .history-row-actions {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: var(--sp-1);
       flex: 0 0 auto;
     }
@@ -1400,19 +1441,38 @@
       white-space: nowrap;
     }
 
-    .history li:last-child {
-      border-bottom: none;
+    .history-top,
+    .history-bottom {
+      display: flex;
+      align-items: center;
     }
 
-    .history-text {
+    .history-top {
+      gap: var(--sp-1);
+    }
+
+    .history-bottom {
+      flex: 0 0 auto;
+    }
+
+    .history-meta {
       display: flex;
       align-items: center;
       gap: var(--sp-1-5);
       min-width: 0;
-      flex: 1 1 auto;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      font-size: var(--text-xs);
+      color: var(--muted);
+    }
+
+    .history-score {
+      flex: 0 0 auto;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: var(--text-lg);
+      font-weight: 600;
+      color: var(--text);
     }
 
     .history-icon {
@@ -1422,8 +1482,23 @@
     }
 
     .history-icon svg {
-      width: 15px;
-      height: 15px;
+      width: 4px;
+      height: 4px;
+    }
+
+    .history-icon svg circle {
+      animation: history-icon-shimmer 2.4s ease-in-out infinite;
+    }
+
+    @keyframes history-icon-shimmer {
+      0%, 100% { fill: var(--primary); }
+      50% { fill: #9fd0ff; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .history-icon svg circle {
+        animation: none;
+      }
     }
 
     /* Lock state */
@@ -1580,11 +1655,86 @@
       border-color: transparent;
     }
 
+    .custom-bank-nav-btn.custom-bank-active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-tint);
+    }
+
     @media (max-width: 640px) {
       .header .inner { padding: var(--sp-3) var(--sp-4); }
-      .nav { gap: var(--sp-2); }
-      .nav .btn { max-width: clamp(64px, 22vw, 110px); padding: var(--sp-2); }
       .quiz-actions .btn { flex: 1 1 calc(50% - 5px); justify-content: center; }
+    }
+
+    .nav-toggle {
+      display: none;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .nav-toggle:hover {
+      background: var(--bg-hover);
+    }
+
+    .nav-toggle svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    @media (max-width: 640px) {
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: var(--sp-2) var(--sp-4);
+        gap: var(--sp-1);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition: max-height .25s ease, opacity .2s ease;
+      }
+
+      .nav.nav-open {
+        max-height: 320px;
+        opacity: 1;
+        pointer-events: auto;
+        padding: var(--sp-3) var(--sp-4);
+      }
+
+      .nav .btn {
+        width: 100%;
+        max-width: none;
+        justify-content: flex-start;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+      }
+    }
+
+    @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+      .nav {
+        transition: none;
+      }
     }
 
     @media (max-width: 560px) {
@@ -1655,7 +1805,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity .3s ease, transform .3s ease;
-      width: min(640px, calc(100vw - 48px));
+      width: min(640px, calc(100vw - 32px));
     }
 
     @keyframes ai-halo-shift {
@@ -1863,8 +2013,9 @@
 
     .ai-ask-actions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: var(--sp-3);
+      gap: var(--sp-2) var(--sp-3);
     }
 
     .ai-ask-buttons {
@@ -1961,21 +2112,13 @@
       outline: none;
       resize: none;
       overflow: hidden;
-      font-size: var(--text-sm);
+      font-size: 16px;
       font-family: inherit;
-      line-height: 20px;
+      line-height: 22px;
       color: var(--text);
       width: 100%;
       max-height: 160px;
       transition: height .12s ease;
-    }
-
-    @media (max-width: 640px) {
-      .ai-ask-input {
-        /* iOS가 16px 미만 입력창엔 포커스 시 자동으로 화면을 확대하는 걸 막기 위함 */
-        font-size: 16px;
-        line-height: 22px;
-      }
     }
 
     .ai-ask-input::placeholder {
@@ -2109,9 +2252,14 @@
     .history-empty {
       margin: var(--sp-2) 0 0;
       padding: var(--sp-8) 0;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
       color: var(--muted);
       font-size: var(--text-sm);
+      box-sizing: border-box;
     }
 
     /* === 확인 모달 (초기화 등 확인이 필요한 액션용) === */
@@ -2217,6 +2365,211 @@
     .confirm-btn--primary {
       background: var(--primary);
       color: #fff;
+    }
+
+    .custom-bank-modal {
+      max-width: 480px;
+      align-items: stretch;
+      text-align: left;
+      gap: var(--sp-4);
+    }
+
+    .custom-bank-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .custom-bank-title {
+      margin: 0;
+      font-size: var(--text-md);
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .custom-bank-close {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .custom-bank-close:hover {
+      background: var(--bg-hover);
+      color: var(--text);
+    }
+
+    .custom-bank-close svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .custom-bank-desc {
+      margin: 0;
+      font-size: var(--text-sm);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .custom-bank-active-info {
+      background: var(--primary-tint);
+      border-radius: 12px;
+      padding: var(--sp-3) var(--sp-4);
+    }
+
+    .custom-bank-active-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-3);
+    }
+
+    .custom-bank-active-text {
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .custom-bank-remove-btn {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .custom-bank-upload-area {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+
+    .custom-bank-sample-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-1-5);
+      align-self: flex-start;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-soft);
+      color: var(--text);
+      font-family: inherit;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: var(--sp-1-5) var(--sp-3);
+      cursor: pointer;
+    }
+
+    .custom-bank-sample-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .custom-bank-sample-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .custom-bank-guide {
+      margin: 0;
+      padding: var(--sp-2) var(--sp-3);
+      background: var(--bg-soft);
+      border-radius: 10px;
+      font-size: var(--text-xs);
+      color: var(--muted);
+      line-height: 1.7;
+      list-style: none;
+    }
+
+    .custom-bank-guide li::before {
+      content: '· ';
+      color: var(--primary);
+    }
+
+    .custom-bank-dropzone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 96px;
+      border: 1.5px dashed var(--border);
+      border-radius: 14px;
+      background: var(--bg-soft);
+      color: var(--muted);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      padding: var(--sp-4);
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+
+    .custom-bank-dropzone:hover,
+    .custom-bank-dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-tint);
+      color: var(--primary);
+    }
+
+    .custom-bank-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      color: var(--muted);
+      font-size: var(--text-xs);
+    }
+
+    .custom-bank-divider::before,
+    .custom-bank-divider::after {
+      content: '';
+      flex: 1 1 auto;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .custom-bank-link-row {
+      display: flex;
+      gap: var(--sp-2);
+    }
+
+    .custom-bank-link-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: var(--sp-2) var(--sp-3);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .custom-bank-link-row .btn {
+      flex: 0 0 auto;
+    }
+
+    .custom-bank-status {
+      margin: 0;
+      font-size: var(--text-xs);
+      line-height: 1.5;
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: 8px;
+    }
+
+    .custom-bank-status--error {
+      background: var(--bad-tint);
+      color: var(--bad);
+    }
+
+    .custom-bank-status--success {
+      background: var(--good-tint);
+      color: var(--good);
+    }
+
+    .custom-bank-status--loading {
+      background: var(--bg-soft);
+      color: var(--muted);
     }
 
     /* === 재출제하기 링크 (1열/2열 토글 좌측) === */
@@ -2422,11 +2775,15 @@
       <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="moonble 홈으로">
         <svg class="brand-logo" viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" font-family="'Paperlogy', ui-sans-serif, sans-serif" font-weight="800" font-size="28" letter-spacing="-0.6" fill="var(--primary)">moonble</text></svg>
       </div>
-      <nav class="nav">
+      <button id="navToggle" class="nav-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="siteNav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
+      </button>
+      <nav class="nav" id="siteNav">
         <a class="btn btn-ghost" href="#guide" title="개요보기">개요보기</a>
         <a class="btn btn-primary" href="#quiz" title="문제풀이">문제풀이</a>
         <a class="btn btn-ghost" href="#historyBox" title="나의 성취도">나의 성취도</a>
         <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
+        <button id="customBankBtn" class="btn btn-ghost custom-bank-nav-btn" type="button" title="커스텀출제">커스텀출제</button>
       </nav>
     </div>
   </header>
@@ -2442,7 +2799,7 @@
         <div id="aiHeroPrompt" class="ai-hero-prompt">
           <div class="ai-hero-prompt-bar">
             <svg class="ai-hero-prompt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input type="text" id="aiHeroPromptInput" class="ai-hero-prompt-input" placeholder="궁금하면 바로 물어보세요." autocomplete="off" />
+            <textarea id="aiHeroPromptInput" class="ai-hero-prompt-input" placeholder="궁금하면 바로 물어보세요." rows="1"></textarea>
             <button id="aiHeroPromptBtn" class="btn btn-primary ai-hero-prompt-btn btn-inactive" type="button">질문하기</button>
           </div>
         </div>
@@ -2839,7 +3196,7 @@
       wrongMode = !!sourceArray && sourceArray.length && sourceArray.every(q => q && q.id);
       modePill.style.display = wrongMode ? 'inline-flex' : 'none';
 
-      picked = sourceArray ? sourceArray.slice() : sample(BANK, QUESTION_COUNT);
+      picked = sourceArray ? sourceArray.slice() : sample(typeof getActiveBank === 'function' ? getActiveBank() : BANK, QUESTION_COUNT);
 
       picked.forEach((q, idx) => {
         const card = document.createElement('div');
@@ -3177,8 +3534,26 @@
     var thetaDeg = 180 * (1 - t);
     var sinThreshold = Math.max(0, Math.min(1, (cy - safeMaxDotY) / r));
     var thetaMinDeg = Math.asin(sinThreshold) * 180 / Math.PI;
-    if (thetaDeg < thetaMinDeg) thetaDeg = thetaMinDeg;
-    if (thetaDeg > 180 - thetaMinDeg) thetaDeg = 180 - thetaMinDeg;
+
+    // 모바일처럼 마스헤드가 세로로 길면 xMidYMax slice가 viewBox 가로 양쪽을 크게 잘라내는데
+    // (leftVB~rightVB만 실제로 보임), 위 세로 안전영역 클램프는 dotY만 검사하고 dotX가
+    // 그 보이는 가로 구간 안에 있는지는 확인하지 않는다. 그래서 뜨고 지는 각도에 따라
+    // 점이 화면 밖(잘린 영역)으로 나가 안 보이는 시간대가 생긴다. dotX도 같은 방식으로 클램프한다.
+    var X_MARGIN = 6;
+    var cosMinForRight = Math.max(-1, Math.min(1, (rightVB - X_MARGIN - cx) / r));
+    var thetaLoX = Math.acos(cosMinForRight) * 180 / Math.PI;
+    var cosMaxForLeft = Math.max(-1, Math.min(1, (leftVB + X_MARGIN - cx) / r));
+    var thetaHiX = Math.acos(cosMaxForLeft) * 180 / Math.PI;
+
+    var thetaLo = Math.max(thetaMinDeg, thetaLoX);
+    var thetaHi = Math.min(180 - thetaMinDeg, thetaHiX);
+    if (thetaLo > thetaHi) {
+      // 세로/가로 안전영역이 서로 모순되면(둘 다 만족 불가한 극단적 비율) 세로를 우선한다.
+      thetaLo = thetaMinDeg;
+      thetaHi = 180 - thetaMinDeg;
+    }
+    if (thetaDeg < thetaLo) thetaDeg = thetaLo;
+    if (thetaDeg > thetaHi) thetaDeg = thetaHi;
     var thetaRad = thetaDeg * Math.PI / 180;
     var dotX = cx + r * Math.cos(thetaRad);
     var dotY = cy - r * Math.sin(thetaRad);
@@ -3377,7 +3752,10 @@
     askInput.placeholder = PLACEHOLDER_BEFORE_SELECT;
     hintOnlyCheck.checked = false;
     hintOnlyLabel.classList.remove('visible');
-    if (heroPromptInput) heroPromptInput.value = '';
+    if (heroPromptInput) {
+      heroPromptInput.value = '';
+      heroPromptInput.style.height = '';
+    }
     if (heroPromptBtn) heroPromptBtn.classList.add('btn-inactive');
   }
 
@@ -3405,6 +3783,23 @@
     var heroPromptOriginalNext = null;
     var heroPromptPlaceholder = null;
     var heroPromptRelocating = false;
+    var dockedRestBottom = null;
+
+    // position:fixed는 iOS 등 모바일 브라우저에서 "레이아웃 뷰포트" 기준으로 고정되는데,
+    // 키보드가 떠 있는 동안엔 그게 화면에 실제로 보이는 영역(visual viewport)과 어긋난다.
+    // 그 상태에서 스크롤하면 레이아웃 뷰포트 기준 좌표가 흔들려서 독킹된 바가
+    // 키보드 위에서 떨어져 보이는 문제가 생긴다. visualViewport로 키보드가 가린
+    // 만큼을 직접 계산해서 bottom에 더해주면 스크롤과 무관하게 항상 키보드 바로 위에 붙는다.
+    function updateDockedPosition() {
+      if (!heroPromptBar.classList.contains('docked')) return;
+      var vv = window.visualViewport;
+      if (!vv) return;
+      if (dockedRestBottom === null) {
+        dockedRestBottom = parseFloat(getComputedStyle(heroPromptBar).bottom) || 0;
+      }
+      var keyboardGap = window.innerHeight - (vv.offsetTop + vv.height);
+      heroPromptBar.style.bottom = (dockedRestBottom + Math.max(0, keyboardGap)) + 'px';
+    }
 
     heroPromptInput.addEventListener('focus', function () {
       document.body.classList.add('hero-prompt-focused');
@@ -3424,6 +3819,13 @@
         heroPromptBar.classList.add('docked');
         heroPromptInput.focus();
         heroPromptRelocating = false;
+
+        dockedRestBottom = null;
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', updateDockedPosition);
+          window.visualViewport.addEventListener('scroll', updateDockedPosition);
+          updateDockedPosition();
+        }
 
         var lastRect = heroPromptBar.getBoundingClientRect();
         var gapFromBottom = window.innerHeight - lastRect.bottom;
@@ -3455,10 +3857,16 @@
         heroPromptOriginalParent = null;
         heroPromptOriginalNext = null;
 
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateDockedPosition);
+          window.visualViewport.removeEventListener('scroll', updateDockedPosition);
+        }
         heroPromptBar.classList.remove('flip-animating');
         heroPromptBar.classList.remove('docked');
         heroPromptBar.style.transform = '';
         heroPromptBar.style.transformOrigin = '';
+        heroPromptBar.style.bottom = '';
+        dockedRestBottom = null;
         restoreParent.insertBefore(heroPromptBar, heroPromptPlaceholder || restoreNext);
         if (heroPromptPlaceholder && heroPromptPlaceholder.parentNode) {
           heroPromptPlaceholder.parentNode.removeChild(heroPromptPlaceholder);
@@ -3479,8 +3887,19 @@
         });
       }
     });
+    function resizeHeroPromptInput() {
+      heroPromptInput.style.height = 'auto';
+      heroPromptInput.style.height = Math.min(heroPromptInput.scrollHeight, 140) + 'px';
+      if (heroPromptBar.classList.contains('docked')) {
+        var barRect = heroPromptBar.getBoundingClientRect();
+        var gapFromBottom = window.innerHeight - barRect.bottom;
+        document.body.style.paddingBottom = (barRect.height + gapFromBottom + 12) + 'px';
+      }
+    }
+
     heroPromptInput.addEventListener('input', function () {
       heroPromptBtn.classList.toggle('btn-inactive', !heroPromptInput.value.trim());
+      resizeHeroPromptInput();
     });
     heroPromptInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.isComposing) {
@@ -3489,6 +3908,15 @@
       }
     });
     heroPromptBtn.addEventListener('click', submitHeroPrompt);
+
+    // 모바일에서 독킹된 채로 창을 넓혀서 데스크톱 폭을 넘어가면 .docked 스타일이
+    // 더 이상 적용 안 되는 미디어쿼리라 엉뚱한 위치에 붕 뜬 것처럼 보인다.
+    // 그 시점엔 그냥 기존 blur 핸들러(포커스 해제 시 원위치 복구 로직)를 그대로 재사용해서 되돌린다.
+    window.addEventListener('resize', function () {
+      if (heroPromptBar.classList.contains('docked') && !window.matchMedia('(max-width: 640px)').matches) {
+        heroPromptInput.blur();
+      }
+    });
   }
 
   askInput.addEventListener('keydown', function (e) {
@@ -3704,10 +4132,19 @@
   var otherNavLinks = Array.prototype.slice.call(document.querySelectorAll('.nav a[href^="#"]')).filter(function (a) {
     return a !== overviewLink;
   });
-  if (!overviewLink) return;
+
+  // 같은 이유로 "나의 성취도"(#historyBox)도 #quiz 섹션 안에 있는 하위 지점이라,
+  // sectionIds엔 quiz만 있어서 그쪽으로 스크롤하면 "문제풀이"가 대신 활성화돼버린다.
+  // 성취도 영역이 화면에 상당히 보일 땐 "나의 성취도"를 강제로 활성화한다.
+  var historyLink = document.querySelector('.nav a[href="#historyBox"]');
+  var quizLink = document.querySelector('.nav a[href="#quiz"]');
+  var historyBoxEl = document.getElementById('historyBox');
+
+  if (!overviewLink && !historyLink) return;
 
   function fixOverviewNavHighlight() {
     if (!document.body.classList.contains('tab-overview')) return;
+    if (!overviewLink) return;
     overviewLink.classList.add('btn-primary');
     overviewLink.classList.remove('btn-ghost');
     otherNavLinks.forEach(function (a) {
@@ -3716,24 +4153,55 @@
     });
   }
 
+  function fixHistoryNavHighlight() {
+    if (!document.body.classList.contains('tab-quiz')) return;
+    if (!historyLink || !historyBoxEl) return;
+    var rect = historyBoxEl.getBoundingClientRect();
+    var visible = rect.height > 0 && rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.2;
+    // 성취도 기록이 없어서 섹션이 짧으면 문서 전체 높이도 짧아져서, 아무리 끝까지
+    // 스크롤해도 historyBox가 위 조건(60%/20% 밴드)에 안 걸릴 수 있다.
+    // 그런 경우엔 "문서 끝까지 스크롤됐고 historyBox가 화면에 조금이라도 보이는지"로 보정.
+    if (!visible) {
+      var atDocBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
+      visible = atDocBottom && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    }
+    if (!visible) return;
+    historyLink.classList.add('btn-primary');
+    historyLink.classList.remove('btn-ghost');
+    if (quizLink) {
+      quizLink.classList.remove('btn-primary');
+      quizLink.classList.add('btn-ghost');
+    }
+  }
+
+  function fixNavHighlight() {
+    fixOverviewNavHighlight();
+    fixHistoryNavHighlight();
+  }
+
   var ticking = false;
   window.addEventListener('scroll', function () {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(function () {
-      fixOverviewNavHighlight();
+      fixNavHighlight();
       ticking = false;
     });
   }, { passive: true });
 
-  // 클릭으로 탭/앵커가 바뀔 때는 스크롤이 아예 안 일어날 수도 있어서(이미 화면 안이면) 별도로도 보정
+  // 클릭으로 탭/앵커가 바뀔 때는 스크롤이 아예 안 일어날 수도 있어서(이미 화면 안이면) 별도로도 보정.
+  // 보호된 스크립트가 nav 클릭 200ms 뒤에 자체적으로 updateActiveByVisibility()를 한 번 더
+  // 돌려서(스크롤 애니메이션이 끝난 뒤 하이라이트를 "정리"하려는 목적) sectionIds 기준으로
+  // 다시 계산해버리는데, 거기엔 historyBox가 없어서 그 시점에 이 보정이 덮어써진다.
+  // 그 뒤에 한 번 더(250ms) 돌려서 이 보정이 항상 마지막에 적용되게 한다.
   document.querySelectorAll('.nav a[href^="#"], .section-tab').forEach(function (el) {
     el.addEventListener('click', function () {
-      setTimeout(fixOverviewNavHighlight, 50);
+      setTimeout(fixNavHighlight, 50);
+      setTimeout(fixNavHighlight, 250);
     });
   });
 
-  fixOverviewNavHighlight();
+  fixNavHighlight();
 })();
 </script>
 <script>
@@ -3762,6 +4230,51 @@
     <div class="confirm-buttons">
       <button class="confirm-btn confirm-btn--cancel" id="confirmCancel" type="button"></button>
       <button class="confirm-btn confirm-btn--confirm" id="confirmOk" type="button"></button>
+    </div>
+  </div>
+</div>
+<div class="confirm-overlay custom-bank-overlay" id="customBankOverlay">
+  <div class="confirm-modal custom-bank-modal">
+    <div class="custom-bank-modal-header">
+      <h3 class="custom-bank-title">커스텀 문제 출제</h3>
+      <button type="button" class="custom-bank-close" id="customBankClose" aria-label="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+    <p class="custom-bank-desc">직접 만든 문제로 퀴즈를 풀 수 있어요. CSV 파일을 올리거나, "링크 있는 사람 모두 뷰어"로 공유된 구글 시트 링크를 붙여넣으세요. 최소 20문항이 필요합니다.</p>
+
+    <div id="customBankActiveInfo" class="custom-bank-active-info" style="display:none;">
+      <div class="custom-bank-active-row">
+        <span id="customBankActiveText" class="custom-bank-active-text"></span>
+        <button type="button" id="customBankRemove" class="btn btn-secondary custom-bank-remove-btn">삭제하고 기본으로</button>
+      </div>
+    </div>
+
+    <div id="customBankUploadArea" class="custom-bank-upload-area">
+      <button type="button" id="customBankSampleBtn" class="custom-bank-sample-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        샘플 CSV 다운로드
+      </button>
+
+      <label id="customBankDropzone" class="custom-bank-dropzone" for="customBankFileInput">
+        <span class="custom-bank-dropzone-text">클릭하거나 CSV 파일을 여기로 끌어다 놓으세요</span>
+        <input type="file" id="customBankFileInput" accept=".csv,text/csv" hidden />
+      </label>
+
+      <div class="custom-bank-divider"><span>또는</span></div>
+
+      <div class="custom-bank-link-row">
+        <input type="text" id="customBankLinkInput" class="custom-bank-link-input" placeholder="구글 시트 공유 링크 붙여넣기" />
+        <button type="button" id="customBankLinkBtn" class="btn btn-primary">가져오기</button>
+      </div>
+
+      <ul class="custom-bank-guide">
+        <li>컬럼: 번호, question, option1~option4, correct, explain(선택)</li>
+        <li>정답은 보기 번호(1~4)로 입력하고, 정답이 여러 개면 1,3 처럼 콤마로 구분해요</li>
+        <li>최소 20문항 이상 채워야 적용할 수 있어요</li>
+      </ul>
+
+      <p id="customBankStatus" class="custom-bank-status" style="display:none;"></p>
     </div>
   </div>
 </div>
@@ -3818,7 +4331,7 @@
 
   if (!historyBox) return;
 
-  var HISTORY_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z"></path><path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z"></path></svg>';
+  var HISTORY_ICON_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="currentColor"></circle></svg>';
 
   var TRASH_ICON_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"></path></svg>';
   var RETRY_ICON_SVG = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z"></path></svg>';
@@ -3841,8 +4354,10 @@
 
   function questionsByIds(ids) {
     if (typeof BANK === 'undefined') return [];
+    var customBank = (typeof getCustomBank === 'function' ? getCustomBank() : null) || [];
     return (ids || []).map(function (id) {
-      return BANK.find(function (q) { return q.id === id; });
+      return BANK.find(function (q) { return q.id === id; })
+        || customBank.find(function (q) { return q.id === id; });
     }).filter(Boolean);
   }
 
@@ -3886,20 +4401,56 @@
   function injectHistoryIcons() {
     var items = historyBox.querySelectorAll('li');
     items.forEach(function (li) {
-      if (!li.querySelector('.history-text')) {
-        var textWrap = document.createElement('span');
-        textWrap.className = 'history-text';
-        while (li.firstChild) {
-          textWrap.appendChild(li.firstChild);
-        }
+      if (!li.querySelector('.history-top')) {
+        // renderHistory()가 만든 원본 자식 노드: [텍스트("최근 N회차 — 날짜 · ")][<b>점수</b>][텍스트(" (n/m)")]
+        // 문자열을 새로 만들지 않고, "·" 기준으로 기존 노드를 메타(회차·날짜) / 점수 두 그룹으로 나눠 옮긴다.
+        var nodes = Array.prototype.slice.call(li.childNodes);
+        var metaNodes = [];
+        var scoreNodes = [];
+        var splitDone = false;
+        nodes.forEach(function (node) {
+          if (!splitDone && node.nodeType === Node.TEXT_NODE && node.textContent.indexOf('·') !== -1) {
+            var idx = node.textContent.indexOf('·');
+            var before = node.textContent.slice(0, idx).trim();
+            var after = node.textContent.slice(idx + 1);
+            if (before) metaNodes.push(document.createTextNode(before));
+            splitDone = true;
+            if (after) scoreNodes.push(document.createTextNode(after));
+          } else if (!splitDone) {
+            metaNodes.push(node);
+          } else {
+            scoreNodes.push(node);
+          }
+        });
+        while (li.firstChild) li.removeChild(li.firstChild);
+
         var icon = document.createElement('span');
         icon.className = 'history-icon';
         icon.setAttribute('aria-hidden', 'true');
         icon.innerHTML = HISTORY_ICON_SVG;
-        textWrap.insertBefore(icon, textWrap.firstChild);
-        li.appendChild(textWrap);
+
+        var meta = document.createElement('span');
+        meta.className = 'history-meta';
+        metaNodes.forEach(function (n) { meta.appendChild(n); });
+
+        var top = document.createElement('div');
+        top.className = 'history-top';
+        top.appendChild(icon);
+        top.appendChild(meta);
+
+        var score = document.createElement('span');
+        score.className = 'history-score';
+        scoreNodes.forEach(function (n) { score.appendChild(n); });
+
+        var bottom = document.createElement('div');
+        bottom.className = 'history-bottom';
+        bottom.appendChild(score);
+
+        li.appendChild(top);
+        li.appendChild(bottom);
       }
-      if (!li.querySelector('.history-row-actions')) {
+      var bottomEl = li.querySelector('.history-bottom');
+      if (bottomEl && !li.querySelector('.history-row-actions')) {
         var actions = document.createElement('div');
         actions.className = 'history-row-actions';
 
@@ -3917,10 +4468,10 @@
 
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'history-icon-btn history-icon-btn--danger';
+        deleteBtn.className = 'history-icon-btn history-icon-btn--labeled history-icon-btn--danger';
         deleteBtn.setAttribute('aria-label', '기록 삭제');
         deleteBtn.title = '기록 삭제';
-        deleteBtn.innerHTML = TRASH_ICON_SVG;
+        deleteBtn.innerHTML = TRASH_ICON_SVG + '<span>삭제하기</span>';
         deleteBtn.addEventListener('click', function () { deleteHistoryEntry(li); });
 
         actions.appendChild(retryItemBtn);
@@ -4020,22 +4571,6 @@
     return !!quizContainer.querySelector('.option-card.selected');
   }
 
-  reissueLink.addEventListener('click', function () {
-    var isLocked = quizContainer.classList.contains('quiz-locked');
-    if (!isLocked && hasAnySelected() && window.moonbleOpenConfirm) {
-      window.moonbleOpenConfirm({
-        message: '풀고 있는 문제가 있어요.<br>그래도 재출제할까요?',
-        cancelLabel: '계속풀래요.',
-        confirmLabel: '재출제해주세요.',
-        onConfirm: function () {
-          retryBtn.click();
-        }
-      });
-    } else {
-      retryBtn.click();
-    }
-  });
-
   var SKELETON_DELAY = 450;
 
   function applySkeleton() {
@@ -4046,9 +4581,27 @@
     }, SKELETON_DELAY);
   }
 
-  // 버블 단계 리스너: 보호된 renderQuiz() 리스너(더 먼저 등록되어 먼저 실행)가 새 카드를
-  // 다 그린 직후에 실행되므로, 재-디스패치 없이도 새로 렌더링된 카드에 정확히 스켈레톤을 입힐 수 있다.
-  retryBtn.addEventListener('click', applySkeleton);
+  // "재출제하기"(상단)는 하단 "다시하기" 버튼과 별개로, 항상 완전히 새로운 랜덤 문제 세트를 뽑는다.
+  // 예전엔 retryBtn.click()으로 프록시했지만, 이제 하단 버튼은 "같은 문제 다시풀기" 용도로 의미가
+  // 바뀌었기 때문에 여기서 직접 renderQuiz()를 호출해 완전히 분리한다.
+  function doReissue() {
+    if (typeof renderQuiz === 'function') renderQuiz();
+    applySkeleton();
+  }
+
+  reissueLink.addEventListener('click', function () {
+    var isLocked = quizContainer.classList.contains('quiz-locked');
+    if (!isLocked && hasAnySelected() && window.moonbleOpenConfirm) {
+      window.moonbleOpenConfirm({
+        message: '풀고 있는 문제가 있어요.<br>그래도 재출제할까요?',
+        cancelLabel: '계속풀래요.',
+        confirmLabel: '재출제해주세요.',
+        onConfirm: doReissue
+      });
+    } else {
+      doReissue();
+    }
+  });
 
   applySkeleton();
 })();
@@ -4227,28 +4780,72 @@
         .style('animation-delay', (i * 1.75) + 's');
     });
 
-    svg.selectAll('.history-chart-dot')
+    var dotSel = svg.selectAll('.history-chart-dot')
       .data(hist)
       .enter()
       .append('circle')
       .attr('class', 'history-chart-dot')
       .attr('cx', function (_, i) { return x(i); })
       .attr('cy', function (d) { return y(d.score); })
-      .attr('r', 4)
-      .on('mouseenter', function (event, d) {
-        d3.select(this).attr('r', 6);
-        var dt = new Date(d.date);
-        var ds = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
-        tooltip.textContent = ds + ' · ' + d.score + '점 (' + d.correct + '/' + d.total + ')';
-        tooltip.style.opacity = '1';
-      })
+      .attr('r', 4);
+
+    // 점(r=4)에 정확히 올려야만 툴팁이 뜨면 호버하기 너무 빡빡하므로,
+    // 차트 전체에 걸친 투명 히트 영역 하나로 받는다. 세로 가이드라인은 마우스를
+    // 그대로 따라 부드럽게 움직이고, 툴팁은 그 위치에서 가장 가까운 날짜의
+    // "세로 라인대"(한 칸 폭의 절반) 안에 들어왔을 때만 그 날짜 정보로 노출된다.
+    var hoverLine = svg.append('line')
+      .attr('class', 'history-chart-hover-line')
+      .attr('y1', margin.top)
+      .attr('y2', height - margin.bottom)
+      .style('opacity', 0);
+    hoverLine.lower(); // 그래프(영역/선/점)보다 뒤로
+
+    var dotNodes = dotSel.nodes();
+    var step = SLOT_COUNT > 1 ? Math.abs(x(1) - x(0)) : (width - margin.left - margin.right);
+
+    function resetDots() {
+      dotNodes.forEach(function (el) { d3.select(el).classed('history-chart-dot--active', false); });
+    }
+
+    svg.append('rect')
+      .attr('class', 'history-chart-hit')
+      .attr('x', margin.left)
+      .attr('y', margin.top)
+      .attr('width', Math.max(0, width - margin.left - margin.right))
+      .attr('height', Math.max(0, height - margin.top - margin.bottom))
+      .attr('fill', 'transparent')
       .on('mousemove', function (event) {
-        tooltip.style.left = (event.clientX + 12) + 'px';
-        tooltip.style.top = (event.clientY - 12) + 'px';
+        var rectBounds = this.getBoundingClientRect();
+        var svgSpaceWidth = Math.max(1, width - margin.left - margin.right);
+        var mxRatio = rectBounds.width > 0 ? (event.clientX - rectBounds.left) / rectBounds.width : 0;
+        var mx = margin.left + Math.max(0, Math.min(1, mxRatio)) * svgSpaceWidth;
+        hoverLine.attr('x1', mx).attr('x2', mx).style('opacity', 1);
+
+        var idx = Math.round((mx - x(0)) / step);
+        idx = Math.max(0, Math.min(hist.length - 1, idx));
+        var cx = x(idx);
+        var withinBand = Math.abs(mx - cx) <= step / 2;
+
+        resetDots();
+        if (withinBand) {
+          var d = hist[idx];
+          var activeDotEl = dotNodes[idx];
+          d3.select(activeDotEl).classed('history-chart-dot--active', true);
+          var dt = new Date(d.date);
+          var ds = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+          tooltip.textContent = ds + ' · ' + d.score + '점 (' + d.correct + '/' + d.total + ')';
+          tooltip.style.opacity = '1';
+          var dotBounds = activeDotEl.getBoundingClientRect();
+          tooltip.style.left = (dotBounds.left + dotBounds.width / 2) + 'px';
+          tooltip.style.top = (dotBounds.bottom + 10) + 'px';
+        } else {
+          tooltip.style.opacity = '0';
+        }
       })
       .on('mouseleave', function () {
-        d3.select(this).attr('r', 4);
+        hoverLine.style('opacity', 0);
         tooltip.style.opacity = '0';
+        resetDots();
       });
   }
 
@@ -4260,6 +4857,502 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(draw, 150);
   });
+})();
+</script>
+<script>
+(() => {
+  var toggle = document.getElementById('navToggle');
+  var nav = document.getElementById('siteNav');
+  if (!toggle || !nav) return;
+
+  function closeNav() {
+    nav.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+  function openNav() {
+    nav.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  toggle.addEventListener('click', function () {
+    if (nav.classList.contains('nav-open')) closeNav();
+    else openNav();
+  });
+
+  // 메뉴 안의 링크(앵커 이동)를 누르면 자동으로 닫히게.
+  // 다크모드 전환은 토글 개념이라 메뉴 이동과 달리 닫히지 않아야 해서 제외한다.
+  Array.prototype.slice.call(nav.querySelectorAll('a, button')).forEach(function (el) {
+    if (el.id === 'themeToggle') return;
+    el.addEventListener('click', function () {
+      if (window.matchMedia('(max-width: 640px)').matches) closeNav();
+    });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!nav.classList.contains('nav-open')) return;
+    if (nav.contains(e.target) || toggle.contains(e.target)) return;
+    closeNav();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.classList.contains('nav-open')) closeNav();
+  });
+
+  window.addEventListener('resize', function () {
+    if (!window.matchMedia('(max-width: 640px)').matches) closeNav();
+  });
+})();
+</script>
+<script>
+(() => {
+  var quizSectionEl = document.getElementById('quiz');
+  var controls = quizSectionEl ? quizSectionEl.querySelector('.quiz-top-controls') : null;
+  var h2 = quizSectionEl ? quizSectionEl.querySelector('.section-head h2') : null;
+  if (!quizSectionEl || !controls || !h2) return;
+
+  // "재출제하기/열보기" 줄을 모바일에서 "문제풀이" 제목과 세로로 맞추는 로직.
+  // 예전엔 top 값을 특정 화면폭 하나에 맞춰 고정 px로 박아뒀는데, 실제 기기마다
+  // eyebrow 뱃지/부제목 줄바꿈이 달라서 h2 위치가 조금씩 달라지고, 그때마다 어긋나 보였다.
+  // 매번 h2의 실제 렌더링 위치를 재서 거기에 맞추면 화면폭과 무관하게 항상 맞는다.
+  function alignControlsToH2() {
+    if (!window.matchMedia('(max-width: 640px)').matches) {
+      controls.style.top = '';
+      return;
+    }
+    var quizRect = quizSectionEl.getBoundingClientRect();
+    var h2Rect = h2.getBoundingClientRect();
+    var controlsRect = controls.getBoundingClientRect();
+    var h2CenterY = h2Rect.top + h2Rect.height / 2;
+    var newTop = (h2CenterY - quizRect.top) - controlsRect.height / 2;
+    controls.style.top = Math.max(0, newTop) + 'px';
+  }
+
+  alignControlsToH2();
+  window.addEventListener('load', alignControlsToH2);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(alignControlsToH2);
+  }
+
+  // setTimeout 디바운스는 드래그 리사이즈 도중엔 한 번도 재계산을 안 하다가(계속 타이머만
+  // 미뤄짐) 드래그를 멈춘 뒤에야 한 번에 "확" 보정되는 구조라, 그 순간 값이 크게 튀면서
+  // 잠깐 내려갔다 올라가는(또는 그 반대) 움직임으로 보였다. rAF로 매 프레임 계속 따라가게
+  // 바꿔서 리사이즈 도중에도 항상 h2 위치와 같이 부드럽게 움직이도록 한다.
+  var rafPending = false;
+  function scheduleAlign() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      alignControlsToH2();
+    });
+  }
+  window.addEventListener('resize', scheduleAlign);
+})();
+</script>
+<script>
+(() => {
+  var CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
+  var MIN_QUESTIONS = 20;
+  var CUSTOM_ID_BASE = 100000;
+
+  // ---- storage ----
+  function getCustomBankMeta() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_BANK_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return (parsed && Array.isArray(parsed.questions) && parsed.questions.length) ? parsed : null;
+    } catch (e) { return null; }
+  }
+  function getCustomBank() {
+    var meta = getCustomBankMeta();
+    return meta ? meta.questions : null;
+  }
+  function setCustomBank(questions, sourceLabel) {
+    try {
+      localStorage.setItem(CUSTOM_BANK_KEY, JSON.stringify({
+        questions: questions, source: sourceLabel, savedAt: new Date().toISOString()
+      }));
+    } catch (e) { /* localStorage quota 등, 조용히 무시 */ }
+  }
+  function clearCustomBank() {
+    try { localStorage.removeItem(CUSTOM_BANK_KEY); } catch (e) { }
+  }
+  window.getCustomBank = getCustomBank;
+  window.getActiveBank = function () {
+    var custom = getCustomBank();
+    return (custom && custom.length) ? custom : (typeof BANK !== 'undefined' ? BANK : []);
+  };
+
+  // ---- CSV 파싱 (따옴표로 감싼 콤마를 처리하는 간단한 RFC4180 스타일 파서) ----
+  function parseCSVText(text) {
+    var rows = [];
+    var row = [];
+    var field = '';
+    var inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          field += c;
+        }
+      } else if (c === '"') {
+        inQuotes = true;
+      } else if (c === ',') {
+        row.push(field); field = '';
+      } else if (c === '\n') {
+        row.push(field); rows.push(row); row = []; field = '';
+      } else if (c === '\r') {
+        // skip, \n이 줄바꿈 처리
+      } else {
+        field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return c.trim() !== ''; }); });
+  }
+
+  function csvToQuestions(text) {
+    // '#'로 시작하는 행은 가이드/주석 행으로 보고 건너뛴다(샘플 CSV 맨 위 작성 가이드용).
+    var rows = parseCSVText(text).filter(function (r) {
+      return !(r[0] && r[0].trim().charAt(0) === '#');
+    });
+    if (!rows.length) return { error: 'CSV 내용이 비어 있습니다.' };
+    var header = rows[0].map(function (h) { return (h || '').trim().toLowerCase(); });
+    var qIdx = header.indexOf('question');
+    var cIdx = header.indexOf('correct');
+    var optIdx = [
+      header.indexOf('option1'), header.indexOf('option2'),
+      header.indexOf('option3'), header.indexOf('option4')
+    ];
+    var eIdx = header.indexOf('explain');
+    if (qIdx === -1 || cIdx === -1 || optIdx[0] === -1 || optIdx[1] === -1) {
+      return { error: '헤더에 question, option1, option2, correct 컬럼이 필요합니다.' };
+    }
+    var questions = [];
+    var errors = [];
+    for (var i = 1; i < rows.length; i++) {
+      var r = rows[i];
+      var qText = (r[qIdx] || '').trim();
+      if (!qText) continue;
+      var opts = optIdx.map(function (idx) { return idx === -1 ? '' : (r[idx] || '').trim(); }).filter(Boolean);
+      var correctRaw = (r[cIdx] || '').trim();
+      var explain = eIdx === -1 ? '' : (r[eIdx] || '').trim();
+
+      if (opts.length < 2) { errors.push((i + 1) + '행: 보기가 2개 미만입니다.'); continue; }
+      var correctNums = correctRaw.split(',').map(function (s) { return parseInt(s.trim(), 10); }).filter(function (n) { return !isNaN(n); });
+      if (!correctNums.length) { errors.push((i + 1) + '행: 정답 번호가 올바르지 않습니다.'); continue; }
+      var correctIdx = correctNums.map(function (n) { return n - 1; });
+      var outOfRange = correctIdx.some(function (n) { return n < 0 || n >= opts.length; });
+      if (outOfRange) { errors.push((i + 1) + '행: 정답 번호가 보기 범위를 벗어납니다.'); continue; }
+
+      questions.push({
+        id: CUSTOM_ID_BASE + questions.length + 1,
+        q: qText,
+        options: opts,
+        correct: correctIdx,
+        explain: explain,
+        multi: correctIdx.length > 1
+      });
+    }
+    if (questions.length < MIN_QUESTIONS) {
+      var msg = '유효한 문항이 ' + questions.length + '개뿐입니다. 최소 ' + MIN_QUESTIONS + '개가 필요합니다.';
+      if (errors.length) msg += ' (' + errors.slice(0, 3).join(' / ') + (errors.length > 3 ? ' 외 ' + (errors.length - 3) + '건' : '') + ')';
+      return { error: msg };
+    }
+    return { questions: questions };
+  }
+
+  // ---- 샘플 CSV 다운로드 ----
+  function downloadSampleCSV() {
+    var header = ['번호', 'question', 'option1', 'option2', 'option3', 'option4', 'correct', 'explain'];
+    var dataRows = [];
+    for (var i = 1; i <= 500; i++) {
+      if (i === 1) {
+        dataRows.push([
+          'Q.' + i,
+          '샘플 문제입니다. 이 문항을 실제 문제로 바꿔서 사용하세요.',
+          '보기 1', '보기 2', '보기 3', '보기 4',
+          '1,3',
+          '정답이 여러 개인 경우의 예시입니다(1번, 3번이 정답). 정답이 하나면 "1"처럼 숫자 하나만 적으면 됩니다.'
+        ]);
+      } else {
+        dataRows.push(['Q.' + i, '', '', '', '', '', '', '']);
+      }
+    }
+    var csv = [header].concat(dataRows).map(function (r) {
+      return r.map(function (v) {
+        v = String(v);
+        return (v.indexOf(',') !== -1 || v.indexOf('"') !== -1) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }).join(',');
+    }).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'moonble_custom_sample.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  // ---- 구글 시트 링크 → export CSV URL ----
+  function extractSheetExportUrl(link) {
+    var m = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!m) return null;
+    var id = m[1];
+    var gidMatch = link.match(/[#&?]gid=(\d+)/);
+    var url = 'https://docs.google.com/spreadsheets/d/' + id + '/export?format=csv';
+    if (gidMatch) url += '&gid=' + gidMatch[1];
+    return url;
+  }
+
+  // ---- UI 연결 ----
+  var overlay = document.getElementById('customBankOverlay');
+  var openBtn = document.getElementById('customBankBtn');
+  var closeBtn = document.getElementById('customBankClose');
+  var activeInfo = document.getElementById('customBankActiveInfo');
+  var activeText = document.getElementById('customBankActiveText');
+  var removeBtn = document.getElementById('customBankRemove');
+  var uploadArea = document.getElementById('customBankUploadArea');
+  var sampleBtn = document.getElementById('customBankSampleBtn');
+  var dropzone = document.getElementById('customBankDropzone');
+  var fileInput = document.getElementById('customBankFileInput');
+  var linkInput = document.getElementById('customBankLinkInput');
+  var linkBtn = document.getElementById('customBankLinkBtn');
+  var statusEl = document.getElementById('customBankStatus');
+
+  if (!overlay || !openBtn) return;
+
+  function showStatus(kind, message) {
+    statusEl.textContent = message;
+    statusEl.className = 'custom-bank-status custom-bank-status--' + kind;
+    statusEl.style.display = 'block';
+  }
+  function hideStatus() {
+    statusEl.style.display = 'none';
+  }
+
+  function refreshModalState() {
+    var meta = getCustomBankMeta();
+    if (meta) {
+      activeInfo.style.display = 'block';
+      activeText.textContent = (meta.source || '커스텀 문제') + ' · ' + meta.questions.length + '문항 적용 중';
+      uploadArea.style.display = 'none';
+    } else {
+      activeInfo.style.display = 'none';
+      uploadArea.style.display = 'flex';
+    }
+    hideStatus();
+  }
+
+  function updateNavButton() {
+    var active = !!getCustomBankMeta();
+    openBtn.classList.toggle('custom-bank-active', active);
+    openBtn.textContent = active ? '커스텀 사용중' : '커스텀출제';
+  }
+
+  function openModal() {
+    refreshModalState();
+    overlay.classList.add('active');
+  }
+  function closeModal() {
+    overlay.classList.remove('active');
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeModal();
+  });
+
+  function applyQuestions(questions, sourceLabel) {
+    setCustomBank(questions, sourceLabel);
+    updateNavButton();
+    refreshModalState();
+    showStatus('success', sourceLabel + '에서 ' + questions.length + '문항을 불러왔습니다. 다음 "다시하기"부터 이 문제로 출제됩니다.');
+  }
+
+  function handleCSVText(text, sourceLabel) {
+    var result = csvToQuestions(text);
+    if (result.error) {
+      showStatus('error', result.error);
+      return;
+    }
+    applyQuestions(result.questions, sourceLabel);
+  }
+
+  function looksLikeCSVFile(file) {
+    var name = (file.name || '').toLowerCase();
+    if (name.slice(-4) === '.csv') return true;
+    // 확장자가 없거나 애매한 경우를 대비해 MIME 타입도 같이 확인
+    var type = (file.type || '').toLowerCase();
+    return type === 'text/csv' || type === 'application/csv' || type === 'text/plain';
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    hideStatus();
+    if (!looksLikeCSVFile(file)) {
+      showStatus('error', 'CSV 파일만 업로드할 수 있어요(.csv). 엑셀 파일이면 "다른 이름으로 저장 → CSV"로 내보낸 뒤 올려주세요. (선택한 파일: ' + (file.name || '이름 없음') + ')');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      handleCSVText(String(reader.result), file.name);
+    };
+    reader.onerror = function () {
+      showStatus('error', '파일을 읽는 중 문제가 발생했습니다.');
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  });
+
+  dropzone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', function () {
+    dropzone.classList.remove('dragover');
+  });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  sampleBtn.addEventListener('click', downloadSampleCSV);
+
+  linkBtn.addEventListener('click', function () {
+    var link = linkInput.value.trim();
+    if (!link) return;
+    var exportUrl = extractSheetExportUrl(link);
+    if (!exportUrl) {
+      showStatus('error', '올바른 구글 시트 링크가 아닙니다.');
+      return;
+    }
+    showStatus('loading', '불러오는 중...');
+    fetch(exportUrl)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        // 비공개 시트거나 권한이 없으면 CSV 대신 구글 로그인/에러 HTML 페이지가 응답으로 온다.
+        // 그걸 그대로 CSV로 밀어넣으면 이상하게 파싱되니 먼저 걸러낸다.
+        var trimmed = text.trim().toLowerCase();
+        if (trimmed.indexOf('<!doctype') === 0 || trimmed.indexOf('<html') === 0) {
+          showStatus('error', '구글 시트 데이터를 받지 못했습니다(로그인/권한 페이지가 대신 응답했어요). "링크 있는 사람 모두 뷰어" 권한인지 다시 확인해주세요.');
+          return;
+        }
+        handleCSVText(text, '구글 시트');
+      })
+      .catch(function () {
+        showStatus('error', '구글 시트를 불러오지 못했습니다. "링크 있는 사람 모두 뷰어" 권한인지 확인해주세요.');
+      });
+  });
+
+  removeBtn.addEventListener('click', function () {
+    clearCustomBank();
+    updateNavButton();
+    refreshModalState();
+  });
+
+  updateNavButton();
+})();
+</script>
+<script>
+(() => {
+  var quizContainer = document.getElementById('quizContainer');
+  if (!quizContainer) return;
+
+  // 채점 후 Q번호 배지에 붙는 right/wrong 클래스(보호된 grade() 로직, 건드리지 않음)를
+  // 감시해서, 배지 자체 텍스트를 "Q14" -> "Q14: 정답"처럼 바꿔준다(별도 칩 요소 추가 안 함).
+  var mo = new MutationObserver(function (records) {
+    records.forEach(function (r) {
+      var badge = r.target;
+      if (!badge.classList || !badge.classList.contains('q-number')) return;
+      var isRight = badge.classList.contains('right');
+      var isWrong = badge.classList.contains('wrong');
+
+      if (!badge.dataset.baseText) {
+        badge.dataset.baseText = badge.textContent;
+      }
+
+      if (!isRight && !isWrong) {
+        badge.textContent = badge.dataset.baseText;
+        return;
+      }
+
+      badge.textContent = badge.dataset.baseText + ' ' + (isRight ? '정답' : '오답');
+    });
+  });
+  mo.observe(quizContainer, { attributes: true, attributeFilter: ['class'], subtree: true });
+})();
+</script>
+<script>
+(() => {
+  // 하단 "다시하기" 버튼의 의미 정리:
+  // - 상단 "재출제하기"는 완전히 새로운 랜덤 문제 세트(재출제).
+  // - 하단 "다시하기"는 방금 푼 문제를 처음부터 "동일하게" 다시 풀어보는 재시험 개념이라
+  //   보호된 스크립트의 기본 클릭 리스너(renderQuiz() 새 랜덤 재출제)와 의미가 어긋난다.
+  // 그래서 제출 전에는 숨기고(할 일이 없으니), 제출 후(quiz-locked)엔 클릭을 캡처 단계에서
+  // 가로채 보호된 기본 동작 대신 방금 그 회차의 questionIds로 동일한 문제를 다시 그린다.
+  var retryBtn = document.getElementById('retryBtn');
+  var quizContainer = document.getElementById('quizContainer');
+  if (!retryBtn || !quizContainer) return;
+
+  function isLocked() {
+    return quizContainer.classList.contains('quiz-locked');
+  }
+
+  function syncVisibility() {
+    retryBtn.style.display = isLocked() ? '' : 'none';
+  }
+
+  new MutationObserver(syncVisibility).observe(quizContainer, { attributes: true, attributeFilter: ['class'] });
+  syncVisibility();
+
+  function questionsByIds(ids) {
+    if (typeof BANK === 'undefined') return [];
+    var customBank = (typeof getCustomBank === 'function' ? getCustomBank() : null) || [];
+    return (ids || []).map(function (id) {
+      return BANK.find(function (q) { return q.id === id; })
+        || customBank.find(function (q) { return q.id === id; });
+    }).filter(Boolean);
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target !== retryBtn) return;
+    if (!isLocked()) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 방금 채점된 회차와 정확히 동일한 문제 세트로 다시 렌더링(협조된 클릭 위장 없이 직접 호출).
+    var hist = typeof getHistory === 'function' ? getHistory() : [];
+    var latest = hist[0];
+    var same = latest ? questionsByIds(latest.questionIds) : [];
+    if (typeof renderQuiz === 'function') {
+      renderQuiz(same.length ? same : undefined);
+      // renderQuiz(sourceArray)는 "오답만" 재도전용으로 설계돼서 sourceArray가 있으면
+      // 항상 "오답 재도전 모드" 배지를 띄우는데, 지금은 전체 문제를 그대로 다시 푸는
+      // 거라 그 배지가 잘못 붙는다. 여기서 바로 보정.
+      var modePill = document.getElementById('modePill');
+      if (modePill) modePill.style.display = 'none';
+    }
+
+    // 보호된 GA 자동 태깅 스크립트가 이 클릭을 못 받으므로(이벤트 캡처 단계에서 가로챔) 직접 보정.
+    if (typeof window.track === 'function') {
+      window.track(retryBtn.dataset.evt || 'quiz_reset', { label: retryBtn.dataset.evtLabel || retryBtn.textContent.trim() });
+    }
+  }, true);
 })();
 </script>
 </body>
