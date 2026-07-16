@@ -4310,11 +4310,13 @@
     iconEl.classList.toggle('confirm-icon--primary', isPrimary);
     okBtn.classList.toggle('confirm-btn--primary', isPrimary);
     overlay.classList.add('active');
+    if (window.moonbleScrollLock) window.moonbleScrollLock.lock();
   }
   function closeConfirm() {
     overlay.classList.remove('active');
     onConfirmCallback = null;
     onCancelCallback = null;
+    if (window.moonbleScrollLock) window.moonbleScrollLock.unlock();
   }
   window.moonbleOpenConfirm = openConfirm;
 
@@ -5163,9 +5165,11 @@
   function openModal() {
     refreshModalState();
     overlay.classList.add('active');
+    if (window.moonbleScrollLock) window.moonbleScrollLock.lock();
   }
   function closeModal() {
     overlay.classList.remove('active');
+    if (window.moonbleScrollLock) window.moonbleScrollLock.unlock();
   }
 
   openBtn.addEventListener('click', openModal);
@@ -5350,11 +5354,39 @@
       renderQuiz(same.length ? same : undefined);
     }
 
+    var quizSectionEl = document.getElementById('quiz');
+    if (quizSectionEl) quizSectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     // 보호된 GA 자동 태깅 스크립트가 이 클릭을 못 받으므로(이벤트 캡처 단계에서 가로챔) 직접 보정.
     if (typeof window.track === 'function') {
       window.track(retryBtn.dataset.evt || 'quiz_reset', { label: retryBtn.dataset.evtLabel || retryBtn.textContent.trim() });
     }
   }, true);
+})();
+</script>
+<script>
+(() => {
+  // 모달(확인 모달 / 커스텀출제 모달) 열려있는 동안 뒷배경 스크롤 방지.
+  // 여러 모달이 겹칠 일은 없지만 안전하게 카운터로 관리.
+  var lockCount = 0;
+  var savedOverflow = '';
+
+  function lock() {
+    lockCount += 1;
+    if (lockCount > 1) return;
+    savedOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function unlock() {
+    lockCount = Math.max(0, lockCount - 1);
+    if (lockCount > 0) return;
+    document.documentElement.style.overflow = savedOverflow;
+    document.body.style.overflow = '';
+  }
+
+  window.moonbleScrollLock = { lock: lock, unlock: unlock };
 })();
 </script>
 </body>
