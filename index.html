@@ -1237,6 +1237,12 @@
       font-weight: 700;
     }
 
+    /* "오답 재도전 모드" 배지는 UI에서 완전히 숨김(보호된 스크립트가 내부적으로
+       display를 토글하는 로직은 그대로 두고, 시각적으로만 항상 숨긴다) */
+    #modePill {
+      display: none !important;
+    }
+
     .history {
       margin-top: var(--sp-12);
       border-top: 1px solid var(--border);
@@ -5341,11 +5347,6 @@
     var same = latest ? questionsByIds(latest.questionIds) : [];
     if (typeof renderQuiz === 'function') {
       renderQuiz(same.length ? same : undefined);
-      // renderQuiz(sourceArray)는 "오답만" 재도전용으로 설계돼서 sourceArray가 있으면
-      // 항상 "오답 재도전 모드" 배지를 띄우는데, 지금은 전체 문제를 그대로 다시 푸는
-      // 거라 그 배지가 잘못 붙는다. 여기서 바로 보정.
-      var modePill = document.getElementById('modePill');
-      if (modePill) modePill.style.display = 'none';
     }
 
     // 보호된 GA 자동 태깅 스크립트가 이 클릭을 못 받으므로(이벤트 캡처 단계에서 가로챔) 직접 보정.
