@@ -226,8 +226,7 @@
     }
 
     .hero-greeting-time-item {
-      display: flex;
-      align-items: center;
+      display: block;
       height: 1.15em;
       line-height: 1.15;
       white-space: normal;
@@ -727,8 +726,8 @@
     @media (max-width: 640px) {
       .ai-hero-prompt-bar.docked {
         position: fixed;
-        left: var(--sp-4);
-        right: var(--sp-4);
+        left: var(--sp-2);
+        right: var(--sp-2);
         bottom: max(var(--sp-2), env(safe-area-inset-bottom));
         max-width: none;
         width: auto;
@@ -1825,9 +1824,18 @@
 
     .ai-ask-bar {
       position: fixed;
-      left: 50%;
+      /* 100vw는 iOS Safari 등 실제 모바일 브라우저에서 주소창/스크롤바 처리 때문에
+         실제 보이는 뷰포트 폭과 어긋나는 경우가 있어서, calc(100vw - ...)로 폭을
+         계산하면 여백이 사라지거나 화면을 넘칠 수 있다. 대신 left/right를 뷰포트
+         가장자리에서 고정 여백으로 잡고 max-width+margin:auto로 넓은 화면에서만
+         중앙 정렬되게 하면, 브라우저가 실제 보이는 영역만 갖고 계산해서 항상
+         정확한 여백이 유지된다. */
+      left: var(--sp-2);
+      right: var(--sp-2);
+      max-width: 640px;
+      margin: 0 auto;
       bottom: var(--sp-6);
-      transform: translate(-50%, 20px);
+      transform: translateY(20px);
       display: flex;
       flex-direction: column;
       gap: var(--sp-2);
@@ -1849,7 +1857,6 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity .3s ease, transform .3s ease;
-      width: min(640px, calc(100vw - 32px));
     }
 
     @keyframes ai-halo-shift {
@@ -2146,7 +2153,7 @@
     body.ai-pick-mode .ai-ask-bar {
       opacity: 1;
       pointer-events: auto;
-      transform: translate(-50%, 0);
+      transform: translateY(0);
     }
 
     .ai-ask-input {
@@ -4086,11 +4093,12 @@
     // click을 합성하기 전에 인풋에 blur가 먼저 걸려서 독킹 해제(리페어런팅) 애니메이션이
     // 그 사이에 끼어든다. 그러면 버튼이 탭 도중에 DOM에서 이동해버려서 click 이벤트
     // 자체가 씹히고(1차 탭은 무반응), 원위치로 돌아간 뒤 다시 눌러야만 동작하는 문제가
-    // 생긴다. mousedown/touchstart에서 기본 동작(포커스 이동)을 막아 blur가 아예 안
-    // 일어나게 하면, 탭 한 번에 바로 제출까지 끝난다(원위치 복귀는 submitHeroPrompt
-    // 안에서 명시적으로 처리).
+    // 생긴다. mousedown에서 기본 동작(포커스 이동)을 막아 blur가 아예 안 일어나게 하면,
+    // 탭 한 번에 바로 제출까지 끝난다(원위치 복귀는 submitHeroPrompt 안에서 명시적으로
+    // 처리). touchstart에도 preventDefault를 걸면 터치 명세상 그 뒤에 합성되는
+    // mousedown/mouseup/click 자체가 통째로 억제돼서(=탭해도 아예 안 눌림) 오히려
+    // 더 심각하게 고장 나므로 mousedown만 막는다.
     heroPromptBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    heroPromptBtn.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
 
     // 모바일에서 독킹된 채로 창을 넓혀서 데스크톱 폭을 넘어가면 .docked 스타일이
     // 더 이상 적용 안 되는 미디어쿼리라 엉뚱한 위치에 붕 뜬 것처럼 보인다.
@@ -4115,10 +4123,32 @@
     askInput.classList.add('shake');
   }
 
-  askInput.addEventListener('input', function () {
+  // 빈 textarea에서 scrollHeight가 placeholder의 줄바꿈까지 반영해주는지는
+  // 브라우저마다 다르다(안 되는 경우가 있음). 그래서 실제 값이 있을 땐 textarea
+  // 자신의 scrollHeight를 쓰고, 비어있을 땐(placeholder만 있을 때) 숨겨진 복제본에
+  // placeholder 텍스트를 진짜 value로 넣어서 재는 방식으로 확실하게 계산한다.
+  var askMeasureEl = null;
+  function resizeAskInput() {
+    var text = askInput.value;
+    if (!text) {
+      if (!askMeasureEl) {
+        askMeasureEl = document.createElement('textarea');
+        askMeasureEl.setAttribute('rows', '1');
+        askMeasureEl.style.cssText = 'position:absolute; visibility:hidden; left:-9999px; top:0; height:auto; overflow:hidden;';
+        askMeasureEl.className = askInput.className;
+        document.body.appendChild(askMeasureEl);
+      }
+      askMeasureEl.style.width = askInput.clientWidth + 'px';
+      askMeasureEl.value = askInput.placeholder || '';
+      askMeasureEl.style.height = 'auto';
+      askInput.style.height = Math.min(askMeasureEl.scrollHeight, 160) + 'px';
+      return;
+    }
     askInput.style.height = 'auto';
     askInput.style.height = Math.min(askInput.scrollHeight, 160) + 'px';
-  });
+  }
+
+  askInput.addEventListener('input', resizeAskInput);
 
   if (askField) {
     askField.addEventListener('click', function () {
@@ -4133,6 +4163,11 @@
     askBtn.classList.remove('btn-inactive');
     askInput.disabled = false;
     askInput.placeholder = PLACEHOLDER_AFTER_SELECT;
+    // placeholder만 바뀌는 경우 'input' 이벤트가 안 뜨기 때문에(사용자가 아무것도
+    // 입력하지 않음) 자동 높이 조절이 안 걸려서, rows=1 높이 그대로 남아 긴
+    // placeholder 문구(모바일 좁은 폭)가 두 줄로 안 감싸지고 잘려 보였다.
+    // placeholder를 바꿀 때도 직접 한 번 호출해서 맞춰준다.
+    resizeAskInput();
     hintOnlyLabel.classList.add('visible');
   }
 
@@ -4141,9 +4176,9 @@
     selectedCard = null;
     askBtn.classList.add('btn-inactive');
     askInput.value = '';
-    askInput.style.height = '';
-    askInput.disabled = true;
     askInput.placeholder = PLACEHOLDER_BEFORE_SELECT;
+    resizeAskInput();
+    askInput.disabled = true;
     hintOnlyCheck.checked = false;
     hintOnlyLabel.classList.remove('visible');
   }
