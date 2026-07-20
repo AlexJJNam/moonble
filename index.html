@@ -181,9 +181,14 @@
 .brand-mark {
       display: inline-flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 0.25em;
       color: var(--primary);
       font-weight: 800;
+    }
+
+    .hero-greeting-prefix {
+      white-space: nowrap;
     }
 
     @media (max-width: 640px) {
@@ -199,7 +204,12 @@
       display: inline-block;
       overflow: hidden;
       vertical-align: bottom;
-      height: 1em;
+      max-width: 100%;
+      height: 1.15em;
+    }
+
+    .hero-greeting-time-viewport.hero-greeting-two-line {
+      height: 2.3em;
     }
 
     .hero-greeting-time {
@@ -216,9 +226,15 @@
     }
 
     .hero-greeting-time-item {
-      display: block;
-      height: 1em;
-      line-height: 1em;
+      display: flex;
+      align-items: center;
+      height: 1.15em;
+      line-height: 1.15;
+      white-space: normal;
+    }
+
+    .hero-greeting-two-line .hero-greeting-time-item {
+      height: 2.3em;
     }
 
     .hero-greeting-time .char-mask {
@@ -423,6 +439,26 @@
       display: block;
     }
 
+    .masthead-sky stop,
+    .masthead-sky .sky-dot-core,
+    .masthead-sky .sky-dot-glow,
+    .masthead-sky .sky-accent-1,
+    .masthead-sky .sky-accent-2 {
+      transition: stop-color 2.5s ease, stop-opacity 2.5s ease,
+        cx 2.5s ease, cy 2.5s ease, r 2.5s ease, fill 2.5s ease,
+        fill-opacity 2.5s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .masthead-sky stop,
+      .masthead-sky .sky-dot-core,
+      .masthead-sky .sky-dot-glow,
+      .masthead-sky .sky-accent-1,
+      .masthead-sky .sky-accent-2 {
+        transition: none;
+      }
+    }
+
     .sky-arc-ring {
       animation: sky-ring-spin 4s linear infinite;
     }
@@ -475,11 +511,11 @@
     }
 
     .masthead {
-      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%231a56db' stop-opacity='0.55'/%3E%3Cstop offset='50%25' stop-color='%233182f6' stop-opacity='0.25'/%3E%3Cstop offset='100%25' stop-color='%233182f6' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='18' cy='18' r='16' fill='url(%23g)'/%3E%3Cpolygon points='31,18 24.5,29.6 11.5,29.6 5,18 11.5,6.4 24.5,6.4' fill='none' stroke='%233182f6' stroke-opacity='0.16' stroke-width='0.5' stroke-dasharray='1.5 2.5'/%3E%3C/svg%3E") 18 18, pointer;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%231a56db' stop-opacity='0.5'/%3E%3Cstop offset='60%25' stop-color='%233182f6' stop-opacity='0.2'/%3E%3Cstop offset='100%25' stop-color='%233182f6' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='15' cy='15' r='13' fill='url(%23g)'/%3E%3Ccircle cx='15' cy='15' r='2.5' fill='%231a56db'/%3E%3C/svg%3E") 15 15, pointer;
     }
 
     html[data-theme="dark"] .masthead {
-      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8' stop-opacity='0.55'/%3E%3Cstop offset='50%25' stop-color='%234593fc' stop-opacity='0.25'/%3E%3Cstop offset='100%25' stop-color='%234593fc' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='18' cy='18' r='16' fill='url(%23g)'/%3E%3Cpolygon points='31,18 24.5,29.6 11.5,29.6 5,18 11.5,6.4 24.5,6.4' fill='none' stroke='%234593fc' stroke-opacity='0.16' stroke-width='0.5' stroke-dasharray='1.5 2.5'/%3E%3C/svg%3E") 18 18, pointer;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8' stop-opacity='0.5'/%3E%3Cstop offset='60%25' stop-color='%234593fc' stop-opacity='0.2'/%3E%3Cstop offset='100%25' stop-color='%234593fc' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='15' cy='15' r='13' fill='url(%23g)'/%3E%3Ccircle cx='15' cy='15' r='2.5' fill='%231d4ed8'/%3E%3C/svg%3E") 15 15, pointer;
     }
 
     .masthead .feature-card {
@@ -1031,8 +1067,9 @@
       font-weight: 700;
       margin-bottom: var(--sp-2);
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      gap: var(--sp-3);
+      gap: var(--sp-1-5);
     }
 
     .q-title .q-number {
@@ -2789,8 +2826,8 @@
         <a class="btn btn-ghost" href="#guide" title="개요보기">개요보기</a>
         <a class="btn btn-primary" href="#quiz" title="문제풀이">문제풀이</a>
         <a class="btn btn-ghost" href="#historyBox" title="나의 성취도">나의 성취도</a>
-        <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
         <button id="customBankBtn" class="btn btn-ghost custom-bank-nav-btn" type="button" title="커스텀출제">커스텀출제</button>
+        <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
       </nav>
     </div>
   </header>
@@ -3491,12 +3528,40 @@
       if (ch === ' ') return ' ';
       return '<span class="char-mask"><span class="char" style="animation-delay:' + (i * 22) + 'ms">' + ch + '</span></span>';
     }).join('');
-    greeting.innerHTML = '안녕하세요? <span class="hero-greeting-time-viewport"><span class="hero-greeting-time">'
+    greeting.innerHTML = '<span class="hero-greeting-prefix">안녕하세요?</span> <span class="hero-greeting-time-viewport"><span class="hero-greeting-time">'
       + '<span class="hero-greeting-time-item">' + chars + '</span>'
       + '<span class="hero-greeting-time-item" aria-hidden="true">' + t.currentTimeText + '</span>'
       + '<span class="hero-greeting-time-item" aria-hidden="true">' + t.text + '</span>'
       + '</span></span>';
     greeting.style.visibility = 'visible';
+
+    // 문구 길이가 화면 폭보다 길어 두 줄로 감싸질 때만 티커 한 줄 높이를 2줄
+    // 분량으로 넉넉히 잡는다(항상 2줄 자리를 잡아두면 한 줄짜리 문구일 때
+    // 인사말과 아래 문구 사이가 불필요하게 벌어져 보인다).
+    // viewport 자신은 inline-block이라 내용에 맞춰 너비가 저절로 정해진다(shrink-to-fit),
+    // 그래서 viewport.clientWidth로 재면 순환 참조가 된다. 실제 레이아웃 폭 제약을 받는
+    // 조상(h1.title)의 너비를 기준으로 잰다. 폭 계산은 canvas.measureText 대신 실제
+    // DOM에 white-space:nowrap 임시 엘리먼트를 붙여서 잰다 — 커스텀 폰트(Paperlogy)가
+    // 아직 로딩 중일 때 canvas 쪽 font 문자열 매칭이 실제 렌더링과 어긋나 폭이 다르게
+    // 나오는 경우가 있어서, 항상 "지금 실제로 그 자리에 적용되는" 폰트로 재기 위함이다.
+    var viewport = greeting.querySelector('.hero-greeting-time-viewport');
+    if (viewport) {
+      var titleEl = greeting.closest('.title') || greeting.parentElement;
+      var probe = document.createElement('span');
+      probe.style.cssText = 'position:absolute; visibility:hidden; white-space:nowrap; left:-9999px; top:0;';
+      probe.className = viewport.className;
+      titleEl.appendChild(probe);
+
+      function measure(text) {
+        probe.textContent = text;
+        return probe.getBoundingClientRect().width;
+      }
+
+      var availWidth = titleEl.clientWidth;
+      var needsTwoLine = measure(t.text) > availWidth || measure(t.currentTimeText) > availWidth;
+      titleEl.removeChild(probe);
+      viewport.classList.toggle('hero-greeting-two-line', needsTwoLine);
+    }
   }
 
   renderFull();
@@ -3518,6 +3583,7 @@
   var masthead = document.querySelector('.masthead');
   if (!masthead) return;
   var skySvg = null;
+  var skyEls = null;
   var SPIN_SEC = 4;
 
   function lerp(a, b, k) { return a + (b - a) * k; }
@@ -3545,62 +3611,72 @@
     var cropTopPx = 260 * scale - containerH;
 
     var gridEl = masthead.querySelector('#aiHeroPrompt');
-    var safeMaxDotY = 135;
     var safeFlareTop = 226;
     if (gridEl) {
       var gRect = gridEl.getBoundingClientRect();
-      var gridTopVB = ((gRect.top - mRect.top) + cropTopPx) / scale;
       var gridBottomVB = ((gRect.bottom - mRect.top) + cropTopPx) / scale;
-      safeMaxDotY = Math.max(20, gridTopVB - 6);
       safeFlareTop = Math.min(252, gridBottomVB + 6);
     }
 
     var cx = 400, cy = 360, r = 280;
     var t = hourFrac / 24;
     var thetaDeg = 180 * (1 - t);
-    var sinThreshold = Math.max(0, Math.min(1, (cy - safeMaxDotY) / r));
-    var thetaMinDeg = Math.asin(sinThreshold) * 180 / Math.PI;
-
-    // 모바일처럼 마스헤드가 세로로 길면 xMidYMax slice가 viewBox 가로 양쪽을 크게 잘라내는데
-    // (leftVB~rightVB만 실제로 보임), 예전엔 원래 반지름(r=280)으로 각도만 계산한 뒤 화면
-    // 밖으로 나가면 가장자리에 딱 붙여버렸다(clamp). 그러면 저녁~자정 전 시간대 전체가
-    // 우측 끝에, 자정~새벽 시간대 전체가 좌측 끝에 뭉쳐서 "그 시간대엔 항상 같은 자리"처럼
-    // 보이는 문제가 생긴다. 각도(theta, = 시간대)는 그대로 두고, 대신 보이는 가로 폭 안에
-    // 다 들어오도록 가로 반지름(rx)만 줄이면 PC처럼 24시간 내내 위치가 연속적으로 이동한다.
-    var thetaLo = thetaMinDeg;
-    var thetaHi = 180 - thetaMinDeg;
-    if (thetaDeg < thetaLo) thetaDeg = thetaLo;
-    if (thetaDeg > thetaHi) thetaDeg = thetaHi;
     var thetaRad = thetaDeg * Math.PI / 180;
+    var elevation = Math.max(0, Math.sin(thetaRad));
 
+    // 가로/세로를 따로 눌러 담거나(찌그러짐) 구간을 이어붙이면(꺾임/모자모양) 진짜
+    // 반원 모양이 깨진다. 진짜 원(가로반지름=세로반지름) 모양은 유지하되, 반지름을
+    // 화면에 맞는 만큼 줄이거나(R) 키워서 "같은 모양, 다른 크기"로 만든다.
+    // 반원의 기준(밑변·정상)은 검색창이 아니라 키비주얼(마스트헤드) 자체여야 한다.
+    // 밑변은 마스트헤드의 실제 밑변(뷰박스 하단, 260)으로, 정상은 xMidYMax slice로
+    // 잘려나가는 만큼(cropTopPx)을 감안한 실제로 보이는 뷰박스 상단(visibleTopVB)에서
+    // 여백만큼 내려온 지점으로 잡는다. 검색창은 더 이상 이 계산에 관여하지 않는다 —
+    // 검색창은 카드 자체가 불투명 배경이라 궤도 일부와 겹쳐도 그 위에 자연스럽게 덮여 보인다.
     var X_MARGIN = 6;
     var visibleHalfWidth = Math.min(cx - leftVB, rightVB - cx) - X_MARGIN;
-    var rx = Math.max(24, Math.min(r, visibleHalfWidth));
+    var visibleTopVB = Math.max(0, cropTopPx / scale);
+    var TOP_MARGIN = 24;
+    // 밑변을 뷰박스 하단(260)에 딱 맞추면 세로 여유가 부족한 화면(특히 PC처럼
+    // 넓고 낮은 마스트헤드)에서 반지름이 필요 이상으로 작아진다. 밑변을 마스트헤드
+    // 아래로 조금 더 내려서(=화면 밖으로 살짝 잠기게) "반지름이 얼마나 커질 수
+    // 있는지" 계산할 때 쓸 여유만 넉넉하게 확보한다. 정상 위치(topY)는 항상
+    // peakCeiling(보이는 영역 상단+여백)에 고정해서, 가로 폭이 좁아 반지름이
+    // 늘어나지 못하는 화면(모바일)에서는 위치가 불필요하게 밀려 내려가지 않는다.
+    var floorY = cy;
+    var peakCeiling = visibleTopVB + TOP_MARGIN;
+    var verticalBudget = Math.max(10, floorY - peakCeiling);
+    var R = Math.max(24, Math.min(r, visibleHalfWidth, verticalBudget));
+    var topY = peakCeiling;
 
-    var dotX = cx + rx * Math.cos(thetaRad);
-    var dotY = cy - r * Math.sin(thetaRad);
-    var elevation = Math.max(0, Math.sin(thetaRad));
+    var dotX = cx + R * Math.cos(thetaRad);
+    var dotY = topY + R * (1 - elevation);
+
+    // 궤도(점선 링)는 점과 똑같이 반지름 R을 쓰는 진짜 원호라서 점이 항상 궤도
+    // 위에 정확히 온다. 다만 R이 작게 잡히는 화면(모바일 등)에서는 지평선(양 끝)이
+    // 마스트헤드 보이는 영역 안에 그대로 남아 점선의 "끝"이 카드 안에 어중간하게
+    // 보인다(PC는 R이 커서 지평선이 카드 아래로 자연스럽게 잠기니까 안 보였을 뿐).
+    // 기하학적으로 끝을 숨기는 대신, 궤도 선 자체를 양 끝에서 투명하게 페이드아웃
+    // 시켜서(가로 방향 그라데이션 스트로크) 어느 화면에서든 끝이 매끄럽게 사라지게
+    // 한다.
+    var horizonY = topY + R;
+    var ringPath = 'M ' + (cx - R).toFixed(1) + ',' + horizonY.toFixed(1)
+      + ' A ' + R.toFixed(1) + ',' + R.toFixed(1) + ' 0 0 1 ' + (cx + R).toFixed(1) + ',' + horizonY.toFixed(1);
 
     var horizonColor = isDay ? '#ff9d5c' : '#a9c6ff';
     var peakColor = isDay ? '#fff3b0' : '#eef4ff';
     var glowColor = lerpColor(horizonColor, peakColor, elevation);
 
-    var dotGradStops = isDay
-      ? "<stop offset='0%' stop-color='#fff7cc'/><stop offset='45%' stop-color='#ffe98a' stop-opacity='.55'/><stop offset='100%' stop-color='#ffe98a' stop-opacity='0'/>"
-      : "<stop offset='0%' stop-color='#f5f8ff'/><stop offset='45%' stop-color='#cfe0ff' stop-opacity='.5'/><stop offset='100%' stop-color='#cfe0ff' stop-opacity='0'/>";
-    var skyStops = isDay
-      ? "<stop offset='0%' stop-color='#5aa9f2'/><stop offset='100%' stop-color='#cfe8ff'/>"
-      : "<stop offset='0%' stop-color='#0b1130'/><stop offset='100%' stop-color='#3b2b6b'/>";
+    var dotStops = isDay
+      ? ["#fff7cc", "#ffe98a", "#ffe98a"]
+      : ["#f5f8ff", "#cfe0ff", "#cfe0ff"];
+    var dotStopOps = ["1", ".55", "0"];
+    // 프롬프트 입력창 쪽(그라데이션 하단)이 좀 더 진하게 보이도록 아래쪽 색을 더 채도/명도
+    // 있는 톤으로 조정(위쪽 하늘색은 그대로 유지).
+    var skyStops = isDay ? ["#5aa9f2", "#9cc9ee"] : ["#0b1130", "#2e2158"];
 
-    var stars = '';
-    if (!isDay) {
-      var starPos = [[90, 60], [210, 40], [560, 55], [680, 90], [400, 30], [320, 100]];
-      stars = starPos.map(function (p) {
-        return "<circle cx='" + p[0] + "' cy='" + p[1] + "' r='1.6' fill='white' fill-opacity='.7'/>";
-      }).join('');
-    }
+    var starPos = [[90, 60], [210, 40], [560, 55], [680, 90], [400, 30], [320, 100]];
 
-    var accentMarkup;
+    var accent;
     if (isDay) {
       var MARGIN = 36;
       var cornerX = dotX >= cx ? (leftVB + MARGIN) : (rightVB - MARGIN);
@@ -3609,41 +3685,107 @@
       var flare1Y = lerp(safeFlareTop + 22, safeFlareTop, elevation);
       var flare2X = cornerX + cornerDir * 26;
       var flare2Y = flare1Y + 9;
-      var flare1R = lerp(22, 14, elevation), flare1Op = lerp(.5, .3, elevation);
-      var flare2R = lerp(11, 7, elevation), flare2Op = lerp(.7, .5, elevation);
-      accentMarkup = "<circle cx='" + flare1X.toFixed(1) + "' cy='" + flare1Y.toFixed(1) + "' r='" + flare1R.toFixed(1) + "' fill='white' fill-opacity='" + flare1Op.toFixed(2) + "'/>"
-        + "<circle cx='" + flare2X.toFixed(1) + "' cy='" + flare2Y.toFixed(1) + "' r='" + flare2R.toFixed(1) + "' fill='white' fill-opacity='" + flare2Op.toFixed(2) + "'/>";
+      accent = {
+        c1: { cx: flare1X, cy: flare1Y, r: lerp(22, 14, elevation), op: lerp(.5, .3, elevation), fill: 'white' },
+        c2: { cx: flare2X, cy: flare2Y, r: lerp(11, 7, elevation), op: lerp(.7, .5, elevation), fill: 'white' }
+      };
     } else {
-      // soft moonlight halo around the moon itself, instead of a lens-flare accent
-      accentMarkup = "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='38' fill='#cfe0ff' fill-opacity='.18'/>";
+      accent = {
+        c1: { cx: dotX, cy: dotY, r: 38, op: .18, fill: '#cfe0ff' },
+        c2: { cx: dotX, cy: dotY, r: 0, op: 0, fill: '#cfe0ff' }
+      };
     }
 
-    var markup = "<defs>"
-      + "<linearGradient id='sky-bg' x1='0' y1='0' x2='0' y2='1'>" + skyStops + "</linearGradient>"
-      + "<radialGradient id='sky-dot'>" + dotGradStops + "</radialGradient>"
-      + "</defs>"
-      + "<rect width='800' height='260' fill='url(#sky-bg)'/>"
-      + stars
-      + "<path class='sky-arc-ring' d='M " + (cx - r) + "," + cy + " A " + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + "' fill='none' stroke='white' stroke-opacity='.35' stroke-width='2' stroke-linecap='round' stroke-dasharray='1 9'/>"
-      + accentMarkup
-      + "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='25' fill='url(#sky-dot)'/>"
-      + "<circle cx='" + dotX.toFixed(1) + "' cy='" + dotY.toFixed(1) + "' r='10' fill='" + glowColor + "'/>";
-
+    // 예전엔 매 draw()마다 innerHTML을 통째로 새로 그렸는데, 그러면 엘리먼트가 매번
+    // 새로 생성되는 거라 CSS transition이 걸릴 "이전 상태"가 없어서 색/위치가 60초마다
+    // 뚝뚝 끊기듯 순간이동했다. 대신 엘리먼트는 최초 1회만 만들어두고, 이후엔 속성만
+    // 갱신해서(setAttribute) CSS transition으로 부드럽게 보간되게 한다.
     if (!skySvg) {
       skySvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       skySvg.setAttribute('class', 'masthead-sky');
       skySvg.setAttribute('viewBox', '0 0 800 260');
       skySvg.setAttribute('preserveAspectRatio', 'xMidYMax slice');
       skySvg.setAttribute('aria-hidden', 'true');
+      skySvg.innerHTML = "<defs>"
+        + "<linearGradient id='sky-bg' x1='0' y1='0' x2='0' y2='1'>"
+        + "<stop class='sky-bg-stop-0' offset='0%'/><stop class='sky-bg-stop-1' offset='100%'/>"
+        + "</linearGradient>"
+        + "<radialGradient id='sky-dot'>"
+        + "<stop class='sky-dot-stop-0' offset='0%'/><stop class='sky-dot-stop-1' offset='45%'/><stop class='sky-dot-stop-2' offset='100%'/>"
+        + "</radialGradient>"
+        + "<linearGradient id='sky-ring-fade' class='sky-ring-fade' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='1' y2='0'>"
+        + "<stop offset='0%' stop-color='white' stop-opacity='0'/>"
+        + "<stop offset='12%' stop-color='white' stop-opacity='1'/>"
+        + "<stop offset='88%' stop-color='white' stop-opacity='1'/>"
+        + "<stop offset='100%' stop-color='white' stop-opacity='0'/>"
+        + "</linearGradient>"
+        + "</defs>"
+        + "<rect width='800' height='260' fill='url(#sky-bg)'/>"
+        + "<g class='sky-stars'></g>"
+        + "<path class='sky-arc-ring' fill='none' stroke='url(#sky-ring-fade)' stroke-opacity='.4' stroke-width='2' stroke-linecap='round' stroke-dasharray='1 9'/>"
+        + "<circle class='sky-accent-1'/><circle class='sky-accent-2'/>"
+        + "<circle class='sky-dot-core' r='25' fill='url(#sky-dot)'/>"
+        + "<circle class='sky-dot-glow' r='10'/>";
       masthead.insertBefore(skySvg, masthead.firstChild);
-    }
-    skySvg.innerHTML = markup;
 
-    var ringEl = skySvg.querySelector('.sky-arc-ring');
-    if (ringEl) {
-      var elapsed = (Date.now() / 1000) % SPIN_SEC;
-      ringEl.style.animationDelay = (-elapsed) + 's';
+      skyEls = {
+        bgStop0: skySvg.querySelector('.sky-bg-stop-0'),
+        bgStop1: skySvg.querySelector('.sky-bg-stop-1'),
+        dotStop0: skySvg.querySelector('.sky-dot-stop-0'),
+        dotStop1: skySvg.querySelector('.sky-dot-stop-1'),
+        dotStop2: skySvg.querySelector('.sky-dot-stop-2'),
+        stars: skySvg.querySelector('.sky-stars'),
+        ring: skySvg.querySelector('.sky-arc-ring'),
+        ringFade: skySvg.querySelector('.sky-ring-fade'),
+        accent1: skySvg.querySelector('.sky-accent-1'),
+        accent2: skySvg.querySelector('.sky-accent-2'),
+        dotCore: skySvg.querySelector('.sky-dot-core'),
+        dotGlow: skySvg.querySelector('.sky-dot-glow')
+      };
     }
+
+    skyEls.bgStop0.setAttribute('stop-color', skyStops[0]);
+    skyEls.bgStop1.setAttribute('stop-color', skyStops[1]);
+    skyEls.dotStop0.setAttribute('stop-color', dotStops[0]);
+    skyEls.dotStop0.setAttribute('stop-opacity', dotStopOps[0]);
+    skyEls.dotStop1.setAttribute('stop-color', dotStops[1]);
+    skyEls.dotStop1.setAttribute('stop-opacity', dotStopOps[1]);
+    skyEls.dotStop2.setAttribute('stop-color', dotStops[2]);
+    skyEls.dotStop2.setAttribute('stop-opacity', dotStopOps[2]);
+
+    if (isDay && skyEls.stars.childElementCount) {
+      skyEls.stars.innerHTML = '';
+    } else if (!isDay && !skyEls.stars.childElementCount) {
+      skyEls.stars.innerHTML = starPos.map(function (p) {
+        return "<circle cx='" + p[0] + "' cy='" + p[1] + "' r='1.6' fill='white' fill-opacity='.7'/>";
+      }).join('');
+    }
+
+    skyEls.ring.setAttribute('d', ringPath);
+    skyEls.ringFade.setAttribute('x1', (cx - R).toFixed(1));
+    skyEls.ringFade.setAttribute('x2', (cx + R).toFixed(1));
+    skyEls.ringFade.setAttribute('y1', horizonY.toFixed(1));
+    skyEls.ringFade.setAttribute('y2', horizonY.toFixed(1));
+
+    skyEls.accent1.setAttribute('cx', accent.c1.cx.toFixed(1));
+    skyEls.accent1.setAttribute('cy', accent.c1.cy.toFixed(1));
+    skyEls.accent1.setAttribute('r', accent.c1.r.toFixed(1));
+    skyEls.accent1.setAttribute('fill', accent.c1.fill);
+    skyEls.accent1.setAttribute('fill-opacity', accent.c1.op.toFixed(2));
+    skyEls.accent2.setAttribute('cx', accent.c2.cx.toFixed(1));
+    skyEls.accent2.setAttribute('cy', accent.c2.cy.toFixed(1));
+    skyEls.accent2.setAttribute('r', accent.c2.r.toFixed(1));
+    skyEls.accent2.setAttribute('fill', accent.c2.fill);
+    skyEls.accent2.setAttribute('fill-opacity', accent.c2.op.toFixed(2));
+
+    skyEls.dotCore.setAttribute('cx', dotX.toFixed(1));
+    skyEls.dotCore.setAttribute('cy', dotY.toFixed(1));
+    skyEls.dotGlow.setAttribute('cx', dotX.toFixed(1));
+    skyEls.dotGlow.setAttribute('cy', dotY.toFixed(1));
+    skyEls.dotGlow.setAttribute('fill', glowColor);
+
+    var elapsed = (Date.now() / 1000) % SPIN_SEC;
+    skyEls.ring.style.animationDelay = (-elapsed) + 's';
   }
 
   draw();
@@ -3707,7 +3849,14 @@
   function getScrollBounds() {
     var headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
     var top = quizSection.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
-    var bottom = historyBox.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 24;
+    // 성취도 기록이 아직 없으면(historyBox가 비어서 짧음) historyBox의 bottom이
+    // 문제 목록 중간보다도 위에 잡혀서, 20문항 중간쯤 보고 있다가 "AI에게 질문하기"를
+    // 누르기만 해도 범위를 벗어난 것으로 오판해 맨 위로 스크롤되는 문제가 있었다.
+    // 실제 스크롤 가능한 하단 끝은 historyBox와 quizContainer(문항 목록) 중 더 아래에
+    // 있는 쪽이므로 둘 다 확인해서 더 큰 값을 쓴다.
+    var quizBottom = quizContainer ? quizContainer.getBoundingClientRect().bottom : 0;
+    var historyBottom = historyBox.getBoundingClientRect().bottom;
+    var bottom = Math.max(quizBottom, historyBottom) + window.scrollY - window.innerHeight + 24;
     top = Math.max(0, top);
     bottom = Math.max(top, bottom);
     return { min: top, max: bottom };
@@ -3798,6 +3947,9 @@
     var url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
     exitPickMode();
     openPopup(url);
+    // 팝업을 연 뒤에 직접 blur시켜서 독킹 해제(원위치 복귀)를 여기서 확실히 트리거한다.
+    // (아래 mousedown/touchstart에서 버튼 탭으로 인한 blur를 막아뒀기 때문에 필요)
+    if (heroPromptInput) heroPromptInput.blur();
   }
 
   if (heroPromptInput && heroPromptBtn) {
@@ -3930,6 +4082,15 @@
       }
     });
     heroPromptBtn.addEventListener('click', submitHeroPrompt);
+    // 모바일에서 독킹된 인풋이 포커스된 상태로 "질문하기" 버튼을 탭하면, 브라우저가
+    // click을 합성하기 전에 인풋에 blur가 먼저 걸려서 독킹 해제(리페어런팅) 애니메이션이
+    // 그 사이에 끼어든다. 그러면 버튼이 탭 도중에 DOM에서 이동해버려서 click 이벤트
+    // 자체가 씹히고(1차 탭은 무반응), 원위치로 돌아간 뒤 다시 눌러야만 동작하는 문제가
+    // 생긴다. mousedown/touchstart에서 기본 동작(포커스 이동)을 막아 blur가 아예 안
+    // 일어나게 하면, 탭 한 번에 바로 제출까지 끝난다(원위치 복귀는 submitHeroPrompt
+    // 안에서 명시적으로 처리).
+    heroPromptBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    heroPromptBtn.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
 
     // 모바일에서 독킹된 채로 창을 넓혀서 데스크톱 폭을 넘어가면 .docked 스타일이
     // 더 이상 적용 안 되는 미디어쿼리라 엉뚱한 위치에 붕 뜬 것처럼 보인다.
