@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#37414C">
+<meta name="color-scheme" content="dark">
+<title>[라씨 매매비서 · 엑스퍼트] 회원 안내 서신</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
+<style>
+/* 서울한강체 — 서울특별시 배포, 상업적 이용 무료 */
+@font-face{
+  font-family:'SeoulHangang';
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulHangangM.woff') format('woff');
+}
+@font-face{
+  font-family:'SeoulHangang';
+  font-weight:700;
+  font-style:normal;
+  font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Seoul/SeoulHangangB.woff') format('woff'),
+      url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/SeoulHangangM.woff') format('woff');
+}
+
+:root{
+  /* 색 */
+  --field:#2A333D;
+  --field-deep:#1E262F;
+  --paper:#FCFCFB;
+  --card:#F4F5F7;
+  --card-label:#6B7684;
+  --card-value:#191F28;
+  --hairline:#E5E7EA;
+  --card-sub:#6B7684;
+  --ink:#1D232B;
+  --ink-strong:#141920;
+  --mark:rgba(42,47,54,.5);
+  --accent-wash:rgba(31,115,80,.22);
+
+  /* 서체 */
+  --serif:'SeoulHangang', 'Gowun Batang', 'Nanum Myeongjo', serif;
+  --sans:'Pretendard', 'Pretendard Variable', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+
+  /* 타입 스케일 — 편지 본문 */
+  --t-title:clamp(24px, 3.6vw, 32px);  /* 제목        */
+  --t-lead:20px;                       /* 서명 브랜드명 */
+  --t-body:17px;                       /* 본문        */
+  --t-micro:12px;                      /* 하단 고지    */
+
+  /* 모서리 */
+  --radius:14px;
+
+  /* 행간 */
+  --lh-title:1.55;
+  --lh-body:2.1;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+html{
+  background:#1E262F;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
+body{
+  background:radial-gradient(120% 90% at 50% 0%, #37414C 0%, var(--field) 45%, var(--field-deep) 100%);
+  min-height:100vh;
+  font-family:var(--serif);
+  font-size:var(--t-body);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+.stage{
+  max-width:760px;
+  margin:0 auto;
+  padding:64px 24px 96px;
+}
+
+/* ---------- 편지지 ---------- */
+.letter{
+  position:relative;
+  background:var(--paper);
+  border-radius:var(--radius);
+  padding:72px 60px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.06),
+    0 40px 80px -30px rgba(0,0,0,.65),
+    0 4px 14px rgba(0,0,0,.25);
+  animation:rise .9s cubic-bezier(.2,.7,.2,1) both;
+}
+/* ---------- 제목 ---------- */
+h1{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:var(--t-title);
+  line-height:var(--lh-title);
+  letter-spacing:-.015em;
+  color:var(--ink-strong);
+  margin:0 0 36px;
+  word-break:keep-all;
+}
+h1 .line{display:block;}
+h1 .accent{position:relative;white-space:nowrap;}
+h1 .accent::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:.08em;
+  height:.42em;
+  background:var(--accent-wash);
+  z-index:-1;
+}
+
+/* ---------- 본문 ---------- */
+.prose p{
+  font-size:var(--t-body);
+  line-height:var(--lh-body);
+  letter-spacing:-.005em;
+  margin:0 0 1.65em;
+  word-break:keep-all;
+}
+.prose p:last-child{margin-bottom:0;}
+.prose .lead{color:var(--ink-strong);}
+.prose .opening{font-weight:700;}
+.prose .tag{
+  font-weight:700;
+  color:var(--ink-strong);
+  border-bottom:1px solid var(--mark);
+  padding-bottom:1px;
+}
+
+/* ---------- 혜택 카드 ---------- */
+.ledger{
+  margin:40px 0 42px;
+  font-family:var(--sans);
+}
+.ledger h2{
+  margin:0 0 12px;
+  padding:0;
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  color:var(--card-value);
+}
+.ledger dl{
+  margin:0;
+  padding:20px 20px 21px;
+  background:var(--card);
+  border-radius:16px;
+}
+.ledger .row{
+  display:grid;
+  grid-template-columns:44px 1fr;
+  gap:16px;
+  padding:0;
+  align-items:baseline;
+}
+.ledger .row + .row{margin-top:14px;}
+.ledger dt{
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:-.01em;
+  color:var(--card-label);
+}
+.ledger dd{
+  margin:0;
+  font-size:15px;
+  font-weight:500;
+  line-height:1.5;
+  letter-spacing:-.02em;
+  color:var(--card-value);
+  word-break:keep-all;
+}
+.ledger .sub{
+  display:block;
+  margin-top:3px;
+  font-size:14px;
+  font-weight:400;
+  color:var(--card-sub);
+  line-height:1.45;
+}
+
+/* ---------- 서명 ---------- */
+.sign{
+  margin-top:18px;
+  padding-top:26px;
+  border-top:1px solid var(--hairline);
+  text-align:right;
+}
+.sign p{
+  margin:0;
+  font-size:var(--t-body);
+  line-height:1.5;
+  color:var(--ink-strong);
+}
+.sign strong{
+  display:inline-block;
+  margin:0 .06em;
+  font-size:var(--t-lead);
+  font-weight:700;
+  letter-spacing:.02em;
+  color:var(--ink-strong);
+}
+
+/* ---------- 하단 고지 ---------- */
+.action{
+  margin-top:32px;
+  text-align:center;
+}
+
+.notice{
+  font-family:var(--sans);
+  font-size:var(--t-micro);
+  font-weight:300;
+  line-height:1.85;
+  color:rgba(252,252,251,.68);
+  margin:0 auto;
+  max-width:600px;
+  word-break:keep-all;
+}
+
+/* ---------- 모션 ---------- */
+.rev{
+  animation:floatUp .7s cubic-bezier(.2,.7,.2,1) both;
+  animation-delay:calc(.30s + var(--i, 0) * .09s);
+}
+
+@keyframes rise{
+  from{opacity:0;transform:translateY(22px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes floatUp{
+  from{opacity:0;transform:translateY(14px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+
+/* ---------- 반응형 ---------- */
+@media (max-width:640px){
+  :root{
+    --radius:12px;
+    --t-title:clamp(21px, 5.8vw, 27px);
+    --t-lead:18px;
+    --t-body:16px;
+    --t-micro:11.5px;
+    --lh-title:1.45;
+    --lh-body:1.95;
+  }
+  .stage{padding:20px 12px 44px;}
+  .letter{padding:32px 26px;}
+  h1{margin-bottom:24px;letter-spacing:-.02em;}
+  .prose p{margin-bottom:1.5em;}
+  .ledger{margin:28px 0 30px;}
+  .ledger h2{font-size:15px;margin-bottom:10px;}
+  .ledger dl{padding:17px 16px 18px;border-radius:14px;}
+  .ledger .row{grid-template-columns:40px 1fr;gap:12px;}
+  .ledger .row + .row{margin-top:12px;}
+  .ledger dt{font-size:13px;}
+  .ledger dd{font-size:14.5px;}
+  .ledger .sub{font-size:13.5px;}
+  .sign{margin-top:15px;padding-top:22px;}
+  .action{margin-top:24px;}
+  .notice{padding:0 6px;line-height:1.75;}
+}
+
+@media (max-width:360px){
+  :root{--t-body:15.5px;}
+  .stage{padding:16px 8px 36px;}
+  .letter{padding:28px 22px;}
+  .ledger dl{padding:15px 14px 16px;}
+  .ledger .row{grid-template-columns:38px 1fr;gap:10px;}
+}
+
+@media print{
+  body{background:#fff;}
+  .stage{padding:0;max-width:none;}
+  .letter{box-shadow:none;border-radius:0;padding:44px 36px;}
+  .action{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <article class="letter">
+
+    <h1>
+      <span class="line rev" style="--i:0">회원님의 성투를 위해,</span>
+      <span class="line rev" style="--i:1"><span class="accent">1개월 무료 연장</span>을 제공합니다</span>
+    </h1>
+
+    <div class="prose">
+      <p class="lead opening rev" style="--i:2">안녕하세요, 종목추천 플랫폼 &ldquo;엑스퍼트&rdquo;입니다.</p>
+
+      <p class="rev" style="--i:3">최근 계속되는 약세장으로 인해 기대하셨던 만큼의 수익을 드리지 못해 마음이 매우 무겁습니다. 믿고 맡겨주신 회원님께 진심으로 죄송한 마음입니다.</p>
+
+      <p class="rev" style="--i:4">실전매매대가 역시 누구보다 책임감을 느끼며, 힘든 시장 상황 속에서도 손놓고 침묵하기보다는, 시장 반등 시 가장 빠르게 움직일 수 있는 우량 종목과 모멘텀을 엄선하는 데 집중하고 있습니다. 흔들리지 않고 확실한 자리에서 최선의 전략을 전달해 드리겠습니다.</p>
+
+      <p class="rev" style="--i:5">이에 라씨 매매비서 엑스퍼트와 실전매매대가는 뜻을 모아, 믿어주신 감사함과 죄송한 마음을 담아 <span class="tag">1개월 무료 기간</span>을 제공해 드리기로 하였습니다.</p>
+    </div>
+
+    <section class="ledger rev" style="--i:6">
+      <h2>혜택 안내</h2>
+      <dl>
+        <div class="row">
+          <dt>대상</dt>
+          <dd>7월 중 엑스퍼트 실전매매대가 서비스를 이용한 회원님</dd>
+        </div>
+        <div class="row">
+          <dt>혜택</dt>
+          <dd>+1개월(30일) 무상 제공</dd>
+        </div>
+        <div class="row">
+          <dt>적용</dt>
+          <dd>
+            별도 신청 없이 일괄 자동 적용
+            <span class="sub">나의 엑스퍼트 페이지에서 확인하실 수 있습니다.</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="prose">
+      <p class="rev" style="--i:7">라씨 매매비서 엑스퍼트와 실전매매대가는 회원님의 투자에 든든한 페이스메이커가 될 수 있도록 끝까지 책임감을 가지고 최선의 전략을 제시하겠습니다.</p>
+      <p class="lead rev" style="--i:8">감사합니다.</p>
+    </div>
+
+    <div class="sign rev" style="--i:9">
+      <p>종목추천 플랫폼 <strong>엑스퍼트</strong> 드림</p>
+    </div>
+
+  </article>
+
+  <div class="action rev" style="--i:10">
+    <p class="notice">
+      본 안내는 유료 서비스 이용 회원님께 발송되는 안내 서신입니다.
+      제공되는 정보는 투자 참고 자료이며 투자 결과에 대한 최종 판단과 책임은 회원님 본인에게 있습니다.
+      과거의 수익률이 미래의 수익을 보장하지 않으며, 투자 원금의 손실이 발생할 수 있습니다.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>
