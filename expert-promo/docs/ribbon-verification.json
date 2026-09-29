@@ -1,0 +1,82 @@
+[
+  {
+    "width": 320,
+    "original": {
+      "y": 718,
+      "w": 280,
+      "h": 42,
+      "slot": 42
+    },
+    "pinned": {
+      "top": 0,
+      "width": 320,
+      "left": 0,
+      "sticky": true,
+      "text": "혜택 기간이 얼마 남지 않았어요!",
+      "overflow": false,
+      "mainHeight": 5521.375
+    },
+    "deepTop": 0,
+    "restored": 718
+  },
+  {
+    "width": 375,
+    "original": {
+      "y": 718,
+      "w": 315,
+      "h": 42,
+      "slot": 42
+    },
+    "pinned": {
+      "top": 0,
+      "width": 375,
+      "left": 0,
+      "sticky": true,
+      "text": "혜택 기간이 얼마 남지 않았어요!",
+      "overflow": false,
+      "mainHeight": 5435.359375
+    },
+    "deepTop": 0,
+    "restored": 718
+  },
+  {
+    "width": 480,
+    "original": {
+      "y": 718,
+      "w": 420,
+      "h": 42,
+      "slot": 42
+    },
+    "pinned": {
+      "top": 0,
+      "width": 480,
+      "left": 0,
+      "sticky": true,
+      "text": "혜택 기간이 얼마 남지 않았어요!",
+      "overflow": false,
+      "mainHeight": 5435.359375
+    },
+    "deepTop": 0,
+    "restored": 718
+  },
+  {
+    "width": 1280,
+    "original": {
+      "y": 718,
+      "w": 420,
+      "h": 42,
+      "slot": 42
+    },
+    "pinned": {
+      "top": 0,
+      "width": 480,
+      "left": 400,
+      "sticky": true,
+      "text": "혜택 기간이 얼마 남지 않았어요!",
+      "overflow": false,
+      "mainHeight": 5435.359375
+    },
+    "deepTop": 0,
+    "restored": 718
+  }
+]

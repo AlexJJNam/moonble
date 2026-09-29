@@ -1,0 +1,53 @@
+{
+  "report": [
+    {
+      "width": 320,
+      "height": 568,
+      "footerBottom": 5575.875,
+      "bodyBottom": 5575.875,
+      "documentHeight": 5576,
+      "viewport": 320,
+      "scrollWidth": 320,
+      "padding": "0px",
+      "countdownHidden": true,
+      "originalPrice": "220,000"
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "footerBottom": 5501.359375,
+      "bodyBottom": 5501.359375,
+      "documentHeight": 5501,
+      "viewport": 375,
+      "scrollWidth": 375,
+      "padding": "0px",
+      "countdownHidden": false,
+      "originalPrice": "220,000"
+    },
+    {
+      "width": 480,
+      "height": 800,
+      "footerBottom": 5449.359375,
+      "bodyBottom": 5449.359375,
+      "documentHeight": 5449,
+      "viewport": 480,
+      "scrollWidth": 480,
+      "padding": "0px",
+      "countdownHidden": false,
+      "originalPrice": "220,000"
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "footerBottom": 5449.359375,
+      "bodyBottom": 5449.359375,
+      "documentHeight": 5449,
+      "viewport": 844,
+      "scrollWidth": 844,
+      "padding": "0px",
+      "countdownHidden": true,
+      "originalPrice": "220,000"
+    }
+  ],
+  "smooth": "smooth"
+}

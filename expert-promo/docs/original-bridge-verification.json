@@ -1,0 +1,7 @@
+{
+  "mockOnly": true,
+  "allFourButtonsUseOriginalExample": true,
+  "immediateCallsWithoutWaiting": 4,
+  "missingBridgeToast": true,
+  "actualAppNavigationTested": false
+}
