@@ -1,9 +1,0 @@
-{
-  "deadline": "2026-10-02T23:59:59+09:00",
-  "utc": "2026-10-02T14:59:59Z",
-  "oneDayHourMinuteSecond": true,
-  "lastSecond": true,
-  "atDeadline": "종료됨",
-  "afterDeadline": "종료됨",
-  "visibilityResync": true
-}
