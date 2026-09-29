@@ -1,0 +1,77 @@
+{
+  "report": [
+    {
+      "width": 320,
+      "bar": {
+        "width": 320,
+        "bottom": 900,
+        "height": 89.5
+      },
+      "padding": 89.5,
+      "labels": [
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기"
+      ],
+      "overflow": false,
+      "animation": "sheenBG",
+      "duration": "2.6s"
+    },
+    {
+      "width": 375,
+      "bar": {
+        "width": 375,
+        "bottom": 900,
+        "height": 65.5
+      },
+      "padding": 65.5,
+      "labels": [
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기"
+      ],
+      "overflow": false,
+      "animation": "sheenBG",
+      "duration": "2.6s"
+    },
+    {
+      "width": 480,
+      "bar": {
+        "width": 480,
+        "bottom": 900,
+        "height": 65.5
+      },
+      "padding": 65.5,
+      "labels": [
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기"
+      ],
+      "overflow": false,
+      "animation": "sheenBG",
+      "duration": "2.6s"
+    },
+    {
+      "width": 1280,
+      "bar": {
+        "width": 480,
+        "bottom": 900,
+        "height": 65.5
+      },
+      "padding": 65.5,
+      "labels": [
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기",
+        "평생반값 혜택받기"
+      ],
+      "overflow": false,
+      "animation": "sheenBG",
+      "duration": "2.6s"
+    }
+  ],
+  "reducedMotion": "none"
+}
