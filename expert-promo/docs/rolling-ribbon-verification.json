@@ -1,0 +1,141 @@
+{
+  "report": [
+    {
+      "width": 320,
+      "initial": {
+        "rolling": "none",
+        "closeHidden": true
+      },
+      "pinned": {
+        "background": "rgba(184, 245, 213, 0.8)",
+        "triangle": "none",
+        "closeHidden": true,
+        "duration": "7.5s",
+        "rows": [
+          {
+            "width": 248,
+            "scrollWidth": 248
+          },
+          {
+            "width": 248,
+            "scrollWidth": 248
+          },
+          {
+            "width": 248,
+            "scrollWidth": 248
+          },
+          {
+            "width": 248,
+            "scrollWidth": 248
+          }
+        ],
+        "width": 320
+      }
+    },
+    {
+      "width": 375,
+      "initial": {
+        "rolling": "none",
+        "closeHidden": true
+      },
+      "pinned": {
+        "background": "rgba(184, 245, 213, 0.8)",
+        "triangle": "none",
+        "closeHidden": true,
+        "duration": "7.5s",
+        "rows": [
+          {
+            "width": 303,
+            "scrollWidth": 303
+          },
+          {
+            "width": 303,
+            "scrollWidth": 303
+          },
+          {
+            "width": 303,
+            "scrollWidth": 303
+          },
+          {
+            "width": 303,
+            "scrollWidth": 303
+          }
+        ],
+        "width": 375
+      }
+    },
+    {
+      "width": 480,
+      "initial": {
+        "rolling": "none",
+        "closeHidden": true
+      },
+      "pinned": {
+        "background": "rgba(184, 245, 213, 0.8)",
+        "triangle": "none",
+        "closeHidden": true,
+        "duration": "7.5s",
+        "rows": [
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          }
+        ],
+        "width": 480
+      }
+    },
+    {
+      "width": 1280,
+      "initial": {
+        "rolling": "none",
+        "closeHidden": true
+      },
+      "pinned": {
+        "background": "rgba(184, 245, 213, 0.8)",
+        "triangle": "none",
+        "closeHidden": true,
+        "duration": "7.5s",
+        "rows": [
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          },
+          {
+            "width": 408,
+            "scrollWidth": 408
+          }
+        ],
+        "width": 480
+      }
+    }
+  ],
+  "closeVisible": true,
+  "offsets": [
+    "matrix(1, 0, 0, 1, 0, 0)",
+    "matrix(1, 0, 0, 1, 0, -20)",
+    "matrix(1, 0, 0, 1, 0, -40)"
+  ],
+  "dismissed": true,
+  "staysDismissed": true,
+  "method": "Headless scroll events dispatched explicitly; animation timeline sampled at 0, 2600, 5100 ms."
+}

@@ -1,0 +1,8 @@
+{
+  "mockOnly": true,
+  "allFourExpertMappingsVerified": true,
+  "discountAmt": "220000",
+  "immediateCallsWithoutWaiting": 4,
+  "missingBridgeToast": true,
+  "actualAppNavigationTested": false
+}

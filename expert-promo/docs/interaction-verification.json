@@ -1,0 +1,77 @@
+{
+  "eventPassed": true,
+  "events": [
+    {
+      "expertId": "surge-hunter",
+      "expertName": "서지헌터",
+      "price": 99000,
+      "currency": "KRW"
+    },
+    {
+      "expertId": "trader-shin",
+      "expertName": "트레이더신",
+      "price": 99000,
+      "currency": "KRW"
+    },
+    {
+      "expertId": "absolute-wealth",
+      "expertName": "절대부유",
+      "price": 99000,
+      "currency": "KRW"
+    },
+    {
+      "expertId": "gold-spoon",
+      "expertName": "금수저",
+      "price": 99000,
+      "currency": "KRW"
+    }
+  ],
+  "buttonNames": [
+    "서지헌터 평생반값 혜택받기",
+    "트레이더신 평생반값 혜택받기",
+    "절대부유 평생반값 혜택받기",
+    "금수저 평생반값 혜택받기"
+  ],
+  "touchAreas": [
+    {
+      "width": 150,
+      "visualHeight": 36,
+      "extension": "-4px 0px"
+    },
+    {
+      "width": 150,
+      "visualHeight": 36,
+      "extension": "-4px 0px"
+    },
+    {
+      "width": 150,
+      "visualHeight": 36,
+      "extension": "-4px 0px"
+    },
+    {
+      "width": 150,
+      "visualHeight": 36,
+      "extension": "-4px 0px"
+    }
+  ],
+  "telephone": "tel:02-2174-6446",
+  "keyboardFallback": true,
+  "anchor": {
+    "hash": "#experts",
+    "targetTop": 20.359375
+  },
+  "textOverflow": [
+    {
+      "width": 320,
+      "issues": []
+    },
+    {
+      "width": 375,
+      "issues": []
+    },
+    {
+      "width": 480,
+      "issues": []
+    }
+  ]
+}
