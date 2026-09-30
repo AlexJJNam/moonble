@@ -1,0 +1,12 @@
+{
+  "mockOnly": true,
+  "actualAppNavigationTested": false,
+  "passed": [
+    "missing parameters blocked",
+    "four buttons route exact mapped string payload",
+    "missing bridge handled",
+    "rejected bridge handled",
+    "duplicate calls blocked while pending",
+    "host cancellation respected"
+  ]
+}
