@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="light">
+<html lang="ko" data-theme="light" data-auth-pending>
 
 <head>
   <!-- Google tag (gtag.js) -->
@@ -2703,9 +2703,25 @@
       }
     }
   </style>
+  <style>
+    html[data-auth-pending] body > :not(#moonble-auth-status),
+    html[data-auth-pending] body > :not(#moonble-auth-status) * {
+      visibility: hidden !important;
+    }
+    #moonble-auth-status {
+      position: fixed; inset: 0; z-index: 99999; display: grid;
+      place-content: center; gap: 16px; text-align: center;
+      background: #f6f7f9; color: #191f28;
+    }
+    html:not([data-auth-pending]) #moonble-auth-status { display: none; }
+  </style>
 </head>
 
 <body class="tab-quiz">
+  <div id="moonble-auth-status" role="status">
+    <span>로그인 상태를 확인하고 있습니다…</span>
+    <a href="./login.html">로그인 화면 열기</a>
+  </div>
 <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
   <filter id="ink-blob" x="-40%" y="-40%" width="180%" height="180%">
     <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="3" seed="5" result="noise" />

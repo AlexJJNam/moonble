@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { supabase } from './supabase.js';
+import { loginUrl, supabase } from './supabase.js';
+
+let leavingHome = false;
+function requireLogin() {
+  document.documentElement.setAttribute('data-auth-pending', '');
+  if (leavingHome) return;
+  leavingHome = true;
+  window.location.replace(loginUrl());
+}
 
 function Account() {
   const [user, setUser] = useState(null);
@@ -8,17 +16,23 @@ function Account() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) { requireLogin(); return; }
     let alive = true;
+    function acceptSession(session) {
+      if (!alive || leavingHome) return;
+      if (!session) { requireLogin(); return; }
+      setUser(session.user);
+      setChecking(false);
+      document.documentElement.removeAttribute('data-auth-pending');
+    }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (alive) { setUser(session?.user ?? null); setChecking(false); }
+      acceptSession(session);
     });
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!alive) return;
-      setUser(data.session?.user ?? null);
-      setChecking(false);
-      if (sessionError) setError('로그인 상태 확인 실패');
-    }).catch(() => { if (alive) { setChecking(false); setError('로그인 상태 확인 실패'); } });
+      if (sessionError) { requireLogin(); return; }
+      acceptSession(data.session);
+    }).catch(() => { if (alive) requireLogin(); });
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
 
@@ -29,6 +43,7 @@ function Account() {
       const { error: authError } = await supabase.auth.signOut({ scope: 'local' });
       if (authError) throw authError;
       setUser(null);
+      requireLogin();
     } catch { setError('로그아웃 실패. 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
