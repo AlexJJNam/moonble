@@ -112,7 +112,7 @@ function Login() {
   return <main className="auth-page">
     <div className="gradient-backdrop" aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <div key={n} className={`g${n}`} />)}</div>
     <section className="auth-card" aria-label="Moonble 계정">
-      <h1 className="auth-brand">moonble.</h1>
+      <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Paperlogy', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
       {(mode === 'login' || mode === 'register') ? <div className="auth-tabs" aria-label="계정 메뉴">
         <button type="button" disabled={pending} aria-pressed={mode === 'login'} onClick={() => switchMode('login')}>로그인</button>
         <button type="button" disabled={pending} aria-pressed={mode === 'register'} onClick={() => switchMode('register')}>회원가입</button>
@@ -131,7 +131,6 @@ function Login() {
       {message && <p className="auth-message" role="status">{message}</p>}
       {mode === 'login' && <button className="auth-link" disabled={pending} onClick={() => switchMode('reset')}>비밀번호를 잊으셨나요?</button>}
       {mode !== 'login' && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}
-      <a className="auth-link" href="./index.html">Moonble로 돌아가기</a>
     </section>
   </main>;
 }

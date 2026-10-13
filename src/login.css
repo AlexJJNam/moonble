@@ -6,7 +6,8 @@ button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 .auth-page { position: relative; isolation: isolate; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; overflow: hidden; }
 .auth-card { width: 100%; max-width: 448px; padding: 32px; border-radius: 16px; border: 1px solid #0000000d; background: #ffffffb3; backdrop-filter: blur(24px); box-shadow: 0 10px 30px #00000012; }
-.auth-brand { margin: 0 0 32px; text-align: center; font-size: 40px; letter-spacing: -1.5px; background: linear-gradient(100deg, #9b5de5, #3182f6, #00bba7); background-clip: text; color: transparent; }
+.auth-brand { margin: 0 0 32px; }
+.auth-brand svg { display: block; width: 140px; height: 28px; margin: 0 auto; overflow: visible; }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: #f1f3f5; border-radius: 8px; margin-bottom: 24px; }
 .auth-tabs button { border: 0; border-radius: 5px; background: transparent; padding: 9px; color: #6b7684; cursor: pointer; }
 .auth-tabs button[aria-pressed='true'] { background: white; color: #191f28; box-shadow: 0 1px 3px #00000015; }
