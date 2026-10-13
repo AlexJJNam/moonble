@@ -78,3 +78,10 @@ React와 Supabase는 빌드에 포함되고 기존 D3·폰트·Google Analytics 
 - 공개 API 읽기 전용 확인: 인증 설정 HTTP 200, 이메일 인증 활성화, 신규 가입 허용, 이메일 자동 확인 비활성화.
 - 비로그인 profiles 조회는 HTTP 401 / PostgreSQL `42501`로 거부됨.
 - 다음 단계는 Cloudflare Pages 프리뷰 배포와 해당 프리뷰 Redirect URL 추가. 실제 가입, 이메일 발송, 두 계정의 RLS, 비밀번호 복구와 전체 회귀 검증은 남아 있음.
+
+### Cloudflare 브랜치 설정 복구 (2026-10-13)
+
+- develop이 Production branch로 지정되어 `79acba6`이 Production으로 배포된 것을 확인함.
+- 사용자가 Production branch를 main, Preview Include를 develop으로 수정·저장함.
+- 기존 main `03a9d3c` 배포 `4615487e`로 Rollback 성공을 확인함. GitHub main 코드는 변경하지 않음.
+- 이전 develop 배포의 Production 표시는 과거 배포 기록임. 새 develop 배포가 Preview로 분류되는지 별도로 확인해야 함.
