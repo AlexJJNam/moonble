@@ -4,7 +4,8 @@ import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
 import './login.css';
 
 function Login() {
-  const [mode, setMode] = useState('login');
+  const signupPage = window.location.pathname.endsWith('/signup') || window.location.pathname.endsWith('/signup.html');
+  const [mode, setMode] = useState(signupPage ? 'register' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -113,10 +114,7 @@ function Login() {
     <div className="gradient-backdrop" aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <div key={n} className={`g${n}`} />)}</div>
     <section className="auth-card" aria-label="Moonble 계정">
       <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Paperlogy', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
-      {(mode === 'login' || mode === 'register') ? <div className="auth-tabs" aria-label="계정 메뉴">
-        <button type="button" disabled={pending} aria-pressed={mode === 'login'} onClick={() => switchMode('login')}>로그인</button>
-        <button type="button" disabled={pending} aria-pressed={mode === 'register'} onClick={() => switchMode('register')}>회원가입</button>
-      </div> : <h2>{title}</h2>}
+      <h2>{title}</h2>
       {!supabase && <p className="auth-message" role="status">회원가입을 준비 중입니다. 설정이 완료되면 이용할 수 있습니다.</p>}
       {checking && <p role="status">로그인 상태를 확인하고 있습니다…</p>}
       <form onSubmit={submit}>
@@ -130,7 +128,9 @@ function Login() {
       {error && <p className="auth-error" role="alert">{error}</p>}
       {message && <p className="auth-message" role="status">{message}</p>}
       {mode === 'login' && <button className="auth-link" disabled={pending} onClick={() => switchMode('reset')}>비밀번호를 잊으셨나요?</button>}
-      {mode !== 'login' && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}
+      {mode === 'login' && <><div className="auth-separator" aria-hidden="true" /><a className="auth-create" href="./signup.html">새 계정 만들기</a></>}
+      {mode === 'register' && <a className="auth-link" href="./login.html">이미 계정이 있나요? 로그인</a>}
+      {(mode === 'reset' || mode === 'update') && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}
     </section>
   </main>;
 }

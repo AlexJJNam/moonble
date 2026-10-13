@@ -1,0 +1,22 @@
+.workspace-header { display:flex; align-items:center; flex-wrap:wrap; gap:20px; padding:16px max(20px, calc((100vw - 1200px) / 2)); background:white; border-bottom:1px solid #e5e7eb; }
+.workspace-logo svg { display:block; width:140px; height:28px; overflow:visible; }
+.workspace-header nav, .workspace-account { display:flex; align-items:center; flex-wrap:wrap; gap:16px; }
+.workspace-header a, .workspace-header button { font-size:14px; }
+.workspace-header a[aria-current] { color:#3182f6; font-weight:700; }
+.workspace-account { margin-left:auto; }
+.workspace-account span { color:#6b7280; font-size:13px; }
+.workspace-header button:disabled { opacity:.6; }
+.workspace-header a:focus-visible, .workspace-header button:focus-visible { outline:2px solid #3182f6; outline-offset:4px; }
+.profile-wrap { padding:48px 20px; }
+.profile-card { max-width:448px; margin:32px auto; padding:28px; background:white; border:1px solid #e5e7eb; border-radius:16px; }
+.profile-card h1 { font-size:23px; font-weight:700; margin-bottom:12px; }
+.profile-card p { font-size:14px; color:#6b7280; margin:12px 0; }
+.profile-card fieldset { display:grid; gap:10px; margin-top:24px; }
+.profile-card label { font-size:14px; font-weight:600; }
+.profile-card input { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:8px; }
+.profile-card input:disabled { background:#f3f4f6; }
+.profile-card input:focus-visible { outline:2px solid #3182f6; }
+.shell-primary { border-radius:8px; background:#3182f6; color:white; padding:12px; }
+.profile-card [role=alert], .shell-error { color:#b42318; }
+.storage-note { margin:0; padding:10px 20px; font-size:12px; text-align:center; color:#6b7280; background:#f9fafb; }
+@media (max-width:640px) { .workspace-header { gap:16px; padding:16px; } .workspace-account { width:100%; margin:0; justify-content:flex-end; } .workspace-account span { margin-right:auto; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .profile-wrap { padding:16px; } }

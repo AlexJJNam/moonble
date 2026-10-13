@@ -2846,8 +2846,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
       </button>
       <nav class="nav" id="siteNav">
+        <a class="btn btn-ghost" href="./prd.html">PRD</a>
         <a class="btn btn-ghost" href="#guide" title="개요보기">개요보기</a>
-        <a class="btn btn-primary" href="#quiz" title="문제풀이">문제풀이</a>
+        <a class="btn btn-primary" href="./quiz.html" title="문제풀이">문제풀이</a>
         <a class="btn btn-ghost" href="#historyBox" title="나의 성취도">나의 성취도</a>
         <button id="customBankBtn" class="btn btn-ghost custom-bank-nav-btn" type="button" title="커스텀출제">커스텀출제</button>
         <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
@@ -5217,6 +5218,10 @@
   }
   window.getCustomBank = getCustomBank;
   window.getActiveBank = function () {
+    var paper = new URLSearchParams(window.location.search).get('paper');
+    if (paper === 'basics' && typeof BANK !== 'undefined') return BANK.filter(function (q) { return q.id <= 30; });
+    if (paper === 'advanced' && typeof BANK !== 'undefined') return BANK.filter(function (q) { return q.id > 30; });
+    if (paper === 'random' && typeof BANK !== 'undefined') return BANK;
     var custom = getCustomBank();
     return (custom && custom.length) ? custom : (typeof BANK !== 'undefined' ? BANK : []);
   };

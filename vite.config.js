@@ -41,12 +41,17 @@ export default defineConfig(({ mode }) => {
   }
   return {
   plugins: [preserveLegacyPages()],
+  resolve: { alias: { '@': fileURLToPath(new URL('./src/prd', import.meta.url)) } },
+  esbuild: { jsx: 'automatic' },
   base: './',
   build: {
     rollupOptions: {
       input: {
         home: fileURLToPath(new URL('./index.html', import.meta.url)),
         login: fileURLToPath(new URL('./login.html', import.meta.url)),
+        signup: fileURLToPath(new URL('./signup.html', import.meta.url)),
+        prd: fileURLToPath(new URL('./prd.html', import.meta.url)),
+        quiz: fileURLToPath(new URL('./quiz.html', import.meta.url)),
       },
     },
   },
