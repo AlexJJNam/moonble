@@ -35,7 +35,7 @@ export function ProfileForm({ user, initial, onSaved }) {
           <label htmlFor="profile-company">회사명</label>
           <input id="profile-company" autoComplete="organization" maxLength={100} required value={company} onChange={e => setCompany(e.target.value)} aria-describedby="company-hint" />
           <p id="company-hint">소속 회사가 없다면 ‘개인’으로 입력해주세요.</p>
-          <button className="shell-primary" type="submit">{pending ? '저장 중…' : initial ? '저장하고 PRD 시작하기' : '내 정보 저장'}</button>
+          <button className="shell-primary" type="submit" aria-label={pending ? '내 정보 저장 중' : undefined}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : initial ? '저장하고 PRD 시작하기' : '내 정보 저장'}</button>
         </fieldset>
       </form>
       {error && <p role="alert">{error}</p>}

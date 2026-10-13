@@ -36,7 +36,7 @@ function QuizLibrary() {
     <header className="quiz-header">
       <a className="quiz-logo" href="./prd.html"><svg viewBox="0 0 140 28" aria-label="moonble"><text x="0" y="21" fontFamily="'Paperlogy', sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></a>
       <nav><a href="./prd.html">PRD</a><a href="./quiz.html" aria-current="page">문제풀이</a></nav>
-      <div className="quiz-account"><span>{profile.name}님</span><a href="./prd.html#/my-page">내 정보 수정</a><button disabled={pending} onClick={logout}>로그아웃</button></div>
+      <div className="quiz-account"><span>{profile.name}님</span><a href="./prd.html#/my-page">내 정보 수정</a><button disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></div>
     </header>
     <main className="quiz-main">
       <div className="quiz-title"><p>QUESTION SETS</p><h1>어떤 문제를 풀어볼까요?</h1><span>문제지를 고르면 바로 풀이 모드가 시작됩니다.</span></div>

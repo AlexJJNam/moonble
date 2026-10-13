@@ -122,7 +122,7 @@ function Login() {
           {mode !== 'update' && <label>이메일<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>}
           {mode !== 'reset' && <div><label htmlFor="password">비밀번호</label><span className="password-field"><input id="password" type={visible ? 'text' : 'password'} autoComplete={newPassword ? 'new-password' : 'current-password'} required minLength={newPassword ? 8 : undefined} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} /><button className="visibility" type="button" aria-label={visible ? '비밀번호 숨기기' : '비밀번호 표시'} aria-pressed={visible} onClick={() => setVisible(v => !v)}>{visible ? '숨기기' : '보기'}</button></span></div>}
           {newPassword && <><p className="auth-hint">영문·특수문자 포함 8자 이상, 공백·한글 제외</p><label>비밀번호 확인<input type={visible ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={128} value={confirmation} onChange={e => setConfirmation(e.target.value)} /></label></>}
-          <button className="auth-submit" type="submit">{pending ? '처리 중…' : title}</button>
+          <button className="auth-submit" type="submit" aria-label={pending ? `${title} 처리 중` : undefined}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : title}</button>
         </fieldset>
       </form>
       {error && <p className="auth-error" role="alert">{error}</p>}

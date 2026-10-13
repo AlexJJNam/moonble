@@ -2714,6 +2714,8 @@
       background: #f6f7f9; color: #191f28;
     }
     html:not([data-auth-pending]) #moonble-auth-status { display: none; }
+    .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: middle; animation: moonble-spin .7s linear infinite; }
+    @keyframes moonble-spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
