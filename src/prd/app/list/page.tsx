@@ -845,6 +845,10 @@ export default function PrdListPage() {
 
 
       <div className="max-w-4xl mx-auto p-4 sm:p-8">
+        <div className="mb-8">
+          <h1 className="mb-page-title">나의 PRD</h1>
+          <p className="mt-2 text-base text-gray-500">아이디어를 정리하고 제품의 방향을 구체화해보세요.</p>
+        </div>
         <div className="flex justify-between items-center mb-4">
             <div className='flex items-center gap-2'>
               <DropdownMenu>

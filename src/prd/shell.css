@@ -1,24 +1,38 @@
-.workspace-header { display:flex; align-items:center; flex-wrap:wrap; gap:20px; padding:16px max(20px, calc((100vw - 1200px) / 2)); background:white; border-bottom:1px solid #e5e7eb; }
+.workspace-header { display:flex; align-items:center; flex-wrap:wrap; gap:var(--mb-space-24); min-height:80px; padding:var(--mb-space-12) max(24px, calc((100vw - 1200px) / 2)); background:var(--mb-surface); border-bottom:1px solid var(--mb-border); }
 .workspace-logo svg { display:block; width:140px; height:28px; overflow:visible; }
-.workspace-header nav, .workspace-account { display:flex; align-items:center; flex-wrap:wrap; gap:16px; }
-.workspace-header a, .workspace-header button { font-size:14px; }
-.workspace-header a[aria-current] { color:#3182f6; font-weight:700; }
+.workspace-header nav, .workspace-account { display:flex; align-items:center; flex-wrap:wrap; gap:var(--mb-space-16); }
+.workspace-header a, .workspace-header button { display:inline-flex; align-items:center; min-height:44px; color:var(--mb-text-secondary); font-size:var(--mb-font-14); line-height:20px; font-weight:500; }
+.workspace-header a[aria-current] { color:var(--mb-primary-strong); font-weight:700; }
 .workspace-account { margin-left:auto; }
-.workspace-account span { color:#6b7280; font-size:13px; }
+.workspace-account span { color:var(--mb-text-tertiary); font-size:var(--mb-font-14); line-height:20px; }
+.workspace-header button { border-radius:var(--mb-radius-8); padding:var(--mb-space-8) var(--mb-space-12); background:var(--mb-surface-muted); }
+.workspace-header button:hover:not(:disabled) { background:var(--mb-border); }
 .workspace-header button:disabled { opacity:.6; }
-.workspace-header a:focus-visible, .workspace-header button:focus-visible { outline:2px solid #3182f6; outline-offset:4px; }
-.profile-wrap { padding:48px 20px; }
-.profile-card { max-width:448px; margin:32px auto; padding:28px; background:white; border:1px solid #e5e7eb; border-radius:16px; }
-.profile-card h1 { font-size:23px; font-weight:700; margin-bottom:12px; }
-.profile-card p { font-size:14px; color:#6b7280; margin:12px 0; }
-.profile-card fieldset { display:grid; gap:10px; margin-top:24px; }
-.profile-card label { font-size:14px; font-weight:600; }
-.profile-card input { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:8px; }
-.profile-card input:disabled { background:#f3f4f6; }
-.profile-card input:focus-visible { outline:2px solid #3182f6; }
-.shell-primary { border-radius:8px; background:#3182f6; color:white; padding:12px; }
+.workspace-header a:focus-visible, .workspace-header button:focus-visible { outline:3px solid var(--mb-primary); outline-offset:4px; }
+.profile-wrap { padding:var(--mb-space-48) var(--mb-space-24); }
+.profile-card { max-width:480px; margin:var(--mb-space-32) auto; padding:var(--mb-space-32); background:var(--mb-surface); border:1px solid var(--mb-border); border-radius:var(--mb-radius-16); box-shadow:0 4px 20px #191f2805; }
+.profile-card h1 { font-size:var(--mb-font-28); line-height:36px; font-weight:700; letter-spacing:-.02em; margin:0 0 var(--mb-space-12); word-break:keep-all; overflow-wrap:anywhere; }
+.profile-card p { font-size:var(--mb-font-16); line-height:24px; color:var(--mb-text-secondary); margin:var(--mb-space-12) 0; }
+.profile-card fieldset { display:grid; gap:var(--mb-space-8); margin-top:var(--mb-space-32); min-width:0; }
+.profile-card label { font-size:var(--mb-font-14); line-height:20px; color:var(--mb-text-secondary); font-weight:600; }
+.profile-card input { width:100%; min-height:48px; padding:11px var(--mb-space-16); font-size:var(--mb-font-16); line-height:24px; border:1px solid var(--mb-border-strong); border-radius:var(--mb-radius-12); margin-bottom:var(--mb-space-16); color:var(--mb-text-primary); background:var(--mb-surface); }
+.profile-card input:disabled { color:var(--mb-text-tertiary); background:var(--mb-surface-muted); border-color:var(--mb-border); }
+.profile-card input:focus-visible, .profile-card button:focus-visible { outline:3px solid var(--mb-primary); outline-offset:3px; }
+.profile-card #company-hint { margin:-8px 0 var(--mb-space-16); font-size:var(--mb-font-14); line-height:20px; color:var(--mb-text-tertiary); }
+.shell-primary { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--mb-radius-12); background:var(--mb-primary-strong); color:white; padding:var(--mb-space-12) var(--mb-space-16); font-size:var(--mb-font-16); line-height:24px; font-weight:600; }
+.shell-primary:hover:not(:disabled) { background:var(--mb-primary-hover); }
+.profile-card fieldset:disabled { opacity:.6; }
 .moonble-spinner { display:inline-block; width:18px; height:18px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; vertical-align:middle; animation:moonble-spin .7s linear infinite; }
 @keyframes moonble-spin { to { transform:rotate(360deg); } }
-.profile-card [role=alert], .shell-error { color:#b42318; }
-.storage-note { margin:0; padding:10px 20px; font-size:12px; text-align:center; color:#6b7280; background:#f9fafb; }
-@media (max-width:640px) { .workspace-header { gap:16px; padding:16px; } .workspace-account { width:100%; margin:0; justify-content:flex-end; } .workspace-account span { margin-right:auto; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .profile-wrap { padding:16px; } }
+.profile-card [role=alert], .shell-error { color:var(--mb-danger); }
+.shell-error { padding:var(--mb-space-12) var(--mb-space-24); background:var(--mb-danger-soft); font-size:var(--mb-font-14); line-height:20px; }
+.profile-card [role=status] { color:var(--mb-primary-strong); }
+.storage-note { margin:0; padding:var(--mb-space-12) var(--mb-space-24); font-size:var(--mb-font-12); line-height:18px; text-align:center; color:var(--mb-text-tertiary); background:var(--mb-bg); }
+@media (max-width:640px) {
+  .workspace-header { gap:var(--mb-space-16); padding:var(--mb-space-12) var(--mb-space-16); }
+  .workspace-account { width:100%; margin:0; justify-content:flex-end; gap:var(--mb-space-12); }
+  .workspace-account span { margin-right:auto; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .profile-wrap { padding:var(--mb-space-24) var(--mb-space-16); }
+  .profile-card { margin:var(--mb-space-16) auto; padding:var(--mb-space-24); }
+  .profile-card h1 { font-size:var(--mb-font-24); line-height:32px; }
+}

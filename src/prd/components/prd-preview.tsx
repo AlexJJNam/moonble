@@ -10,8 +10,8 @@ interface PrdPreviewProps {
 
 const Section: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className }) => (
   <section className={`mb-6 break-inside-avoid break-words ${className}`}>
-    <h3 className="text-base font-semibold border-b pb-2 mb-3 text-gray-800">{title}</h3>
-    <div className="text-sm text-gray-700 leading-relaxed">{children}</div>
+    <h3 className="text-lg font-semibold border-b pb-2 mb-3 text-gray-800">{title}</h3>
+    <div className="text-base text-gray-700 leading-relaxed">{children}</div>
   </section>
 );
 
@@ -51,11 +51,11 @@ const hasContent = (data: any) => {
 export function PrdPreview({ prdData }: PrdPreviewProps) {
   return (
     <div className="w-full max-w-[800px] bg-white rounded-lg overflow-hidden print:shadow-none print:rounded-none">
-      <div className="p-10 md:p-12 aspect-[210/297] overflow-y-auto print:aspect-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="p-6 md:p-12 aspect-[210/297] overflow-y-auto print:aspect-auto" style={{ fontFamily: 'var(--mb-font-sans)' }}>
         <header className="flex justify-between items-start mb-8 pb-4 border-b">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{prdData.title}</h1>
-            <p className="text-sm md:text-md text-gray-600 mt-2">{prdData.mission}</p>
+            <h1 className="text-[24px] leading-8 md:text-2xl font-bold text-gray-900">{prdData.title}</h1>
+            <p className="text-base text-gray-600 mt-2">{prdData.mission}</p>
           </div>
           {prdData.companyLogoUrl && (
             <div className="w-24 h-10 relative shrink-0 ml-4">
@@ -71,7 +71,7 @@ export function PrdPreview({ prdData }: PrdPreviewProps) {
           )}
         </header>
 
-        <div className="grid grid-cols-3 gap-4 mb-8 text-xs md:text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-sm">
           <div><strong className="text-gray-600">작성자:</strong> {prdData.author}</div>
           <div><strong className="text-gray-600">문서 버전:</strong> {prdData.version}</div>
           <div><strong className="text-gray-600">최종 수정일:</strong> {prdData.updatedAt}</div>
@@ -133,7 +133,7 @@ export function PrdPreview({ prdData }: PrdPreviewProps) {
             <Section title="5. 핵심 사용자 시나리오">
               {prdData.userStories.map((story, i) => (
                 (story.asA?.trim() || story.iWant?.trim() || story.soThat?.trim()) && (
-                  <div key={i} className="mb-2 p-3 bg-gray-50 rounded text-xs md:text-sm break-inside-avoid">
+                  <div key={i} className="mb-2 p-3 bg-gray-50 rounded text-base break-inside-avoid">
                     <p><strong>As a</strong> {story.asA || '...'}, <strong>I want to</strong> {story.iWant || '...'}, <strong>so that</strong> {story.soThat || '...'}.</p>
                   </div>
                 )
@@ -204,7 +204,7 @@ export function PrdPreview({ prdData }: PrdPreviewProps) {
           
           {hasContent(prdData.milestones) && (
             <Section title="9. 주요 마일스톤 및 담당자">
-               <div className="space-y-2 text-xs md:text-sm">
+               <div className="space-y-2 text-sm">
                   <div className="flex justify-between font-semibold text-gray-600 border-b pb-1">
                       <span className="w-2/4">마일스톤</span>
                       <span className="w-1/4 text-center">담당자</span>
@@ -243,7 +243,7 @@ export function PrdPreview({ prdData }: PrdPreviewProps) {
           )}
         </main>
 
-        <footer className="text-center text-xs text-gray-400 border-t pt-4 mt-8 print:block">
+        <footer className="text-center text-xs text-gray-500 border-t pt-4 mt-8 print:block">
           {prdData.companyName || 'moonble.'} | CONFIDENTIAL
         </footer>
       </div>

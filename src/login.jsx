@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
+import './design-system.css';
 import './login.css';
 
 function Login() {
@@ -113,7 +114,7 @@ function Login() {
   return <main className="auth-page">
     <div className="gradient-backdrop" aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <div key={n} className={`g${n}`} />)}</div>
     <section className="auth-card" aria-label="Moonble 계정">
-      <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Paperlogy', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
+      <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
       <h2>{title}</h2>
       {!supabase && <p className="auth-message" role="status">회원가입을 준비 중입니다. 설정이 완료되면 이용할 수 있습니다.</p>}
       {checking && <p role="status">로그인 상태를 확인하고 있습니다…</p>}

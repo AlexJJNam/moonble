@@ -10,12 +10,32 @@ export default {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       fontFamily: {
-        sans: ['Inter', ...fontFamily.sans],
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        sans: ['Pretendard', ...fontFamily.sans],
+        body: ['Pretendard', ...fontFamily.sans],
+        headline: ['Pretendard', ...fontFamily.sans],
         code: ['monospace'],
       },
+      fontSize: {
+        xs: ['0.75rem', { lineHeight: '1.125rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['1rem', { lineHeight: '1.5rem' }],
+        md: ['1rem', { lineHeight: '1.5rem' }],
+        lg: ['1.125rem', { lineHeight: '1.625rem' }],
+        xl: ['1.375rem', { lineHeight: '1.875rem' }],
+        '2xl': ['1.75rem', { lineHeight: '2.25rem' }],
+        '3xl': ['2rem', { lineHeight: '2.5rem' }],
+      },
       colors: {
+        gray: {
+          50: '#f7f8fa', 100: '#f2f4f6', 200: '#e5e8eb',
+          300: '#d1d6db', 400: '#8b95a1', 500: '#6b7684',
+          600: '#4e5968', 700: '#333d4b', 800: '#191f28', 900: '#191f28',
+        },
+        blue: {
+          50: '#f2f7ff', 100: '#e8f3ff', 200: '#c9e2ff',
+          300: '#90c2ff', 400: '#63a5fa', 500: '#3182f6',
+          600: '#1b64da', 700: '#1554b6', 800: '#174693', 900: '#183d76',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -69,8 +89,8 @@ export default {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: '0.75rem',
+        sm: '0.5rem',
       },
       keyframes: {
         'accordion-down': {

@@ -8,6 +8,7 @@ import { useRoute, useRouter } from './navigation.jsx';
 import PrdList from './app/list/page';
 import { PrdStudio } from './components/prd-studio';
 import { Toaster } from './components/ui/toaster';
+import '../design-system.css';
 import './app/globals.css';
 import './shell.css';
 
@@ -59,7 +60,7 @@ function Workspace() {
   const profile = profileOf(user);
   return <>
     <header className="workspace-header no-print">
-      <a href="#/list" className="workspace-logo" aria-label="Moonble PRD 홈"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Paperlogy', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></a>
+      <a href="#/list" className="workspace-logo" aria-label="Moonble PRD 홈"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></a>
       <nav aria-label="주 메뉴"><a href="#/list" aria-current={path !== '/my-page' ? 'page' : undefined}>PRD</a><a href="./quiz.html">문제풀이</a></nav>
       <div className="workspace-account"><span>{profile.name ? `${profile.name}님` : user.email}</span><a href="#/my-page" aria-current={path === '/my-page' ? 'page' : undefined}>내 정보 수정</a><button disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></div>
     </header>

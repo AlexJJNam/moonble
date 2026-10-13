@@ -1,0 +1,153 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css');
+
+/* Shared Moonble UI foundations. See docs/MOONBLE_DESIGN_GUIDE.md. */
+:root {
+  --mb-font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mb-font-12: .75rem;
+  --mb-font-14: .875rem;
+  --mb-font-16: 1rem;
+  --mb-font-18: 1.125rem;
+  --mb-font-22: 1.375rem;
+  --mb-font-24: 1.5rem;
+  --mb-font-28: 1.75rem;
+  --mb-font-32: 2rem;
+  --mb-weight-regular: 400;
+  --mb-weight-medium: 500;
+  --mb-weight-semibold: 600;
+  --mb-weight-bold: 700;
+  --mb-line-heading: 1.3;
+  --mb-line-body: 1.5;
+  --mb-line-reading: 1.75;
+
+  --mb-bg: #f7f8fa;
+  --mb-surface: #fff;
+  --mb-surface-muted: #f2f4f6;
+  --mb-text-primary: #191f28;
+  --mb-text-secondary: #4e5968;
+  --mb-text-tertiary: #6b7684;
+  --mb-text-disabled: #8b95a1;
+  --mb-border: #e5e8eb;
+  --mb-border-strong: #8b95a1;
+  --mb-primary: #3182f6;
+  --mb-primary-strong: #1b64da;
+  --mb-primary-hover: #1554b6;
+  --mb-primary-soft: #e8f3ff;
+  --mb-danger: #b42318;
+  --mb-danger-soft: #fff1f0;
+  --mb-success: #087f5b;
+  --mb-success-soft: #eaf8f1;
+  --mb-warning: #8b5200;
+  --mb-warning-soft: #fff8e6;
+
+  --mb-space-4: 4px;
+  --mb-space-8: 8px;
+  --mb-space-12: 12px;
+  --mb-space-16: 16px;
+  --mb-space-24: 24px;
+  --mb-space-32: 32px;
+  --mb-space-48: 48px;
+  --mb-space-64: 64px;
+  --mb-radius-8: 8px;
+  --mb-radius-12: 12px;
+  --mb-radius-16: 16px;
+  --mb-shadow-card: 0 2px 8px rgb(25 31 40 / 4%);
+  --mb-shadow-hover: 0 8px 24px rgb(25 31 40 / 8%);
+  --mb-focus-ring: 0 0 0 3px rgb(49 130 246 / 24%);
+  --mb-duration: 160ms;
+  --mb-control-height: 48px;
+  --mb-target-size: 44px;
+}
+
+body {
+  font-family: var(--mb-font-sans);
+  font-size: var(--mb-font-16);
+  line-height: var(--mb-line-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, textarea, select, svg text {
+  font-family: var(--mb-font-sans);
+}
+
+button, input, textarea, select {
+  line-height: var(--mb-line-body);
+}
+
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--mb-primary-strong);
+  outline-offset: 3px;
+}
+
+.mb-display {
+  font-size: var(--mb-font-32);
+  line-height: 1.25;
+  font-weight: var(--mb-weight-bold);
+  letter-spacing: -.03em;
+}
+
+.mb-page-title {
+  font-size: var(--mb-font-28);
+  line-height: 1.285714;
+  font-weight: var(--mb-weight-bold);
+  letter-spacing: -.025em;
+}
+
+.mb-section-title {
+  font-size: var(--mb-font-22);
+  line-height: 1.363636;
+  font-weight: var(--mb-weight-semibold);
+  letter-spacing: -.02em;
+}
+
+.mb-card-title {
+  font-size: var(--mb-font-18);
+  line-height: 1.444444;
+  font-weight: var(--mb-weight-semibold);
+  letter-spacing: -.015em;
+}
+
+.mb-body {
+  font-size: var(--mb-font-16);
+  line-height: var(--mb-line-body);
+  font-weight: var(--mb-weight-regular);
+}
+
+.mb-label {
+  font-size: var(--mb-font-14);
+  line-height: 1.428571;
+  font-weight: var(--mb-weight-medium);
+}
+
+.mb-caption {
+  font-size: var(--mb-font-12);
+  line-height: var(--mb-line-body);
+  font-weight: var(--mb-weight-regular);
+}
+
+.mb-reading {
+  font-size: var(--mb-font-16);
+  line-height: var(--mb-line-reading);
+}
+
+.mb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .mb-display { font-size: var(--mb-font-28); line-height: 1.285714; }
+  .mb-page-title { font-size: var(--mb-font-24); line-height: 1.333333; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .moonble-spinner { animation: none !important; }
+  .mb-interactive { transition: none !important; }
+}

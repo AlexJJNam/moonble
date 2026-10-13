@@ -1,0 +1,43 @@
+/* Legacy solver presentation mapped to the shared Moonble foundations. */
+:root {
+  --radius: 16px;
+  --text-xs: var(--mb-font-12);
+  --text-sm: var(--mb-font-14);
+  --text-base: var(--mb-font-16);
+  --text-md: var(--mb-font-18);
+  --text-lg: var(--mb-font-22);
+  --text-xl: var(--mb-font-28);
+  --text-2xl: var(--mb-font-32);
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.75;
+}
+html[data-theme="light"] {
+  --bg: var(--mb-bg);
+  --text: var(--mb-text-primary);
+  --muted: var(--mb-text-secondary);
+  --caption: var(--mb-text-tertiary);
+  --primary-600: var(--mb-primary-strong);
+  --good: var(--mb-success);
+  --bad: var(--mb-danger);
+}
+body, button, input, select, textarea, svg text { font-family: var(--mb-font-sans); }
+.section-head h2 { font-size: var(--mb-font-28); line-height: 36px; font-weight: 700; letter-spacing: -.025em; }
+.solver-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 8px; color: var(--info-text); font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
+#quiz>.muted { font-size: var(--mb-font-16); line-height: 28px; margin-top: 12px; }
+.quiz-wrap { gap: 24px; margin-top: 32px; }
+.q-card { border-radius: 16px; padding: 24px; box-shadow: none; }
+.q-title { font-size: var(--mb-font-16); line-height: 28px; font-weight: 600; gap: 12px; }
+.q-title .q-number { font-size: var(--mb-font-12); line-height: 18px; }
+.option-card { min-height: 48px; padding: 16px; font-size: var(--mb-font-16); line-height: 24px; border-radius: 12px; }
+.q-caption { font-size: var(--mb-font-12); line-height: 18px; }
+.btn { min-height: 44px; font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
+.quiz-actions .btn { min-height: 48px; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; border-radius: 12px; }
+html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
+.quiz-reissue { min-height: 44px; font-size: var(--mb-font-14); line-height: 20px; }
+@media (max-width: 640px) {
+  :root { --text-2xl: var(--mb-font-28); }
+  .section-head h2 { font-size: var(--mb-font-24); line-height: 32px; }
+  .quiz-wrap { gap: 16px; margin-top: 24px; }
+  .q-card { padding: 16px; }
+  .quiz-actions { gap: 8px; }
+}

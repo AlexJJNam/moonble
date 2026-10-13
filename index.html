@@ -15,8 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>moonble</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233182f6'/><text x='16' y='21' font-family='ui-sans-serif,system-ui,sans-serif' font-weight='800' font-size='19' fill='white' text-anchor='middle'>m</text></svg>" />
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" />
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="/src/design-system.css" />
   <style>
     html {
       scroll-behavior: smooth;
@@ -122,7 +121,7 @@
 
     body {
       margin: 0;
-      font-family: 'Paperlogy', ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: 'Pretendard', ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       font-size: var(--text-base);
@@ -2717,6 +2716,7 @@
     .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: middle; animation: moonble-spin .7s linear infinite; }
     @keyframes moonble-spin { to { transform: rotate(360deg); } }
   </style>
+  <link rel="stylesheet" href="/src/quiz-solver.css" />
 </head>
 
 <body class="tab-quiz">
@@ -2842,7 +2842,7 @@
   <header class="header">
     <div class="inner container">
       <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="moonble 홈으로">
-        <svg class="brand-logo" viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" font-family="'Paperlogy', ui-sans-serif, sans-serif" font-weight="800" font-size="28" letter-spacing="-0.6" fill="var(--primary)">moonble</text></svg>
+        <svg class="brand-logo" viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" font-family="'Pretendard', ui-sans-serif, sans-serif" font-weight="800" font-size="28" letter-spacing="-0.6" fill="var(--primary)">moonble</text></svg>
       </div>
       <button id="navToggle" class="nav-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="siteNav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
@@ -3030,7 +3030,7 @@
       </div>
       <div class="section-head">
         <div>
-          <div class="eyebrow">Assessment</div>
+          <a class="solver-back" href="./quiz.html">← 문제지 목록</a>
           <h2>문제풀이</h2>
         </div>
       </div>
@@ -3258,6 +3258,15 @@
       submitBtn.disabled = false;
     }
 
+    // Resolve the selected paper before the initial render and later retries.
+    function getSelectedPaperBank() {
+      const paper = new URLSearchParams(window.location.search).get('paper');
+      if (paper === 'basics') return BANK.filter(q => q.id <= 30);
+      if (paper === 'advanced') return BANK.filter(q => q.id > 30);
+      if (paper === 'random') return BANK;
+      return null;
+    }
+
     // ===== Render quiz =====
     function renderQuiz(sourceArray) {
       quizEl.innerHTML = '';
@@ -3267,7 +3276,7 @@
       wrongMode = !!sourceArray && sourceArray.length && sourceArray.every(q => q && q.id);
       modePill.style.display = wrongMode ? 'inline-flex' : 'none';
 
-      picked = sourceArray ? sourceArray.slice() : sample(typeof getActiveBank === 'function' ? getActiveBank() : BANK, QUESTION_COUNT);
+      picked = sourceArray ? sourceArray.slice() : sample(typeof getActiveBank === 'function' ? getActiveBank() : (getSelectedPaperBank() || BANK), QUESTION_COUNT);
 
       picked.forEach((q, idx) => {
         const card = document.createElement('div');
@@ -3568,7 +3577,7 @@
     // viewport 자신은 inline-block이라 내용에 맞춰 너비가 저절로 정해진다(shrink-to-fit),
     // 그래서 viewport.clientWidth로 재면 순환 참조가 된다. 실제 레이아웃 폭 제약을 받는
     // 조상(h1.title)의 너비를 기준으로 잰다. 폭 계산은 canvas.measureText 대신 실제
-    // DOM에 white-space:nowrap 임시 엘리먼트를 붙여서 잰다 — 커스텀 폰트(Paperlogy)가
+    // DOM에 white-space:nowrap 임시 엘리먼트를 붙여서 잰다 — 커스텀 폰트(Pretendard)가
     // 아직 로딩 중일 때 canvas 쪽 font 문자열 매칭이 실제 렌더링과 어긋나 폭이 다르게
     // 나오는 경우가 있어서, 항상 "지금 실제로 그 자리에 적용되는" 폰트로 재기 위함이다.
     var viewport = greeting.querySelector('.hero-greeting-time-viewport');
@@ -5220,10 +5229,8 @@
   }
   window.getCustomBank = getCustomBank;
   window.getActiveBank = function () {
-    var paper = new URLSearchParams(window.location.search).get('paper');
-    if (paper === 'basics' && typeof BANK !== 'undefined') return BANK.filter(function (q) { return q.id <= 30; });
-    if (paper === 'advanced' && typeof BANK !== 'undefined') return BANK.filter(function (q) { return q.id > 30; });
-    if (paper === 'random' && typeof BANK !== 'undefined') return BANK;
+    var selected = getSelectedPaperBank();
+    if (selected) return selected;
     var custom = getCustomBank();
     return (custom && custom.length) ? custom : (typeof BANK !== 'undefined' ? BANK : []);
   };
