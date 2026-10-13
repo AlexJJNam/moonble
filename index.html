@@ -2721,8 +2721,9 @@
 
 <body class="tab-quiz">
   <div id="moonble-auth-status" role="status">
-    <span>로그인 상태를 확인하고 있습니다…</span>
+    <span class="moonble-spinner" aria-hidden="true" style="justify-self:center"></span><span class="mb-sr-only">로그인 상태 확인 중</span>
     <a href="./login.html">로그인 화면 열기</a>
+    <noscript>서비스를 이용하려면 브라우저에서 JavaScript를 허용해주세요.</noscript>
   </div>
 <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
   <filter id="ink-blob" x="-40%" y="-40%" width="180%" height="180%">
@@ -3051,7 +3052,7 @@
       <div id="historyChart" class="history-chart"></div>
     </section>
 
-    <div class="footer">© <span id="year"></span> moonble. Sky-blue themed. 라이트/다크 지원.</div>
+    <span id="year" hidden></span><div id="moonble-footer"></div>
   </main>
 
   <script>

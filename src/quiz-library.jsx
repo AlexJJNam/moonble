@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ArrowRight, BookOpen, FileText, LayoutGrid, List, LogOut, Search, Settings2 } from 'lucide-react';
 import { loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
+import { SiteFooter } from './site-footer.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -110,7 +111,7 @@ function QuizLibrary() {
         </section>
         {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어나 분류로 찾아보세요.</p><button onClick={() => { setQuery(''); setFilter('전체'); }}>전체 문제지 보기</button></div>}
         <p className="quiz-library-note">미리보기는 예시 문항이에요. 풀이를 시작하면 선택한 범위에서 20문항이 출제됩니다.</p>
-      </main>
+      </main><SiteFooter />
     </div>
   </div>;
 }

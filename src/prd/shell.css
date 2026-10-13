@@ -36,3 +36,8 @@
   .profile-card { margin:var(--mb-space-16) auto; padding:var(--mb-space-24); }
   .profile-card h1 { font-size:var(--mb-font-24); line-height:32px; }
 }
+.privacy-request h2 { margin-bottom: 12px; }
+.privacy-request select { width: 100%; margin: 8px 0 16px; padding: 12px; min-height: 48px; font-size: 16px; border: 1px solid var(--mb-border-strong); border-radius: 12px; background: white; }
+.privacy-request .privacy-confirm { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 16px; }
+.privacy-request .privacy-confirm input { width: 20px; min-height: 20px; margin: 0; accent-color: var(--mb-primary-strong); }
+.privacy-request button:disabled { opacity: .5; }

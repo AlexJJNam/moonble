@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
+import { SiteFooter } from './site-footer.jsx';
+import { signupConsents } from './policy.js';
 import './design-system.css';
 import './login.css';
 
@@ -15,6 +17,8 @@ function Login() {
   const [checking, setChecking] = useState(Boolean(supabase));
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -62,6 +66,10 @@ function Login() {
     if (!supabase || pending) return;
     setError('');
     setMessage('');
+    if (mode === 'register' && (!termsAccepted || !privacyAccepted)) {
+      setError('필수 이용약관과 개인정보 수집·이용에 동의해주세요.');
+      return;
+    }
     if ((mode === 'register' || mode === 'update') && password !== confirmation) {
       setError('비밀번호 확인이 일치하지 않습니다.');
       return;
@@ -78,7 +86,7 @@ function Login() {
         goHome();
       } else if (mode === 'register') {
         const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(), password, options: { emailRedirectTo: loginUrl() },
+          email: email.trim(), password, options: { emailRedirectTo: loginUrl(), data: { signup_consents: signupConsents() } },
         });
         if (authError) throw authError;
         setPassword('');
@@ -111,18 +119,23 @@ function Login() {
 
   const newPassword = mode === 'register' || mode === 'update';
   const title = { login: '로그인', register: '회원가입', reset: '비밀번호 재설정', update: '새 비밀번호 저장' }[mode];
-  return <main className="auth-page">
+  return <><main className="auth-page">
     <div className="gradient-backdrop" aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <div key={n} className={`g${n}`} />)}</div>
     <section className="auth-card" aria-label="Moonble 계정">
       <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
       <h2>{title}</h2>
       {!supabase && <p className="auth-message" role="status">회원가입을 준비 중입니다. 설정이 완료되면 이용할 수 있습니다.</p>}
-      {checking && <p role="status">로그인 상태를 확인하고 있습니다…</p>}
+      {checking && <p role="status" aria-label="로그인 상태 확인 중"><span className="moonble-spinner" aria-hidden="true" /></p>}
       <form onSubmit={submit}>
         <fieldset disabled={pending || checking || !supabase}>
           {mode !== 'update' && <label>이메일<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>}
           {mode !== 'reset' && <div><label htmlFor="password">비밀번호</label><span className="password-field"><input id="password" type={visible ? 'text' : 'password'} autoComplete={newPassword ? 'new-password' : 'current-password'} required minLength={newPassword ? 8 : undefined} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} /><button className="visibility" type="button" aria-label={visible ? '비밀번호 숨기기' : '비밀번호 표시'} aria-pressed={visible} onClick={() => setVisible(v => !v)}>{visible ? '숨기기' : '보기'}</button></span></div>}
           {newPassword && <><p className="auth-hint">영문·특수문자 포함 8자 이상, 공백·한글 제외</p><label>비밀번호 확인<input type={visible ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={128} value={confirmation} onChange={e => setConfirmation(e.target.value)} /></label></>}
+          {mode === 'register' && <div className="signup-consents">
+            <div className="consent-row"><label><input type="checkbox" required checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} /><span>[필수] 이용약관 동의</span></label><a href="./terms.html" target="_blank" rel="noopener noreferrer" aria-label="이용약관 내용 보기 (새 창)">보기</a></div>
+            <div className="consent-row"><label><input type="checkbox" required checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} /><span>[필수] 개인정보 수집·이용 동의</span></label><a href="./privacy.html" target="_blank" rel="noopener noreferrer" aria-label="개인정보 처리방침 보기 (새 창)">보기</a></div>
+            <div className="consent-summary"><p>목적: 회원 인증, 프로필 표시, 동의 확인</p><p>항목: 이메일·비밀번호, 이름·회사명(첫 로그인 시), 동의 내역</p><p>보유 기간: 계정 이용 기간, 계정 삭제 처리 시 파기</p><p>동의를 거부할 수 있으며, 필수 항목에 동의하지 않으면 가입할 수 없습니다.</p></div>
+          </div>}
           <button className="auth-submit" type="submit" aria-label={pending ? `${title} 처리 중` : undefined}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : title}</button>
         </fieldset>
       </form>
@@ -133,7 +146,7 @@ function Login() {
       {mode === 'register' && <a className="auth-link" href="./login.html">이미 계정이 있나요? 로그인</a>}
       {(mode === 'reset' || mode === 'update') && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}
     </section>
-  </main>;
+  </main><SiteFooter /></>;
 }
 
 createRoot(document.getElementById('root')).render(<Login />);

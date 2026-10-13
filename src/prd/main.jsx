@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { supabase, loginUrl } from '../supabase.js';
 import { hasProfile, profileOf } from '../profile.js';
 import { ProfileForm } from './profile-form.jsx';
+import { PrivacyRequest } from './privacy-request.jsx';
+import { SiteFooter } from '../site-footer.jsx';
 import { setStorageUser } from './storage.js';
 import { useRoute, useRouter } from './navigation.jsx';
 import PrdList from './app/list/page';
@@ -76,6 +78,8 @@ function Workspace() {
             ? <PrdStudio key={route} prdId={path === '/edit/new' ? undefined : path.slice('/edit/'.length)} />
             : <PrdList key={`${user.id}:${profile.name}:${profile.companyName}`} />}
         </WorkspaceBoundary>}
+    {!initial && path === '/my-page' && <PrivacyRequest user={user} />}
+    <SiteFooter />
     <Toaster />
   </>;
 }

@@ -37,3 +37,10 @@ body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); font-
 .auth-error { background: var(--mb-danger-soft); color: var(--mb-danger); }
 .auth-card h2 { font-size: var(--mb-font-28); line-height: 36px; font-weight: 700; letter-spacing: -.02em; text-align: center; margin: 0 0 var(--mb-space-24); }
 @media (max-width: 640px) { .auth-card { padding: var(--mb-space-24); } .auth-card h2 { font-size: var(--mb-font-24); line-height: 32px; } }
+.signup-consents { border-top: 1px solid var(--mb-border); padding-top: 16px; }
+.consent-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.auth-card .consent-row label { display: flex; align-items: center; flex: 1; min-height: 44px; gap: 8px; font-weight: 500; }
+.auth-card .consent-row input { flex: 0 0 20px; width: 20px; min-height: 20px; height: 20px; margin: 0; padding: 0; accent-color: var(--mb-primary-strong); }
+.consent-row a { padding: 12px 4px; font-size: 14px; color: var(--mb-primary-strong); }
+.consent-summary { padding: 12px; border-radius: 8px; background: var(--mb-bg); }
+.consent-summary p { margin: 4px 0; font-size: 12px; line-height: 18px; color: var(--mb-text-secondary); }

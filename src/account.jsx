@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
+import { SiteFooter } from './site-footer.jsx';
 
 let leavingHome = false;
 function requireLogin() {
@@ -63,3 +64,4 @@ function Account() {
 }
 
 createRoot(document.getElementById('moonble-account')).render(<Account />);
+createRoot(document.getElementById('moonble-footer')).render(<SiteFooter />);
