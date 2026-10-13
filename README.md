@@ -4,9 +4,13 @@
 
 - 작업 브랜치: `develop`. Cloudflare 미리보기에서 검증.
 - 운영 브랜치: `main`. 사용자 승인 후 검증된 변경만 반영.
-- Cloudflare Pages 빌드 명령: `npm run build`, 출력 폴더: `dist`.
+- Cloudflare Pages Preview 빌드 명령: `npm run build`, 출력 폴더: `dist`, Root directory는 기본값.
+- Preview Branch control: Custom branches의 Include에 `develop`만 지정, Exclude는 비움.
+- 현재 Production은 기존 정적 main을 배포하므로 빌드 명령 `exit 0`, 출력 폴더 `.`. 기존 사이트 `https://moonble.pages.dev` 배포 성공을 확인함.
+- 회원가입 변경을 main에 승인 반영할 때는 Production 빌드도 `npm run build` / `dist`로 바꾸고 운영용 인증 환경변수를 별도로 설정해야 함. 현재 main에는 회원가입 변경을 반영하지 않음.
 - Cloudflare의 develop/Preview 환경변수에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`를 설정해야 실제 인증이 활성화됨. 공개용 키만 사용. 로컬 `.env`는 커밋하지 않음.
-- 프리뷰 배포 후 실제 프리뷰의 `/login.html` 주소를 Supabase Redirect URLs에 추가.
+- Preview 환경에 두 공개용 인증 변수를 입력 완료. 값 자체는 저장소 문서에 기록하지 않음.
+- develop Push로 자동 배포가 시작되면 빌드 로그와 실제 페이지를 확인하고, 프리뷰의 `/login.html` 주소를 Supabase Redirect URLs에 추가. 실제 회원가입·메일·두 계정 권한 검증은 이후 진행.
 - 회원가입 전용 파일은 저장소 최상위의 `login.html`, `src/`, `database/`에 배치.
 - 원격 main의 기존 모바일 질문 입력창 여백 수정을 보존. 기존 다른 정적 페이지·에셋도 빌드 결과에 복사하여 경로를 유지.
 - GitHub에 개발 코드가 올라가는 것과 Cloudflare 배포 설정 완료는 별개임.
