@@ -20,9 +20,9 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-card input:focus-visible, .auth-card button:focus-visible, .auth-card a:focus-visible { outline: 3px solid var(--mb-primary); outline-offset: 3px; }
 .floating-field { position: relative; min-width: 0; }
 .floating-field label { position: absolute; z-index: 1; left: var(--mb-space-16); top: 50%; max-width: calc(100% - 32px); overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 20px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; transform: translateY(-50%); transform-origin: left top; transition: top var(--mb-duration), transform var(--mb-duration), font-size var(--mb-duration), color var(--mb-duration); }
-.floating-field input:focus + label,
 .floating-field input:not(:placeholder-shown) + label,
-.floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
+.floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
+.floating-field input:focus + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
 .floating-field input:focus { border-color: var(--mb-primary); box-shadow: var(--mb-focus-ring); outline: 0; }
 .password-field { position: relative; }
 .password-field input { padding-right: 64px; }

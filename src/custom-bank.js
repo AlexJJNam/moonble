@@ -1,12 +1,32 @@
 // Shared CSV format and storage for the library and existing solver.
-  var CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
+  var LEGACY_CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
+  var CUSTOM_BANK_KEY_PREFIX = 'moonble:user:';
+  var activeUserId = null;
   var MIN_QUESTIONS = 20;
   var CUSTOM_ID_BASE = 100000;
 
   // ---- storage ----
-  export function getCustomBankMeta() {
+  function storageKey(userId) {
+    var id = userId || activeUserId;
+    return id ? CUSTOM_BANK_KEY_PREFIX + id + ':custom-bank-v2' : null;
+  }
+  export function setCustomBankUser(userId) {
+    activeUserId = typeof userId === 'string' && userId ? userId : null;
+    var key = storageKey();
+    if (!key) return;
     try {
-      var raw = localStorage.getItem(CUSTOM_BANK_KEY);
+      if (!localStorage.getItem(key)) {
+        var legacy = localStorage.getItem(LEGACY_CUSTOM_BANK_KEY);
+        if (legacy) localStorage.setItem(key, legacy);
+      }
+      localStorage.removeItem(LEGACY_CUSTOM_BANK_KEY);
+    } catch (e) { /* 저장소 제한 시 읽기 함수가 안전하게 null을 반환한다. */ }
+  }
+  export function getCustomBankMeta(userId) {
+    try {
+      var key = storageKey(userId);
+      if (!key) return null;
+      var raw = localStorage.getItem(key);
       if (!raw) return null;
       var parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length < MIN_QUESTIONS) return null;
@@ -14,19 +34,25 @@
       return { ...parsed, source: typeof parsed.source === 'string' ? parsed.source : '커스텀 문제' };
     } catch (e) { return null; }
   }
-  export function getCustomBank() {
-    var meta = getCustomBankMeta();
+  export function getCustomBank(userId) {
+    var meta = getCustomBankMeta(userId);
     return meta ? meta.questions : null;
   }
-  export function setCustomBank(questions, sourceLabel) {
+  export function setCustomBank(questions, sourceLabel, userId) {
     try {
-      localStorage.setItem(CUSTOM_BANK_KEY, JSON.stringify({
+      var key = storageKey(userId);
+      if (!key) throw new Error('로그인 상태를 확인해주세요.');
+      localStorage.setItem(key, JSON.stringify({
         questions: questions, source: sourceLabel, savedAt: new Date().toISOString()
       }));
     } catch (e) { throw new Error('브라우저 저장 공간에 문제지를 저장하지 못했습니다.'); }
   }
-  export function clearCustomBank() {
-    try { localStorage.removeItem(CUSTOM_BANK_KEY); } catch (e) { throw new Error('문제지를 삭제하지 못했습니다.'); }
+  export function clearCustomBank(userId) {
+    try {
+      var key = storageKey(userId);
+      if (!key) throw new Error('로그인 상태를 확인해주세요.');
+      localStorage.removeItem(key);
+    } catch (e) { throw new Error(e.message === '로그인 상태를 확인해주세요.' ? e.message : '문제지를 삭제하지 못했습니다.'); }
   }
   // ---- CSV 파싱 (따옴표로 감싼 콤마를 처리하는 간단한 RFC4180 스타일 파서) ----
   function parseCSVText(text) {

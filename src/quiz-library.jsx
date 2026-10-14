@@ -5,7 +5,7 @@ import { loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
 import { CustomBankDialog } from './custom-bank-dialog.jsx';
-import { getCustomBankMeta } from './custom-bank.js';
+import { getCustomBankMeta, setCustomBankUser } from './custom-bank.js';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -23,7 +23,8 @@ const papers = [
     { title: '앱의 화면 조회에 사용하는 이벤트는?', options: ['screen_view', 'page_view', 'first_visit'] },
   ] },
 ];
-const filters = ['전체', '기본', '심화', '랜덤', '커스텀'];
+const categories = ['전체', '기본 제공', '내 문제지'];
+const difficulties = ['전체 난이도', '기본', '심화'];
 
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.id}`} aria-hidden="true">
@@ -46,10 +47,11 @@ function QuizLibrary() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('전체');
+  const [category, setCategory] = useState('전체');
+  const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [creating, setCreating] = useState(false);
-  const [custom, setCustom] = useState(getCustomBankMeta);
+  const [custom, setCustom] = useState(null);
   useEffect(() => {
     const refresh = () => setCustom(getCustomBankMeta());
     window.addEventListener('storage', refresh);
@@ -63,6 +65,8 @@ function QuizLibrary() {
       if (!alive) return;
       if (!session) { window.location.replace(loginUrl()); return; }
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html', location.href)); return; }
+      setCustomBankUser(session.user.id);
+      setCustom(getCustomBankMeta(session.user.id));
       setUser(session.user);
       document.documentElement.removeAttribute('data-auth-pending');
     };
@@ -85,17 +89,21 @@ function QuizLibrary() {
   const profile = profileOf(user);
   const search = query.trim().toLocaleLowerCase();
   const allPapers = custom ? [...papers, {
-    id: 'custom', label: (custom.source || '나의 문제지').replace(/\.csv$/i, ''), level: '커스텀', count: 20,
-    description: '직접 등록한 문제로 학습을 시작해보세요.', topics: `${custom.questions.length}문항 등록 · 이 브라우저에 저장`,
+    id: 'custom', label: (custom.source || '내 문제지').replace(/\.csv$/i, ''), level: '내 문제지', count: 20,
+    description: '직접 등록한 문제로 학습을 시작해보세요.', topics: `등록 ${custom.questions.length}문항 · 매회 20문항 출제`,
     samples: custom.questions.slice(0, 2).map(q => ({ title: q.q, options: q.options.slice(0, 3) })),
   }] : papers;
-  const visiblePapers = allPapers.filter(paper => (filter === '전체' || paper.level === filter) && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search));
+  const visiblePapers = allPapers.filter(paper => {
+    const categoryMatch = category === '전체' || (category === '내 문제지' ? paper.id === 'custom' : paper.id !== 'custom');
+    const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
+    return categoryMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
+  });
   return <div className="quiz-workspace">
     <a className="quiz-skip" href="#paper-library">문제지 목록으로 건너뛰기</a>
     <aside className="quiz-sidebar">
-      <a className="quiz-profile" href="./prd.html#/my-page" aria-label="내 정보 수정"><span className="quiz-avatar">{profile.name.slice(0, 1)}</span><span><strong>{profile.name}님</strong><small>{profile.companyName}</small></span><Settings2 size={16} /></a>
+      <a className="quiz-profile" href="./account.html" aria-label="내 계정 열기"><span className="quiz-avatar">{profile.name.slice(0, 1)}</span><span><strong>{profile.name}님</strong><small>{profile.companyName}</small></span><Settings2 size={16} /></a>
       <nav className="quiz-navigation" aria-label="주 메뉴">
-        <a href="./quiz.html" aria-current="page"><BookOpen size={20} />문제풀이</a>
+        <a href="./quiz.html" aria-current="page"><BookOpen size={20} />문제지</a>
         <a href="./prd.html"><FileText size={20} />PRD</a>
       </nav>
       <div className="quiz-account">
@@ -106,25 +114,25 @@ function QuizLibrary() {
     <div className="quiz-content">
       <header className="quiz-topbar"><a className="quiz-logo" href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a><span aria-hidden="true" /><strong>문제지</strong></header>
       <main className="quiz-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">나의 문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />문제지 생성</button></div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />새 문제지 만들기</button></div>
         <div className="quiz-library-tools">
-          <div className="quiz-filters" role="group" aria-label="문제지 분류">{filters.map(item => <button key={item} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div>
+          <div className="quiz-filter-groups"><div className="quiz-filters" role="group" aria-label="문제지 소유 구분">{categories.map(item => <button key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="quiz-difficulties" role="group" aria-label="난이도">{difficulties.map(item => <button key={item} aria-pressed={difficulty === item} onClick={() => setDifficulty(item)}>{item}</button>)}</div></div>
           <div className="quiz-display-tools">
             <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="문제지 검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
             <div className="quiz-view-toggle" role="group" aria-label="보기 방식"><button aria-label="카드 보기" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={18} /></button><button aria-label="목록 보기" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={18} /></button></div>
           </div>
         </div>
-        <div className="quiz-results"><p role="status">{filter === '전체' ? '전체 문제지' : `${filter} 문제지`} <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
+        <div className="quiz-results"><p role="status">{category} <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
-          {visiblePapers.map(paper => <a className="paper-card" key={paper.id} href={`./index.html?view=quiz&paper=${paper.id}#quiz`} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`}>
+          {visiblePapers.map(paper => <a className="paper-card" key={paper.id} href={`./solve.html?paper=${paper.id}#quiz`} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`}>
             <PaperPreview paper={paper} />
             <div className="paper-info"><div className="paper-meta"><span className={`paper-badge badge-${paper.id}`}>{paper.level}</span><span>{paper.count}문항</span></div><h2 className="mb-card-title">{paper.label}</h2><p>{paper.description}</p><div className="paper-footer"><span>{paper.topics}</span><ArrowRight size={16} aria-hidden="true" /></div></div>
           </a>)}
         </section>
-        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어나 분류로 찾아보세요.</p><button onClick={() => { setQuery(''); setFilter('전체'); }}>전체 문제지 보기</button></div>}
+        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? 'CSV 또는 Google Sheets로 첫 문제지를 만들어보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? setCreating(true) : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '새 문제지 만들기' : '전체 문제지 보기'}</button></div>}
         <p className="quiz-library-note">미리보기는 예시 문항이에요. 풀이를 시작하면 선택한 범위에서 20문항이 출제됩니다.</p>
       </main><SiteFooter />
-      {creating && <CustomBankDialog onClose={() => setCreating(false)} onChange={meta => { setCustom(meta); if (meta) { setFilter('전체'); setQuery(''); } }} />}
+      {creating && <CustomBankDialog onClose={() => setCreating(false)} onChange={meta => { setCustom(meta); if (meta) { setCategory('내 문제지'); setDifficulty('전체 난이도'); setQuery(''); } }} />}
     </div>
   </div>;
 }

@@ -28,11 +28,7 @@ function Account() {
         window.location.replace(new URL('./prd.html', window.location.href).href);
         return;
       }
-      if (new URLSearchParams(window.location.search).get('view') !== 'quiz') {
-        leavingHome = true;
-        window.location.replace(new URL('./quiz.html', window.location.href).href);
-        return;
-      }
+      window.moonbleUserId = session.user.id;
       setUser(session.user);
       setChecking(false);
       document.documentElement.removeAttribute('data-auth-pending');
@@ -62,7 +58,7 @@ function Account() {
 
   return <>
     {checking ? <span className="btn" role="status" aria-label="계정 확인 중"><span className="moonble-spinner" aria-hidden="true" /></span> : user
-      ? <><a className="btn btn-ghost" href="./prd.html#/my-page">내 정보 수정</a><button className="btn btn-ghost" type="button" disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></>
+      ? <><a className="btn btn-ghost" href="./account.html">내 계정</a><button className="btn btn-ghost" type="button" disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></>
       : <a className="btn btn-ghost" href="./login.html">로그인 / 회원가입</a>}
     {error && <span role="alert">{error}</span>}
   </>;

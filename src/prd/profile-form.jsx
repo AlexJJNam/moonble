@@ -22,7 +22,7 @@ export function ProfileForm({ user, initial, onSaved }) {
     } catch { setError('저장하지 못했습니다. 입력한 내용은 유지됩니다. 잠시 후 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
-  return <main className="profile-wrap">
+  return <div className="profile-wrap">
     <section className="profile-card">
       <h1>{initial ? 'Moonble에 오신 것을 환영합니다' : '내 정보 수정'}</h1>
       <p>{initial ? 'Moonble을 시작하기 전에 이름과 회사를 알려주세요.' : 'Moonble에서 사용할 이름과 회사 정보를 수정할 수 있습니다.'}</p>
@@ -41,5 +41,5 @@ export function ProfileForm({ user, initial, onSaved }) {
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
     </section>
-  </main>;
+  </div>;
 }

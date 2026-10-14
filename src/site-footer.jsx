@@ -8,7 +8,7 @@ export function SiteFooter() {
       <a href="./terms.html">이용 안내</a>
       <a href="https://github.com/AlexJJNam/moonble/issues" target="_blank" rel="noopener noreferrer">의견 보내기<span className="mb-sr-only"> (GitHub, 새 창)</span></a>
     </nav>
-    <p>Moonble · 개인 운영 서비스 · 호스팅 GitHub Pages / Cloudflare Pages</p>
+    <p>Moonble · 개인 운영 서비스</p>
     <small>© {new Date().getFullYear()} Moonble</small>
   </footer>;
 }

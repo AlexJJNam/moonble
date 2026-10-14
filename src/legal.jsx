@@ -19,7 +19,7 @@ function Privacy() {
     <p>연결된 외부 서비스에 적용되는 정책은 <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase</a>, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub</a>, <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare</a>, <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google</a>에서 확인할 수 있습니다.</p>
     <h2>4. 동의 거부 및 정보 관리</h2>
     <p>개인정보 수집·이용에 동의하지 않을 수 있습니다. 필수 회원정보 처리에 동의하지 않으면 회원가입과 회원 전용 기능을 이용할 수 없습니다.</p>
-    <p><a href="./prd.html#/my-page">내 정보 수정</a>에서 이름·회사명을 확인하고 수정할 수 있습니다. 같은 화면의 개인정보 요청에서 열람·삭제·처리정지 등을 요청할 수 있습니다. 요청은 계정에 접수되고 개인 운영자가 확인하여 처리합니다. 요청 버튼만으로 계정이 즉시 삭제되지는 않습니다.</p>
+    <p><a href="./account.html">내 계정</a>에서 이름·회사명을 확인하고 수정할 수 있습니다. 같은 화면에서 개인정보 열람·삭제·처리정지 요청 상태를 계정에 기록할 수 있습니다. 요청 버튼만으로 계정이 즉시 삭제되지는 않습니다.</p>
     <h2>5. 보호 조치와 변경 안내</h2>
     <p>인증 및 정보 전송에 HTTPS를 사용하고 계정별 접근을 제한합니다. 개인정보는 공개된 의견 게시판에 올리지 마세요. 이 방침이 변경되면 본 페이지의 시행일과 내용을 갱신하며 동의가 필요한 변경은 별도로 안내합니다.</p>
   </>;
@@ -34,5 +34,5 @@ function Terms() {
     <h2>5. 의견과 개인정보 요청</h2><p>기능 제안과 오류 신고는 하단의 의견 보내기로 전달할 수 있습니다. GitHub 계정이 필요할 수 있으며 게시한 내용은 공개됩니다. 비밀번호·이메일 등 개인정보는 게시하지 말고, 개인정보 관련 요청은 로그인 후 내 정보 수정 화면을 이용해주세요.</p>
   </>;
 }
-function Legal() { return <><header className="legal-header"><a href="./index.html" aria-label="Moonble 홈">moonble</a><a href="./login.html">로그인</a></header><main className="legal-main"><h1 className="mb-page-title">{privacy ? '개인정보 처리방침' : '이용 안내'}</h1><p className="legal-date">시행일 · {POLICY_VERSION}</p>{privacy ? <Privacy /> : <Terms />}</main><SiteFooter /></>; }
+function Legal() { return <><header className="legal-header"><a href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a><a href="./login.html">로그인</a></header><main className="legal-main"><h1 className="mb-page-title">{privacy ? '개인정보 처리방침' : '이용 안내'}</h1><p className="legal-date">시행일 · {POLICY_VERSION}</p>{privacy ? <Privacy /> : <Terms />}</main><SiteFooter /></>; }
 createRoot(document.getElementById('root')).render(<Legal />);

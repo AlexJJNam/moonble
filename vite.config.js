@@ -48,8 +48,10 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       input: {
         home: fileURLToPath(new URL('./index.html', import.meta.url)),
+        solve: fileURLToPath(new URL('./solve.html', import.meta.url)),
         login: fileURLToPath(new URL('./login.html', import.meta.url)),
         signup: fileURLToPath(new URL('./signup.html', import.meta.url)),
+        account: fileURLToPath(new URL('./account.html', import.meta.url)),
         prd: fileURLToPath(new URL('./prd.html', import.meta.url)),
         quiz: fileURLToPath(new URL('./quiz.html', import.meta.url)),
         privacy: fileURLToPath(new URL('./privacy.html', import.meta.url)),
