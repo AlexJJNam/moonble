@@ -1,16 +1,17 @@
 * { box-sizing: border-box; }
-body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); }
+html { min-width: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .6; }
 .moonble-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: moonble-spin .7s linear infinite; }
 @keyframes moonble-spin { to { transform: rotate(360deg); } }
-.quiz-check { min-height: 100vh; display: grid; place-content: center; color: var(--mb-primary); }
-.quiz-workspace { min-height: 100vh; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
+.quiz-check { min-height: 100vh; min-height: 100dvh; display: grid; place-content: center; color: var(--mb-primary); }
+.quiz-workspace { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
 .quiz-skip { position: fixed; left: 16px; top: -80px; z-index: 10; padding: 12px 16px; border-radius: 8px; background: var(--mb-primary-strong); color: #fff; }
 .quiz-skip:focus { top: 16px; }
-.quiz-sidebar { position: sticky; top: 0; height: 100vh; padding: 16px; background: var(--mb-surface); border-right: 1px solid var(--mb-border); display: flex; flex-direction: column; }
+.quiz-sidebar { position: sticky; top: 0; height: 100vh; height: 100dvh; padding: 16px; background: var(--mb-surface); border-right: 1px solid var(--mb-border); display: flex; flex-direction: column; }
 .quiz-navigation { display: grid; gap: 4px; }
 .quiz-navigation a { display: flex; align-items: center; gap: 12px; padding: 12px; font-size: var(--mb-font-14); font-weight: 500; line-height: 20px; border-radius: 8px; color: var(--mb-text-secondary); }
 .quiz-navigation a:hover { background: var(--mb-surface-muted); }
@@ -38,7 +39,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-title p { margin: 8px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 24px; }
 .quiz-subject { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; background: var(--mb-surface); border: 1px solid var(--mb-border); border-radius: 8px; padding: 8px 12px; white-space: nowrap; }
 .quiz-library-tools { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-.quiz-filters { display: flex; gap: 4px; }
+.quiz-filters { display: flex; flex-wrap: wrap; gap: 4px; }
 .quiz-filters button { min-height: 44px; min-width: 56px; border: 0; border-radius: 8px; padding: 10px 16px; color: var(--mb-text-tertiary); background: transparent; font-size: var(--mb-font-14); font-weight: 500; }
 .quiz-filters button:hover { background: var(--mb-border); }
 .quiz-filters button[aria-pressed="true"] { color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: var(--mb-shadow-card); font-weight: 600; }
@@ -122,6 +123,12 @@ button:disabled { cursor: wait; opacity: .6; }
 }
 @media (max-width: 540px) {
   .quiz-main { padding: 24px 16px 48px; }
+  .quiz-title { align-items: stretch; }
+  .quiz-title .quiz-create { width: 100%; justify-content: center; }
+  .quiz-filters { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .quiz-filters::-webkit-scrollbar { display: none; }
+  .quiz-filters button { flex: 0 0 auto; }
+  .quiz-view-toggle { flex-shrink: 0; }
   .paper-grid:not(.paper-list) { grid-template-columns: 1fr; gap: 16px; }
   .paper-preview { height: 232px; }
   .paper-info { padding: 16px; }
@@ -133,5 +140,4 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .paper-footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .paper-card, .preview-sheet { transition: none; } .paper-card:hover, .paper-card:hover .preview-sheet { transform: none; } }
-.quiz-filters { flex-wrap: wrap; }
 .paper-info h2, .preview-sheet-title { overflow-wrap: anywhere; }

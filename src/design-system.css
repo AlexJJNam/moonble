@@ -58,6 +58,12 @@
   --mb-target-size: 44px;
 }
 
+html {
+  min-width: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: var(--mb-font-sans);
   font-size: var(--mb-font-16);

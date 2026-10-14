@@ -30,10 +30,10 @@
 .profile-card [role=status] { color:var(--mb-primary-strong); }
 .storage-note { margin:0; padding:var(--mb-space-12) var(--mb-space-24); font-size:var(--mb-font-12); line-height:18px; text-align:center; color:var(--mb-text-tertiary); background:var(--mb-bg); }
 @media (max-width:640px) {
-  .workspace-header { gap:var(--mb-space-16); padding:var(--mb-space-12) var(--mb-space-16); }
+  .workspace-header { gap:var(--mb-space-16); padding:var(--mb-space-12) max(var(--mb-space-16), env(safe-area-inset-right)) var(--mb-space-12) max(var(--mb-space-16), env(safe-area-inset-left)); }
   .workspace-account { width:100%; margin:0; justify-content:flex-end; gap:var(--mb-space-12); }
   .workspace-account span { margin-right:auto; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .profile-wrap { padding:var(--mb-space-24) var(--mb-space-16); }
+  .profile-wrap { padding:var(--mb-space-24) max(var(--mb-space-16), env(safe-area-inset-right)) var(--mb-space-24) max(var(--mb-space-16), env(safe-area-inset-left)); }
   .profile-card { margin:var(--mb-space-16) auto; padding:var(--mb-space-24); }
   .profile-card h1 { font-size:var(--mb-font-24); line-height:32px; }
 }
