@@ -27,5 +27,5 @@ let navigatingHome = false;
 export function goHome() {
   if (navigatingHome) return;
   navigatingHome = true;
-  window.location.replace(new URL('./prd.html', window.location.href).href);
+  window.location.replace(new URL('./quiz.html', window.location.href).href);
 }

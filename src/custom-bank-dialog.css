@@ -1,0 +1,22 @@
+.bank-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100dvh - 48px); padding: 24px; border: 1px solid var(--mb-border); border-radius: 16px; color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 16px 48px #191f2826; }
+.bank-dialog::backdrop { background: #191f2866; }
+.bank-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.bank-dialog h2 { margin: 0; font-size: 22px; line-height: 30px; }
+.bank-dialog p { color: var(--mb-text-secondary); font-size: 14px; line-height: 22px; }
+.bank-close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--mb-text-secondary); }
+.bank-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: 44px; border: 1px solid var(--mb-border); border-radius: 8px; background: var(--mb-surface); color: var(--mb-text-secondary); font-size: 14px; }
+.bank-drop { position: relative; display: grid; place-items: center; margin-top: 16px; padding: 24px 16px; min-height: 104px; border: 1px dashed var(--mb-border-strong); border-radius: 12px; text-align: center; font-size: 14px; color: var(--mb-text-secondary); }
+.bank-drop input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.bank-drop:focus-within { outline: 2px solid var(--mb-primary-strong); outline-offset: 3px; }
+.bank-drop:hover { background: var(--mb-primary-soft); }
+.bank-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--mb-text-tertiary); font-size: 12px; }
+.bank-divider::before, .bank-divider::after { content: ''; height: 1px; flex: 1; background: var(--mb-border); }
+.bank-link { display: flex; gap: 8px; }
+.bank-link input { min-width: 0; flex: 1; min-height: 48px; border: 1px solid var(--mb-border-strong); border-radius: 12px; padding: 12px; font-size: 16px; }
+.bank-link button { min-width: 80px; border: 0; border-radius: 12px; background: var(--mb-primary-strong); color: white; font-size: 14px; }
+.bank-guide { margin: 16px 0 0; padding: 12px 12px 12px 28px; background: var(--mb-bg); border-radius: 8px; color: var(--mb-text-tertiary); font-size: 12px; line-height: 20px; }
+.bank-active { padding: 16px; border-radius: 12px; background: var(--mb-primary-soft); font-size: 14px; overflow-wrap: anywhere; }
+.bank-dialog .bank-error { padding: 12px; color: var(--mb-danger); background: var(--mb-danger-soft); border-radius: 8px; }
+.quiz-create { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 12px; color: white; background: var(--mb-primary-strong); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.quiz-create:hover { background: var(--mb-primary-hover); }
+@media(max-width:540px) { .quiz-title { flex-wrap: wrap; gap: 16px; } .bank-dialog { padding: 16px; } }

@@ -13,12 +13,19 @@ body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); font-
 .auth-tabs button { border: 0; border-radius: 5px; background: transparent; padding: 9px; color: #6b7684; cursor: pointer; }
 .auth-tabs button[aria-pressed='true'] { background: white; color: #191f28; box-shadow: 0 1px 3px #00000015; }
 .auth-card fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--mb-space-16); min-width: 0; }
-.auth-card label { display: grid; gap: var(--mb-space-8); color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; }
-.auth-card input { min-width: 0; width: 100%; min-height: 48px; border: 1px solid var(--mb-border-strong); background: var(--mb-surface); border-radius: var(--mb-radius-12); padding: 11px var(--mb-space-16); color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; }
-.auth-card input::placeholder { color: var(--mb-text-tertiary); }
+.auth-card label { color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; }
+.auth-card input { min-width: 0; width: 100%; min-height: 56px; border: 1px solid var(--mb-border-strong); background: var(--mb-surface); border-radius: var(--mb-radius-12); padding: 21px var(--mb-space-16) 7px; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; }
+.auth-card input::placeholder { color: transparent; }
 .auth-card input:focus-visible, .auth-card button:focus-visible, .auth-card a:focus-visible { outline: 3px solid var(--mb-primary); outline-offset: 3px; }
-.password-field { position: relative; display: block; margin-top: 8px; }
+.floating-field { position: relative; min-width: 0; }
+.floating-field label { position: absolute; z-index: 1; left: var(--mb-space-16); top: 50%; max-width: calc(100% - 32px); overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 20px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; transform: translateY(-50%); transform-origin: left top; transition: top var(--mb-duration), transform var(--mb-duration), font-size var(--mb-duration), color var(--mb-duration); }
+.floating-field input:focus + label,
+.floating-field input:not(:placeholder-shown) + label,
+.floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
+.floating-field input:focus { border-color: var(--mb-primary); box-shadow: var(--mb-focus-ring); outline: 0; }
+.password-field { position: relative; }
 .password-field input { padding-right: 64px; }
+.password-field label { max-width: calc(100% - 96px); }
 .auth-card .visibility { position: absolute; right: 4px; top: 2px; bottom: 2px; min-width: 44px; border: 0; background: transparent; color: var(--mb-text-secondary); cursor: pointer; padding: 0 var(--mb-space-8); font-size: var(--mb-font-14); line-height: 20px; }
 .auth-card .auth-submit { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 0; border-radius: var(--mb-radius-12); padding: var(--mb-space-12) var(--mb-space-16); background: var(--mb-primary-strong); color: white; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; cursor: pointer; transition: background-color .15s ease; }
 .auth-submit:hover:not(:disabled) { background: var(--mb-primary-hover); }

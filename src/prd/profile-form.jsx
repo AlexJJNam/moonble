@@ -25,7 +25,7 @@ export function ProfileForm({ user, initial, onSaved }) {
   return <main className="profile-wrap">
     <section className="profile-card">
       <h1>{initial ? 'Moonble에 오신 것을 환영합니다' : '내 정보 수정'}</h1>
-      <p>{initial ? 'PRD 작성을 시작하기 전에 이름과 회사를 알려주세요.' : 'PRD에 사용할 이름과 회사 정보를 수정할 수 있습니다.'}</p>
+      <p>{initial ? 'Moonble을 시작하기 전에 이름과 회사를 알려주세요.' : 'Moonble에서 사용할 이름과 회사 정보를 수정할 수 있습니다.'}</p>
       <form onSubmit={save}>
         <fieldset disabled={pending}>
           <label htmlFor="profile-email">이메일</label>
@@ -35,7 +35,7 @@ export function ProfileForm({ user, initial, onSaved }) {
           <label htmlFor="profile-company">회사명</label>
           <input id="profile-company" autoComplete="organization" maxLength={100} required value={company} onChange={e => setCompany(e.target.value)} aria-describedby="company-hint" />
           <p id="company-hint">소속 회사가 없다면 ‘개인’으로 입력해주세요.</p>
-          <button className="shell-primary" type="submit" aria-label={pending ? '내 정보 저장 중' : undefined}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : initial ? '저장하고 PRD 시작하기' : '내 정보 저장'}</button>
+          <button className="shell-primary" type="submit" aria-label={pending ? '내 정보 저장 중' : undefined}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : initial ? '저장하고 문제 풀기' : '내 정보 저장'}</button>
         </fieldset>
       </form>
       {error && <p role="alert">{error}</p>}

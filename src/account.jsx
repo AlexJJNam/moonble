@@ -23,9 +23,14 @@ function Account() {
     function acceptSession(session) {
       if (!alive || leavingHome) return;
       if (!session) { requireLogin(); return; }
-      if (!hasProfile(session.user) || new URLSearchParams(window.location.search).get('view') !== 'quiz') {
+      if (!hasProfile(session.user)) {
         leavingHome = true;
         window.location.replace(new URL('./prd.html', window.location.href).href);
+        return;
+      }
+      if (new URLSearchParams(window.location.search).get('view') !== 'quiz') {
+        leavingHome = true;
+        window.location.replace(new URL('./quiz.html', window.location.href).href);
         return;
       }
       setUser(session.user);

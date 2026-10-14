@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BookOpen, FileText, LayoutGrid, List, LogOut, Search, Settings2 } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, LayoutGrid, List, LogOut, Plus, Search, Settings2 } from 'lucide-react';
 import { loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
+import { CustomBankDialog } from './custom-bank-dialog.jsx';
+import { getCustomBankMeta } from './custom-bank.js';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -21,12 +23,12 @@ const papers = [
     { title: '앱의 화면 조회에 사용하는 이벤트는?', options: ['screen_view', 'page_view', 'first_visit'] },
   ] },
 ];
-const filters = ['전체', '기본', '심화', '랜덤'];
+const filters = ['전체', '기본', '심화', '랜덤', '커스텀'];
 
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.id}`} aria-hidden="true">
     <div className="preview-sheet">
-      <div className="preview-sheet-brand"><span>moonble</span><span>GA4</span></div>
+      <div className="preview-sheet-brand"><span>moonble</span><span>{paper.id === 'custom' ? 'CUSTOM' : 'GA4'}</span></div>
       <div className="preview-sheet-title">{paper.label}</div>
       <div className="preview-sheet-subtitle">개념을 확인하는 작은 시작</div>
       {paper.samples.map((sample, index) => <div className="preview-question" key={sample.title}>
@@ -46,6 +48,14 @@ function QuizLibrary() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('전체');
   const [view, setView] = useState('grid');
+  const [creating, setCreating] = useState(false);
+  const [custom, setCustom] = useState(getCustomBankMeta);
+  useEffect(() => {
+    const refresh = () => setCustom(getCustomBankMeta());
+    window.addEventListener('storage', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => { window.removeEventListener('storage', refresh); window.removeEventListener('pageshow', refresh); };
+  }, []);
   useEffect(() => {
     if (!supabase) { window.location.replace(loginUrl()); return; }
     let alive = true;
@@ -74,27 +84,29 @@ function QuizLibrary() {
   if (!user) return <div className="quiz-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">로그인 상태 확인 중</span></div>;
   const profile = profileOf(user);
   const search = query.trim().toLocaleLowerCase();
-  const visiblePapers = papers.filter(paper => (filter === '전체' || paper.level === filter) && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search));
+  const allPapers = custom ? [...papers, {
+    id: 'custom', label: (custom.source || '나의 문제지').replace(/\.csv$/i, ''), level: '커스텀', count: 20,
+    description: '직접 등록한 문제로 학습을 시작해보세요.', topics: `${custom.questions.length}문항 등록 · 이 브라우저에 저장`,
+    samples: custom.questions.slice(0, 2).map(q => ({ title: q.q, options: q.options.slice(0, 3) })),
+  }] : papers;
+  const visiblePapers = allPapers.filter(paper => (filter === '전체' || paper.level === filter) && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search));
   return <div className="quiz-workspace">
     <a className="quiz-skip" href="#paper-library">문제지 목록으로 건너뛰기</a>
     <aside className="quiz-sidebar">
-      <a className="quiz-logo" href="./prd.html" aria-label="Moonble PRD 홈">moonble</a>
-      <div className="quiz-workspace-label">워크스페이스</div>
+      <a className="quiz-profile" href="./prd.html#/my-page" aria-label="내 정보 수정"><span className="quiz-avatar">{profile.name.slice(0, 1)}</span><span><strong>{profile.name}님</strong><small>{profile.companyName}</small></span><Settings2 size={16} /></a>
       <nav className="quiz-navigation" aria-label="주 메뉴">
-        <a href="./prd.html"><FileText size={20} />PRD</a>
         <a href="./quiz.html" aria-current="page"><BookOpen size={20} />문제풀이</a>
+        <a href="./prd.html"><FileText size={20} />PRD</a>
       </nav>
-      <div className="quiz-sidebar-note"><BookOpen size={20} /><strong>하나씩 풀며 쌓는 실력</strong><p>부담 없이 시작하고,<br />틀린 문제는 다시 살펴보세요.</p></div>
       <div className="quiz-account">
-        <a className="quiz-profile" href="./prd.html#/my-page" aria-label="내 정보 수정"><span className="quiz-avatar">{profile.name.slice(0, 1)}</span><span><strong>{profile.name}님</strong><small>{profile.companyName}</small></span><Settings2 size={16} /></a>
         <button disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : <><LogOut size={16} />로그아웃</>}</button>
         {error && <p className="quiz-error" role="alert">{error}</p>}
       </div>
     </aside>
     <div className="quiz-content">
-      <header className="quiz-topbar"><span>문제풀이</span><span className="quiz-topbar-caption">배우고, 풀고, 내 것으로</span></header>
+      <header className="quiz-topbar"><a className="quiz-logo" href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a><span aria-hidden="true" /><strong>문제지</strong></header>
       <main className="quiz-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">나의 문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><span className="quiz-subject">Google Analytics 4</span></div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">나의 문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />문제지 생성</button></div>
         <div className="quiz-library-tools">
           <div className="quiz-filters" role="group" aria-label="문제지 분류">{filters.map(item => <button key={item} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div>
           <div className="quiz-display-tools">
@@ -112,6 +124,7 @@ function QuizLibrary() {
         {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어나 분류로 찾아보세요.</p><button onClick={() => { setQuery(''); setFilter('전체'); }}>전체 문제지 보기</button></div>}
         <p className="quiz-library-note">미리보기는 예시 문항이에요. 풀이를 시작하면 선택한 범위에서 20문항이 출제됩니다.</p>
       </main><SiteFooter />
+      {creating && <CustomBankDialog onClose={() => setCreating(false)} onChange={meta => { setCustom(meta); if (meta) { setFilter('전체'); setQuery(''); } }} />}
     </div>
   </div>;
 }
