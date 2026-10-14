@@ -8,7 +8,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-page { position: relative; isolation: isolate; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: var(--mb-space-32) max(var(--mb-space-16), env(safe-area-inset-right)) var(--mb-space-32) max(var(--mb-space-16), env(safe-area-inset-left)); overflow: hidden; }
 .auth-page .gradient-backdrop { opacity: .45; }
 .auth-card { width: 100%; max-width: 448px; padding: var(--mb-space-32); border-radius: var(--mb-radius-16); border: 1px solid var(--mb-border); background: #ffffffe8; backdrop-filter: blur(24px); box-shadow: 0 8px 32px #191f280a; }
-.auth-brand { margin: 0 0 32px; }
+.auth-brand { display: flex; justify-content: center; margin: 0 0 32px; text-align: center; }
 .auth-brand svg { display: block; width: 140px; height: 28px; margin: 0 auto; overflow: visible; }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: #f1f3f5; border-radius: 8px; margin-bottom: 24px; }
 .auth-tabs button { border: 0; border-radius: 5px; background: transparent; padding: 9px; color: #6b7684; cursor: pointer; }
