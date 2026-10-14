@@ -27,7 +27,9 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .password-field { position: relative; }
 .password-field input { padding-right: 64px; }
 .password-field label { max-width: calc(100% - 96px); }
-.auth-card .visibility { position: absolute; right: 4px; top: 2px; bottom: 2px; min-width: 44px; border: 0; background: transparent; color: var(--mb-text-secondary); cursor: pointer; padding: 0 var(--mb-space-8); font-size: var(--mb-font-14); line-height: 20px; }
+.auth-card .visibility { position: absolute; right: 6px; top: 50%; display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--mb-text-secondary); cursor: pointer; padding: 0; transform: translateY(-50%); }
+.auth-card .visibility:hover { background: var(--mb-bg); color: var(--mb-text-primary); }
+.auth-card .visibility svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .auth-card .auth-submit { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 0; border-radius: var(--mb-radius-12); padding: var(--mb-space-12) var(--mb-space-16); background: var(--mb-primary-strong); color: white; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; cursor: pointer; transition: background-color .15s ease; }
 .auth-submit:hover:not(:disabled) { background: var(--mb-primary-hover); }
 .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: middle; animation: moonble-spin .7s linear infinite; }

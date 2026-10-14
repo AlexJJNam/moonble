@@ -1,10 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Eye, EyeOff } from 'lucide-react';
 import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
 import { signupConsents } from './policy.js';
 import './design-system.css';
 import './login.css';
+
+function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, onChange, setVisible, value, visible }) {
+  const [focused, setFocused] = useState(false);
+
+  function handleBlur(event) {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    setFocused(false);
+    setVisible(false);
+  }
+
+  return <div
+    className="floating-field password-field"
+    onFocus={() => setFocused(true)}
+    onBlur={handleBlur}
+  >
+    <input
+      id={id}
+      type={visible ? 'text' : 'password'}
+      autoComplete={autoComplete}
+      required
+      minLength={minLength}
+      maxLength={maxLength}
+      value={value}
+      onChange={onChange}
+      placeholder=" "
+    />
+    <label htmlFor={id}>{label}</label>
+    {focused && <button
+      className="visibility"
+      type="button"
+      aria-label={visible ? `${label} 숨기기` : `${label} 표시`}
+      aria-pressed={visible}
+      onClick={() => setVisible(!visible)}
+    >
+      {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+    </button>}
+  </div>;
+}
 
 function Login() {
   const signupPage = window.location.pathname.endsWith('/signup') || window.location.pathname.endsWith('/signup.html');
@@ -12,7 +51,8 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
-  const [visible, setVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [pending, setPending] = useState(false);
   const [checking, setChecking] = useState(Boolean(supabase));
   const [message, setMessage] = useState('');
@@ -56,7 +96,8 @@ function Login() {
     setMode(next);
     setPassword('');
     setConfirmation('');
-    setVisible(false);
+    setPasswordVisible(false);
+    setConfirmationVisible(false);
     setMessage('');
     setError('');
   }
@@ -129,8 +170,8 @@ function Login() {
       <form onSubmit={submit}>
         <fieldset disabled={pending || checking || !supabase}>
           {mode !== 'update' && <div className="floating-field"><input id="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder=" " /><label htmlFor="email">이메일</label></div>}
-          {mode !== 'reset' && <div className="floating-field password-field"><input id="password" type={visible ? 'text' : 'password'} autoComplete={newPassword ? 'new-password' : 'current-password'} required minLength={newPassword ? 8 : undefined} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} placeholder=" " /><label htmlFor="password">비밀번호</label><button className="visibility" type="button" aria-label={visible ? '비밀번호 숨기기' : '비밀번호 표시'} aria-pressed={visible} onClick={() => setVisible(v => !v)}>{visible ? '숨기기' : '보기'}</button></div>}
-          {newPassword && <><p className="auth-hint">영문·특수문자 포함 8자 이상, 공백·한글 제외</p><div className="floating-field"><input id="password-confirmation" type={visible ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={128} value={confirmation} onChange={e => setConfirmation(e.target.value)} placeholder=" " /><label htmlFor="password-confirmation">비밀번호 확인</label></div></>}
+          {mode !== 'reset' && <PasswordField id="password" label="비밀번호" autoComplete={newPassword ? 'new-password' : 'current-password'} minLength={newPassword ? 8 : undefined} value={password} onChange={e => setPassword(e.target.value)} visible={passwordVisible} setVisible={setPasswordVisible} />}
+          {newPassword && <><p className="auth-hint">영문·특수문자 포함 8자 이상, 공백·한글 제외</p><PasswordField id="password-confirmation" label="비밀번호 확인" autoComplete="new-password" minLength={8} value={confirmation} onChange={e => setConfirmation(e.target.value)} visible={confirmationVisible} setVisible={setConfirmationVisible} /></>}
           {mode === 'register' && <div className="signup-consents">
             <div className="consent-row"><label><input type="checkbox" required checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} /><span>[필수] 이용약관 동의</span></label><a href="./terms.html" target="_blank" rel="noopener noreferrer" aria-label="이용약관 내용 보기 (새 창)">보기</a></div>
             <div className="consent-row"><label><input type="checkbox" required checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} /><span>[필수] 개인정보 수집·이용 동의</span></label><a href="./privacy.html" target="_blank" rel="noopener noreferrer" aria-label="개인정보 처리방침 보기 (새 창)">보기</a></div>
