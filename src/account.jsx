@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
+import { AppHeader } from './app-header.jsx';
 
 let leavingHome = false;
 function requireLogin() {
@@ -56,13 +57,10 @@ function Account() {
     finally { setPending(false); }
   }
 
-  return <>
-    {checking ? <span className="btn" role="status" aria-label="계정 확인 중"><span className="moonble-spinner" aria-hidden="true" /></span> : user
-      ? <><a className="btn btn-ghost" href="./account.html">내 계정</a><button className="btn btn-ghost" type="button" disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></>
-      : <a className="btn btn-ghost" href="./login.html">로그인 / 회원가입</a>}
-    {error && <span role="alert">{error}</span>}
-  </>;
+  if (checking) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">계정 확인 중</span></div>;
+  if (!user) return null;
+  return <AppHeader active="papers" user={user} pending={pending} error={error} onLogout={logout} />;
 }
 
-createRoot(document.getElementById('moonble-account')).render(<Account />);
+createRoot(document.getElementById('moonble-app-header')).render(<Account />);
 createRoot(document.getElementById('moonble-footer')).render(<SiteFooter />);

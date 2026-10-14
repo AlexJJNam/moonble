@@ -2,12 +2,6 @@
 body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
-.account-header { min-height: 64px; display: flex; align-items: center; gap: 24px; padding: 10px max(24px, calc((100vw - 1080px) / 2)); border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
-.account-logo { color: var(--mb-primary); font-size: var(--mb-font-22); line-height: 28px; font-weight: 800; letter-spacing: -.04em; }
-.account-header nav { display: flex; gap: 8px; }
-.account-header nav a { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); font-weight: 600; }
-.account-header nav a:hover { background: var(--mb-surface-muted); }
-.account-header strong { margin-left: auto; font-size: var(--mb-font-14); }
 .account-main { max-width: 1080px; margin: 0 auto; padding: 40px 24px 64px; }
 .account-heading { max-width: 480px; margin: 0 auto 24px; }
 .account-heading h1 { margin: 0; }
@@ -16,13 +10,9 @@ button { font: inherit; cursor: pointer; }
 .account-main .profile-card { margin: 24px auto; }
 .account-main .profile-card h2 { margin: 0 0 12px; }
 .local-data-count { padding: 12px 16px; border-radius: 8px; background: var(--mb-surface-muted); }
-.account-danger, .account-session button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-weight: 600; }
+.account-danger { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-weight: 600; }
 .account-danger { border: 1px solid #ffd4d0; color: var(--mb-danger); background: var(--mb-surface); }
 .account-danger-note { color: var(--mb-danger) !important; }
-.account-session button { border: 1px solid var(--mb-border); color: var(--mb-text-secondary); background: var(--mb-surface); }
 @media (max-width: 640px) {
-  .account-header { flex-wrap: wrap; gap: 8px 16px; padding: 10px 16px; }
-  .account-header nav { order: 3; width: 100%; }
-  .account-header nav a { flex: 1; justify-content: center; }
   .account-main { padding: 24px 16px 48px; }
 }

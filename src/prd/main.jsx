@@ -4,6 +4,7 @@ import { supabase, loginUrl } from '../supabase.js';
 import { hasProfile, profileOf } from '../profile.js';
 import { ProfileForm } from './profile-form.jsx';
 import { SiteFooter } from '../site-footer.jsx';
+import { AppHeader } from '../app-header.jsx';
 import { setStorageUser } from './storage.js';
 import { useRoute, useRouter } from './navigation.jsx';
 import PrdList from './app/list/page';
@@ -64,12 +65,7 @@ function Workspace() {
     return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">내 계정으로 이동 중</span></div>;
   }
   return <>
-    <header className="workspace-header no-print">
-      <a href="./quiz.html" className="workspace-logo" aria-label="Moonble 문제지 홈"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="0" y="21" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></a>
-      <nav aria-label="주 메뉴"><a href="#/list" aria-current="page">PRD</a><a href="./quiz.html">문제지</a></nav>
-      <div className="workspace-account"><span>{profile.name ? `${profile.name}님` : user.email}</span><a href="./account.html">내 계정</a><button disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button></div>
-    </header>
-    {error && <p role="alert" className="shell-error">{error}</p>}
+    <AppHeader active="prd" user={user} pending={pending} error={error} onLogout={logout} />
     {initial || path === '/register-name'
       ? <ProfileForm key={`${user.id}:${initial}`} user={user} initial={initial} onSaved={updated => {
           setStorageUser(updated); setUser(updated);

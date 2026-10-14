@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BarChart3, BookOpen, FileText, LayoutGrid, List, LogOut, Plus, Search, Settings2 } from 'lucide-react';
+import { ArrowRight, LayoutGrid, List, Plus, Search } from 'lucide-react';
 import { loginUrl, supabase } from './supabase.js';
-import { hasProfile, profileOf } from './profile.js';
+import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
 import { CustomBankDialog } from './custom-bank-dialog.jsx';
 import { getCustomBankMeta, setCustomBankUser } from './custom-bank.js';
 import { QuizAchievement } from './quiz-achievement.jsx';
+import { AppHeader } from './app-header.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -93,7 +94,6 @@ function QuizLibrary() {
     finally { setPending(false); }
   }
   if (!user) return <div className="quiz-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">로그인 상태 확인 중</span></div>;
-  const profile = profileOf(user);
   const search = query.trim().toLocaleLowerCase();
   const allPapers = custom ? [...papers, {
     id: 'custom', label: (custom.source || '내 문제지').replace(/\.csv$/i, ''), level: '내 문제지', count: 20,
@@ -105,22 +105,10 @@ function QuizLibrary() {
     const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
     return categoryMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   });
-  return <div className="quiz-workspace">
+  return <div className="quiz-page">
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
-    <aside className="quiz-sidebar">
-      <a className="quiz-profile" href="./account.html" aria-label="내 계정 열기"><span className="quiz-avatar">{profile.name.slice(0, 1)}</span><span><strong>{profile.name}님</strong><small>{profile.companyName}</small></span><Settings2 size={16} /></a>
-      <nav className="quiz-navigation" aria-label="주 메뉴">
-        <a href="#paper-library" aria-current={section === 'papers' ? 'page' : undefined}><BookOpen size={20} />문제지</a>
-        <a href="#achievement" aria-current={section === 'achievement' ? 'page' : undefined}><BarChart3 size={20} />나의 성취도</a>
-        <a href="./prd.html"><FileText size={20} />PRD</a>
-      </nav>
-      <div className="quiz-account">
-        <button disabled={pending} aria-label={pending ? '로그아웃 처리 중' : undefined} onClick={logout}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : <><LogOut size={16} />로그아웃</>}</button>
-        {error && <p className="quiz-error" role="alert">{error}</p>}
-      </div>
-    </aside>
+    <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
-      <header className="quiz-topbar"><a className="quiz-logo" href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a><span aria-hidden="true" /><strong>{section === 'achievement' ? '나의 성취도' : '문제지'}</strong></header>
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />새 문제지 만들기</button></div>
         <div className="quiz-library-tools">

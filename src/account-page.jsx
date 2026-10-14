@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BookOpen, FileText, LogOut, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { loginUrl, supabase } from './supabase.js';
-import { hasProfile, profileOf } from './profile.js';
+import { hasProfile } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { PrivacyRequest } from './prd/privacy-request.jsx';
 import { SiteFooter } from './site-footer.jsx';
+import { AppHeader } from './app-header.jsx';
 import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
@@ -60,19 +61,13 @@ function AccountPage() {
   }
 
   if (!user) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">계정 정보 확인 중</span></div>;
-  const profile = profileOf(user);
   return <>
-    <header className="account-header">
-      <a className="account-logo" href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a>
-      <nav aria-label="주 메뉴"><a href="./quiz.html"><BookOpen size={18} />문제지</a><a href="./prd.html"><FileText size={18} />PRD</a></nav>
-      <strong>{profile.name}님</strong>
-    </header>
+    <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main">
       <div className="account-heading"><h1 className="mb-page-title">내 계정</h1><p>프로필과 이 기기에 저장된 데이터를 관리할 수 있어요.</p></div>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
       <LocalData user={user} />
       <PrivacyRequest user={user} />
-      <section className="profile-card account-session"><h2 className="mb-section-title">로그인 관리</h2><p>현재 기기의 Moonble 세션을 종료합니다.</p><button type="button" disabled={pending} onClick={logout}><LogOut size={17} />{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '로그아웃'}</button>{error && <p role="alert">{error}</p>}</section>
     </main>
     <SiteFooter />
   </>;
