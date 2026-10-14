@@ -1346,6 +1346,10 @@
       border-radius: 14px;
     }
 
+    .solver-history-storage {
+      display: none !important;
+    }
+
     .history-chart-title {
       margin: 0 0 var(--sp-2);
       font-size: var(--text-sm);
@@ -2880,7 +2884,6 @@
       <nav class="nav" id="siteNav">
         <a class="btn btn-ghost" href="./prd.html">PRD</a>
         <a class="btn btn-primary" href="./quiz.html" title="문제지 목록">문제지</a>
-        <a class="btn btn-ghost" href="#historyBox" title="나의 성취도">나의 성취도</a>
         <button id="themeToggle" class="btn" type="button" aria-label="테마 전환" title="다크/라이트 전환">다크모드</button>
         <span id="moonble-account" style="display:contents"></span>
       </nav>
@@ -3071,12 +3074,12 @@
         <button id="retryBtn" class="btn btn-secondary" type="button">같은 문제 다시 풀기</button>
         <button id="retryWrongBtn" class="btn btn-secondary" type="button" disabled>틀린 문제만 풀기</button>
         <button id="submitBtn" class="btn btn-primary btn-lg" type="button">제출하기</button>
-        <button id="csvBtn" class="btn btn-success" type="button" disabled>CSV 내보내기 (80점 이상)</button>
+        <button id="csvBtn" class="btn btn-success solver-history-storage" type="button" disabled hidden>CSV 내보내기 (80점 이상)</button>
       </div>
 
       <div id="resultBox" class="result" aria-live="polite"></div>
-      <div id="historyBox" class="history"></div>
-      <div id="historyChart" class="history-chart"></div>
+      <div id="historyBox" class="history solver-history-storage" hidden></div>
+      <div id="historyChart" class="history-chart solver-history-storage" hidden></div>
     </section>
 
     <span id="year" hidden></span><div id="moonble-footer"></div>
@@ -3293,6 +3296,13 @@
       if (paper === 'advanced') return BANK.filter(q => q.id > 30);
       if (paper === 'random') return BANK;
       if (paper === 'custom' && typeof window.getCustomBank === 'function') return window.getCustomBank() || BANK;
+      if (paper === 'retry') {
+        let ids = [];
+        try { ids = JSON.parse(sessionStorage.getItem('moonble:retry-question-ids') || '[]'); } catch { ids = []; }
+        const customBank = (typeof window.getCustomBank === 'function' ? window.getCustomBank() : null) || [];
+        const restored = (Array.isArray(ids) ? ids : []).map(id => BANK.find(q => q.id === id) || customBank.find(q => q.id === id)).filter(Boolean);
+        return restored.length ? restored : BANK;
+      }
       return null;
     }
 
@@ -4895,205 +4905,6 @@
 
     setTimeout(proceed, EXIT_MS);
   }, true);
-})();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script>
-(() => {
-  var container = document.getElementById('historyChart');
-  var historyBox = document.getElementById('historyBox');
-  if (!container || !historyBox || typeof d3 === 'undefined') return;
-
-  var tooltip = document.createElement('div');
-  tooltip.className = 'history-chart-tooltip';
-  document.body.appendChild(tooltip);
-
-  function formatDate(iso) {
-    var d = new Date(iso);
-    return (d.getMonth() + 1) + '/' + d.getDate();
-  }
-
-  function draw() {
-    var hist = (typeof getHistory === 'function' ? getHistory() : []).slice(0, 10).reverse();
-    container.style.display = hist.length ? 'block' : 'none';
-    container.innerHTML = '';
-    if (!hist.length) return;
-
-    var title = document.createElement('div');
-    title.className = 'history-chart-title';
-    title.textContent = '점수 추이 차트';
-    container.appendChild(title);
-
-    var SLOT_COUNT = 10;
-    var width = container.clientWidth || 320;
-    var height = 260;
-    var margin = { top: 16, right: 16, bottom: 24, left: 32 };
-
-    var svg = d3.select(container).append('svg')
-      .attr('viewBox', '0 0 ' + width + ' ' + height)
-      .attr('width', '100%')
-      .attr('height', height);
-
-    var x = d3.scalePoint()
-      .domain(d3.range(SLOT_COUNT))
-      .range([margin.left, width - margin.right])
-      .padding(0.5);
-
-    var y = d3.scaleLinear()
-      .domain([0, 100])
-      .range([height - margin.bottom, margin.top]);
-
-    svg.selectAll('.history-chart-grid')
-      .data([0, 50, 100])
-      .enter()
-      .append('line')
-      .attr('class', 'history-chart-grid')
-      .attr('x1', margin.left)
-      .attr('x2', width - margin.right)
-      .attr('y1', function (d) { return y(d); })
-      .attr('y2', function (d) { return y(d); });
-
-    svg.selectAll('.history-chart-ylabel')
-      .data([0, 50, 100])
-      .enter()
-      .append('text')
-      .attr('class', 'history-chart-axis')
-      .attr('x', margin.left - 8)
-      .attr('y', function (d) { return y(d); })
-      .attr('text-anchor', 'end')
-      .attr('dominant-baseline', 'middle')
-      .text(function (d) { return d; });
-
-    svg.selectAll('.history-chart-xlabel')
-      .data(hist)
-      .enter()
-      .append('text')
-      .attr('class', 'history-chart-axis')
-      .attr('x', function (_, i) { return x(i); })
-      .attr('y', height - margin.bottom + 16)
-      .attr('text-anchor', 'middle')
-      .text(function (d) { return formatDate(d.date); });
-
-    var gradient = svg.append('defs')
-      .append('linearGradient')
-      .attr('id', 'historyChartAreaGradient')
-      .attr('x1', '0').attr('y1', '0')
-      .attr('x2', '0').attr('y2', '1');
-    gradient.append('stop').attr('class', 'history-chart-area-stop-top').attr('offset', '0%');
-    gradient.append('stop').attr('class', 'history-chart-area-stop-bottom').attr('offset', '100%');
-
-    var area = d3.area()
-      .x(function (_, i) { return x(i); })
-      .y0(height - margin.bottom)
-      .y1(function (d) { return y(d.score); })
-      .curve(d3.curveMonotoneX);
-
-    svg.append('path')
-      .datum(hist)
-      .attr('fill', 'url(#historyChartAreaGradient)')
-      .attr('d', area);
-
-    var line = d3.line()
-      .x(function (_, i) { return x(i); })
-      .y(function (d) { return y(d.score); })
-      .curve(d3.curveMonotoneX);
-
-    svg.append('path')
-      .datum(hist)
-      .attr('class', 'history-chart-line')
-      .attr('d', line);
-
-    var lastIdx = hist.length - 1;
-    var lastCx = x(lastIdx);
-    var lastCy = y(hist[lastIdx].score);
-    var pulseOrigin = lastCx + 'px ' + lastCy + 'px';
-    [0, 1].forEach(function (i) {
-      svg.append('circle')
-        .attr('class', 'history-chart-dot-pulse')
-        .attr('cx', lastCx)
-        .attr('cy', lastCy)
-        .attr('r', 4)
-        .style('transform-origin', pulseOrigin)
-        .style('animation-delay', (i * 1.75) + 's');
-    });
-
-    var dotSel = svg.selectAll('.history-chart-dot')
-      .data(hist)
-      .enter()
-      .append('circle')
-      .attr('class', 'history-chart-dot')
-      .attr('cx', function (_, i) { return x(i); })
-      .attr('cy', function (d) { return y(d.score); })
-      .attr('r', 4);
-
-    // 점(r=4)에 정확히 올려야만 툴팁이 뜨면 호버하기 너무 빡빡하므로,
-    // 차트 전체에 걸친 투명 히트 영역 하나로 받는다. 세로 가이드라인은 마우스를
-    // 그대로 따라 부드럽게 움직이고, 툴팁은 그 위치에서 가장 가까운 날짜의
-    // "세로 라인대"(한 칸 폭의 절반) 안에 들어왔을 때만 그 날짜 정보로 노출된다.
-    var hoverLine = svg.append('line')
-      .attr('class', 'history-chart-hover-line')
-      .attr('y1', margin.top)
-      .attr('y2', height - margin.bottom)
-      .style('opacity', 0);
-    hoverLine.lower(); // 그래프(영역/선/점)보다 뒤로
-
-    var dotNodes = dotSel.nodes();
-    var step = SLOT_COUNT > 1 ? Math.abs(x(1) - x(0)) : (width - margin.left - margin.right);
-
-    function resetDots() {
-      dotNodes.forEach(function (el) { d3.select(el).classed('history-chart-dot--active', false); });
-    }
-
-    svg.append('rect')
-      .attr('class', 'history-chart-hit')
-      .attr('x', margin.left)
-      .attr('y', margin.top)
-      .attr('width', Math.max(0, width - margin.left - margin.right))
-      .attr('height', Math.max(0, height - margin.top - margin.bottom))
-      .attr('fill', 'transparent')
-      .on('mousemove', function (event) {
-        var rectBounds = this.getBoundingClientRect();
-        var svgSpaceWidth = Math.max(1, width - margin.left - margin.right);
-        var mxRatio = rectBounds.width > 0 ? (event.clientX - rectBounds.left) / rectBounds.width : 0;
-        var mx = margin.left + Math.max(0, Math.min(1, mxRatio)) * svgSpaceWidth;
-        hoverLine.attr('x1', mx).attr('x2', mx).style('opacity', 1);
-
-        var idx = Math.round((mx - x(0)) / step);
-        idx = Math.max(0, Math.min(hist.length - 1, idx));
-        var cx = x(idx);
-        var withinBand = Math.abs(mx - cx) <= step / 2;
-
-        resetDots();
-        if (withinBand) {
-          var d = hist[idx];
-          var activeDotEl = dotNodes[idx];
-          d3.select(activeDotEl).classed('history-chart-dot--active', true);
-          var dt = new Date(d.date);
-          var ds = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
-          tooltip.textContent = ds + ' · ' + d.score + '점 (' + d.correct + '/' + d.total + ')';
-          tooltip.style.opacity = '1';
-          var dotBounds = activeDotEl.getBoundingClientRect();
-          tooltip.style.left = (dotBounds.left + dotBounds.width / 2) + 'px';
-          tooltip.style.top = (dotBounds.bottom + 10) + 'px';
-        } else {
-          tooltip.style.opacity = '0';
-        }
-      })
-      .on('mouseleave', function () {
-        hoverLine.style('opacity', 0);
-        tooltip.style.opacity = '0';
-        resetDots();
-      });
-  }
-
-  draw();
-  new MutationObserver(draw).observe(historyBox, { childList: true });
-
-  var resizeTimer;
-  window.addEventListener('resize', function () {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(draw, 150);
-  });
 })();
 </script>
 <script>
