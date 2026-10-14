@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Moonble</title>
+  <desc id="desc">흰색 배경 중앙에 파란색 Moonble 로고가 있습니다.</desc>
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <text x="600" y="338" text-anchor="middle" dominant-baseline="middle" fill="#3182f6" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-7">moonble</text>
+</svg>
