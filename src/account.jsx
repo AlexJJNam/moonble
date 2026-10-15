@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { loginUrl, supabase } from './supabase.js';
+import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
 
 let leavingHome = false;
+const initialSession = cachedAuthSession();
+const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+if (initialUser) {
+  window.moonbleUserId = initialUser.id;
+  document.documentElement.removeAttribute('data-auth-pending');
+}
+
 function requireLogin() {
   document.documentElement.setAttribute('data-auth-pending', '');
   if (leavingHome) return;
@@ -15,8 +22,8 @@ function requireLogin() {
 
 function Account() {
   const solverPage = window.location.pathname.endsWith('/solve.html');
-  const [user, setUser] = useState(null);
-  const [checking, setChecking] = useState(Boolean(supabase));
+  const [user, setUser] = useState(initialUser);
+  const [checking, setChecking] = useState(Boolean(supabase) && !initialUser);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -35,14 +42,15 @@ function Account() {
       setChecking(false);
       document.documentElement.removeAttribute('data-auth-pending');
     }
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      acceptSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) acceptSession(session);
+      else if (event === 'SIGNED_OUT') requireLogin();
     });
-    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+    getSessionSafely().then(({ session, error: sessionError }) => {
       if (!alive) return;
       if (sessionError) { requireLogin(); return; }
-      acceptSession(data.session);
-    }).catch(() => { if (alive) requireLogin(); });
+      acceptSession(session);
+    });
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
 
@@ -58,7 +66,7 @@ function Account() {
     finally { setPending(false); }
   }
 
-  if (checking) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">계정 확인 중</span></div>;
+  if (checking) return <div className="workspace-check" role="status" aria-label="계정 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   if (!user) return null;
   return <AppHeader active="papers" variant={solverPage ? 'solver' : 'default'} user={user} pending={pending} error={error} onLogout={logout} />;
 }

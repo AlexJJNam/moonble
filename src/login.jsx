@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Eye, EyeOff } from 'lucide-react';
-import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
+import { authCallback, cachedAuthSession, getSessionSafely, goHome, loginUrl, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
 import { signupConsents } from './policy.js';
 import './design-system.css';
 import './login.css';
+
+const initialSession = cachedAuthSession();
 
 function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, onChange, setVisible, value, visible }) {
   const inputRef = useRef(null);
@@ -58,7 +60,7 @@ function Login() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [pending, setPending] = useState(false);
-  const [checking, setChecking] = useState(Boolean(supabase));
+  const [checking, setChecking] = useState(Boolean(supabase && initialSession));
   const [message, setMessage] = useState(accountDeleted ? '회원 탈퇴가 완료되었습니다.' : '');
   const [error, setError] = useState('');
   const [completion, setCompletion] = useState(null);
@@ -84,13 +86,15 @@ function Login() {
         goHome();
       }
     });
-    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+    getSessionSafely().then(({ session, error: sessionError }) => {
       if (!alive) return;
       setChecking(false);
       if (sessionError) setError('로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.');
-      if (data.session && recovery) {
+      if (session && recovery) {
         setMode('update');
         setMessage('새 비밀번호를 입력해주세요.');
+      } else if (session && !callbackError) {
+        goHome();
       }
     }).catch(() => {
       if (alive) { setChecking(false); setError('연결을 확인한 뒤 다시 시도해주세요.'); }
@@ -180,7 +184,7 @@ function Login() {
       <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="70" y="21" textAnchor="middle" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="700" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
       {(mode === 'reset' || mode === 'update') && !completion && <h2>{title}</h2>}
       {!supabase && <p className="auth-message" role="status">회원가입을 준비 중입니다. 설정이 완료되면 이용할 수 있습니다.</p>}
-      {checking && <p role="status" aria-label="로그인 상태 확인 중"><span className="moonble-spinner" aria-hidden="true" /></p>}
+      {checking && <p role="status" aria-label="계정 여는 중"><span className="moonble-spinner" aria-hidden="true" /></p>}
       {completion ? <div className="auth-complete" role="status" aria-live="polite">
         <div className="auth-complete-badge" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13.5 24.8l7 7L35 17.5" /></svg></div>
         <strong>{completion.title}</strong>

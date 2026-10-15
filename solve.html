@@ -2765,9 +2765,8 @@
 </head>
 
 <body class="tab-quiz">
-  <div id="moonble-auth-status" role="status">
-    <span class="moonble-spinner" aria-hidden="true" style="justify-self:center"></span><span class="mb-sr-only">로그인 상태 확인 중</span>
-    <a href="./login.html">로그인 화면 열기</a>
+  <div id="moonble-auth-status" role="status" aria-label="문제풀이 여는 중">
+    <span class="moonble-spinner" aria-hidden="true" style="justify-self:center"></span>
     <noscript>서비스를 이용하려면 브라우저에서 JavaScript를 허용해주세요.</noscript>
   </div>
 <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
@@ -4992,12 +4991,12 @@
 })();
 </script>
 <script type="module">
-import { supabase } from '/src/supabase.js';
+import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
 import { getCustomBank, setCustomBankUser } from '/src/custom-bank.js';
 
 if (supabase) {
-  const { data } = await supabase.auth.getSession();
-  const user = data.session?.user;
+  const session = cachedAuthSession() || (await getSessionSafely()).session;
+  const user = session?.user;
   if (user) {
     window.moonbleUserId = user.id;
     setCustomBankUser(user.id);

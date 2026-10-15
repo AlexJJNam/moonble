@@ -73,10 +73,6 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .landing-cta p { margin: 0; color: rgb(255 255 255 / 78%); font-size: var(--mb-font-14); }
 .landing-cta h2 { margin-top: 16px; }
 .landing-cta a { min-height: 52px; display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 13px 22px; border-radius: 14px; color: var(--mb-primary-strong); background: white; font-size: var(--mb-font-16); font-weight: 600; text-decoration: none; }
-.landing-loading { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--mb-primary); background: var(--mb-surface); }
-.landing-loading-logo { font-size: var(--mb-font-24); font-weight: 700; letter-spacing: -.045em; }
-.moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: moonble-spin .7s linear infinite; }
-@keyframes moonble-spin { to { transform: rotate(360deg); } }
 .landing-features, .landing-workflow, .landing-cta { scroll-margin-top: 24px; }
 .landing-hero a:focus-visible, .landing-header a:focus-visible, .landing-workflow a:focus-visible, .landing-cta a:focus-visible { outline: 3px solid var(--mb-primary); outline-offset: 3px; }
 
@@ -131,5 +127,4 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .moonble-spinner { animation: none; }
 }

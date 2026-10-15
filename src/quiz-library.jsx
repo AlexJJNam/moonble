@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowRight, LayoutGrid, List, Plus, Search } from 'lucide-react';
-import { loginUrl, supabase } from './supabase.js';
+import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
 import { CustomBankDialog } from './custom-bank-dialog.jsx';
@@ -28,6 +28,12 @@ const papers = [
 ];
 const categories = ['전체', '기본 제공', '내 문제지'];
 const difficulties = ['전체 난이도', '기본', '심화'];
+const initialSession = cachedAuthSession();
+const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+if (initialUser) {
+  setCustomBankUser(initialUser.id);
+  document.documentElement.removeAttribute('data-auth-pending');
+}
 
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.id}`} aria-hidden="true">
@@ -46,7 +52,7 @@ function PaperPreview({ paper }) {
 }
 
 function QuizLibrary() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(initialUser);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -54,7 +60,7 @@ function QuizLibrary() {
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [creating, setCreating] = useState(false);
-  const [custom, setCustom] = useState(null);
+  const [custom, setCustom] = useState(() => initialUser ? getCustomBankMeta(initialUser.id) : null);
   const [section, setSection] = useState(window.location.hash === '#achievement' ? 'achievement' : 'papers');
   useEffect(() => {
     const syncSection = () => setSection(window.location.hash === '#achievement' ? 'achievement' : 'papers');
@@ -79,11 +85,15 @@ function QuizLibrary() {
       setUser(session.user);
       document.documentElement.removeAttribute('data-auth-pending');
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) { if (alive) window.location.replace(loginUrl()); return; }
-      accept(data.session);
-    }).catch(() => { if (alive) window.location.replace(loginUrl()); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) accept(session);
+      else if (event === 'SIGNED_OUT') window.location.replace(loginUrl());
+    });
+    getSessionSafely().then(({ session, error }) => {
+      if (!alive) return;
+      if (error || !session) { window.location.replace(loginUrl()); return; }
+      accept(session);
+    });
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
   async function logout() {
@@ -94,7 +104,7 @@ function QuizLibrary() {
     } catch { setError('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
-  if (!user) return <div className="quiz-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">로그인 상태 확인 중</span></div>;
+  if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const search = query.trim().toLocaleLowerCase();
   const allPapers = custom ? [...papers, {
     id: 'custom', label: (custom.source || '내 문제지').replace(/\.csv$/i, ''), level: '내 문제지', count: 20,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Check, Trash2 } from 'lucide-react';
-import { loginUrl, supabase } from './supabase.js';
+import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { PrivacyRequest } from './prd/privacy-request.jsx';
@@ -13,6 +13,9 @@ import './prd/shell.css';
 import './account-page.css';
 
 let leavingAfterDeletion = false;
+const initialSession = cachedAuthSession();
+const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+if (initialUser) document.documentElement.removeAttribute('data-auth-pending');
 
 function localDataKeys(userId) {
   const prefixes = [`moonble:${userId}:`, `moonble:user:${userId}:`];
@@ -108,7 +111,7 @@ function AccountDeletion({ user }) {
 }
 
 function AccountPage() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(initialUser);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
 
@@ -123,8 +126,11 @@ function AccountPage() {
       setUser(session.user);
       document.documentElement.removeAttribute('data-auth-pending');
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    supabase.auth.getSession().then(({ data, error: sessionError }) => sessionError ? window.location.replace(loginUrl()) : accept(data.session)).catch(() => window.location.replace(loginUrl()));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) accept(session);
+      else if (event === 'SIGNED_OUT') window.location.replace(loginUrl());
+    });
+    getSessionSafely().then(({ session, error: sessionError }) => sessionError || !session ? window.location.replace(loginUrl()) : accept(session));
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
 
@@ -136,7 +142,7 @@ function AccountPage() {
     } catch { setError('로그아웃하지 못했습니다. 다시 시도해주세요.'); setPending(false); }
   }
 
-  if (!user) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">계정 정보 확인 중</span></div>;
+  if (!user) return <div className="workspace-check" role="status" aria-label="계정 정보 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main">

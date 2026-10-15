@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowRight, BarChart3, BookOpen, Check, FileText, LayoutPanelLeft } from 'lucide-react';
 import { hasProfile } from './profile.js';
-import { supabase } from './supabase.js';
+import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
 import './design-system.css';
 import './landing.css';
@@ -41,8 +41,6 @@ const features = [
 ];
 
 function Landing() {
-  const [checking, setChecking] = useState(Boolean(supabase));
-
   useEffect(() => {
     if (!supabase) return undefined;
     let alive = true;
@@ -50,25 +48,16 @@ function Landing() {
 
     function accept(session) {
       if (!alive || moving) return;
-      if (!session) {
-        setChecking(false);
-        return;
-      }
+      if (!session) return;
       moving = true;
       moveTo(hasProfile(session.user) ? './quiz.html' : './prd.html#/register-name');
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    supabase.auth.getSession()
-      .then(({ data, error }) => accept(error ? null : data.session))
-      .catch(() => { if (alive) setChecking(false); });
+    getSessionSafely().then(({ session }) => accept(session));
 
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
-
-  if (checking) return <main className="landing-loading" role="status" aria-label="Moonble 여는 중">
-    <span className="landing-loading-logo">moonble</span><span className="moonble-spinner" aria-hidden="true" />
-  </main>;
 
   return <>
     <header className="landing-header">
@@ -106,4 +95,6 @@ function Landing() {
   </>;
 }
 
-createRoot(document.getElementById('root')).render(<Landing />);
+const initialSession = cachedAuthSession();
+if (initialSession) moveTo(hasProfile(initialSession.user) ? './quiz.html' : './prd.html#/register-name');
+else createRoot(document.getElementById('root')).render(<Landing />);

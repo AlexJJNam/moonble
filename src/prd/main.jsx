@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { supabase, loginUrl } from '../supabase.js';
+import { cachedAuthSession, getSessionSafely, supabase, loginUrl } from '../supabase.js';
 import { hasProfile, profileOf } from '../profile.js';
 import { ProfileForm } from './profile-form.jsx';
 import { SiteFooter } from '../site-footer.jsx';
@@ -14,6 +14,10 @@ import '../design-system.css';
 import './app/globals.css';
 import './shell.css';
 
+const initialSession = cachedAuthSession();
+const initialUser = initialSession?.user || null;
+if (initialUser) setStorageUser(initialUser);
+
 class WorkspaceBoundary extends React.Component {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
@@ -23,7 +27,7 @@ class WorkspaceBoundary extends React.Component {
   }
 }
 function Workspace() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(initialUser);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const route = useRoute();
@@ -42,11 +46,14 @@ function Workspace() {
       setStorageUser(session.user);
       setUser(session.user);
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) { if (alive) window.location.replace(loginUrl()); return; }
-      accept(data.session);
-    }).catch(() => { if (alive) window.location.replace(loginUrl()); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) accept(session);
+      else if (event === 'SIGNED_OUT') accept(null);
+    });
+    getSessionSafely().then(({ session, error }) => {
+      if (error || !session) { if (alive) window.location.replace(loginUrl()); return; }
+      accept(session);
+    });
     return () => { alive = false; subscription.unsubscribe(); setStorageUser(null); };
   }, []);
   async function logout() {
@@ -57,7 +64,7 @@ function Workspace() {
     } catch { setError('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
-  if (!user) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">로그인 상태 확인 중</span></div>;
+  if (!user) return <div className="workspace-check" role="status" aria-label="PRD 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const initial = !hasProfile(user);
   const profile = profileOf(user);
   if (path === '/my-page') {
