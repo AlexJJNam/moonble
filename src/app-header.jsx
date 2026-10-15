@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BarChart3, BookOpen, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2 } from 'lucide-react';
+import { BarChart3, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2 } from 'lucide-react';
 import { profileOf } from './profile.js';
 import './app-header.css';
 
@@ -197,7 +197,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
         <Settings2 size={16} aria-hidden="true" />
       </a>
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
-        <div className="mb-solver-heading"><a href="./quiz.html#paper-library"><ArrowLeft size={16} aria-hidden="true" /><span>문제지</span></a><strong>문제 목록</strong></div>
+        <div className="mb-solver-heading"><a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a><strong>문제 목록</strong></div>
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => <a
             className={`mb-solver-question is-${item.status}`}
