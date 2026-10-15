@@ -104,6 +104,10 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
     catch { return false; }
   });
+  const [sidebarHidden, setSidebarHidden] = useState(() => {
+    try { return sessionStorage.getItem('moonble:sidebar-hidden') === 'true'; }
+    catch { return false; }
+  });
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
   const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
@@ -121,7 +125,26 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     return () => document.body.classList.remove('mb-sidebar-collapsed');
   }, [collapsed]);
 
-  return <aside className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  useEffect(() => {
+    document.body.classList.toggle('mb-sidebar-hidden', sidebarHidden);
+    try { sessionStorage.setItem('moonble:sidebar-hidden', String(sidebarHidden)); } catch { /* 현재 탭에 저장할 수 없어도 단축키는 동작한다. */ }
+    return () => document.body.classList.remove('mb-sidebar-hidden');
+  }, [sidebarHidden]);
+
+  useEffect(() => {
+    function toggleSidebar(event) {
+      if (!event.shiftKey || event.code !== 'Backslash' || event.repeat) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      event.preventDefault();
+      setSidebarHidden(value => !value);
+    }
+
+    window.addEventListener('keydown', toggleSidebar);
+    return () => window.removeEventListener('keydown', toggleSidebar);
+  }, []);
+
+  return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><span className="mb-app-logo-full">moonble</span><span className="mb-app-logo-compact" aria-hidden="true">m</span></a>
       <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
