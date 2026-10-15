@@ -77,7 +77,23 @@ function useSolverQuestions(enabled) {
   }, [enabled]);
 
   useEffect(() => {
-    navRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const nav = navRef.current;
+    const current = nav?.querySelector('[aria-current="true"]');
+    if (!nav || !current) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const currentRect = current.getBoundingClientRect();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior = reduceMotion ? 'auto' : 'smooth';
+
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      const left = nav.scrollLeft + currentRect.left - navRect.left - (nav.clientWidth - currentRect.width) / 2;
+      nav.scrollTo({ left: Math.max(0, left), behavior });
+      return;
+    }
+
+    const top = nav.scrollTop + currentRect.top - navRect.top - (nav.clientHeight - currentRect.height) / 2;
+    nav.scrollTo({ top: Math.max(0, top), behavior });
   }, [activeIndex, items.length]);
 
   function goToQuestion(event, index) {
