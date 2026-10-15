@@ -25,12 +25,15 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .solver-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 8px; color: var(--info-text); font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
 #quiz>.muted { font-size: var(--mb-font-16); line-height: 28px; margin-top: 12px; }
 .quiz-wrap { gap: 24px; margin-top: 32px; }
-.q-card { border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
+.q-card { position: relative; isolation: isolate; border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
 .q-card:focus { outline: none; }
+.q-card.is-anchor-trace::before { content: ''; position: absolute; inset: -2px; z-index: 2; padding: 2px; border-radius: inherit; background: conic-gradient(from var(--mb-anchor-trace-angle), transparent 0 70%, rgb(49 130 246 / 16%) 77%, var(--mb-primary) 86%, rgb(49 130 246 / 60%) 91%, transparent 98% 100%); pointer-events: none; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: mb-question-card-trace 1050ms cubic-bezier(.22, 1, .36, 1) 1; }
 .q-title { font-size: var(--mb-font-16); line-height: 28px; font-weight: 600; gap: 12px; }
 .q-title .q-number { position: relative; overflow: hidden; isolation: isolate; font-size: var(--mb-font-12); line-height: 18px; }
 .q-title .q-number.is-anchor-flash::after { content: ''; position: absolute; inset: -50% auto -50% -60%; width: 42%; transform: rotate(18deg); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 88%), transparent); animation: mb-question-badge-flash 680ms cubic-bezier(.22, 1, .36, 1) 1; pointer-events: none; }
 @keyframes mb-question-badge-flash { to { left: 135%; } }
+@property --mb-anchor-trace-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes mb-question-card-trace { from { --mb-anchor-trace-angle: 0deg; opacity: .35; } 18% { opacity: 1; } to { --mb-anchor-trace-angle: 360deg; opacity: 0; } }
 .option-card { min-height: 48px; padding: 16px; font-size: var(--mb-font-16); line-height: 24px; border-radius: 12px; }
 .q-caption { font-size: var(--mb-font-12); line-height: 18px; }
 .btn { min-height: 44px; font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
@@ -47,4 +50,5 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 
 @media (prefers-reduced-motion: reduce) {
   .q-title .q-number.is-anchor-flash::after { animation: none; }
+  .q-card.is-anchor-trace::before { background: var(--mb-primary); animation: none; opacity: 1; }
 }
