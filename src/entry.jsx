@@ -67,14 +67,24 @@ function Landing() {
     </header>
     <main>
       <section className="landing-hero">
+        <div className="landing-hero-glow landing-hero-glow-one" aria-hidden="true" />
+        <div className="landing-hero-glow landing-hero-glow-two" aria-hidden="true" />
         <div className="landing-hero-copy">
           <span className="landing-eyebrow"><LayoutPanelLeft size={16} aria-hidden="true" />기획자를 위한 개인 워크스페이스</span>
-          <h1>배우고, 정리하고,<br /><em>다음 생각으로.</em></h1>
-          <p>문제 풀이와 학습 기록, PRD 작성을 하나의 흐름으로 연결하세요.<br className="landing-desktop-break" /> Moonble이 흩어진 생각을 꾸준한 결과로 바꿔드립니다.</p>
-          <div className="landing-actions"><a className="landing-primary" href="./signup.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">Moonble 살펴보기</a></div>
+          <h1>배움에서 기획까지,<br /><em>생각이 일이 되는 곳.</em></h1>
+          <p>문제 풀이와 학습 기록, PRD 작성을 하나의 흐름으로 연결하세요.<br className="landing-desktop-break" /> Moonble이 흩어진 생각을 다음 결과로 이어드립니다.</p>
+          <div className="landing-actions"><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">Moonble 살펴보기</a></div>
           <ul aria-label="Moonble 이용 특징"><li><Check size={15} aria-hidden="true" />설치 없이 바로 시작</li><li><Check size={15} aria-hidden="true" />개인 학습 기록 저장</li></ul>
         </div>
         <ProductPreview />
+      </section>
+
+      <section className="landing-proof" aria-label="Moonble 핵심 가치">
+        <div><strong>Learn</strong><span>문제로 익히고</span></div>
+        <i aria-hidden="true" />
+        <div><strong>Track</strong><span>변화를 확인하고</span></div>
+        <i aria-hidden="true" />
+        <div><strong>Build</strong><span>기획으로 완성해요</span></div>
       </section>
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
@@ -85,11 +95,11 @@ function Landing() {
       </section>
 
       <section className="landing-workflow" id="workflow" aria-labelledby="workflow-title">
-        <div><span className="landing-eyebrow">SIMPLE FLOW</span><h2 id="workflow-title">오늘 할 일을 고르면<br />바로 시작할 수 있어요.</h2><p>문제지를 고르고, 집중해서 풀고, 기록으로 다음 행동을 정하세요. 기획이 필요할 때는 PRD로 자연스럽게 이어집니다.</p><a href="./signup.html">내 워크스페이스 만들기<ArrowRight size={18} aria-hidden="true" /></a></div>
+        <div><span className="landing-eyebrow">SIMPLE FLOW</span><h2 id="workflow-title">오늘 할 일을 고르면<br />바로 시작할 수 있어요.</h2><p>문제지를 고르고, 집중해서 풀고, 기록으로 다음 행동을 정하세요. 기획이 필요할 때는 PRD로 자연스럽게 이어집니다.</p><a href="./login.html">내 워크스페이스 열기<ArrowRight size={18} aria-hidden="true" /></a></div>
         <ol><li><b>1</b><div><strong>문제지 선택</strong><p>준비된 문제지 또는 직접 만든 문제지를 선택해요.</p></div></li><li><b>2</b><div><strong>집중해서 풀이</strong><p>문제 목록을 오가며 한 번에 흐름을 이어가요.</p></div></li><li><b>3</b><div><strong>성취도 확인</strong><p>점수와 추세를 확인하고 다음 학습을 계획해요.</p></div></li></ol>
       </section>
 
-      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>한곳에서 생각하고,<br />한 걸음씩 완성하세요.</h2><a href="./signup.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>한곳에서 생각하고,<br />한 걸음씩 완성하세요.</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
     </main>
     <SiteFooter />
   </>;
