@@ -872,7 +872,7 @@ export default function PrdListPage() {
               </Button>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="default" className="btn-animated-gradient" onClick={handleOpenNewPrdDialog}>
+              <Button variant="default" className="mb-flow-gradient" onClick={handleOpenNewPrdDialog}>
                   <Plus className="mr-2" />
                   PRD 작성하기
               </Button>

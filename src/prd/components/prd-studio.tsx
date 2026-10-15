@@ -418,7 +418,7 @@ export function PrdStudio({ prdId }: { prdId?: string }) {
             <Button variant="outline" size="sm" onClick={handlePrint} className="hidden sm:flex"><FileDown /> PDF 내보내기</Button>
             <Button variant="outline" size="sm" onClick={handleCopyMarkup} className="hidden sm:flex"><Clipboard /> 마크업 복사</Button>
             {!isNewPrd && <Button variant="outline" size="sm" onClick={handleUpdateCurrentVersion}>현재 버전 저장</Button>}
-            <Button onClick={handleSaveAsNewVersionClick} variant="default" className="btn-animated-gradient">
+            <Button onClick={handleSaveAsNewVersionClick} variant="default" className="mb-flow-gradient">
               {saveButtonText}
             </Button>
           </div>

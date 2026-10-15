@@ -98,34 +98,6 @@
     100% { background-position: 0% 50%; }
   }
 
-  .btn-animated-gradient {
-    @apply relative overflow-hidden isolate;
-    background: linear-gradient(125deg, #2563eb, #7c3aed, #2563eb);
-    background-size: 400% 400%;
-    color: white;
-    animation: moving-gradient 8s ease infinite;
-    transition: transform .2s ease, box-shadow .2s ease;
-  }
-  .btn-animated-gradient:hover {
-    animation-duration: 2s;
-    box-shadow: 0 8px 20px rgb(79 70 229 / 22%);
-    transform: translateY(-1px);
-  }
-  .btn-animated-gradient::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    z-index: -1;
-    border-radius: inherit;
-    background: linear-gradient(125deg, #2563eb, #7c3aed, #2563eb);
-    background-size: 400% 400%;
-    filter: blur(8px);
-    opacity: .8;
-    animation: moving-gradient 8s ease infinite;
-  }
-  .btn-animated-gradient:hover::before {
-    animation-duration: 2s;
-  }
   .text-animated-gradient {
     @apply text-transparent bg-clip-text;
     background-image: linear-gradient(125deg, #2563eb, #7c3aed, #2563eb);
@@ -212,7 +184,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-slide-in, .animate-slide-in-from-bottom, .animate-slide-out-to-bottom, .btn-animated-gradient, .btn-animated-gradient::before, .text-animated-gradient {
+  .animate-slide-in, .animate-slide-in-from-bottom, .animate-slide-out-to-bottom, .text-animated-gradient {
     animation-duration: .01ms;
     animation-iteration-count: 1;
   }

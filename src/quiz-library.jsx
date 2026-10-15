@@ -110,7 +110,7 @@ function QuizLibrary() {
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />새 문제지 만들기</button></div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><button className="quiz-create mb-flow-gradient" onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />새 문제지 만들기</button></div>
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><div className="quiz-filters" role="group" aria-label="문제지 소유 구분">{categories.map(item => <button key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="quiz-difficulties" role="group" aria-label="난이도">{difficulties.map(item => <button key={item} aria-pressed={difficulty === item} onClick={() => setDifficulty(item)}>{item}</button>)}</div></div>
           <div className="quiz-display-tools">

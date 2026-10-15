@@ -135,6 +135,31 @@ button, input, textarea, select {
   line-height: var(--mb-line-reading);
 }
 
+@keyframes mb-flow-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.mb-flow-gradient {
+  color: #fff;
+  background-image: linear-gradient(125deg, #2563eb, #7c3aed, #2563eb) !important;
+  background-size: 400% 400%;
+  animation: mb-flow-gradient 8s ease infinite;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.mb-flow-gradient:hover {
+  animation-duration: 2s;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.mb-flow-gradient::before {
+  content: none !important;
+}
+
 .mb-sr-only {
   position: absolute;
   width: 1px;
@@ -156,4 +181,5 @@ button, input, textarea, select {
   html { scroll-behavior: auto; }
   .moonble-spinner { animation: none !important; }
   .mb-interactive { transition: none !important; }
+  .mb-flow-gradient { animation: none !important; background-position: 50% 50%; }
 }
