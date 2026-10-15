@@ -50,9 +50,9 @@
   --mb-radius-8: 8px;
   --mb-radius-12: 12px;
   --mb-radius-16: 16px;
-  --mb-shadow-card: 0 2px 8px rgb(25 31 40 / 4%);
-  --mb-shadow-hover: 0 8px 24px rgb(25 31 40 / 8%);
-  --mb-focus-ring: 0 0 0 3px rgb(49 130 246 / 24%);
+  --mb-shadow-card: none;
+  --mb-shadow-hover: none;
+  --mb-focus-ring: none;
   --mb-duration: 160ms;
   --mb-control-height: 48px;
   --mb-target-size: 44px;

@@ -15,7 +15,7 @@ button { font: inherit; cursor: pointer; }
 .account-danger-note { color: var(--mb-danger) !important; }
 .account-delete-card { border-color: #ffd4d0 !important; }
 .account-delete-overlay { position: fixed; inset: 0; z-index: 100; background: rgb(25 31 40 / 48%); animation: account-overlay-in 180ms ease-out; }
-.account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: 28px 24px 22px; border: 0; border-radius: 24px; background: var(--mb-surface); box-shadow: 0 24px 70px rgb(25 31 40 / 24%); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }
+.account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: 28px 24px 22px; border: 0; border-radius: 24px; background: var(--mb-surface); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }
 .account-delete-dialog h2 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; }
 .account-delete-dialog>p { margin: 10px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
 .account-delete-dialog ul { margin: 20px 0; padding: 16px 16px 16px 34px; border-radius: 12px; background: var(--mb-surface-muted); color: var(--mb-text-secondary); font-size: var(--mb-font-13, 13px); line-height: 20px; }

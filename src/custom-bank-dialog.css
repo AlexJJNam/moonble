@@ -1,4 +1,4 @@
-.bank-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 24px; border: 1px solid var(--mb-border); border-radius: 16px; color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 16px 48px #191f2826; }
+.bank-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 24px; border: 1px solid var(--mb-border); border-radius: 16px; color: var(--mb-text-primary); background: var(--mb-surface); }
 .bank-dialog::backdrop { background: #191f2866; }
 .bank-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .bank-dialog h2 { margin: 0; font-size: 22px; line-height: 30px; }

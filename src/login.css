@@ -12,7 +12,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-brand svg { display: block; width: 196px; height: 40px; margin: 0 auto; overflow: visible; }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: #f1f3f5; border-radius: 8px; margin-bottom: 24px; }
 .auth-tabs button { border: 0; border-radius: 5px; background: transparent; padding: 9px; color: #6b7684; cursor: pointer; }
-.auth-tabs button[aria-pressed='true'] { background: white; color: #191f28; box-shadow: 0 1px 3px #00000015; }
+.auth-tabs button[aria-pressed='true'] { background: white; color: #191f28; }
 .auth-card fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--mb-space-16); min-width: 0; }
 .auth-card label { color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; }
 .auth-card input { min-width: 0; width: 100%; min-height: 56px; border: 1px solid var(--mb-border-strong); background: var(--mb-surface); border-radius: var(--mb-radius-12); padding: 21px var(--mb-space-16) 7px; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; }
@@ -23,7 +23,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .floating-field input:not(:placeholder-shown) + label,
 .floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
 .floating-field input:focus + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
-.floating-field input:focus { border-color: var(--mb-primary); box-shadow: var(--mb-focus-ring); outline: 0; }
+.floating-field input:focus { border-color: var(--mb-primary); }
 .password-field { position: relative; }
 .password-field input { padding-right: 64px; }
 .password-field label { max-width: calc(100% - 96px); }
@@ -48,7 +48,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-error { background: var(--mb-danger-soft); color: var(--mb-danger); }
 .auth-card h2 { font-size: var(--mb-font-28); line-height: 36px; font-weight: 700; letter-spacing: -.02em; text-align: center; margin: 0 0 var(--mb-space-24); }
 .auth-complete { display: flex; min-height: 312px; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.auth-complete-badge { display: grid; width: 76px; height: 76px; margin-bottom: var(--mb-space-24); place-items: center; border-radius: 50%; background: var(--mb-primary); box-shadow: 0 14px 30px -12px #3182f699; animation: auth-complete-pop .5s cubic-bezier(.34, 1.56, .64, 1) both; }
+.auth-complete-badge { display: grid; width: 76px; height: 76px; margin-bottom: var(--mb-space-24); place-items: center; border-radius: 50%; background: var(--mb-primary); animation: auth-complete-pop .5s cubic-bezier(.34, 1.56, .64, 1) both; }
 .auth-complete-badge svg { width: 42px; height: 42px; overflow: visible; }
 .auth-complete-badge path { fill: none; stroke: white; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 34; stroke-dashoffset: 34; animation: auth-complete-draw .32s ease-out .2s forwards; }
 .auth-complete strong { color: var(--mb-text-primary); font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; animation: auth-complete-in .35s ease-out .35s both; }
