@@ -1,10 +1,10 @@
 
 :root {
-  --g1: #f5c8e5;
-  --g2: #d1c8f4;
-  --g3: #b9e3f5;
-  --g4: #c5eee5;
-  --g5: #f6edc9;
+  --g1: #f08ac7;
+  --g2: #a99aec;
+  --g3: #6bcaf0;
+  --g4: #74dbc8;
+  --g5: #efd06c;
 }
 
 @keyframes move1 {
@@ -44,14 +44,14 @@
   inset: -20vmax;
   z-index: -1;
   pointer-events: none;
-  filter: blur(112px) saturate(92%);
+  filter: blur(96px) saturate(112%);
 }
 
 .gradient-backdrop > div {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.24;
-  mix-blend-mode: screen;
+  opacity: 0.34;
+  will-change: transform;
 }
 
 .g1 {
@@ -104,9 +104,9 @@
     inset: 0;
     filter: none;
     background:
-      radial-gradient(circle at 18% 20%, rgb(245 200 229 / 10%), transparent 44%),
-      radial-gradient(circle at 82% 72%, rgb(185 227 245 / 11%), transparent 46%),
-      linear-gradient(160deg, #fcfbff, #f6fbfd 66%, #f9fdfa);
+      radial-gradient(circle at 18% 20%, rgb(240 138 199 / 24%), transparent 46%),
+      radial-gradient(circle at 82% 72%, rgb(107 202 240 / 26%), transparent 48%),
+      linear-gradient(160deg, #fcf7ff, #eff9ff 66%, #f4fcf7);
   }
   .gradient-backdrop > div { display: none; animation: none; }
 }
