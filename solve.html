@@ -3111,7 +3111,8 @@
     }
     function headerH() {
       const currentHeader = document.querySelector('.mb-app-header, .header');
-      return currentHeader ? currentHeader.getBoundingClientRect().height : 0;
+      const desktopSidebar = currentHeader && currentHeader.classList.contains('mb-app-header') && window.matchMedia('(min-width: 768px)').matches;
+      return currentHeader && !desktopSidebar ? currentHeader.getBoundingClientRect().height : 0;
     }
     function setActiveNav(id) {
       let changed = false;
@@ -3913,7 +3914,8 @@
 
   function getScrollBounds() {
     var currentHeader = document.querySelector('.mb-app-header, .header');
-    var headerHeight = currentHeader ? currentHeader.getBoundingClientRect().height : 0;
+    var desktopSidebar = currentHeader && currentHeader.classList.contains('mb-app-header') && window.matchMedia('(min-width: 768px)').matches;
+    var headerHeight = currentHeader && !desktopSidebar ? currentHeader.getBoundingClientRect().height : 0;
     var top = quizSection.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
     // 성취도 기록이 아직 없으면(historyBox가 비어서 짧음) historyBox의 bottom이
     // 문제 목록 중간보다도 위에 잡혀서, 20문항 중간쯤 보고 있다가 "AI에게 질문하기"를
@@ -4855,7 +4857,8 @@
     var firstCard = quizContainer.querySelector('.q-card');
     var target = firstCard || quizContainer;
     var currentHeader = document.querySelector('.mb-app-header, .header');
-    var hh = currentHeader ? currentHeader.getBoundingClientRect().height : 0;
+    var desktopSidebar = currentHeader && currentHeader.classList.contains('mb-app-header') && window.matchMedia('(min-width: 768px)').matches;
+    var hh = currentHeader && !desktopSidebar ? currentHeader.getBoundingClientRect().height : 0;
     var y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - hh - 8);
     window.scrollTo({ top: y, behavior: 'smooth' });
   }
