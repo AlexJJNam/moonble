@@ -44,11 +44,13 @@ function formatShortDate(value) {
 function ScoreChart({ history }) {
   const chronological = useMemo(() => history.slice(0, 10).reverse(), [history]);
   const trendData = useMemo(() => {
-    let total = 0;
     return chronological.map((item, index) => {
       const score = Number(item.score) || 0;
-      total += score;
-      return { ...item, score, average: Math.round(total / (index + 1)) };
+      const scores = chronological.slice(0, index + 1).map(record => Number(record.score) || 0);
+      const recent3Scores = scores.slice(-3);
+      const recent10Scores = scores.slice(-10);
+      const average = values => Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+      return { ...item, score, recent3: average(recent3Scores), recent10: average(recent10Scores) };
     });
   }, [chronological]);
   const chartRef = useRef(null);
@@ -69,7 +71,7 @@ function ScoreChart({ history }) {
       const point = event.currentTarget.getBoundingClientRect();
       const pointerX = Number.isFinite(event.clientX) && event.clientX ? event.clientX : point.left + point.width / 2;
       const pointerY = Number.isFinite(event.clientY) && event.clientY ? event.clientY : point.top;
-      tooltip.textContent = `${formatDate(item.date)} · ${item.score}점 · 누적 평균 ${item.average}점`;
+      tooltip.textContent = `${formatDate(item.date)} · ${item.score}점 · 최근 3회 ${item.recent3}점 · 장기 추세 ${item.recent10}점`;
       tooltip.style.left = `${Math.min(window.innerWidth - 16, pointerX + 12)}px`;
       tooltip.style.top = `${Math.max(12, pointerY - 12)}px`;
       tooltip.dataset.visible = 'true';
@@ -84,10 +86,10 @@ function ScoreChart({ history }) {
       const svg = d3.select(container).selectAll('svg').data([null]).join('svg')
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('role', 'img')
-        .attr('aria-label', `최근 점수 추이: ${trendData.map(item => `${item.score}점`).join(', ')}`)
+        .attr('aria-label', `최근 점수와 실력 추이: ${trendData.map(item => `${item.score}점`).join(', ')}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
       svg.selectAll('*').remove();
-      svg.append('title').text('최근 문제풀이 점수와 누적 평균 추이');
+      svg.append('title').text('최근 문제풀이 점수와 3회·10회 이동평균 추이');
 
       const x = d3.scaleBand()
         .domain(d3.range(trendData.length))
@@ -135,23 +137,31 @@ function ScoreChart({ history }) {
         .attr('y', item => y(item.score))
         .attr('height', item => Math.max(0, y(0) - y(item.score)));
 
-      const line = d3.line()
-        .x((_, index) => x(index) + x.bandwidth() / 2).y(item => y(item.average))
+      const movingAverageLine = key => d3.line()
+        .x((_, index) => x(index) + x.bandwidth() / 2).y(item => y(item[key]))
         .curve(d3.curveMonotoneX);
 
-      const linePath = svg.append('path').datum(trendData)
-        .attr('class', 'achievement-chart-line').attr('d', line);
+      const longLinePath = svg.append('path').datum(trendData)
+        .attr('class', 'achievement-chart-line achievement-chart-line-long').attr('d', movingAverageLine('recent10'));
+      const shortLinePath = svg.append('path').datum(trendData)
+        .attr('class', 'achievement-chart-line achievement-chart-line-short').attr('d', movingAverageLine('recent3'));
       if (!reduceMotion) {
-        const length = linePath.node()?.getTotalLength() || 0;
-        linePath.attr('stroke-dasharray', `${length} ${length}`).attr('stroke-dashoffset', length)
-          .transition().duration(700).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+        [longLinePath, shortLinePath].forEach((path, index) => {
+          const length = path.node()?.getTotalLength() || 0;
+          path.attr('stroke-dasharray', `${length} ${length}`).attr('stroke-dashoffset', length)
+            .transition().delay(index * 80).duration(700).ease(d3.easeCubicOut)
+            .attr('stroke-dashoffset', 0)
+            .on('end', () => {
+              if (index === 0) path.attr('stroke-dasharray', '6 6');
+            });
+        });
       }
 
       const dots = svg.selectAll('.achievement-chart-dot').data(trendData).enter().append('circle')
         .attr('class', 'achievement-chart-dot')
-        .attr('cx', (_, index) => x(index) + x.bandwidth() / 2).attr('cy', item => y(item.average))
+        .attr('cx', (_, index) => x(index) + x.bandwidth() / 2).attr('cy', item => y(item.recent3))
         .attr('r', reduceMotion ? 4 : 0).attr('tabindex', 0).attr('role', 'img')
-        .attr('aria-label', item => `${formatDate(item.date)}, 누적 평균 ${item.average}점`)
+        .attr('aria-label', item => `${formatDate(item.date)}, 최근 3회 평균 ${item.recent3}점, 장기 추세 ${item.recent10}점`)
         .on('pointerenter focus', function (event, item) {
           d3.select(this).interrupt().transition().duration(140).attr('r', 6);
           showTooltip(event, item);
@@ -174,28 +184,38 @@ function ScoreChart({ history }) {
 
   const latest = trendData.at(-1);
   const previous = trendData.at(-2);
-  const difference = previous ? latest.score - previous.score : null;
-  const trendCopy = difference === null
-    ? `첫 기록은 ${latest.score}점이에요. 다음 풀이부터 변화가 함께 표시돼요.`
-    : difference > 0
-      ? `최근 점수는 ${latest.score}점으로 직전 풀이보다 ${difference}점 올랐어요.`
-      : difference < 0
-        ? `최근 점수는 ${latest.score}점이에요. 누적 평균은 ${latest.average}점을 유지하고 있어요.`
-        : `최근 점수는 ${latest.score}점으로 직전 풀이와 같아요.`;
+  const trendGap = latest.recent3 - latest.recent10;
+  const previousGap = previous ? previous.recent3 - previous.recent10 : 0;
+  const recentChange = previous ? latest.recent3 - previous.recent3 : 0;
+  const crossedUp = trendData.length >= 5 && trendGap > 0 && previousGap <= 0;
+  const trendCopy = trendData.length < 5
+    ? `현재 ${trendData.length}회 기록이 있어요. 5회 이상 쌓이면 최근 성장세를 더 정확히 비교할 수 있어요.`
+    : crossedUp
+      ? `최근 성장세가 장기 추세를 넘어섰어요. 최근 3회 평균은 ${latest.recent3}점이에요.`
+      : trendGap >= 3
+        ? `최근 3회 평균이 장기 추세보다 ${trendGap}점 높아요. 상승 흐름이 이어지고 있어요.`
+        : trendGap > 0
+          ? `최근 3회 평균이 장기 추세보다 ${trendGap}점 높아요.`
+          : recentChange > 0
+            ? `최근 3회 평균이 직전 추세보다 ${recentChange}점 올랐어요.`
+            : trendGap <= -3
+              ? `최근 3회 평균이 장기 추세보다 ${Math.abs(trendGap)}점 낮아요. 취약 영역을 다시 확인해보세요.`
+              : `최근 성장세가 장기 추세와 비슷하게 유지되고 있어요.`;
 
   return <section className="achievement-chart" aria-labelledby="achievement-chart-title">
     <div className="achievement-section-heading">
-      <div><h2 id="achievement-chart-title" className="mb-section-title">점수 추이</h2><p>{trendCopy}</p></div>
-      <div className="achievement-legend" aria-label="그래프 범례"><span><i className="score" />회차 점수</span><span><i className="average" />누적 평균</span></div>
+      <div><h2 id="achievement-chart-title" className="mb-section-title">실력 추세</h2><p>{trendCopy}</p></div>
+      <div className="achievement-legend" aria-label="그래프 범례"><span><i className="score" />회차 점수</span><span><i className="recent" />최근 3회</span><span><i className="long-term" />최근 10회</span></div>
     </div>
     <div className="achievement-chart-scroll" tabIndex={0} aria-label="점수 추이 그래프와 표, 가로로 이동 가능">
       <div className="achievement-chart-canvas" ref={chartRef} />
       <table className="achievement-chart-table">
-        <caption className="mb-sr-only">최근 문제풀이 점수와 누적 평균</caption>
+        <caption className="mb-sr-only">최근 문제풀이 점수와 3회·10회 이동평균</caption>
         <thead><tr><th scope="col">기록</th>{trendData.map((item, index) => <th scope="col" key={`${item.date}-date-${index}`}>{formatShortDate(item.date)}</th>)}</tr></thead>
         <tbody>
           <tr><th scope="row"><i className="score" />점수</th>{trendData.map((item, index) => <td key={`${item.date}-score-${index}`}>{item.score}점</td>)}</tr>
-          <tr><th scope="row"><i className="average" />누적 평균</th>{trendData.map((item, index) => <td key={`${item.date}-average-${index}`}>{item.average}점</td>)}</tr>
+          <tr><th scope="row"><i className="recent" />최근 3회</th>{trendData.map((item, index) => <td key={`${item.date}-recent3-${index}`}>{item.recent3}점</td>)}</tr>
+          <tr><th scope="row"><i className="long-term" />최근 10회</th>{trendData.map((item, index) => <td key={`${item.date}-recent10-${index}`}>{item.recent10}점</td>)}</tr>
         </tbody>
       </table>
     </div>

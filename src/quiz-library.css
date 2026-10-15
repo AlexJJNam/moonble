@@ -102,7 +102,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .achievement-legend i, .achievement-chart-table i { display: inline-block; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
 .achievement-legend i.score, .achievement-chart-table i.score { background: var(--mb-primary); }
-.achievement-legend i.average, .achievement-chart-table i.average { height: 3px; border-radius: 999px; background: var(--mb-success); }
+.achievement-legend i.recent, .achievement-chart-table i.recent { width: 14px; height: 3px; border-radius: 999px; background: var(--mb-success); }
+.achievement-legend i.long-term, .achievement-chart-table i.long-term { width: 14px; height: 0; border-top: 2px dashed var(--mb-text-disabled); border-radius: 0; }
 .achievement-chart-scroll { min-width: 0; overflow-x: auto; border: 1px solid var(--mb-border); border-radius: 16px; scrollbar-width: thin; scrollbar-color: #d1d6db transparent; }
 .achievement-chart-scroll:focus-visible { outline-offset: 4px; }
 .achievement-chart-canvas { min-width: 680px; width: 100%; padding: 8px 8px 0; }
@@ -111,7 +112,9 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-chart-label, .achievement-chart-date { fill: var(--mb-text-tertiary); font-family: var(--mb-font-sans); font-size: 11px; }
 .achievement-chart-bar { fill: var(--mb-primary); cursor: pointer; transition: fill var(--mb-duration); }
 .achievement-chart-bar.is-active, .achievement-chart-bar:focus { fill: var(--mb-primary-strong); stroke: var(--mb-primary-hover); stroke-width: 1; outline: none; }
-.achievement-chart-line { fill: none; stroke: var(--mb-success); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.achievement-chart-line { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.achievement-chart-line-short { stroke: var(--mb-success); stroke-width: 2.5; }
+.achievement-chart-line-long { stroke: var(--mb-text-disabled); stroke-width: 2; stroke-dasharray: 6 6; }
 .achievement-chart-dot { fill: var(--mb-surface); stroke: var(--mb-success); stroke-width: 2; cursor: pointer; vector-effect: non-scaling-stroke; }
 .achievement-chart-dot:focus { outline: none; stroke-width: 4; }
 .achievement-chart-table { width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0; table-layout: fixed; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; }
@@ -174,11 +177,9 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-preview { height: 232px; }
   .paper-info { padding: 16px; }
   .paper-info>p { min-height: 0; }
-  .paper-footer { margin-top: 16px; }
   .paper-list .paper-preview { width: 108px; height: auto; min-height: 200px; padding: 20px 0 0; }
   .paper-list .preview-sheet { transform: scale(.68); transform-origin: top center; }
   .paper-list .preview-tag, .paper-list .preview-open { display: none; }
-  .paper-list .paper-footer { display: none; }
   .achievement-title { align-items: stretch; }
   .achievement-export { width: 100%; }
   .achievement-title { margin-bottom: 28px; }
