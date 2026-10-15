@@ -23,7 +23,7 @@ export function ProfileForm({ user, initial, onSaved }) {
     finally { setPending(false); }
   }
   return <div className="profile-wrap">
-    <section className="profile-card">
+    <section className="profile-card profile-form-card">
       <h1>{initial ? 'Moonble에 오신 것을 환영합니다' : '내 정보 수정'}</h1>
       <p>{initial ? 'Moonble을 시작하기 전에 이름과 회사를 알려주세요.' : 'Moonble에서 사용할 이름과 회사 정보를 수정할 수 있습니다.'}</p>
       <form onSubmit={save}>

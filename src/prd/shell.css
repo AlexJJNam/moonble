@@ -1,6 +1,7 @@
 .workspace-check { min-height:100dvh; display:grid; place-content:center; color:var(--mb-primary-strong); }
 .profile-wrap { padding:var(--mb-space-48) var(--mb-space-24); }
 .profile-card { max-width:480px; margin:var(--mb-space-32) auto; padding:var(--mb-space-32); background:var(--mb-surface); border:1px solid var(--mb-border); border-radius:var(--mb-radius-16); box-shadow:0 4px 20px #191f2805; }
+.profile-form-card { border:0; }
 .profile-card h1 { font-size:var(--mb-font-28); line-height:36px; font-weight:700; letter-spacing:-.02em; margin:0 0 var(--mb-space-12); word-break:keep-all; overflow-wrap:anywhere; }
 .profile-card p { font-size:var(--mb-font-16); line-height:24px; color:var(--mb-text-secondary); margin:var(--mb-space-12) 0; }
 .profile-card fieldset { display:grid; gap:var(--mb-space-8); margin-top:var(--mb-space-32); min-width:0; }
