@@ -55,6 +55,9 @@ function ScrollStory() {
     const sticky = stickyRef.current;
     if (!section || !sticky) return undefined;
     let frame = 0;
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let previousTime = 0;
 
     const render = progress => {
       const select = smooth(progress / .22);
@@ -79,26 +82,53 @@ function ScrollStory() {
     };
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => {
-      frame = 0;
-      if (reducedMotion.matches) { render(1); return; }
+    const readProgress = () => {
       const bounds = section.getBoundingClientRect();
       const travel = Math.max(section.offsetHeight - window.innerHeight, 1);
-      render(clamp((72 - bounds.top) / travel));
-    };
-    const requestUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
+      const stickyTop = window.innerWidth <= 767 ? 66 : 72;
+      return clamp((stickyTop - bounds.top) / travel);
     };
 
-    update();
+    const animate = time => {
+      const elapsed = previousTime ? Math.min(time - previousTime, 50) : 16;
+      previousTime = time;
+      const blend = 1 - Math.exp(-elapsed / 110);
+      currentProgress += (targetProgress - currentProgress) * blend;
+
+      if (Math.abs(targetProgress - currentProgress) < .0005) currentProgress = targetProgress;
+      render(currentProgress);
+
+      if (currentProgress === targetProgress) {
+        frame = 0;
+        previousTime = 0;
+      } else frame = window.requestAnimationFrame(animate);
+    };
+
+    const requestUpdate = () => {
+      if (reducedMotion.matches) { render(1); return; }
+      targetProgress = readProgress();
+      if (!frame) frame = window.requestAnimationFrame(animate);
+    };
+    const handleMotionChange = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = 0;
+      previousTime = 0;
+      currentProgress = readProgress();
+      targetProgress = currentProgress;
+      render(reducedMotion.matches ? 1 : currentProgress);
+    };
+
+    currentProgress = readProgress();
+    targetProgress = currentProgress;
+    render(reducedMotion.matches ? 1 : currentProgress);
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate);
-    reducedMotion.addEventListener?.('change', requestUpdate);
+    reducedMotion.addEventListener?.('change', handleMotionChange);
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestUpdate);
       window.removeEventListener('resize', requestUpdate);
-      reducedMotion.removeEventListener?.('change', requestUpdate);
+      reducedMotion.removeEventListener?.('change', handleMotionChange);
     };
   }, []);
 
