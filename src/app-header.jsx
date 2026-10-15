@@ -89,11 +89,22 @@ function useSolverQuestions(enabled) {
       ? header.getBoundingClientRect().height + 12
       : 16;
     const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - topOffset);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     manualSelectionUntil.current = Date.now() + 800;
     setActiveIndex(index);
-    window.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
     window.history.replaceState(null, '', `#question-${index + 1}`);
     target.focus({ preventScroll: true });
+
+    const badge = target.querySelector('.q-number');
+    if (badge && !reduceMotion) {
+      window.setTimeout(() => {
+        badge.classList.remove('is-anchor-flash');
+        void badge.offsetWidth;
+        badge.classList.add('is-anchor-flash');
+        badge.addEventListener('animationend', () => badge.classList.remove('is-anchor-flash'), { once: true });
+      }, 450);
+    }
   }
 
   return { activeIndex, goToQuestion, items, navRef };
