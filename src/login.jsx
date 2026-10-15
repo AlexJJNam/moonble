@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Eye, EyeOff } from 'lucide-react';
 import { authCallback, goHome, loginUrl, supabase } from './supabase.js';
@@ -8,20 +8,19 @@ import './design-system.css';
 import './login.css';
 
 function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, onChange, setVisible, value, visible }) {
-  const [focused, setFocused] = useState(false);
+  const inputRef = useRef(null);
 
   function handleBlur(event) {
     if (event.currentTarget.contains(event.relatedTarget)) return;
-    setFocused(false);
     setVisible(false);
   }
 
   return <div
     className="floating-field password-field"
-    onFocus={() => setFocused(true)}
     onBlur={handleBlur}
   >
     <input
+      ref={inputRef}
       id={id}
       type={visible ? 'text' : 'password'}
       autoComplete={autoComplete}
@@ -33,15 +32,19 @@ function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, on
       placeholder=" "
     />
     <label htmlFor={id}>{label}</label>
-    {focused && <button
+    <button
       className="visibility"
       type="button"
       aria-label={visible ? `${label} 숨기기` : `${label} 표시`}
       aria-pressed={visible}
-      onClick={() => setVisible(!visible)}
+      onPointerDown={event => event.preventDefault()}
+      onClick={() => {
+        setVisible(!visible);
+        inputRef.current?.focus({ preventScroll: true });
+      }}
     >
       {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-    </button>}
+    </button>
   </div>;
 }
 
