@@ -14,6 +14,7 @@ function requireLogin() {
 }
 
 function Account() {
+  const solverPage = window.location.pathname.endsWith('/solve.html');
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(Boolean(supabase));
   const [pending, setPending] = useState(false);
@@ -59,7 +60,7 @@ function Account() {
 
   if (checking) return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">계정 확인 중</span></div>;
   if (!user) return null;
-  return <AppHeader active="papers" user={user} pending={pending} error={error} onLogout={logout} />;
+  return <AppHeader active="papers" variant={solverPage ? 'solver' : 'default'} user={user} pending={pending} error={error} onLogout={logout} />;
 }
 
 createRoot(document.getElementById('moonble-app-header')).render(<Account />);

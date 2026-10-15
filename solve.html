@@ -3310,6 +3310,8 @@
       picked.forEach((q, idx) => {
         const card = document.createElement('div');
         card.className = 'q-card';
+        card.id = `question-${idx + 1}`;
+        card.tabIndex = -1;
         card.dataset.qid = q.id;
         card.dataset.multi = q.multi ? '1' : '0';
 

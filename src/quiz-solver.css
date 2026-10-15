@@ -25,7 +25,8 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .solver-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 8px; color: var(--info-text); font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
 #quiz>.muted { font-size: var(--mb-font-16); line-height: 28px; margin-top: 12px; }
 .quiz-wrap { gap: 24px; margin-top: 32px; }
-.q-card { border-radius: 16px; padding: 24px; box-shadow: none; }
+.q-card { border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
+.q-card:focus { outline: none; }
 .q-title { font-size: var(--mb-font-16); line-height: 28px; font-weight: 600; gap: 12px; }
 .q-title .q-number { font-size: var(--mb-font-12); line-height: 18px; }
 .option-card { min-height: 48px; padding: 16px; font-size: var(--mb-font-16); line-height: 24px; border-radius: 12px; }
@@ -38,6 +39,6 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
   :root { --text-2xl: var(--mb-font-28); }
   .section-head h2 { font-size: var(--mb-font-24); line-height: 32px; }
   .quiz-wrap { gap: 16px; margin-top: 24px; }
-  .q-card { padding: 16px; }
+  .q-card { padding: 16px; scroll-margin-top: 140px; }
   .quiz-actions { gap: 8px; }
 }
