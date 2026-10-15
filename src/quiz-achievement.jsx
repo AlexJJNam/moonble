@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Download, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
 
@@ -33,16 +33,31 @@ function formatDate(value) {
   }).format(date);
 }
 
+function formatShortDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: '2-digit', month: '2-digit', day: '2-digit',
+  }).format(date);
+}
+
 function ScoreChart({ history }) {
   const chronological = useMemo(() => history.slice(0, 10).reverse(), [history]);
+  const trendData = useMemo(() => {
+    let total = 0;
+    return chronological.map((item, index) => {
+      const score = Number(item.score) || 0;
+      total += score;
+      return { ...item, score, average: Math.round(total / (index + 1)) };
+    });
+  }, [chronological]);
   const chartRef = useRef(null);
   const tooltipRef = useRef(null);
-  const gradientId = `achievement-area-${useId().replaceAll(':', '')}`;
 
   useEffect(() => {
     const container = chartRef.current;
     const tooltip = tooltipRef.current;
-    if (!container || !tooltip || !chronological.length) return undefined;
+    if (!container || !tooltip || !trendData.length) return undefined;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     let lastWidth = 0;
 
@@ -54,30 +69,31 @@ function ScoreChart({ history }) {
       const point = event.currentTarget.getBoundingClientRect();
       const pointerX = Number.isFinite(event.clientX) && event.clientX ? event.clientX : point.left + point.width / 2;
       const pointerY = Number.isFinite(event.clientY) && event.clientY ? event.clientY : point.top;
-      tooltip.textContent = `${formatDate(item.date)} · ${item.score}점 (${item.correct}/${item.total})`;
+      tooltip.textContent = `${formatDate(item.date)} · ${item.score}점 · 누적 평균 ${item.average}점`;
       tooltip.style.left = `${Math.min(window.innerWidth - 16, pointerX + 12)}px`;
       tooltip.style.top = `${Math.max(12, pointerY - 12)}px`;
       tooltip.dataset.visible = 'true';
     }
 
     function draw() {
-      const width = Math.max(320, container.clientWidth || 320);
+      const width = Math.max(680, container.clientWidth || 680);
       if (container.querySelector('svg') && Math.abs(width - lastWidth) < 1) return;
       lastWidth = width;
-      const height = Math.max(230, Math.min(300, Math.round(width * .38)));
-      const margin = { top: 20, right: 20, bottom: 38, left: 42 };
+      const height = Math.max(260, Math.min(320, Math.round(width * .38)));
+      const margin = { top: 24, right: 24, bottom: 44, left: 44 };
       const svg = d3.select(container).selectAll('svg').data([null]).join('svg')
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('role', 'img')
-        .attr('aria-label', `최근 점수 추이: ${chronological.map(item => `${item.score}점`).join(', ')}`)
+        .attr('aria-label', `최근 점수 추이: ${trendData.map(item => `${item.score}점`).join(', ')}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
       svg.selectAll('*').remove();
-      svg.append('title').text('최근 10회 문제풀이 점수 추이');
+      svg.append('title').text('최근 문제풀이 점수와 누적 평균 추이');
 
-      const x = d3.scalePoint()
-        .domain(d3.range(chronological.length))
+      const x = d3.scaleBand()
+        .domain(d3.range(trendData.length))
         .range([margin.left, width - margin.right])
-        .padding(chronological.length === 1 ? .5 : .35);
+        .paddingInner(.62)
+        .paddingOuter(.32);
       const y = d3.scaleLinear().domain([0, 100]).range([height - margin.bottom, margin.top]);
       const ticks = [0, 25, 50, 75, 100];
 
@@ -90,62 +106,99 @@ function ScoreChart({ history }) {
         .attr('x', margin.left - 10).attr('y', score => y(score))
         .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
         .text(score => score);
-      svg.selectAll('.achievement-chart-date').data(chronological).enter().append('text')
+      svg.selectAll('.achievement-chart-date').data(trendData).enter().append('text')
         .attr('class', 'achievement-chart-date')
-        .attr('x', (_, index) => x(index)).attr('y', height - 14)
+        .attr('x', (_, index) => x(index) + x.bandwidth() / 2).attr('y', height - 14)
         .attr('text-anchor', 'middle')
         .text(item => new Date(item.date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }));
 
-      const gradient = svg.append('defs').append('linearGradient')
-        .attr('id', gradientId).attr('x1', '0').attr('y1', '0').attr('x2', '0').attr('y2', '1');
-      gradient.append('stop').attr('class', 'achievement-chart-area-stop-top').attr('offset', '0%');
-      gradient.append('stop').attr('class', 'achievement-chart-area-stop-bottom').attr('offset', '100%');
-      const area = d3.area()
-        .x((_, index) => x(index)).y0(height - margin.bottom).y1(item => y(Number(item.score) || 0))
-        .curve(d3.curveMonotoneX);
+      const bars = svg.selectAll('.achievement-chart-bar').data(trendData).enter().append('rect')
+        .attr('class', 'achievement-chart-bar')
+        .attr('x', (_, index) => x(index))
+        .attr('width', x.bandwidth())
+        .attr('y', y(0))
+        .attr('height', 0)
+        .attr('rx', 5)
+        .attr('tabindex', 0)
+        .attr('role', 'img')
+        .attr('aria-label', item => `${formatDate(item.date)}, ${item.score}점, ${item.correct}/${item.total}개 정답`)
+        .on('pointerenter focus', function (event, item) {
+          d3.select(this).classed('is-active', true);
+          showTooltip(event, item);
+        })
+        .on('pointermove', showTooltip)
+        .on('pointerleave blur', function () {
+          d3.select(this).classed('is-active', false);
+          hideTooltip();
+        });
+      bars.transition().duration(reduceMotion ? 0 : 520).ease(d3.easeCubicOut)
+        .attr('y', item => y(item.score))
+        .attr('height', item => Math.max(0, y(0) - y(item.score)));
+
       const line = d3.line()
-        .x((_, index) => x(index)).y(item => y(Number(item.score) || 0))
+        .x((_, index) => x(index) + x.bandwidth() / 2).y(item => y(item.average))
         .curve(d3.curveMonotoneX);
 
-      const areaPath = svg.append('path').datum(chronological)
-        .attr('class', 'achievement-chart-area').attr('fill', `url(#${gradientId})`).attr('d', area);
-      const linePath = svg.append('path').datum(chronological)
+      const linePath = svg.append('path').datum(trendData)
         .attr('class', 'achievement-chart-line').attr('d', line);
       if (!reduceMotion) {
-        areaPath.attr('opacity', 0).transition().duration(500).attr('opacity', 1);
         const length = linePath.node()?.getTotalLength() || 0;
         linePath.attr('stroke-dasharray', `${length} ${length}`).attr('stroke-dashoffset', length)
           .transition().duration(700).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
       }
 
-      const dots = svg.selectAll('.achievement-chart-dot').data(chronological).enter().append('circle')
+      const dots = svg.selectAll('.achievement-chart-dot').data(trendData).enter().append('circle')
         .attr('class', 'achievement-chart-dot')
-        .attr('cx', (_, index) => x(index)).attr('cy', item => y(Number(item.score) || 0))
-        .attr('r', reduceMotion ? 5 : 0).attr('tabindex', 0).attr('role', 'button')
-        .attr('aria-label', item => `${formatDate(item.date)}, ${item.score}점, ${item.correct}/${item.total}개 정답`)
+        .attr('cx', (_, index) => x(index) + x.bandwidth() / 2).attr('cy', item => y(item.average))
+        .attr('r', reduceMotion ? 4 : 0).attr('tabindex', 0).attr('role', 'img')
+        .attr('aria-label', item => `${formatDate(item.date)}, 누적 평균 ${item.average}점`)
         .on('pointerenter focus', function (event, item) {
-          d3.select(this).interrupt().transition().duration(140).attr('r', 7);
+          d3.select(this).interrupt().transition().duration(140).attr('r', 6);
           showTooltip(event, item);
         })
         .on('pointermove', showTooltip)
         .on('pointerleave blur', function () {
-          d3.select(this).interrupt().transition().duration(140).attr('r', 5);
+          d3.select(this).interrupt().transition().duration(140).attr('r', 4);
           hideTooltip();
         });
-      if (!reduceMotion) dots.transition().delay((_, index) => 350 + index * 45).duration(220).attr('r', 5);
+      if (!reduceMotion) dots.transition().delay((_, index) => 350 + index * 45).duration(220).attr('r', 4);
     }
 
     draw();
     const observer = new ResizeObserver(draw);
     observer.observe(container);
     return () => { observer.disconnect(); d3.select(container).selectAll('*').interrupt(); };
-  }, [chronological, gradientId]);
+  }, [trendData]);
 
-  if (!chronological.length) return null;
+  if (!trendData.length) return null;
+
+  const latest = trendData.at(-1);
+  const previous = trendData.at(-2);
+  const difference = previous ? latest.score - previous.score : null;
+  const trendCopy = difference === null
+    ? `첫 기록은 ${latest.score}점이에요. 다음 풀이부터 변화가 함께 표시돼요.`
+    : difference > 0
+      ? `최근 점수는 ${latest.score}점으로 직전 풀이보다 ${difference}점 올랐어요.`
+      : difference < 0
+        ? `최근 점수는 ${latest.score}점이에요. 누적 평균은 ${latest.average}점을 유지하고 있어요.`
+        : `최근 점수는 ${latest.score}점으로 직전 풀이와 같아요.`;
 
   return <section className="achievement-chart" aria-labelledby="achievement-chart-title">
-    <div className="achievement-section-heading"><div><h2 id="achievement-chart-title" className="mb-section-title">점수 추이</h2><p>최근 10회 기록을 오래된 순서부터 보여줘요.</p></div></div>
-    <div className="achievement-chart-canvas" ref={chartRef} />
+    <div className="achievement-section-heading">
+      <div><h2 id="achievement-chart-title" className="mb-section-title">점수 추이</h2><p>{trendCopy}</p></div>
+      <div className="achievement-legend" aria-label="그래프 범례"><span><i className="score" />회차 점수</span><span><i className="average" />누적 평균</span></div>
+    </div>
+    <div className="achievement-chart-scroll" tabIndex={0} aria-label="점수 추이 그래프와 표, 가로로 이동 가능">
+      <div className="achievement-chart-canvas" ref={chartRef} />
+      <table className="achievement-chart-table">
+        <caption className="mb-sr-only">최근 문제풀이 점수와 누적 평균</caption>
+        <thead><tr><th scope="col">기록</th>{trendData.map((item, index) => <th scope="col" key={`${item.date}-date-${index}`}>{formatShortDate(item.date)}</th>)}</tr></thead>
+        <tbody>
+          <tr><th scope="row"><i className="score" />점수</th>{trendData.map((item, index) => <td key={`${item.date}-score-${index}`}>{item.score}점</td>)}</tr>
+          <tr><th scope="row"><i className="average" />누적 평균</th>{trendData.map((item, index) => <td key={`${item.date}-average-${index}`}>{item.average}점</td>)}</tr>
+        </tbody>
+      </table>
+    </div>
     <div className="achievement-chart-tooltip" ref={tooltipRef} data-visible="false" role="status" />
   </section>;
 }
@@ -166,12 +219,13 @@ export function QuizAchievement({ userId }) {
   }, [userId]);
 
   const stats = useMemo(() => {
-    if (!history.length) return { latest: 0, average: 0, best: 0 };
+    if (!history.length) return { latest: 0, average: 0, best: 0, latestDate: '-' };
     const scores = history.map(item => Number(item.score) || 0);
     return {
       latest: scores[0],
       average: Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length),
       best: Math.max(...scores),
+      latestDate: formatShortDate(history[0].date),
     };
   }, [history]);
 
@@ -204,16 +258,19 @@ export function QuizAchievement({ userId }) {
 
   return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
-      <div><h1 className="mb-page-title">나의 성취도</h1><p>최근 문제풀이 결과와 점수 변화를 확인해보세요.</p></div>
+      <div><span className="achievement-eyebrow"><Trophy size={15} aria-hidden="true" />학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
       <button className="achievement-export" type="button" disabled={!history.length} onClick={exportHistory}><Download size={18} aria-hidden="true" />CSV 내보내기</button>
     </div>
 
     {history.length ? <>
-      <section className="achievement-summary" aria-label="성취도 요약">
-        <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
-        <article><span>평균 점수</span><strong>{stats.average}<small>점</small></strong></article>
-        <article><span>최고 점수</span><strong>{stats.best}<small>점</small></strong></article>
-        <article><span>완료한 풀이</span><strong>{history.length}<small>회</small></strong></article>
+      <section className="achievement-performance" aria-labelledby="achievement-performance-title">
+        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>최근 10회까지 현재 기기에 안전하게 저장돼요.</p></div></div>
+        <div className="achievement-summary" aria-label="성취도 요약">
+          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{history.length}회 완료</small></article>
+          <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
+          <article><span>평균 점수</span><strong>{stats.average}<small>점</small></strong></article>
+          <article><span>최고 점수</span><strong>{stats.best}<small>점</small></strong></article>
+        </div>
       </section>
       <ScoreChart history={history} />
       <section className="achievement-history" aria-labelledby="achievement-history-title">
