@@ -57,6 +57,7 @@ function Login() {
   const [checking, setChecking] = useState(Boolean(supabase));
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [completion, setCompletion] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
@@ -100,6 +101,7 @@ function Login() {
     setConfirmationVisible(false);
     setMessage('');
     setError('');
+    setCompletion(null);
   }
 
   async function submit(event) {
@@ -107,6 +109,7 @@ function Login() {
     if (!supabase || pending) return;
     setError('');
     setMessage('');
+    setCompletion(null);
     if (mode === 'register' && (!termsAccepted || !privacyAccepted)) {
       setError('필수 이용약관과 개인정보 수집·이용에 동의해주세요.');
       return;
@@ -133,11 +136,17 @@ function Login() {
         setPassword('');
         setConfirmation('');
         if (data.session) goHome();
-        else setMessage('가입 요청을 처리했습니다. 받은 메일의 인증 링크를 확인해주세요. 이미 가입했다면 로그인하거나 비밀번호를 재설정해주세요.');
+        else setCompletion({
+          title: '인증 메일을 요청했어요',
+          description: '받은 메일의 인증 링크를 눌러 가입을 완료해주세요. 메일이 오지 않으면 이미 가입한 계정일 수 있어요.',
+        });
       } else if (mode === 'reset') {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: loginUrl() });
         if (authError) throw authError;
-        setMessage('재설정 요청을 처리했습니다. 해당 계정이 있다면 이메일을 확인해주세요.');
+        setCompletion({
+          title: '재설정 메일을 요청했어요',
+          description: '입력한 계정이 있다면 비밀번호를 바꿀 수 있는 링크를 보내드렸어요.',
+        });
       } else {
         const { error: authError } = await supabase.auth.updateUser({ password });
         if (authError) throw authError;
@@ -164,10 +173,15 @@ function Login() {
     <div className="gradient-backdrop" aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <div key={n} className={`g${n}`} />)}</div>
     <section className="auth-card" aria-label="Moonble 계정">
       <h1 className="auth-brand"><svg viewBox="0 0 140 28" role="img" aria-label="moonble"><text x="70" y="21" textAnchor="middle" fontFamily="'Pretendard', ui-sans-serif, sans-serif" fontWeight="800" fontSize="28" letterSpacing="-0.6" fill="#3182f6">moonble</text></svg></h1>
-      <h2>{title}</h2>
+      {(mode === 'reset' || mode === 'update') && !completion && <h2>{title}</h2>}
       {!supabase && <p className="auth-message" role="status">회원가입을 준비 중입니다. 설정이 완료되면 이용할 수 있습니다.</p>}
       {checking && <p role="status" aria-label="로그인 상태 확인 중"><span className="moonble-spinner" aria-hidden="true" /></p>}
-      <form onSubmit={submit}>
+      {completion ? <div className="auth-complete" role="status" aria-live="polite">
+        <div className="auth-complete-badge" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13.5 24.8l7 7L35 17.5" /></svg></div>
+        <strong>{completion.title}</strong>
+        <p>{completion.description}</p>
+        <button className="auth-complete-action" type="button" onClick={() => switchMode('login')}>로그인으로 돌아가기</button>
+      </div> : <><form onSubmit={submit}>
         <fieldset disabled={pending || checking || !supabase}>
           {mode !== 'update' && <div className="floating-field"><input id="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder=" " /><label htmlFor="email">이메일</label></div>}
           {mode !== 'reset' && <PasswordField id="password" label="비밀번호" autoComplete={newPassword ? 'new-password' : 'current-password'} minLength={newPassword ? 8 : undefined} value={password} onChange={e => setPassword(e.target.value)} visible={passwordVisible} setVisible={setPasswordVisible} />}
@@ -185,7 +199,7 @@ function Login() {
       {mode === 'login' && <button className="auth-link" disabled={pending} onClick={() => switchMode('reset')}>비밀번호를 잊으셨나요?</button>}
       {mode === 'login' && <><div className="auth-separator" aria-hidden="true" /><a className="auth-create" href="./signup.html">새 계정 만들기</a></>}
       {mode === 'register' && <a className="auth-link" href="./login.html">이미 계정이 있나요? 로그인</a>}
-      {(mode === 'reset' || mode === 'update') && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}
+      {(mode === 'reset' || mode === 'update') && <button className="auth-link" disabled={pending} onClick={() => switchMode('login')}>로그인으로 돌아가기</button>}</>}
     </section>
   </main><SiteFooter /></>;
 }
