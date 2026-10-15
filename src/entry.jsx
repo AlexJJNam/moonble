@@ -60,13 +60,13 @@ function ScrollStory() {
     let previousTime = 0;
 
     const render = progress => {
-      const select = smooth(progress / .22);
-      const selectExit = smooth((progress - .27) / .13);
-      const grade = smooth((progress - .25) / .18);
-      const graded = smooth((progress - .43) / .14);
-      const gradeExit = smooth((progress - .62) / .13);
-      const stats = smooth((progress - .64) / .22);
-      const step = progress < .31 ? 1 : progress < .66 ? 2 : 3;
+      const select = smooth(progress / .2);
+      const selectExit = smooth((progress - .28) / .16);
+      const grade = smooth((progress - .25) / .22);
+      const graded = smooth((progress - .44) / .18);
+      const gradeExit = smooth((progress - .64) / .16);
+      const stats = smooth((progress - .65) / .25);
+      const step = progress < .34 ? 1 : progress < .69 ? 2 : 3;
 
       sticky.dataset.step = String(step);
       sticky.style.setProperty('--story-select', select.toFixed(3));
@@ -92,7 +92,7 @@ function ScrollStory() {
     const animate = time => {
       const elapsed = previousTime ? Math.min(time - previousTime, 50) : 16;
       previousTime = time;
-      const blend = 1 - Math.exp(-elapsed / 110);
+      const blend = 1 - Math.exp(-elapsed / 180);
       currentProgress += (targetProgress - currentProgress) * blend;
 
       if (Math.abs(targetProgress - currentProgress) < .0005) currentProgress = targetProgress;
@@ -226,8 +226,8 @@ function Landing() {
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
         <div className="landing-section-heading"><span>하나의 워크스페이스</span><h2 id="features-title">배움과 기획이<br />자연스럽게 이어져요</h2><p>필요한 기능만 단순하게 연결해, 메뉴를 찾는 시간보다 실제 학습과 작업에 집중할 수 있어요.</p></div>
-        <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }, index) => <article key={eyebrow}>
-          <div className="landing-feature-top"><div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div><b>0{index + 1}</b></div>
+        <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
+          <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
           <span>{eyebrow}</span><h3>{title}</h3><p>{copy}</p>
         </article>)}</div>
       </section>
