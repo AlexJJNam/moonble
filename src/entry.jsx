@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BarChart3, BookOpen, Check, FileText } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, FileText, Plus } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -148,36 +148,62 @@ function ScrollStory() {
 
       <div className="landing-story-demo" role="img" aria-label="문제지를 선택하고 문제를 채점한 뒤 성취도 통계를 확인하는 Moonble 화면 애니메이션">
         <div className="story-window">
-          <div className="story-window-bar" aria-hidden="true"><i /><i /><i /><span>moonble</span></div>
-
-          <div className="story-screen story-library-screen">
-            <header><div><small>내 워크스페이스</small><strong>문제지</strong></div><span>3개의 문제지</span></header>
-            <div className="story-paper-grid">
-              <article className="story-paper-picked"><span>기본 · 20문항</span><strong>GA4 핵심 개념</strong><p>분석의 기본기를 차근차근 익혀요.</p><b><Check size={15} aria-hidden="true" />선택됨</b></article>
-              <article><span>심화 · 20문항</span><strong>GA4 실무 응용</strong><p>실무 데이터 품질을 점검해요.</p></article>
+          <aside className="story-app-sidebar" aria-hidden="true">
+            <strong className="story-app-logo">moonble</strong>
+            <div className="story-app-profile"><i>김</i><span><b>남제정</b><small>개인 워크스페이스</small></span></div>
+            <nav className="story-app-menu">
+              <span className="story-app-papers"><BookOpen size={15} />문제지</span>
+              <span className="story-app-achievement"><BarChart3 size={15} />나의 성취도</span>
+              <span><FileText size={15} />PRD</span>
+            </nav>
+            <div className="story-question-menu">
+              <span><ChevronLeft size={15} />문제지</span>
+              <strong>문제 목록</strong>
+              <ol>{[1, 2, 3, 4, 5].map(number => <li className={number === 2 ? 'is-current' : number === 1 ? 'is-done' : ''} key={number}>{number}</li>)}</ol>
             </div>
-          </div>
+          </aside>
+          <div className="story-app-main">
+            <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>김</i></div>
 
-          <div className="story-screen story-question-screen">
-            <header><div><small>GA4 핵심 개념</small><strong>문제 2</strong></div><span>2 / 20</span></header>
-            <p className="story-question">GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</p>
-            <div className="story-options">
-              <div className="story-option story-option-wrong"><i />세션<b>×</b></div>
-              <div className="story-option story-option-correct"><i />이벤트<b>○</b></div>
-              <div className="story-option"><i />사용자 속성</div>
+            <div className="story-screen story-library-screen">
+              <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><button type="button"><Plus size={13} />새 문제지 만들기</button></header>
+              <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
+              <div className="story-paper-grid">
+                <article className="story-paper-picked">
+                  <div className="story-paper-preview"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
+                  <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 다져보세요.</p>
+                </article>
+                <article>
+                  <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
+                  <span><b>심화</b> · 20문항</span><strong>GA4 실무 응용</strong><p>전자상거래와 데이터 품질, 실무 개념을 익혀보세요.</p>
+                </article>
+              </div>
             </div>
-            <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인했어요.</span></div>
-          </div>
 
-          <div className="story-screen story-stats-screen">
-            <header><div><small>학습 기록</small><strong>나의 성취도</strong></div><span>최근 6회</span></header>
-            <div className="story-score-row"><div><small>최근 점수</small><strong>82점</strong></div><div><small>지난 회차 대비</small><strong>+14</strong></div><div><small>정답률</small><strong>82%</strong></div></div>
-            <div className="story-chart">
-              <div className="story-chart-grid"><i /><i /><i /></div>
-              <div className="story-bars">{['38%', '47%', '45%', '59%', '68%', '82%'].map(height => <i key={height} style={{ '--bar-height': height }} />)}</div>
-              <svg viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true"><path d="M12 112 C52 104 62 92 84 96 S132 92 152 79 S199 72 220 55 S270 55 292 35 S330 29 348 19" /></svg>
+            <div className="story-screen story-question-screen">
+              <header><div><small>GA4 핵심 개념</small><strong>문제 풀이</strong></div><span>2 / 20</span></header>
+              <article className="story-question-card"><div className="story-question-title"><b>Q2</b><span>단일 선택</span></div>
+                <p className="story-question">GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</p>
+                <div className="story-options">
+                  <div className="story-option story-option-wrong"><i />세션<b>×</b></div>
+                  <div className="story-option story-option-correct"><i />이벤트<b>○</b></div>
+                  <div className="story-option"><i />사용자 속성</div>
+                </div>
+                <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인했어요.</span></div>
+              </article>
             </div>
-            <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
+
+            <div className="story-screen story-stats-screen">
+              <header><div><small>학습 리포트</small><strong>나의 성취도</strong></div><span>CSV 내보내기</span></header>
+              <div className="story-performance"><h3>학습 실적</h3><div className="story-score-row"><div><small>최근 풀이</small><strong>오늘</strong><em>6회 완료</em></div><div><small>최근 점수</small><strong>82<em>점</em></strong></div><div><small>평균 점수</small><strong>68<em>점</em></strong></div><div><small>최고 점수</small><strong>92<em>점</em></strong></div></div></div>
+              <div className="story-chart-heading"><div><strong>실력 추세</strong><small>최근 3회 평균이 장기 추세보다 6점 높아요.</small></div><p><span><i className="score" />회차 점수</span><span><i className="recent" />최근 3회</span><span><i className="long" />최근 10회</span></p></div>
+              <div className="story-chart">
+                <div className="story-chart-grid"><i /><i /><i /></div>
+                <div className="story-bars">{['38%', '47%', '45%', '59%', '68%', '82%'].map(height => <i key={height} style={{ '--bar-height': height }} />)}</div>
+                <svg viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true"><path className="story-line-long" d="M12 105 C54 101 78 98 105 93 S166 82 192 73 S251 61 283 49 S326 38 348 31" /><path className="story-line-recent" d="M12 112 C52 104 62 92 84 96 S132 92 152 79 S199 72 220 55 S270 55 292 35 S330 29 348 19" /></svg>
+              </div>
+              <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
+            </div>
           </div>
         </div>
       </div>
