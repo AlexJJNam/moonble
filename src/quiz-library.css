@@ -68,14 +68,11 @@ button:disabled { cursor: wait; opacity: .6; }
 .badge-custom { background: #e8f3ff; color: #1b64da; }
 .paper-info h2 { margin: 12px 0 8px; }
 .paper-info>p { min-height: 40px; margin: 0; font-size: var(--mb-font-14); line-height: 20px; color: var(--mb-text-tertiary); word-break: keep-all; overflow-wrap: anywhere; }
-.paper-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--mb-border); font-size: var(--mb-font-12); line-height: 18px; color: var(--mb-text-tertiary); }
-.paper-footer svg { flex-shrink: 0; }
 .paper-list { grid-template-columns: 1fr; }
 .paper-list .paper-card { display: flex; }
 .paper-list .paper-preview { width: 224px; height: 200px; flex-shrink: 0; border-bottom: 0; border-right: 1px solid var(--mb-border); }
 .paper-list .paper-info { flex: 1; min-width: 0; }
 .paper-list .paper-info>p { min-height: 0; }
-.paper-list .paper-footer { margin-top: 16px; padding-top: 12px; }
 .quiz-empty { display: grid; justify-items: center; padding: 64px 24px; color: var(--mb-text-tertiary); text-align: center; }
 .quiz-empty h2 { margin: 16px 0 8px; color: var(--mb-text-primary); }
 .quiz-empty p { margin: 0 0 24px; font-size: var(--mb-font-14); }

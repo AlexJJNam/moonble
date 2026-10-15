@@ -123,7 +123,7 @@ function QuizLibrary() {
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => <a className="paper-card" key={paper.id} href={`./solve.html?paper=${paper.id}#quiz`} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`}>
             <PaperPreview paper={paper} />
-            <div className="paper-info"><div className="paper-meta"><span className={`paper-badge badge-${paper.id}`}>{paper.level}</span><span>{paper.count}문항</span></div><h2 className="mb-card-title">{paper.label}</h2><p>{paper.description}</p><div className="paper-footer"><span>{paper.topics}</span><ArrowRight size={16} aria-hidden="true" /></div></div>
+            <div className="paper-info"><div className="paper-meta"><span className={`paper-badge badge-${paper.id}`}>{paper.level}</span><span>{paper.count}문항</span></div><h2 className="mb-card-title">{paper.label}</h2><p>{paper.description}</p></div>
           </a>)}
         </section>
         {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? 'CSV 또는 Google Sheets로 첫 문제지를 만들어보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? setCreating(true) : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '새 문제지 만들기' : '전체 문제지 보기'}</button></div>}
