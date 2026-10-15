@@ -6,7 +6,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-page button, .auth-page input { font: inherit; }
 .auth-page button, .auth-page a { -webkit-tap-highlight-color: transparent; }
 .auth-page { position: relative; isolation: isolate; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: var(--mb-space-32) max(var(--mb-space-16), env(safe-area-inset-right)) var(--mb-space-32) max(var(--mb-space-16), env(safe-area-inset-left)); overflow: hidden; }
-.auth-page .gradient-backdrop { opacity: .76; }
+.auth-page .gradient-backdrop { opacity: .5; }
 .auth-card { width: 100%; max-width: 448px; padding: var(--mb-space-32); }
 .auth-brand { display: flex; justify-content: center; margin: 0 0 36px; text-align: center; }
 .auth-brand svg { display: block; width: 196px; height: 40px; margin: 0 auto; overflow: visible; }
@@ -63,7 +63,6 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 }
 @media (max-width: 640px) {
   .auth-page { min-height: 100vh; min-height: 100svh; place-items: start center; padding-top: max(var(--mb-space-24), env(safe-area-inset-top)); padding-bottom: max(var(--mb-space-24), env(safe-area-inset-bottom)); overflow: visible; }
-  .auth-page .gradient-backdrop { opacity: 1; }
   .auth-card { max-width: 448px; padding: var(--mb-space-24); }
   .auth-brand { margin-bottom: var(--mb-space-32); }
   .auth-card h2 { margin-bottom: var(--mb-space-24); font-size: var(--mb-font-24); line-height: 32px; }
