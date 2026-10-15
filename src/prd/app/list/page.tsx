@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from '@/components/ui/sheet';
 import { PrdPreview } from '@/components/prd-preview';
+import { FlowActionButton } from '../../../flow-action-button.jsx';
 
 
 const motivationalPhrases = [
@@ -872,10 +873,10 @@ export default function PrdListPage() {
               </Button>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="default" className="mb-flow-gradient" onClick={handleOpenNewPrdDialog}>
-                  <Plus className="mr-2" />
+              <FlowActionButton onClick={handleOpenNewPrdDialog}>
+                  <Plus size={18} aria-hidden="true" />
                   PRD 작성하기
-              </Button>
+              </FlowActionButton>
             </div>
         </div>
         

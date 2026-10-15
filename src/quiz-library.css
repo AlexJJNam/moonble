@@ -140,7 +140,7 @@ button:disabled { cursor: wait; opacity: .6; }
 @media (max-width: 540px) {
   .quiz-main { padding: 24px 16px 48px; }
   .quiz-title { flex-direction: column; align-items: stretch; }
-  .quiz-title .quiz-create { width: 100%; justify-content: center; }
+  .quiz-title .mb-flow-action { width: 100%; }
   .quiz-filters { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .quiz-filters::-webkit-scrollbar { display: none; }
   .quiz-filters button { flex: 0 0 auto; }
