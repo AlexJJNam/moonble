@@ -27,7 +27,7 @@ function useSolverQuestions(enabled) {
             : card.querySelector('.option-card.selected') ? 'answered' : 'idle';
         return {
           id: card.id,
-          label: card.querySelector('.q-title > div')?.textContent?.trim() || `${index + 1}번 문제`,
+          label: `문제 ${index + 1}번`,
           status,
         };
       });
@@ -206,7 +206,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
             aria-current={questions.activeIndex === index ? 'true' : undefined}
             aria-label={`${index + 1}번 문제${item.status === 'answered' ? ', 답변 선택됨' : item.status === 'correct' ? ', 정답' : item.status === 'wrong' ? ', 오답' : ''}`}
             onClick={event => questions.goToQuestion(event, index)}
-          ><span className="mb-solver-number">{index + 1}</span><span className="mb-solver-label">{item.label}</span><span className="mb-solver-status" aria-hidden="true" /></a>)}
+          ><span className="mb-solver-number">{index + 1}</span><span className="mb-solver-label">{item.label}</span><span className="mb-solver-status" aria-hidden="true">{item.status === 'correct' ? 'O' : item.status === 'wrong' ? 'X' : ''}</span></a>)}
         </div>
       </nav> : <nav className="mb-app-nav" aria-label="주 메뉴">
           <a href="./quiz.html#paper-library" aria-current={active === 'papers' ? 'page' : undefined}><BookOpen size={18} aria-hidden="true" /><span>문제지</span></a>

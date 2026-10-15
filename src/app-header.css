@@ -22,15 +22,16 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-solver-heading a { min-height: 36px; padding: 6px 8px; gap: 7px; font-size: var(--mb-font-12); }
 .mb-solver-heading strong { padding: 4px 8px; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; }
 .mb-solver-questions { min-height: 0; display: grid; gap: 3px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--mb-border-strong) transparent; }
-.mb-solver-question { position: relative; min-width: 0; min-height: 42px; display: grid !important; grid-template-columns: 28px minmax(0, 1fr) 8px; align-items: center; gap: 8px !important; padding: 6px 8px !important; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); }
+.mb-solver-question { position: relative; min-width: 0; min-height: 42px; display: grid !important; grid-template-columns: 28px minmax(0, 1fr) 24px; align-items: center; gap: 8px !important; padding: 6px 8px !important; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); }
 .mb-solver-question:hover { background: var(--mb-surface-muted); }
 .mb-solver-question[aria-current='true'] { background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-weight: 600; }
 .mb-solver-number { width: 24px; height: 24px; display: grid; place-content: center; border: 0; border-radius: 50%; background: var(--mb-surface-muted); color: var(--mb-text-tertiary); font-size: 11px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
 .mb-solver-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--mb-font-12); line-height: 18px; }
-.mb-solver-status { width: 7px; height: 7px; border-radius: 50%; background: var(--mb-border-strong); }
+.mb-solver-status { width: 7px; height: 7px; place-self: center; display: grid; place-content: center; border-radius: 50%; background: var(--mb-border-strong); font-size: 11px; line-height: 1; font-weight: 700; }
 .mb-solver-question.is-answered .mb-solver-status { background: var(--mb-primary); }
-.mb-solver-question.is-correct .mb-solver-status { background: var(--mb-success); }
-.mb-solver-question.is-wrong .mb-solver-status { background: var(--mb-danger); }
+.mb-solver-question.is-correct .mb-solver-status, .mb-solver-question.is-wrong .mb-solver-status { width: 22px; height: 22px; }
+.mb-solver-question.is-correct .mb-solver-status { color: var(--mb-success); background: var(--mb-success-soft); }
+.mb-solver-question.is-wrong .mb-solver-status { color: var(--mb-danger); background: var(--mb-danger-soft); }
 .mb-app-account { margin-top: auto; padding: 16px 4px 0; border-top: 1px solid var(--mb-border); }
 .mb-app-logout { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; padding: 8px; border: 0; border-radius: var(--mb-radius-8); background: transparent; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); font-weight: 500; cursor: pointer; }
 .mb-app-logout:hover:not(:disabled) { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
@@ -54,6 +55,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-solver-label { display: none; }
 .mb-app-header.is-collapsed .mb-solver-number { margin: auto; }
 .mb-app-header.is-collapsed .mb-solver-status { position: absolute; right: 3px; bottom: 3px; width: 6px; height: 6px; border: 2px solid var(--mb-surface); }
+.mb-app-header.is-collapsed .mb-solver-question:is(.is-correct, .is-wrong) .mb-solver-status { right: -1px; bottom: -1px; width: 18px; height: 18px; border: 0; font-size: 10px; }
 .mb-app-header.is-collapsed .mb-app-account { padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout>span:not(.moonble-spinner) { display: none; }
@@ -92,6 +94,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-solver-number { margin: auto; }
   .mb-solver-label { display: none; }
   .mb-solver-status { position: absolute; right: 2px; bottom: 2px; width: 6px; height: 6px; border: 2px solid var(--mb-surface); }
+  .mb-solver-question:is(.is-correct, .is-wrong) .mb-solver-status { right: -1px; bottom: -1px; width: 18px; height: 18px; border: 0; font-size: 10px; }
   .mb-sidebar-toggle { top: auto; right: 16px; bottom: -14px; }
   .mb-app-header.is-collapsed .mb-app-header-inner { padding-right: 16px; padding-left: 16px; padding-bottom: 10px; }
   .mb-app-header.is-collapsed .mb-app-logo { justify-content: flex-start; padding: 6px 4px; }
