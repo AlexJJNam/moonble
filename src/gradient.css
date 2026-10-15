@@ -1,50 +1,35 @@
 
 :root {
-  --g1: #ff6ad5;
-  --g2: #9b5de5;
-  --g3: #00bbf9;
-  --g4: #00f5d4;
-  --g5: #fee440;
+  --g1: #f5c8e5;
+  --g2: #d1c8f4;
+  --g3: #b9e3f5;
+  --g4: #c5eee5;
+  --g5: #f6edc9;
 }
 
 @keyframes move1 {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g1); }
-  25% { transform: translate(60px, 30px) scale(1.05); opacity: 0.35; background-color: color-mix(in srgb, var(--g1), var(--g2)); }
-  50% { transform: translate(120px, 60px) scale(1.1); opacity: 0.4; background-color: var(--g2); }
-  75% { transform: translate(60px, 30px) scale(1.05); opacity: 0.35; background-color: color-mix(in srgb, var(--g1), var(--g2)); }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g1); }
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(8%, 5%, 0) scale(1.04); }
 }
 
 @keyframes move2 {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g2); }
-  25% { transform: translate(-45px, 75px) scale(1.1); opacity: 0.35; background-color: color-mix(in srgb, var(--g2), var(--g3)); }
-  50% { transform: translate(-90px, 150px) scale(1.2); opacity: 0.4; background-color: var(--g3); }
-  75% { transform: translate(-45px, 75px) scale(1.1); opacity: 0.35; background-color: color-mix(in srgb, var(--g2), var(--g3)); }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g2); }
+  from { transform: translate3d(2%, -3%, 0) scale(1.01); }
+  to { transform: translate3d(-7%, 8%, 0) scale(1.06); }
 }
 
 @keyframes move3 {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g3); }
-  25% { transform: translate(30px, -60px) scale(0.95); opacity: 0.35; background-color: color-mix(in srgb, var(--g3), var(--g4)); }
-  50% { transform: translate(60px, -120px) scale(0.9); opacity: 0.4; background-color: var(--g4); }
-  75% { transform: translate(30px, -60px) scale(0.95); opacity: 0.35; background-color: color-mix(in srgb, var(--g3), var(--g4)); }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g3); }
+  from { transform: translate3d(-3%, 5%, 0) scale(1.03); }
+  to { transform: translate3d(6%, -7%, 0) scale(.98); }
 }
 
 @keyframes move4 {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g4); }
-  25% { transform: translate(-75px, -30px) scale(1.05); opacity: 0.35; background-color: color-mix(in srgb, var(--g4), var(--g5)); }
-  50% { transform: translate(-150px, -60px) scale(1.1); opacity: 0.4; background-color: var(--g5); }
-  75% { transform: translate(-75px, -30px) scale(1.05); opacity: 0.35; background-color: color-mix(in srgb, var(--g4), var(--g5)); }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g4); }
+  from { transform: translate3d(5%, 3%, 0) scale(.99); }
+  to { transform: translate3d(-8%, -5%, 0) scale(1.04); }
 }
 
 @keyframes move5 {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g5); }
-  25% { transform: translate(45px, 45px) scale(1.1); opacity: 0.35; background-color: color-mix(in srgb, var(--g5), var(--g1)); }
-  50% { transform: translate(90px, 90px) scale(1.2); opacity: 0.4; background-color: var(--g1); }
-  75% { transform: translate(45px, 45px) scale(1.1); opacity: 0.35; background-color: color-mix(in srgb, var(--g5), var(--g1)); }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.3; background-color: var(--g5); }
+  from { transform: translate3d(-52%, -52%, 0) scale(.99); }
+  to { transform: translate3d(-46%, -45%, 0) scale(1.04); }
 }
 
 
@@ -59,13 +44,13 @@
   inset: -20vmax;
   z-index: -1;
   pointer-events: none;
-  filter: blur(80px) saturate(120%);
+  filter: blur(112px) saturate(92%);
 }
 
 .gradient-backdrop > div {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.3;
+  opacity: 0.24;
   mix-blend-mode: screen;
 }
 
@@ -74,7 +59,8 @@
   height: 40vmax;
   top: 18%;
   left: 22%;
-  animation: move1 10s ease-in-out infinite alternate;
+  background: var(--g1);
+  animation: move1 26s cubic-bezier(.45, 0, .55, 1) infinite alternate;
 }
 
 .g2 {
@@ -82,7 +68,8 @@
   height: 36vmax;
   top: 28%;
   right: 18%;
-  animation: move2 12s ease-in-out infinite alternate;
+  background: var(--g2);
+  animation: move2 30s cubic-bezier(.45, 0, .55, 1) infinite alternate;
 }
 
 .g3 {
@@ -90,7 +77,8 @@
   height: 44vmax;
   bottom: 18%;
   left: 28%;
-  animation: move3 13s ease-in-out infinite alternate;
+  background: var(--g3);
+  animation: move3 34s cubic-bezier(.45, 0, .55, 1) infinite alternate;
 }
 
 .g4 {
@@ -98,7 +86,8 @@
     height: 38vmax;
     bottom: 25%;
     right: 25%;
-    animation: move4 11s ease-in-out infinite alternate;
+    background: var(--g4);
+    animation: move4 28s cubic-bezier(.45, 0, .55, 1) infinite alternate;
 }
 
 .g5 {
@@ -106,8 +95,8 @@
     height: 30vmax;
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
-    animation: move5 12s ease-in-out infinite alternate;
+    background: var(--g5);
+    animation: move5 32s cubic-bezier(.45, 0, .55, 1) infinite alternate;
 }
 
 @media (max-width: 640px), (hover: none) and (pointer: coarse) {
@@ -115,9 +104,9 @@
     inset: 0;
     filter: none;
     background:
-      radial-gradient(circle at 18% 20%, rgb(255 106 213 / 12%), transparent 42%),
-      radial-gradient(circle at 82% 72%, rgb(0 187 249 / 13%), transparent 44%),
-      linear-gradient(160deg, #fbf9ff, #f1fbff 66%, #f7fff9);
+      radial-gradient(circle at 18% 20%, rgb(245 200 229 / 10%), transparent 44%),
+      radial-gradient(circle at 82% 72%, rgb(185 227 245 / 11%), transparent 46%),
+      linear-gradient(160deg, #fcfbff, #f6fbfd 66%, #f9fdfa);
   }
   .gradient-backdrop > div { display: none; animation: none; }
 }
