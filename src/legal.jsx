@@ -12,8 +12,8 @@ function Privacy() {
     <h2>1. 수집 항목과 이용 목적</h2>
     <ul><li>이메일·비밀번호: 회원가입, 이메일 인증, 로그인 및 계정 복구. 비밀번호 인증은 Supabase Auth에서 처리합니다.</li><li>이름·회사명(소속): 프로필 표시와 문서 작성자 정보. 첫 로그인 후 입력하며 내 정보에서 수정할 수 있습니다.</li><li>동의 여부·동의 문서 버전·동의 시각: 가입 시 동의 내용을 확인하기 위해 계정 메타데이터에 저장합니다.</li><li>접속 과정의 IP 주소·브라우저 정보·요청 기록은 호스팅·인증 제공업체의 서비스 제공 및 보안 운영 과정에서 처리될 수 있습니다.</li></ul>
     <h2>2. 저장 위치와 보유 기간</h2>
-    <p>회원정보는 Supabase에 저장하며 계정 이용 기간 동안 보유합니다. 계정 삭제 요청을 처리할 때 회원정보와 계정에 연결된 동의 정보를 삭제합니다. 법령에 따른 보존 의무가 발생하면 해당 항목과 기간에 한하여 별도로 보관합니다.</p>
-    <p>PRD 문서, 문제풀이 기록과 사용자 문제지는 현재 사용 중인 브라우저의 로컬 저장소에 보관됩니다. 브라우저 데이터를 지우면 사라질 수 있으며 기기 간 자동 동기화되지 않습니다. 계정 삭제만으로 다른 기기의 로컬 저장소가 삭제되지는 않으므로 공용 기기에서는 로그아웃하고 사이트 데이터를 삭제해주세요.</p>
+    <p>회원정보는 Supabase에 저장하며 계정 이용 기간 동안 보유합니다. 회원 탈퇴를 완료하면 인증 계정, 프로필과 계정에 연결된 동의 정보를 삭제합니다. 법령에 따른 보존 의무가 발생하면 해당 항목과 기간에 한하여 별도로 보관합니다.</p>
+    <p>PRD 문서, 문제풀이 기록과 사용자 문제지는 현재 사용 중인 브라우저의 로컬 저장소에 보관됩니다. 브라우저 데이터를 지우면 사라질 수 있으며 기기 간 자동 동기화되지 않습니다. 회원 탈퇴 시 현재 기기의 계정별 로컬 데이터는 함께 삭제하지만 다른 기기의 로컬 저장소는 삭제할 수 없으므로 해당 기기에서 사이트 데이터를 삭제해주세요.</p>
     <h2>3. 외부 서비스와 처리</h2>
     <ul><li>Supabase: 계정 인증과 회원정보 저장. 현재 프로젝트 데이터베이스 리전은 서울입니다. 서비스 운영·지원 과정의 처리 범위는 제공업체 정책에 따릅니다.</li><li>GitHub Pages·Cloudflare Pages: 웹사이트 호스팅과 파일 전송. 접속 기록이 제공업체의 글로벌 인프라에서 처리될 수 있습니다.</li><li>jsDelivr: 웹폰트와 라이브러리 전송. 파일 요청 시 접속 정보가 전송될 수 있습니다.</li><li>Google Analytics: 문제풀이 화면의 방문·이용 통계 측정. 쿠키와 브라우저·방문 정보를 이용하며 보유 기간은 해당 서비스의 설정에 따릅니다. 브라우저의 쿠키 차단 및 Google Analytics 차단 도구로 수집을 제한할 수 있습니다.</li></ul>
     <p>연결된 외부 서비스에 적용되는 정책은 <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase</a>, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub</a>, <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare</a>, <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google</a>에서 확인할 수 있습니다.</p>

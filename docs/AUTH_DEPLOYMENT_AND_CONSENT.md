@@ -27,9 +27,15 @@ GitHub 저장소 Actions variables에 VITE_SUPABASE_URL과 VITE_SUPABASE_PUBLISH
 
 ## 개인정보 요청 운영
 
-내 계정 화면에서 열람·정정 상담·처리정지·삭제 요청 상태를 기록할 수 있다. 요청은 인증된 본인의 user_metadata.privacy_request(kind/requested_at/status)에 저장한다. 즉시 계정 삭제나 외부 메시지 전송은 수행하지 않는다. 같은 계정의 새 요청은 이전 요청을 대체한다.
+내 계정 화면에서 열람·정정 상담·처리정지 요청 상태를 기록할 수 있다. 요청은 인증된 본인의 user_metadata.privacy_request(kind/requested_at/status)에 저장한다. 외부 메시지 전송은 수행하지 않으며 같은 계정의 새 요청은 이전 요청을 대체한다.
 
-운영자는 Supabase Authentication → Users에서 요청을 정기적으로 확인해야 한다. 이메일 등 본인 확인된 계정 정보로 필요한 후속 내용을 확인하고, 요청 종류에 따라 직접 처리한다. 삭제 요청은 Supabase 관리 화면에서 해당 계정과 연결 데이터를 삭제해야 완료된다. 다른 기기의 localStorage에 남은 PRD·문제 기록은 서버에서 지울 수 없으며 이용자에게 사이트 데이터 삭제를 안내한다. 자동 알림·자동 삭제 기능은 없다.
+운영자는 Supabase Authentication → Users에서 요청을 정기적으로 확인해야 한다. 이메일 등 본인 확인된 계정 정보로 필요한 후속 내용을 확인하고 요청 종류에 따라 직접 처리한다. 자동 알림 기능은 없다.
+
+## 회원 탈퇴
+
+`database/002_delete_account.sql`은 로그인한 본인의 `auth.uid()`만 사용하며 사용자 ID를 인자로 받지 않는 `moonble_delete_account()` RPC를 만든다. 함수 실행 권한은 `authenticated`에만 부여하고 `public`, `anon`에서는 회수한다. `security definer` 함수이므로 빈 `search_path`를 사용하고 모든 테이블을 스키마로 한정한다.
+
+내 계정의 회원 탈퇴 팝업은 삭제 내용을 확인하는 체크박스를 선택해야 활성화된다. 완료하면 Supabase 인증 계정과 `on delete cascade`로 연결된 프로필을 삭제하고, 현재 브라우저의 계정별 PRD·문제지·풀이 기록을 지운 뒤 로컬 세션을 종료한다. 다른 기기의 localStorage는 서버에서 삭제할 수 없으므로 팝업과 개인정보 처리방침에 이를 안내한다.
 
 ## 참고한 공식 문서
 

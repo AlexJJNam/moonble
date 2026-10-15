@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Trash2 } from 'lucide-react';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import { Check, Trash2 } from 'lucide-react';
 import { loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
@@ -11,14 +12,25 @@ import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
 
+let leavingAfterDeletion = false;
+
+function localDataKeys(userId) {
+  const prefixes = [`moonble:${userId}:`, `moonble:user:${userId}:`];
+  return Object.keys(localStorage).filter(key => prefixes.some(prefix => key.startsWith(prefix)));
+}
+
+function clearLocalUserData(userId) {
+  localDataKeys(userId).forEach(key => localStorage.removeItem(key));
+  sessionStorage.removeItem('moonble:retry-question-ids');
+}
+
 function LocalData({ user }) {
-  const prefixes = useMemo(() => [`moonble:${user.id}:`, `moonble:user:${user.id}:`], [user.id]);
-  const [count, setCount] = useState(() => Object.keys(localStorage).filter(key => prefixes.some(prefix => key.startsWith(prefix))).length);
+  const [count, setCount] = useState(() => localDataKeys(user.id).length);
   const [confirming, setConfirming] = useState(false);
 
   function clearData() {
     if (!confirming) { setConfirming(true); return; }
-    Object.keys(localStorage).filter(key => prefixes.some(prefix => key.startsWith(prefix))).forEach(key => localStorage.removeItem(key));
+    clearLocalUserData(user.id);
     setCount(0);
     setConfirming(false);
   }
@@ -32,6 +44,69 @@ function LocalData({ user }) {
   </section>;
 }
 
+function AccountDeletion({ user }) {
+  const [open, setOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+
+  function changeOpen(next) {
+    if (pending) return;
+    setOpen(next);
+    if (!next) { setConfirmed(false); setError(''); }
+  }
+
+  async function deleteAccount() {
+    if (!confirmed || pending) return;
+    setPending(true);
+    setError('');
+    try {
+      const { error: deleteError } = await supabase.rpc('moonble_delete_account');
+      if (deleteError) throw deleteError;
+      clearLocalUserData(user.id);
+      leavingAfterDeletion = true;
+      try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* 계정은 이미 삭제됐으므로 로그인 화면으로 이동한다. */ }
+      window.location.replace(new URL('./login.html?account=deleted', window.location.href).href);
+    } catch (failure) {
+      if (failure?.code === 'PGRST202' || /moonble_delete_account/i.test(failure?.message || '')) {
+        setError('회원 탈퇴 기능 설정이 완료되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        setError('회원 탈퇴를 완료하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      setPending(false);
+    }
+  }
+
+  return <section className="profile-card account-delete-card">
+    <h2 className="mb-section-title">회원 탈퇴</h2>
+    <p>계정과 프로필을 영구 삭제합니다. 탈퇴한 계정은 복구할 수 없습니다.</p>
+    <AlertDialog.Root open={open} onOpenChange={changeOpen}>
+      <AlertDialog.Trigger asChild><button className="account-danger" type="button"><Trash2 size={17} aria-hidden="true" />회원 탈퇴</button></AlertDialog.Trigger>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="account-delete-overlay" />
+        <AlertDialog.Content className="account-delete-dialog">
+          <AlertDialog.Title>회원 탈퇴할까요?</AlertDialog.Title>
+          <AlertDialog.Description>계정과 프로필이 즉시 삭제되며 다시 복구할 수 없습니다.</AlertDialog.Description>
+          <ul>
+            <li>현재 기기에 저장된 PRD, 문제지와 풀이 기록도 함께 삭제됩니다.</li>
+            <li>다른 기기의 브라우저에 남은 데이터는 해당 기기에서 직접 삭제해야 합니다.</li>
+          </ul>
+          <label className="account-delete-confirm">
+            <input type="checkbox" checked={confirmed} disabled={pending} onChange={event => setConfirmed(event.target.checked)} />
+            <span className="account-delete-check" aria-hidden="true"><Check size={16} /></span>
+            <span>삭제되는 내용을 확인했고 회원 탈퇴에 동의합니다.</span>
+          </label>
+          {error && <p className="account-delete-error" role="alert">{error}</p>}
+          <div className="account-delete-actions">
+            <AlertDialog.Cancel asChild><button type="button" className="account-delete-cancel" disabled={pending}>취소</button></AlertDialog.Cancel>
+            <button type="button" className="account-delete-submit" disabled={!confirmed || pending} onClick={deleteAccount}>{pending ? <span className="moonble-spinner" aria-hidden="true" /> : '탈퇴하기'}</button>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
+  </section>;
+}
+
 function AccountPage() {
   const [user, setUser] = useState(null);
   const [pending, setPending] = useState(false);
@@ -42,6 +117,7 @@ function AccountPage() {
     let alive = true;
     const accept = session => {
       if (!alive) return;
+      if (leavingAfterDeletion) return;
       if (!session) { window.location.replace(loginUrl()); return; }
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html#/register-name', location.href)); return; }
       setUser(session.user);
@@ -68,6 +144,7 @@ function AccountPage() {
       <ProfileForm user={user} initial={false} onSaved={setUser} />
       <LocalData user={user} />
       <PrivacyRequest user={user} />
+      <AccountDeletion user={user} />
     </main>
     <SiteFooter />
   </>;

@@ -47,6 +47,7 @@ function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, on
 
 function Login() {
   const signupPage = window.location.pathname.endsWith('/signup') || window.location.pathname.endsWith('/signup.html');
+  const accountDeleted = new URLSearchParams(window.location.search).get('account') === 'deleted';
   const [mode, setMode] = useState(signupPage ? 'register' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,13 +56,14 @@ function Login() {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [pending, setPending] = useState(false);
   const [checking, setChecking] = useState(Boolean(supabase));
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(accountDeleted ? '회원 탈퇴가 완료되었습니다.' : '');
   const [error, setError] = useState('');
   const [completion, setCompletion] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   useEffect(() => {
+    if (accountDeleted) window.history.replaceState(null, '', window.location.pathname);
     if (!supabase) return;
     let alive = true;
     const recovery = authCallback.recovery;
