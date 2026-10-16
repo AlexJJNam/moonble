@@ -11,4 +11,8 @@ body { margin: 0; background: var(--mb-bg); color: var(--mb-text-primary); }
 .legal-main ul { padding-left: 24px; }
 .legal-main a { color: var(--mb-primary-strong); }
 .legal-main .legal-date { font-size: 14px; color: var(--mb-text-tertiary); }
-@media(max-width:640px) { .legal-main { margin: 16px; padding: 24px 16px; } }
+@media(max-width:640px) {
+  .legal-header { padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); }
+  .legal-header a:first-child { font-size: 24px; }
+  .legal-main { margin: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left)); padding: 24px 16px; }
+}

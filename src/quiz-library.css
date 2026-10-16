@@ -162,7 +162,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .paper-preview { width: 160px; }
 }
 @media (max-width: 540px) {
-  .quiz-main { padding: 24px 16px 48px; }
+  .quiz-main { padding: 24px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
   .quiz-title { flex-direction: column; align-items: stretch; }
   .quiz-title .mb-flow-action { width: 100%; }
   .quiz-filters { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }

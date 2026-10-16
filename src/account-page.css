@@ -35,7 +35,8 @@ button { font: inherit; cursor: pointer; }
 @keyframes account-overlay-in { from { opacity: 0; } }
 @keyframes account-dialog-in { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } }
 @media (max-width: 640px) {
-  .account-main { padding: 24px 16px 48px; }
+  .account-main { padding: 24px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
+  .account-main .profile-card { margin: 16px auto; padding: 20px; }
   .account-delete-dialog { padding: 24px 20px 20px; border-radius: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
