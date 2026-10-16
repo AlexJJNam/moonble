@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, FileText, Plus } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, FileText, Link, Plus, Upload } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -60,18 +60,24 @@ function ScrollStory() {
     let previousTime = 0;
 
     const render = progress => {
-      const select = smooth(progress / .2);
-      const selectExit = smooth((progress - .28) / .16);
-      const grade = smooth((progress - .25) / .22);
-      const graded = smooth((progress - .44) / .18);
-      const gradeExit = smooth((progress - .64) / .16);
-      const stats = smooth((progress - .65) / .25);
-      const step = progress < .34 ? 1 : progress < .69 ? 2 : 3;
+      const registered = smooth(progress / .14);
+      const registerExit = smooth((progress - .14) / .12);
+      const libraryIn = smooth((progress - .12) / .12);
+      const select = smooth((progress - .22) / .14);
+      const libraryExit = smooth((progress - .38) / .14);
+      const grade = smooth((progress - .36) / .18);
+      const graded = smooth((progress - .52) / .14);
+      const gradeExit = smooth((progress - .68) / .13);
+      const stats = smooth((progress - .7) / .22);
+      const step = progress < .19 ? 1 : progress < .43 ? 2 : progress < .71 ? 3 : 4;
 
       sticky.dataset.step = String(step);
+      sticky.style.setProperty('--story-register', registered.toFixed(3));
+      sticky.style.setProperty('--story-register-opacity', (1 - registerExit).toFixed(3));
+      sticky.style.setProperty('--story-register-y', `${Math.round(-18 * registerExit)}px`);
       sticky.style.setProperty('--story-select', select.toFixed(3));
-      sticky.style.setProperty('--story-select-opacity', (1 - selectExit).toFixed(3));
-      sticky.style.setProperty('--story-select-y', `${Math.round(-18 * selectExit)}px`);
+      sticky.style.setProperty('--story-select-opacity', (libraryIn * (1 - libraryExit)).toFixed(3));
+      sticky.style.setProperty('--story-select-x', `${Math.round((1 - libraryIn) * 38 - libraryExit * 18)}px`);
       sticky.style.setProperty('--story-grade', grade.toFixed(3));
       sticky.style.setProperty('--story-graded', graded.toFixed(3));
       sticky.style.setProperty('--story-grade-opacity', (grade * (1 - gradeExit)).toFixed(3));
@@ -139,14 +145,15 @@ function ScrollStory() {
         <h2 id="workflow-title">고르고, 풀고,<br />성장을 확인하세요</h2>
         <p>문제지를 고르고 집중해서 푼 다음, 채점 결과와 기록을 보며 다음 행동을 정하세요.</p>
         <ol className="landing-story-nav" aria-label="Moonble 학습 흐름">
-          <li><b>01</b><span><strong>문제지 선택</strong><small>오늘 풀 문제를 골라요</small></span></li>
-          <li><b>02</b><span><strong>풀이와 채점</strong><small>답을 고르고 바로 확인해요</small></span></li>
-          <li><b>03</b><span><strong>성취도 확인</strong><small>기록에서 성장 흐름을 봐요</small></span></li>
+          <li><b>01</b><span><strong>문제지 등록</strong><small>내 문제를 가져와요</small></span></li>
+          <li><b>02</b><span><strong>문제지 선택</strong><small>오늘 풀 문제를 골라요</small></span></li>
+          <li><b>03</b><span><strong>풀이와 채점</strong><small>답을 고르고 바로 확인해요</small></span></li>
+          <li><b>04</b><span><strong>성취도 확인</strong><small>기록에서 성장 흐름을 봐요</small></span></li>
         </ol>
         <a href="./login.html">내 워크스페이스 열기<ArrowRight size={18} aria-hidden="true" /></a>
       </div>
 
-      <div className="landing-story-demo" role="img" aria-label="문제지를 선택하고 문제를 채점한 뒤 성취도 통계를 확인하는 Moonble 화면 애니메이션">
+      <div className="landing-story-demo" role="img" aria-label="문제지를 등록하고 선택한 뒤 문제를 채점하고 성취도 통계를 확인하는 Moonble 화면 애니메이션">
         <div className="story-window">
           <aside className="story-app-sidebar" aria-hidden="true">
             <strong className="story-app-logo">moonble</strong>
@@ -164,6 +171,16 @@ function ScrollStory() {
           </aside>
           <div className="story-app-main">
             <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>김</i></div>
+
+            <div className="story-screen story-register-screen">
+              <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
+              <article className="story-register-card">
+                <div className="story-register-copy"><strong>내 문제를 Moonble로 가져오세요</strong><p>CSV 파일이나 Google Sheets 공유 링크로 간단히 등록할 수 있어요.</p></div>
+                <div className="story-register-drop"><Upload size={22} aria-hidden="true" /><b>CSV 파일 선택</b><small>파일을 끌어다 놓아도 돼요</small><em><Check size={12} aria-hidden="true" />20문항 확인</em></div>
+                <div className="story-register-divider">또는</div>
+                <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><button type="button">가져오기</button></div>
+              </article>
+            </div>
 
             <div className="story-screen story-library-screen">
               <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><button type="button"><Plus size={13} />새 문제지 만들기</button></header>
