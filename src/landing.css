@@ -1,6 +1,7 @@
 * { box-sizing: border-box; }
-html { min-width: 0; scroll-behavior: smooth; scroll-padding-top: 72px; background: #fff; }
-body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary); background: #fff; word-break: keep-all; overflow-wrap: break-word; }
+html { width: 100%; min-width: 0; max-width: 100%; overflow-x: hidden; overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: 72px; background: #fff; }
+body, #root { width: 100%; min-width: 0; max-width: 100%; overflow-x: hidden; overflow-x: clip; }
+body { margin: 0; color: var(--mb-text-primary); background: #fff; word-break: keep-all; overflow-wrap: break-word; }
 
 .landing-header {
   position: sticky; top: 0; z-index: 30;
@@ -22,7 +23,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
   position: relative; isolation: isolate;
   width: min(1240px, calc(100% - 48px));
   display: flex; flex-direction: column; align-items: center;
-  margin: auto; padding: 96px 0 80px;
+  margin: auto; padding: 96px 0 80px; overflow: hidden;
 }
 .landing-hero-copy { position: relative; z-index: 2; width: 100%; max-width: 780px; text-align: center; animation: landing-rise .8s cubic-bezier(.2,.8,.2,1) both; }
 .landing-eyebrow { display: inline-flex; align-items: center; gap: 7px; color: var(--mb-primary-strong); font-size: 13px; line-height: 20px; font-weight: 600; }
@@ -345,13 +346,19 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 }
 @media (max-width: 380px) {
   .landing-preview { grid-template-columns: 62px minmax(0, 1fr); }
+  .landing-preview-sidebar { padding-right: 8px; padding-left: 8px; }
+  .landing-preview-sidebar>strong { padding-right: 0; padding-left: 0; font-size: 9px; white-space: nowrap; }
   .landing-preview-content { padding-right: 12px; padding-left: 12px; }
   .landing-preview-grid { gap: 8px; }
   .landing-preview-grid article { padding: 7px; }
   .landing-story-sticky { min-height: 600px; }
   .landing-story-copy>p { display: none; }
+  .landing-story-nav li { grid-template-columns: 22px minmax(0, 1fr); gap: 4px; padding: 5px 4px; }
+  .landing-story-nav li>b { width: 22px; height: 22px; }
+  .landing-story-nav strong { font-size: 11px; line-height: 16px; }
   .landing-story-demo { flex-basis: 350px; }
   .story-screen { padding: 14px; }
+  .story-screen header>button { max-width: 104px; padding: 6px 7px; font-size: 9px; }
   .story-paper-grid article { min-height: 190px; }
   .story-paper-preview { height: 88px; }
   .story-chart-heading p span:first-child { display: none; }
