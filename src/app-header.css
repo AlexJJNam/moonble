@@ -21,7 +21,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-solver-heading { display: grid; gap: 4px; padding: 0 0 8px; border-bottom: 1px solid var(--mb-border); }
 .mb-solver-heading a { min-height: 44px; gap: 12px; padding: 10px 12px; font-size: var(--mb-font-14); }
 .mb-solver-heading strong { padding: 4px 12px; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; }
-.mb-solver-questions { min-height: 0; display: grid; gap: 3px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--mb-border-strong) transparent; }
+.mb-solver-questions { min-height: 0; display: grid; flex: 1 1 auto; align-content: start; gap: 3px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--mb-border-strong) transparent; }
 .mb-solver-question { position: relative; min-width: 0; min-height: 42px; display: grid !important; grid-template-columns: 28px minmax(0, 1fr) 24px; align-items: center; gap: 8px !important; padding: 6px 8px !important; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); }
 .mb-solver-question:hover { background: var(--mb-surface-muted); }
 .mb-solver-question[aria-current='true'] { background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-weight: 600; }
@@ -103,6 +103,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.is-collapsed .mb-app-profile { justify-content: center; padding: 4px; }
   .mb-app-header.is-collapsed .mb-app-account { padding: 0; }
   .mb-app-header.is-collapsed .mb-app-nav { display: none; }
+  .mb-app-header.is-collapsed .mb-app-nav.mb-solver-nav { display: flex; }
 }
 
 @media (max-width: 380px) {

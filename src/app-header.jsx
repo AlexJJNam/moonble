@@ -11,11 +11,14 @@ function useSolverQuestions(enabled) {
 
   useEffect(() => {
     if (!enabled) return undefined;
-    const container = document.getElementById('quizContainer');
-    if (!container) return undefined;
     let frame = 0;
 
     function readCards() {
+      const container = document.getElementById('quizContainer');
+      if (!container) {
+        setItems([]);
+        return;
+      }
       const next = Array.from(container.querySelectorAll('.q-card')).map((card, index) => {
         card.id = `question-${index + 1}`;
         card.tabIndex = -1;
@@ -38,6 +41,8 @@ function useSolverQuestions(enabled) {
     function updateActive() {
       frame = 0;
       if (Date.now() < manualSelectionUntil.current) return;
+      const container = document.getElementById('quizContainer');
+      if (!container) return;
       const cards = Array.from(container.querySelectorAll('.q-card'));
       if (!cards.length) return;
       const header = document.querySelector('.mb-app-header');
@@ -62,8 +67,11 @@ function useSolverQuestions(enabled) {
       frame = requestAnimationFrame(updateActive);
     }
 
-    const observer = new MutationObserver(readCards);
-    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    const observer = new MutationObserver(() => {
+      readCards();
+      scheduleActive();
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     readCards();
     updateActive();
     window.addEventListener('scroll', scheduleActive, { passive: true });

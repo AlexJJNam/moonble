@@ -35,9 +35,9 @@ function ProductPreview() {
 }
 
 const features = [
-  { icon: BookOpen, eyebrow: '문제지', title: '필요한 문제를 바로 풀어요', copy: '기본 문제지부터 직접 만든 문제지까지 한곳에서 고르고, 흐름을 끊지 않고 풀어보세요.' },
-  { icon: BarChart3, eyebrow: '성취도', title: '점수보다 변화의 흐름을 봐요', copy: '회차별 점수와 단기·장기 추세를 함께 보며 최근에 달라진 실력을 확인하세요.' },
-  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 기획으로 남겨요', copy: '떠오른 아이디어를 PRD로 정리하고 학습과 기획을 같은 워크스페이스에서 이어가세요.' },
+  { icon: BookOpen, eyebrow: '문제지', title: '직접 만들고 바로 풉니다', copy: '기본 문제지와 직접 등록한 문제지를 한곳에서 관리하고, 필요한 순간 바로 풀이를 시작합니다.' },
+  { icon: BarChart3, eyebrow: '성취도', title: '변화를 기록으로 확인합니다', copy: '회차별 점수와 단기·장기 추세를 함께 비교해 최근의 학습 흐름을 확인합니다.' },
+  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 문서로 남깁니다', copy: '문제를 풀며 떠오른 생각을 PRD로 정리해 학습 기록을 실제 기획 작업으로 연결합니다.' },
 ];
 
 const clamp = value => Math.min(1, Math.max(0, value));
@@ -142,8 +142,8 @@ function ScrollStory() {
     <div className="landing-story-sticky" ref={stickyRef} data-step="1">
       <div className="landing-story-copy">
         <span className="landing-eyebrow">시작하는 방법</span>
-        <h2 id="workflow-title">고르고, 풀고,<br />성장을 확인하세요</h2>
-        <p>문제지를 고르고 집중해서 푼 다음, 채점 결과와 기록을 보며 다음 행동을 정하세요.</p>
+        <h2 id="workflow-title">등록하고, 풀고,<br />기록을 확인합니다</h2>
+        <p>문제지를 등록한 뒤 바로 풀고, 채점 결과와 기록을 한 흐름에서 확인합니다.</p>
         <ol className="landing-story-nav" aria-label="Moonble 학습 흐름">
           <li><b>01</b><span><strong>문제지 등록</strong><small>내 문제를 가져와요</small></span></li>
           <li><b>02</b><span><strong>문제지 선택</strong><small>오늘 풀 문제를 골라요</small></span></li>
@@ -255,29 +255,31 @@ function Landing() {
     </header>
     <main>
       <section className="landing-hero">
-        <div className="landing-hero-glow landing-hero-glow-one" aria-hidden="true" />
-        <div className="landing-hero-glow landing-hero-glow-two" aria-hidden="true" />
-        <div className="landing-hero-copy">
-          <span className="landing-eyebrow">기획자를 위한 워크스페이스</span>
-          <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
-          <p>문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.<br className="landing-desktop-break" /> Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.</p>
-          <div className="landing-actions"><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">Moonble 살펴보기</a></div>
-          <ul aria-label="Moonble 이용 특징"><li><Check size={15} aria-hidden="true" />설치 없이 바로 시작</li><li><Check size={15} aria-hidden="true" />개인 학습 기록 저장</li></ul>
+        <div className="landing-hero-intro">
+          <div className="landing-hero-copy">
+            <span className="landing-eyebrow">기획자를 위한 개인 워크스페이스</span>
+            <h1>문제를 풀고,<br /><em>기획을 남깁니다.</em></h1>
+          </div>
+          <div className="landing-hero-detail">
+            <p>문제지, 학습 기록, PRD를 한곳에서 관리하세요. Moonble은 배운 내용을 실제 기획 작업으로 이어주는 도구입니다.</p>
+            <div className="landing-actions"><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">기능 보기</a></div>
+            <ul aria-label="Moonble 이용 특징"><li><Check size={15} aria-hidden="true" />설치 없이 시작</li><li><Check size={15} aria-hidden="true" />학습 기록 자동 저장</li></ul>
+          </div>
         </div>
         <ProductPreview />
       </section>
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
-        <div className="landing-section-heading"><span>하나의 워크스페이스</span><h2 id="features-title">배움과 기획이<br />자연스럽게 이어져요</h2><p>필요한 기능만 단순하게 연결해, 메뉴를 찾는 시간보다 실제 학습과 작업에 집중할 수 있어요.</p></div>
+        <div className="landing-section-heading"><span>워크스페이스 구성</span><h2 id="features-title">문제풀이부터 PRD까지,<br />한곳에서 관리합니다</h2><p>학습과 기획에 필요한 세 가지 기능을 같은 구조 안에 담았습니다.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
-          <span>{eyebrow}</span><h3>{title}</h3><p>{copy}</p>
+          <span>{eyebrow}</span><div><h3>{title}</h3><p>{copy}</p></div>
         </article>)}</div>
       </section>
 
       <ScrollStory />
 
-      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+      <section className="landing-cta"><div><p>Moonble을 시작할 준비가 되셨나요?</p><h2>다음 문제지부터<br />한곳에 기록하세요.</h2></div><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
     </main>
     <SiteFooter />
   </>;
