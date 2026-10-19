@@ -299,14 +299,14 @@ function Landing() {
 
       <ScrollStory />
 
+      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+
       <section className="landing-faq" id="faq" aria-labelledby="faq-title">
         <span>FAQ</span><h2 id="faq-title">자주 묻는 질문</h2>
         <div className="landing-faq-list">{faqs.map(({ question, answer }) => <details key={question}>
           <summary><strong>{question}</strong><i aria-hidden="true" /></summary><p>{answer}</p>
         </details>)}</div>
       </section>
-
-      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
     </main>
     <SiteFooter />
   </>;
