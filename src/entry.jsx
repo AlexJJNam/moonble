@@ -247,9 +247,9 @@ function ScrollStory() {
 function useLandingOrbMotion() {
   useEffect(() => {
     const sections = [
-      { element: document.querySelector('.landing-hero'), distance: [28, 72, -24, -54] },
-      { element: document.querySelector('.landing-features'), distance: [-38, 82, 44, -68] },
-      { element: document.querySelector('.landing-cta'), distance: [24, 48, -32, -58] },
+      { element: document.querySelector('.landing-hero'), vector: [42, 76] },
+      { element: document.querySelector('.landing-features'), vector: [-52, 86] },
+      { element: document.querySelector('.landing-cta'), vector: [38, 58] },
     ].filter(({ element }) => element);
     if (!sections.length) return undefined;
 
@@ -264,12 +264,14 @@ function useLandingOrbMotion() {
       const centerOffset = window.innerHeight * .5 - (bounds.top + bounds.height * .5);
       return Math.max(-1, Math.min(1, centerOffset / Math.max((window.innerHeight + bounds.height) * .5, 1)));
     };
-    const render = values => sections.forEach(({ element, distance }, index) => {
+    const render = values => sections.forEach(({ element, vector }, index) => {
       const progress = reducedMotion.matches ? 0 : values[index];
-      element.style.setProperty('--orb-a-x', `${(progress * distance[0]).toFixed(2)}px`);
-      element.style.setProperty('--orb-a-y', `${(progress * distance[1]).toFixed(2)}px`);
-      element.style.setProperty('--orb-b-x', `${(progress * distance[2]).toFixed(2)}px`);
-      element.style.setProperty('--orb-b-y', `${(progress * distance[3]).toFixed(2)}px`);
+      const x = progress * vector[0];
+      const y = progress * vector[1];
+      element.style.setProperty('--orb-a-x', `${x.toFixed(2)}px`);
+      element.style.setProperty('--orb-a-y', `${y.toFixed(2)}px`);
+      element.style.setProperty('--orb-b-x', `${(-x).toFixed(2)}px`);
+      element.style.setProperty('--orb-b-y', `${(-y).toFixed(2)}px`);
     });
     const animate = time => {
       const elapsed = previousTime ? Math.min(time - previousTime, 48) : 16;
