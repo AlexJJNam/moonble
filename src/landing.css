@@ -271,7 +271,7 @@ body { margin: 0; color: var(--mb-text-primary); background: #fff; word-break: k
   .landing-header nav { display: none; }
   .landing-logo { min-height: 44px; display: inline-flex; align-items: center; font-size: var(--mb-font-22); }
   .landing-login { min-width: 72px; min-height: 44px; padding: 8px 15px; }
-  .landing-hero { width: auto; min-height: 0; margin-right: max(16px, env(safe-area-inset-right)); margin-left: max(16px, env(safe-area-inset-left)); padding: 48px 0 56px; }
+  .landing-hero { width: 100%; min-height: 0; margin: 0; padding: 48px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); }
   .landing-hero-copy { text-align: left; }
   .landing-eyebrow { font-size: 13px; line-height: 19px; }
   .landing-hero h1 { margin: 17px 0 16px; font-size: clamp(36px, 9.8vw, 42px); line-height: 1.2; letter-spacing: -.035em; }
