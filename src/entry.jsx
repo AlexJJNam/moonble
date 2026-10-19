@@ -58,29 +58,11 @@ function ShowcaseScreen({ type }) {
 
 function ProductPreview() {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [trackIndex, setTrackIndex] = useState(1);
-  const [isJumping, setIsJumping] = useState(false);
   const [paused, setPaused] = useState(false);
   const touchStart = useRef(null);
-  const resetFrame = useRef(0);
-  const carouselSlides = [showcaseSlides.at(-1), ...showcaseSlides, showcaseSlides[0]];
   const changeSlide = next => {
     const normalized = (next + showcaseSlides.length) % showcaseSlides.length;
-    setIsJumping(false);
     setActiveSlide(normalized);
-    setTrackIndex(next < 0 ? 0 : next >= showcaseSlides.length ? showcaseSlides.length + 1 : normalized + 1);
-  };
-
-  const finishTransition = event => {
-    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return;
-    const resetIndex = trackIndex === 0 ? showcaseSlides.length : trackIndex === showcaseSlides.length + 1 ? 1 : null;
-    if (resetIndex === null) return;
-    setIsJumping(true);
-    setTrackIndex(resetIndex);
-    window.cancelAnimationFrame(resetFrame.current);
-    resetFrame.current = window.requestAnimationFrame(() => {
-      resetFrame.current = window.requestAnimationFrame(() => setIsJumping(false));
-    });
   };
 
   useEffect(() => {
@@ -89,8 +71,6 @@ function ProductPreview() {
     return () => window.clearInterval(timer);
   }, [activeSlide, paused]);
 
-  useEffect(() => () => window.cancelAnimationFrame(resetFrame.current), []);
-
   return <section className="landing-showcase" aria-roledescription="carousel" aria-label="Moonble 사용 화면" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)} onTouchStart={event => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={event => {
     if (touchStart.current === null) return;
     const distance = event.changedTouches[0].clientX - touchStart.current;
@@ -98,11 +78,15 @@ function ProductPreview() {
     touchStart.current = null;
   }}>
     <div className="landing-showcase-viewport">
-      <div className={`landing-showcase-track${isJumping ? ' is-jumping' : ''}`} style={{ '--showcase-shift': `${trackIndex * 86}%` }} onTransitionEnd={finishTransition}>
-        {carouselSlides.map((slide, index) => <article className={`landing-showcase-slide${index === trackIndex ? ' is-active' : ''}`} aria-hidden={index !== trackIndex} key={`${slide.key}-${index}`}>
-          <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
-          <ShowcaseScreen type={slide.key} />
-        </article>)}
+      <div className="landing-showcase-track">
+        {showcaseSlides.map((slide, index) => {
+          const distance = (index - activeSlide + showcaseSlides.length) % showcaseSlides.length;
+          const position = distance === 0 ? 'is-active' : distance === 1 ? 'is-next' : distance === 2 ? 'is-far' : 'is-previous';
+          return <article className={`landing-showcase-slide ${position}`} aria-hidden={index !== activeSlide} key={slide.key}>
+            <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
+            <ShowcaseScreen type={slide.key} />
+          </article>;
+        })}
       </div>
       <button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button>
       <button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button>
