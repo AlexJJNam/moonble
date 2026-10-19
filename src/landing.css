@@ -47,9 +47,11 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-hero-glow-two { width: 740px; height: 740px; right: -390px; top: 140px; background: radial-gradient(circle at 42% 52%, rgb(123 97 255 / 25%), rgb(49 130 246 / 10%) 52%, transparent 74%); transform: translate3d(var(--orb-b-x), var(--orb-b-y), 0); }
 
 .landing-showcase { position: relative; z-index: 2; width: min(1040px, 100%); margin-top: 80px; animation: landing-preview-in 1s .14s cubic-bezier(.2,.8,.2,1) both; }
-.landing-showcase-viewport { position: relative; overflow: hidden; border: 1px solid #dfe5ec; border-radius: 28px; background: #f4f8ff; }
-.landing-showcase-track { display: flex; transition: transform 680ms cubic-bezier(.22,.78,.22,1); will-change: transform; }
-.landing-showcase-slide { position: relative; min-width: 100%; min-height: 570px; flex: 0 0 100%; padding: 42px 76px 44px; overflow: hidden; background: linear-gradient(145deg, #f7faff 0%, #edf5ff 54%, #f3f0ff 100%); }
+.landing-showcase-viewport { position: relative; overflow: hidden; border-radius: 28px; }
+.landing-showcase-track { height: 594px; display: flex; gap: 2%; transform: translateX(calc(8% - var(--showcase-shift))); transition: transform 720ms cubic-bezier(.22,.78,.22,1); will-change: transform; }
+.landing-showcase-track.is-jumping { transition: none; }
+.landing-showcase-slide { position: relative; min-width: 0; min-height: 570px; flex: 0 0 84%; margin: 12px 0; padding: 42px 76px 44px; overflow: hidden; border: 1px solid #dfe5ec; border-radius: 28px; background: linear-gradient(145deg, #f7faff 0%, #edf5ff 54%, #f3f0ff 100%); opacity: .62; transform: scale(.94); transition: opacity 560ms ease, transform 720ms cubic-bezier(.22,.78,.22,1); pointer-events: none; }
+.landing-showcase-slide.is-active { z-index: 2; opacity: 1; transform: scale(1); pointer-events: auto; }
 .landing-showcase-slide::before, .landing-showcase-slide::after { content: ''; position: absolute; border-radius: 50%; filter: blur(32px); pointer-events: none; }
 .landing-showcase-slide::before { width: 220px; height: 220px; left: -80px; top: -86px; background: rgb(49 130 246 / 18%); }
 .landing-showcase-slide::after { width: 250px; height: 250px; right: -80px; bottom: -110px; background: rgb(123 97 255 / 16%); }
@@ -103,9 +105,9 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .showcase-chart>i { width: 30px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, #79aef8, #3182f6); }
 .showcase-chart svg { position: absolute; inset: 25px 22px 18px; width: calc(100% - 44px); height: calc(100% - 43px); }
 .showcase-chart path { fill: none; stroke: #20a37a; stroke-width: 3; stroke-linecap: round; }
-.landing-showcase-arrow { position: absolute; z-index: 5; top: 57%; width: 46px; height: 46px; display: grid; place-content: center; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: rgb(255 255 255 / 88%); cursor: pointer; transform: translateY(-50%); backdrop-filter: blur(10px); }
-.landing-showcase-arrow.is-prev { left: 18px; }
-.landing-showcase-arrow.is-next { right: 18px; }
+.landing-showcase-arrow { position: absolute; z-index: 5; top: 57%; width: 46px; height: 46px; display: grid; place-content: center; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: rgb(255 255 255 / 90%); cursor: pointer; transform: translateY(-50%); backdrop-filter: blur(10px); }
+.landing-showcase-arrow.is-prev { left: calc(8% + 15px); }
+.landing-showcase-arrow.is-next { right: calc(8% + 15px); }
 .landing-showcase-pagination { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
 .landing-showcase-pagination button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: #c8d0da; cursor: pointer; transition: width 240ms ease, background-color 240ms ease; }
 .landing-showcase-pagination button.is-active { width: 24px; background: var(--mb-primary); }
@@ -397,7 +399,8 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-hero-glow-two { width: 430px; height: 430px; right: -300px; top: 330px; }
   .landing-showcase { width: 100%; margin-top: 48px; }
   .landing-showcase-viewport { border-radius: 20px; }
-  .landing-showcase-slide { min-height: 466px; padding: 28px 14px 24px; }
+  .landing-showcase-track { height: 490px; }
+  .landing-showcase-slide { min-height: 466px; padding: 28px 14px 24px; border-radius: 20px; }
   .landing-showcase-copy>strong { margin-top: 5px; font-size: 19px; line-height: 27px; }
   .landing-showcase-copy>p { max-width: 260px; font-size: 12px; line-height: 18px; }
   .showcase-screen { width: calc(100% - 14px); height: 320px; margin-top: 20px; border-radius: 15px; }
@@ -424,8 +427,8 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .showcase-chart svg { inset: 18px 13px 12px; width: calc(100% - 26px); height: calc(100% - 30px); }
   .showcase-chart>i { width: 18px; }
   .landing-showcase-arrow { top: 60%; width: 38px; height: 38px; color: var(--mb-primary-strong); background: rgb(255 255 255 / 92%); }
-  .landing-showcase-arrow.is-prev { left: 5px; }
-  .landing-showcase-arrow.is-next { right: 5px; }
+  .landing-showcase-arrow.is-prev { left: calc(8% + 1px); }
+  .landing-showcase-arrow.is-next { right: calc(8% + 1px); }
   .landing-showcase-pagination { margin-top: 13px; }
   .landing-preview { min-height: 400px; grid-template-columns: 74px minmax(0, 1fr); margin-top: 40px; border-radius: 20px; }
   .landing-preview-sidebar { padding: 19px 10px; }
@@ -561,7 +564,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-hero-copy, .landing-preview, .landing-hero-glow { animation: none; }
   .landing-reveal-character { opacity: 1; filter: none; transform: none; animation: none; }
   .landing-hero-glow, .landing-features::before, .landing-features::after, .landing-cta::before, .landing-cta::after { transform: none; }
-  .landing-login, .landing-primary, .landing-secondary, .landing-feature-grid article, .landing-story-nav li, .landing-primary svg, .landing-cta a svg, .landing-story-copy a svg, .landing-showcase-track, .landing-showcase-pagination button, .landing-faq-answer, .landing-faq-item>button i::before, .landing-faq-item>button i::after { transition: none; }
+  .landing-login, .landing-primary, .landing-secondary, .landing-feature-grid article, .landing-story-nav li, .landing-primary svg, .landing-cta a svg, .landing-story-copy a svg, .landing-showcase-track, .landing-showcase-slide, .landing-showcase-pagination button, .landing-faq-answer, .landing-faq-item>button i::before, .landing-faq-item>button i::after { transition: none; }
   .landing-story { height: auto; min-height: 0; padding: 112px 0; }
   .landing-story-sticky { position: relative; top: auto; height: auto; min-height: 0; overflow: visible; }
   .story-register-screen, .story-library-screen, .story-question-screen { display: none; }

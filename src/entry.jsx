@@ -58,15 +58,38 @@ function ShowcaseScreen({ type }) {
 
 function ProductPreview() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [trackIndex, setTrackIndex] = useState(1);
+  const [isJumping, setIsJumping] = useState(false);
   const [paused, setPaused] = useState(false);
   const touchStart = useRef(null);
-  const changeSlide = next => setActiveSlide((next + showcaseSlides.length) % showcaseSlides.length);
+  const resetFrame = useRef(0);
+  const carouselSlides = [showcaseSlides.at(-1), ...showcaseSlides, showcaseSlides[0]];
+  const changeSlide = next => {
+    const normalized = (next + showcaseSlides.length) % showcaseSlides.length;
+    setIsJumping(false);
+    setActiveSlide(normalized);
+    setTrackIndex(next < 0 ? 0 : next >= showcaseSlides.length ? showcaseSlides.length + 1 : normalized + 1);
+  };
+
+  const finishTransition = event => {
+    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return;
+    const resetIndex = trackIndex === 0 ? showcaseSlides.length : trackIndex === showcaseSlides.length + 1 ? 1 : null;
+    if (resetIndex === null) return;
+    setIsJumping(true);
+    setTrackIndex(resetIndex);
+    window.cancelAnimationFrame(resetFrame.current);
+    resetFrame.current = window.requestAnimationFrame(() => {
+      resetFrame.current = window.requestAnimationFrame(() => setIsJumping(false));
+    });
+  };
 
   useEffect(() => {
     if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-    const timer = window.setInterval(() => setActiveSlide(current => (current + 1) % showcaseSlides.length), 4800);
+    const timer = window.setInterval(() => changeSlide(activeSlide + 1), 4800);
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [activeSlide, paused]);
+
+  useEffect(() => () => window.cancelAnimationFrame(resetFrame.current), []);
 
   return <section className="landing-showcase" aria-roledescription="carousel" aria-label="Moonble 사용 화면" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)} onTouchStart={event => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={event => {
     if (touchStart.current === null) return;
@@ -75,8 +98,8 @@ function ProductPreview() {
     touchStart.current = null;
   }}>
     <div className="landing-showcase-viewport">
-      <div className="landing-showcase-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
-        {showcaseSlides.map(slide => <article className="landing-showcase-slide" aria-hidden={slide !== showcaseSlides[activeSlide]} key={slide.key}>
+      <div className={`landing-showcase-track${isJumping ? ' is-jumping' : ''}`} style={{ '--showcase-shift': `${trackIndex * 86}%` }} onTransitionEnd={finishTransition}>
+        {carouselSlides.map((slide, index) => <article className={`landing-showcase-slide${index === trackIndex ? ' is-active' : ''}`} aria-hidden={index !== trackIndex} key={`${slide.key}-${index}`}>
           <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
           <ShowcaseScreen type={slide.key} />
         </article>)}
