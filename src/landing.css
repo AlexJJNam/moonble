@@ -20,6 +20,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-login:hover { background: var(--mb-primary-hover); }
 
 .landing-hero {
+  --orb-a-x: 0px; --orb-a-y: 0px; --orb-b-x: 0px; --orb-b-y: 0px;
   position: relative; isolation: isolate;
   width: 100%;
   display: flex; flex-direction: column; align-items: center;
@@ -38,9 +39,9 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-primary:hover svg, .landing-cta a:hover svg, .landing-story-copy a:hover svg { transform: translateX(3px); }
 .landing-secondary { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
 .landing-secondary:hover { color: var(--mb-text-primary); background: #e9edf2; }
-.landing-hero-glow { position: absolute; z-index: -1; border-radius: 50%; filter: blur(12px); pointer-events: none; animation: landing-drift 10s ease-in-out infinite alternate; }
-.landing-hero-glow-one { width: 620px; height: 620px; top: -180px; left: -330px; background: radial-gradient(circle, rgb(49 130 246 / 19%), rgb(49 130 246 / 5%) 52%, transparent 72%); }
-.landing-hero-glow-two { width: 740px; height: 740px; right: -390px; top: 140px; background: radial-gradient(circle, rgb(123 97 255 / 15%), rgb(49 130 246 / 4%) 50%, transparent 72%); animation-delay: -4s; }
+.landing-hero-glow { position: absolute; z-index: -1; border-radius: 50%; filter: blur(48px) saturate(128%); opacity: .86; pointer-events: none; will-change: transform; }
+.landing-hero-glow-one { width: 620px; height: 620px; top: -180px; left: -330px; background: radial-gradient(circle at 58% 44%, rgb(49 130 246 / 29%), rgb(81 126 242 / 14%) 52%, transparent 74%); transform: translate3d(var(--orb-a-x), var(--orb-a-y), 0); }
+.landing-hero-glow-two { width: 740px; height: 740px; right: -390px; top: 140px; background: radial-gradient(circle at 42% 52%, rgb(123 97 255 / 25%), rgb(49 130 246 / 10%) 52%, transparent 74%); transform: translate3d(var(--orb-b-x), var(--orb-b-y), 0); }
 
 .landing-preview {
   position: relative; z-index: 2;
@@ -88,10 +89,10 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-highlights strong { display: block; margin-top: 8px; font-size: clamp(36px, 3vw, 46px); line-height: 1.16; font-weight: 700; letter-spacing: -.035em; }
 .landing-highlights p { margin: 8px 0 0; color: rgb(255 255 255 / 80%); font-size: 13px; line-height: 20px; }
 
-.landing-features { position: relative; isolation: isolate; overflow: hidden; padding: 136px max(28px, calc((100vw - 1120px) / 2)); background: radial-gradient(circle at 10% 18%, rgb(49 130 246 / 25%), transparent 27%), radial-gradient(circle at 88% 82%, rgb(112 92 246 / 22%), transparent 30%), linear-gradient(135deg, #edf5ff 0%, #f3f5ff 48%, #eaf2ff 100%); }
-.landing-features::before, .landing-features::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; }
-.landing-features::before { width: 360px; height: 360px; left: 13%; bottom: -180px; background: rgb(255 255 255 / 42%); }
-.landing-features::after { width: 280px; height: 280px; right: 11%; top: -140px; background: rgb(111 156 246 / 19%); }
+.landing-features { --orb-a-x: 0px; --orb-a-y: 0px; --orb-b-x: 0px; --orb-b-y: 0px; position: relative; isolation: isolate; overflow: hidden; padding: 136px max(28px, calc((100vw - 1120px) / 2)); background: linear-gradient(135deg, #edf5ff 0%, #f3f5ff 48%, #eaf2ff 100%); }
+.landing-features::before, .landing-features::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(52px) saturate(132%); opacity: .76; pointer-events: none; will-change: transform; }
+.landing-features::before { width: 430px; height: 430px; left: 5%; bottom: -210px; background: radial-gradient(circle at 54% 42%, rgb(49 130 246 / 46%), rgb(122 169 248 / 18%) 56%, transparent 74%); transform: translate3d(var(--orb-a-x), var(--orb-a-y), 0); }
+.landing-features::after { width: 360px; height: 360px; right: 4%; top: -170px; background: radial-gradient(circle at 44% 58%, rgb(123 97 255 / 38%), rgb(91 141 246 / 16%) 56%, transparent 74%); transform: translate3d(var(--orb-b-x), var(--orb-b-y), 0); }
 .landing-section-heading { position: relative; z-index: 1; max-width: 820px; margin: 0; }
 .landing-section-heading>span { color: var(--mb-primary-strong); font-size: 14px; line-height: 22px; font-weight: 600; letter-spacing: 0; }
 .landing-section-heading h2, .landing-story-copy h2, .landing-cta h2 { margin: 14px 0 18px; font-size: clamp(36px, 2.7vw, 40px); line-height: 1.3; font-weight: 700; letter-spacing: -.034em; }
@@ -263,10 +264,10 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-faq details[open] summary i::after { transform: rotate(0); }
 .landing-faq details p { max-width: 860px; margin: -5px 0 0; padding: 0 42px 28px 2px; color: #666; font-size: 16px; line-height: 27px; }
 
-.landing-cta { position: relative; isolation: isolate; width: min(1120px, calc(100% - 56px)); overflow: hidden; margin: 128px auto 0; padding: 78px 28px; border-radius: 28px; color: #1f1f1f; background: #f2f5fc; text-align: center; }
-.landing-cta::before, .landing-cta::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgb(49 130 246 / 62%), rgb(94 140 242 / 26%) 52%, rgb(255 255 255 / 12%) 72%); filter: blur(2px); }
-.landing-cta::before { width: 210px; height: 210px; left: -52px; top: -32px; }
-.landing-cta::after { width: 240px; height: 240px; right: -64px; bottom: -90px; }
+.landing-cta { --orb-a-x: 0px; --orb-a-y: 0px; --orb-b-x: 0px; --orb-b-y: 0px; position: relative; isolation: isolate; width: min(1120px, calc(100% - 56px)); overflow: hidden; margin: 128px auto 0; padding: 78px 28px; border-radius: 28px; color: #1f1f1f; background: #f2f5fc; text-align: center; }
+.landing-cta::before, .landing-cta::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(38px) saturate(130%); opacity: .82; pointer-events: none; will-change: transform; }
+.landing-cta::before { width: 250px; height: 250px; left: -72px; top: -62px; background: radial-gradient(circle at 58% 46%, rgb(49 130 246 / 64%), rgb(104 156 247 / 26%) 55%, transparent 74%); transform: translate3d(var(--orb-a-x), var(--orb-a-y), 0); }
+.landing-cta::after { width: 280px; height: 280px; right: -84px; bottom: -112px; background: radial-gradient(circle at 42% 52%, rgb(89 136 242 / 58%), rgb(123 97 255 / 23%) 55%, transparent 74%); transform: translate3d(var(--orb-b-x), var(--orb-b-y), 0); }
 .landing-cta p { margin: 0; color: #666; font-size: 16px; line-height: 26px; }
 .landing-cta h2 { margin-top: 12px; }
 .landing-cta a { min-height: 52px; display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; padding: 13px 23px; border-radius: 12px; color: #fff; background: var(--mb-primary-strong); font-size: 15px; font-weight: 650; text-decoration: none; }
@@ -277,7 +278,6 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 
 @keyframes landing-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 @keyframes landing-preview-in { from { opacity: 0; transform: translateY(40px) scale(.985); } to { opacity: 1; transform: none; } }
-@keyframes landing-drift { from { transform: translate3d(-12px, -8px, 0) scale(.98); } to { transform: translate3d(18px, 14px, 0) scale(1.04); } }
 @media (max-width: 1040px) {
   .landing-hero { padding: 82px 24px 80px; }
   .landing-preview { height: auto; min-height: 470px; grid-template-columns: 160px minmax(0, 1fr); }
@@ -436,6 +436,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .landing-hero-copy, .landing-preview, .landing-hero-glow { animation: none; }
+  .landing-hero-glow, .landing-features::before, .landing-features::after, .landing-cta::before, .landing-cta::after { transform: none; }
   .landing-login, .landing-primary, .landing-secondary, .landing-feature-grid article, .landing-story-nav li, .landing-primary svg, .landing-cta a svg, .landing-story-copy a svg { transition: none; }
   .landing-story { height: auto; min-height: 0; padding: 112px 0; }
   .landing-story-sticky { position: relative; top: auto; height: auto; min-height: 0; overflow: visible; }

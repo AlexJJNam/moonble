@@ -244,7 +244,75 @@ function ScrollStory() {
   </section>;
 }
 
+function useLandingOrbMotion() {
+  useEffect(() => {
+    const sections = [
+      { element: document.querySelector('.landing-hero'), distance: [28, 72, -24, -54] },
+      { element: document.querySelector('.landing-features'), distance: [-38, 82, 44, -68] },
+      { element: document.querySelector('.landing-cta'), distance: [24, 48, -32, -58] },
+    ].filter(({ element }) => element);
+    if (!sections.length) return undefined;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+    let current = sections.map(() => 0);
+    let target = sections.map(() => 0);
+    let previousTime = 0;
+
+    const read = element => {
+      const bounds = element.getBoundingClientRect();
+      const centerOffset = window.innerHeight * .5 - (bounds.top + bounds.height * .5);
+      return Math.max(-1, Math.min(1, centerOffset / Math.max((window.innerHeight + bounds.height) * .5, 1)));
+    };
+    const render = values => sections.forEach(({ element, distance }, index) => {
+      const progress = reducedMotion.matches ? 0 : values[index];
+      element.style.setProperty('--orb-a-x', `${(progress * distance[0]).toFixed(2)}px`);
+      element.style.setProperty('--orb-a-y', `${(progress * distance[1]).toFixed(2)}px`);
+      element.style.setProperty('--orb-b-x', `${(progress * distance[2]).toFixed(2)}px`);
+      element.style.setProperty('--orb-b-y', `${(progress * distance[3]).toFixed(2)}px`);
+    });
+    const animate = time => {
+      const elapsed = previousTime ? Math.min(time - previousTime, 48) : 16;
+      previousTime = time;
+      const blend = 1 - Math.exp(-elapsed / 150);
+      let settled = true;
+      current = current.map((value, index) => {
+        const next = value + (target[index] - value) * blend;
+        if (Math.abs(target[index] - next) > .0005) settled = false;
+        return settled && Math.abs(target[index] - next) <= .0005 ? target[index] : next;
+      });
+      render(current);
+      if (settled) { frame = 0; previousTime = 0; }
+      else frame = window.requestAnimationFrame(animate);
+    };
+    const requestUpdate = () => {
+      target = reducedMotion.matches ? sections.map(() => 0) : sections.map(({ element }) => read(element));
+      if (!frame) frame = window.requestAnimationFrame(animate);
+    };
+    const handleMotionChange = () => {
+      current = reducedMotion.matches ? sections.map(() => 0) : sections.map(({ element }) => read(element));
+      target = [...current];
+      render(current);
+    };
+
+    current = reducedMotion.matches ? sections.map(() => 0) : sections.map(({ element }) => read(element));
+    target = [...current];
+    render(current);
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    reducedMotion.addEventListener?.('change', handleMotionChange);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+      reducedMotion.removeEventListener?.('change', handleMotionChange);
+    };
+  }, []);
+}
+
 function Landing() {
+  useLandingOrbMotion();
+
   useEffect(() => {
     if (!supabase) return undefined;
     let alive = true;
