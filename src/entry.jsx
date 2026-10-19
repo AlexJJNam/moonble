@@ -12,8 +12,8 @@ function moveTo(path) {
 }
 
 const heroDescriptionLines = [
-  '문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.',
-  'Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.',
+  '문제를 풀며 배운 내용은 기록하고, 떠오른 아이디어는 PRD로 정리해보세요.',
+  '학습부터 기획까지, 한곳에서 자연스럽게 이어갈 수 있어요.',
 ];
 
 function HeroDescription() {
@@ -35,10 +35,10 @@ function HeroDescription() {
 }
 
 const showcaseSlides = [
-  { key: 'register', step: '01', title: '문제지 등록', copy: 'CSV 파일과 Google Sheets로 내 문제를 가져옵니다.' },
-  { key: 'library', step: '02', title: '문제지 선택', copy: '오늘 필요한 문제지를 고르고 바로 시작합니다.' },
-  { key: 'solve', step: '03', title: '풀이와 채점', copy: '답을 고른 뒤 정답과 해설을 바로 확인합니다.' },
-  { key: 'stats', step: '04', title: '성취도 확인', copy: '점수와 추세를 보며 다음 학습을 결정합니다.' },
+  { key: 'register', step: '01', title: '문제 불러오기', copy: 'CSV나 Google Sheets에 정리한 문제를 그대로 가져와요.' },
+  { key: 'library', step: '02', title: '오늘의 문제지 고르기', copy: '지금 공부할 문제지를 골라 바로 시작해요.' },
+  { key: 'solve', step: '03', title: '풀고 바로 확인하기', copy: '답을 고르면 정답과 해설을 바로 볼 수 있어요.' },
+  { key: 'stats', step: '04', title: '달라진 실력 보기', copy: '점수와 추세를 보며 다음 공부를 정해요.' },
 ];
 
 function ShowcaseScreen({ type }) {
@@ -102,7 +102,7 @@ const highlights = [
   { label: '개인 워크스페이스', value: 1, suffix: '곳', detail: '문제풀이 · 성취도 · PRD' },
 ];
 
-function AnimatedMetric({ target, active }) {
+function AnimatedMetric({ target, active, cycle }) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ function AnimatedMetric({ target, active }) {
     };
     frame = window.requestAnimationFrame(update);
     return () => window.cancelAnimationFrame(frame);
-  }, [active, target]);
+  }, [active, cycle, target]);
 
   return value;
 }
@@ -128,39 +128,42 @@ function AnimatedMetric({ target, active }) {
 function HighlightBand() {
   const sectionRef = useRef(null);
   const [active, setActive] = useState(false);
+  const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      setActive(true);
-      observer.disconnect();
-    }, { threshold: .35 });
+    const observer = new IntersectionObserver(([entry]) => setActive(entry.isIntersecting), { threshold: .25 });
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (!active || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = window.setInterval(() => setCycle(value => value + 1), 10000);
+    return () => window.clearInterval(timer);
+  }, [active]);
+
   return <section className="landing-highlights" aria-label="Moonble 핵심 구성" ref={sectionRef}>
     <div className="landing-highlights-inner">{highlights.map(({ label, value, suffix, detail }) => <article key={label}>
-      <span>{label}</span><strong><b><AnimatedMetric target={value} active={active} /></b>{suffix}</strong><p>{detail}</p>
+      <span>{label}</span><strong><b><AnimatedMetric target={value} active={active} cycle={cycle} /></b>{suffix}</strong><p>{detail}</p>
     </article>)}</div>
   </section>;
 }
 
 const features = [
-  { icon: Upload, eyebrow: '문제지 등록', title: '내 문제를 간편하게 가져와요', copy: 'CSV 파일이나 Google Sheets 공유 링크로 문제지를 등록하고 한곳에서 관리합니다.' },
-  { icon: BookOpen, eyebrow: '집중 풀이', title: '필요한 문제를 골라 바로 풀어요', copy: '기본·심화 문제지와 직접 만든 문제지 중 오늘 필요한 학습을 선택합니다.' },
-  { icon: BarChart3, eyebrow: '성취도', title: '점수보다 변화의 흐름을 봐요', copy: '회차별 점수와 단기·장기 추세를 비교해 최근의 실력 상승을 확인합니다.' },
-  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 기획으로 이어가요', copy: '문제를 풀며 떠오른 생각을 PRD로 정리해 실제 기획 작업으로 연결합니다.' },
+  { icon: Upload, eyebrow: '문제지 등록', title: '정리해둔 문제를 바로 가져와요', copy: 'CSV 파일을 올리거나 Google Sheets 링크를 붙여 넣어 바로 문제지로 만들 수 있어요.' },
+  { icon: BookOpen, eyebrow: '집중 풀이', title: '오늘 필요한 문제만 골라 풀어요', copy: '기본·심화 문제지와 직접 만든 문제지 중 지금 공부할 내용을 선택하세요.' },
+  { icon: BarChart3, eyebrow: '성취도', title: '점수보다 실력의 흐름을 봐요', copy: '회차별 점수와 최근·장기 추세를 비교해, 어디까지 성장했는지 확인할 수 있어요.' },
+  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 기획으로 이어가요', copy: '문제를 풀며 떠오른 생각을 정리하고, 실제 기획 문서로 발전시켜보세요.' },
 ];
 
 const faqs = [
-  { question: 'Moonble은 어떤 서비스인가요?', answer: '문제지를 등록하고 풀면서 학습 기록을 확인하고, 떠오른 아이디어를 PRD로 정리할 수 있는 기획자용 개인 워크스페이스입니다.' },
-  { question: '문제지는 어떻게 등록하나요?', answer: 'CSV 파일을 올리거나 Google Sheets 공유 링크를 입력해 등록할 수 있습니다. 등록 과정에서 문항 형식과 개수를 확인할 수 있습니다.' },
-  { question: '학습 기록에는 무엇이 저장되나요?', answer: '문제지별 풀이 회차와 점수, 최근 추세가 계정별로 저장됩니다. 나의 성취도에서 단기·장기 흐름을 함께 확인할 수 있습니다.' },
-  { question: '모바일에서도 사용할 수 있나요?', answer: '네. 소개, 로그인, 문제지 선택과 풀이 화면은 모바일 화면에 맞춰 반응형으로 동작합니다.' },
-  { question: '내 정보 수정이나 회원 탈퇴도 가능한가요?', answer: '내 계정에서 이름과 회사 정보를 수정할 수 있으며, 탈퇴 동의 절차를 거쳐 계정과 관련 데이터를 삭제할 수 있습니다.' },
+  { question: 'Moonble로 무엇을 할 수 있나요?', answer: '문제지를 가져와 풀고, 달라진 실력을 확인할 수 있어요. 문제를 풀며 떠오른 아이디어는 PRD로 정리할 수 있어요.' },
+  { question: '내 문제지는 어떻게 등록하나요?', answer: 'CSV 파일을 올리거나 Google Sheets 공유 링크를 붙여 넣으면 돼요. 등록하기 전에 문항 형식과 개수도 확인할 수 있어요.' },
+  { question: '어떤 학습 기록이 저장되나요?', answer: '문제지별 풀이 횟수와 점수, 최근 실력 추세를 계정별로 저장해요. 나의 성취도에서 최근 변화와 장기 추세를 함께 살펴볼 수 있어요.' },
+  { question: '휴대폰에서도 문제를 풀 수 있나요?', answer: '네. 로그인부터 문제지 선택과 풀이까지 모바일 화면에 맞춰 편하게 이용할 수 있어요.' },
+  { question: '내 정보를 바꾸거나 계정을 삭제할 수 있나요?', answer: '내 계정에서 이름과 회사 정보를 직접 바꿀 수 있어요. 회원 탈퇴를 선택하면 확인 절차를 거쳐 계정과 관련 데이터가 삭제돼요.' },
 ];
 
 function LandingFaq() {
@@ -290,12 +293,12 @@ function ScrollStory() {
       <div className="landing-story-copy">
         <span className="landing-eyebrow">시작하는 방법</span>
         <h2 id="workflow-title">등록하고, 풀고,<br />기록을 확인합니다</h2>
-        <p>문제지를 등록한 뒤 바로 풀고, 채점 결과와 기록을 한 흐름에서 확인합니다.</p>
+        <p>문제를 가져온 뒤 바로 풀고, 채점 결과와 실력의 변화를 한곳에서 확인하세요.</p>
         <ol className="landing-story-nav" aria-label="Moonble 학습 흐름">
-          <li><b>01</b><span><strong>문제지 등록</strong><small>내 문제를 가져와요</small></span></li>
+          <li><b>01</b><span><strong>문제지 등록</strong><small>정리해둔 문제를 가져와요</small></span></li>
           <li><b>02</b><span><strong>문제지 선택</strong><small>오늘 풀 문제를 골라요</small></span></li>
-          <li><b>03</b><span><strong>풀이와 채점</strong><small>답을 고르고 바로 확인해요</small></span></li>
-          <li><b>04</b><span><strong>성취도 확인</strong><small>기록에서 성장 흐름을 봐요</small></span></li>
+          <li><b>03</b><span><strong>풀이와 채점</strong><small>정답과 해설을 바로 확인해요</small></span></li>
+          <li><b>04</b><span><strong>성취도 확인</strong><small>달라진 실력을 살펴봐요</small></span></li>
         </ol>
         <a href="./login.html">내 워크스페이스 열기<ArrowRight size={18} aria-hidden="true" /></a>
       </div>
@@ -322,7 +325,7 @@ function ScrollStory() {
             <div className="story-screen story-register-screen">
               <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
               <article className="story-register-card">
-                <div className="story-register-copy"><strong>내 문제를 Moonble로 가져오세요</strong><p>CSV 파일이나 Google Sheets 공유 링크로 간단히 등록할 수 있어요.</p></div>
+                <div className="story-register-copy"><strong>정리해둔 문제를 가져오세요</strong><p>CSV 파일을 올리거나 Google Sheets 링크를 붙여 넣으면 돼요.</p></div>
                 <div className="story-register-drop"><Upload size={22} aria-hidden="true" /><b>CSV 파일 선택</b><small>파일을 끌어다 놓아도 돼요</small><em><Check size={12} aria-hidden="true" />20문항 확인</em></div>
                 <div className="story-register-divider">또는</div>
                 <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><span className="story-demo-action">가져오기</span></div>
@@ -335,7 +338,7 @@ function ScrollStory() {
               <div className="story-paper-grid">
                 <article className="story-paper-picked">
                   <div className="story-paper-preview"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
-                  <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 다져보세요.</p>
+                  <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.</p>
                 </article>
                 <article>
                   <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
@@ -353,7 +356,7 @@ function ScrollStory() {
                   <div className="story-option story-option-correct"><i />이벤트<b>○</b></div>
                   <div className="story-option"><i />사용자 속성</div>
                 </div>
-                <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인했어요.</span></div>
+                <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인해보세요.</span></div>
               </article>
             </div>
 
@@ -478,7 +481,7 @@ function Landing() {
           <span className="landing-eyebrow">기획자 워크스페이스</span>
           <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
           <HeroDescription />
-          <div className="landing-actions"><a className="landing-secondary" href="#features">Moonble 살펴보기</a><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
+          <div className="landing-actions"><a className="landing-secondary" href="#features">먼저 둘러보기</a><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
         </div>
         <ProductPreview />
       </section>
@@ -486,7 +489,7 @@ function Landing() {
       <HighlightBand />
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
-        <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푸는 데서 끝나지 않도록,</em><br />학습과 기획을 연결합니다</h2><p>등록, 풀이, 기록, 문서화가 끊기지 않도록 하나의 워크스페이스에 담았습니다.</p></div>
+        <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푼 뒤에도 배움이 남도록,</em><br />학습과 기획을 자연스럽게 잇습니다</h2><p>문제 등록부터 풀이, 기록, PRD 작성까지 한곳에서 이어가세요.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
           <span>{eyebrow}</span><h3>{title}</h3><p>{copy}</p>
@@ -495,7 +498,7 @@ function Landing() {
 
       <ScrollStory />
 
-      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+      <section className="landing-cta"><p>오늘 배운 내용을 흘려보내지 마세요.</p><h2>오늘의 배움을<br />내일의 기획으로</h2><a href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
 
       <LandingFaq />
     </main>
