@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, FileText, Link, Plus, Upload } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, Plus, Upload } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -34,35 +34,112 @@ function HeroDescription() {
   </p>;
 }
 
-function ProductPreview() {
-  return <div className="landing-preview" role="img" aria-label="문제지와 성취도, PRD 메뉴가 있는 Moonble 워크스페이스 미리보기">
-    <aside className="landing-preview-sidebar">
-      <strong>moonble</strong>
-      <div className="landing-preview-profile"><span>홍</span><i /><i /></div>
-      <nav aria-label="미리보기 메뉴">
-        <b><BookOpen size={15} aria-hidden="true" />문제지</b>
-        <span><BarChart3 size={15} aria-hidden="true" />나의 성취도</span>
-        <span><FileText size={15} aria-hidden="true" />PRD</span>
-      </nav>
-    </aside>
-    <div className="landing-preview-content">
-      <div className="landing-preview-heading"><div><small>내 워크스페이스</small><h2>문제지</h2></div><span>새 문제지 만들기</span></div>
-      <div className="landing-preview-tabs"><b>전체</b><span>내 문제지</span><span>기본</span><span>심화</span></div>
-      <div className="landing-preview-grid">
-        <article><div className="landing-preview-sheet"><i>01</i><i>02</i><i>03</i></div><small>기본 · 20문항</small><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지 분석의 기본기를 익혀요.</p></article>
-        <article><div className="landing-preview-sheet is-blue"><i>01</i><i>02</i><i>03</i></div><small>심화 · 20문항</small><strong>GA4 실무 응용</strong><p>전자상거래와 데이터 품질을 점검해요.</p></article>
-        <article><div className="landing-preview-sheet is-mint"><i>01</i><i>02</i><i>03</i></div><small>랜덤 · 20문항</small><strong>전체 랜덤 문제지</strong><p>매번 새로운 조합으로 실력을 확인해요.</p></article>
-      </div>
+const showcaseSlides = [
+  { key: 'register', step: '01', title: '문제지 등록', copy: 'CSV 파일과 Google Sheets로 내 문제를 가져옵니다.' },
+  { key: 'library', step: '02', title: '문제지 선택', copy: '오늘 필요한 문제지를 고르고 바로 시작합니다.' },
+  { key: 'solve', step: '03', title: '풀이와 채점', copy: '답을 고른 뒤 정답과 해설을 바로 확인합니다.' },
+  { key: 'stats', step: '04', title: '성취도 확인', copy: '점수와 추세를 보며 다음 학습을 결정합니다.' },
+];
+
+function ShowcaseScreen({ type }) {
+  return <div className={`showcase-screen is-${type}`}>
+    <header><strong>moonble</strong><span>내 워크스페이스</span><i>홍</i></header>
+    <div className="showcase-screen-body">
+      <aside><i /><i /><i /><i /></aside>
+      <main>
+        {type === 'register' && <><div className="showcase-title"><small>내 문제지</small><strong>문제지 등록</strong></div><div className="showcase-upload"><Upload size={25} /><b>CSV 파일 선택</b><span>파일을 끌어다 놓아도 돼요</span><em><Check size={12} />20문항 확인</em></div><div className="showcase-link"><Link size={16} /><span>Google Sheets 공유 링크</span><b>가져오기</b></div></>}
+        {type === 'library' && <><div className="showcase-title"><small>내 워크스페이스</small><strong>문제지</strong></div><div className="showcase-papers"><article><div><b>moonble</b><span>GA4 핵심 개념</span><i /><i /><i /></div><small>기본 · 20문항</small><strong>GA4 핵심 개념</strong></article><article><div><b>moonble</b><span>GA4 실무 응용</span><i /><i /><i /></div><small>심화 · 20문항</small><strong>GA4 실무 응용</strong></article></div></>}
+        {type === 'solve' && <><div className="showcase-title"><small>GA4 핵심 개념 · 2 / 20</small><strong>문제 풀이</strong></div><div className="showcase-question"><b>Q2</b><strong>GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</strong><span className="is-wrong">세션 <i>×</i></span><span className="is-correct">이벤트 <i>○</i></span><span>사용자 속성</span></div></>}
+        {type === 'stats' && <><div className="showcase-title"><small>학습 리포트</small><strong>나의 성취도</strong></div><div className="showcase-score"><span><small>최근 점수</small><b>82점</b></span><span><small>평균 점수</small><b>68점</b></span><span><small>최고 점수</small><b>92점</b></span></div><div className="showcase-chart"><i style={{ height: '34%' }} /><i style={{ height: '48%' }} /><i style={{ height: '43%' }} /><i style={{ height: '62%' }} /><i style={{ height: '74%' }} /><i style={{ height: '91%' }} /><svg viewBox="0 0 320 110" preserveAspectRatio="none"><path d="M8 92 C55 88 66 74 104 79 S164 60 193 55 S254 31 312 18" /></svg></div></>}
+      </main>
     </div>
   </div>;
 }
 
+function ProductPreview() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStart = useRef(null);
+  const changeSlide = next => setActiveSlide((next + showcaseSlides.length) % showcaseSlides.length);
+
+  useEffect(() => {
+    if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = window.setInterval(() => setActiveSlide(current => (current + 1) % showcaseSlides.length), 4800);
+    return () => window.clearInterval(timer);
+  }, [paused]);
+
+  return <section className="landing-showcase" aria-roledescription="carousel" aria-label="Moonble 사용 화면" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)} onTouchStart={event => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={event => {
+    if (touchStart.current === null) return;
+    const distance = event.changedTouches[0].clientX - touchStart.current;
+    if (Math.abs(distance) > 42) changeSlide(activeSlide + (distance < 0 ? 1 : -1));
+    touchStart.current = null;
+  }}>
+    <div className="landing-showcase-viewport">
+      <div className="landing-showcase-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
+        {showcaseSlides.map(slide => <article className="landing-showcase-slide" aria-hidden={slide !== showcaseSlides[activeSlide]} key={slide.key}>
+          <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
+          <ShowcaseScreen type={slide.key} />
+        </article>)}
+      </div>
+      <button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button>
+      <button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button>
+    </div>
+    <div className="landing-showcase-pagination" aria-label="화면 선택">{showcaseSlides.map((slide, index) => <button className={index === activeSlide ? 'is-active' : ''} type="button" aria-label={`${slide.title} 화면 보기`} aria-current={index === activeSlide ? 'true' : undefined} onClick={() => changeSlide(index)} key={slide.key} />)}</div>
+  </section>;
+}
+
 const highlights = [
-  { label: '문제지 등록', value: '2가지', detail: 'CSV · Google Sheets' },
-  { label: '기본 문제지', value: '20문항', detail: 'GA4 기본 · 실무 응용' },
-  { label: '학습 흐름', value: '4단계', detail: '등록부터 성취도 확인까지' },
-  { label: '개인 워크스페이스', value: '1곳', detail: '문제풀이 · 성취도 · PRD' },
+  { label: '문제지 등록', value: 2, suffix: '가지', detail: 'CSV · Google Sheets' },
+  { label: '기본 문제지', value: 20, suffix: '문항', detail: 'GA4 기본 · 실무 응용' },
+  { label: '학습 흐름', value: 4, suffix: '단계', detail: '등록부터 성취도 확인까지' },
+  { label: '개인 워크스페이스', value: 1, suffix: '곳', detail: '문제풀이 · 성취도 · PRD' },
 ];
+
+function AnimatedMetric({ target, active }) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    if (!active) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setValue(target); return undefined; }
+    let frame = 0;
+    const startedAt = performance.now();
+    const duration = 900;
+    setValue(0);
+    const update = time => {
+      const progress = Math.min(1, (time - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) frame = window.requestAnimationFrame(update);
+    };
+    frame = window.requestAnimationFrame(update);
+    return () => window.cancelAnimationFrame(frame);
+  }, [active, target]);
+
+  return value;
+}
+
+function HighlightBand() {
+  const sectionRef = useRef(null);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setActive(true);
+      observer.disconnect();
+    }, { threshold: .35 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  return <section className="landing-highlights" aria-label="Moonble 핵심 구성" ref={sectionRef}>
+    <div className="landing-highlights-inner">{highlights.map(({ label, value, suffix, detail }) => <article key={label}>
+      <span>{label}</span><strong><b><AnimatedMetric target={value} active={active} /></b>{suffix}</strong><p>{detail}</p>
+    </article>)}</div>
+  </section>;
+}
 
 const features = [
   { icon: Upload, eyebrow: '문제지 등록', title: '내 문제를 간편하게 가져와요', copy: 'CSV 파일이나 Google Sheets 공유 링크로 문제지를 등록하고 한곳에서 관리합니다.' },
@@ -78,6 +155,22 @@ const faqs = [
   { question: '모바일에서도 사용할 수 있나요?', answer: '네. 소개, 로그인, 문제지 선택과 풀이 화면은 모바일 화면에 맞춰 반응형으로 동작합니다.' },
   { question: '내 정보 수정이나 회원 탈퇴도 가능한가요?', answer: '내 계정에서 이름과 회사 정보를 수정할 수 있으며, 탈퇴 동의 절차를 거쳐 계정과 관련 데이터를 삭제할 수 있습니다.' },
 ];
+
+function LandingFaq() {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  return <section className="landing-faq" id="faq" aria-labelledby="faq-title">
+    <span>FAQ</span><h2 id="faq-title">자주 묻는 질문</h2>
+    <div className="landing-faq-list">{faqs.map(({ question, answer }, index) => {
+      const isOpen = openIndex === index;
+      const answerId = `faq-answer-${index}`;
+      return <div className={`landing-faq-item${isOpen ? ' is-open' : ''}`} key={question}>
+        <button type="button" aria-expanded={isOpen} aria-controls={answerId} onClick={() => setOpenIndex(isOpen ? null : index)}><strong>{question}</strong><i aria-hidden="true" /></button>
+        <div className="landing-faq-answer" id={answerId} aria-hidden={!isOpen}><div><p>{answer}</p></div></div>
+      </div>;
+    })}</div>
+  </section>;
+}
 
 const clamp = value => Math.min(1, Math.max(0, value));
 const smooth = value => {
@@ -109,8 +202,16 @@ function ScrollStory() {
       const gradeExit = smooth((progress - .68) / .13);
       const stats = smooth((progress - .7) / .22);
       const step = progress < .19 ? 1 : progress < .43 ? 2 : progress < .71 ? 3 : 4;
+      const navProgress = progress < .19
+        ? smooth(progress / .19) / 3
+        : progress < .43
+          ? (1 + smooth((progress - .19) / .24)) / 3
+          : progress < .71
+            ? (2 + smooth((progress - .43) / .28)) / 3
+            : 1;
 
       sticky.dataset.step = String(step);
+      sticky.style.setProperty('--story-nav-remaining', `${((1 - navProgress) * 100).toFixed(2)}%`);
       sticky.style.setProperty('--story-register', registered.toFixed(3));
       sticky.style.setProperty('--story-register-opacity', (1 - registerExit).toFixed(3));
       sticky.style.setProperty('--story-register-y', `${Math.round(-18 * registerExit)}px`);
@@ -375,11 +476,7 @@ function Landing() {
         <ProductPreview />
       </section>
 
-      <section className="landing-highlights" aria-label="Moonble 핵심 구성">
-        <div className="landing-highlights-inner">{highlights.map(({ label, value, detail }) => <article key={label}>
-          <span>{label}</span><strong>{value}</strong><p>{detail}</p>
-        </article>)}</div>
-      </section>
+      <HighlightBand />
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
         <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푸는 데서 끝나지 않도록,</em><br />학습과 기획을 연결합니다</h2><p>등록, 풀이, 기록, 문서화가 끊기지 않도록 하나의 워크스페이스에 담았습니다.</p></div>
@@ -393,12 +490,7 @@ function Landing() {
 
       <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
 
-      <section className="landing-faq" id="faq" aria-labelledby="faq-title">
-        <span>FAQ</span><h2 id="faq-title">자주 묻는 질문</h2>
-        <div className="landing-faq-list">{faqs.map(({ question, answer }) => <details key={question}>
-          <summary><strong>{question}</strong><i aria-hidden="true" /></summary><p>{answer}</p>
-        </details>)}</div>
-      </section>
+      <LandingFaq />
     </main>
     <SiteFooter />
   </>;
