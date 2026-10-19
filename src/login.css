@@ -9,6 +9,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-page .gradient-backdrop { opacity: .5; }
 .auth-card { width: 100%; max-width: 448px; padding: var(--mb-space-32); }
 .auth-brand { display: flex; justify-content: center; margin: 0 0 36px; text-align: center; }
+.auth-brand a { display: block; border-radius: var(--mb-radius-8); text-decoration: none; }
 .auth-brand svg { display: block; width: 196px; height: 40px; margin: 0 auto; overflow: visible; }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: #f1f3f5; border-radius: 8px; margin-bottom: 24px; }
 .auth-tabs button { border: 0; border-radius: 5px; background: transparent; padding: 9px; color: #6b7684; cursor: pointer; }
