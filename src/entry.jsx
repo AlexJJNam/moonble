@@ -255,16 +255,14 @@ function Landing() {
     </header>
     <main>
       <section className="landing-hero">
-        <div className="landing-hero-intro">
-          <div className="landing-hero-copy">
-            <span className="landing-eyebrow">기획자를 위한 개인 워크스페이스</span>
-            <h1>문제를 풀고,<br /><em>기획을 남깁니다.</em></h1>
-          </div>
-          <div className="landing-hero-detail">
-            <p>문제지, 학습 기록, PRD를 한곳에서 관리하세요. Moonble은 배운 내용을 실제 기획 작업으로 이어주는 도구입니다.</p>
-            <div className="landing-actions"><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">기능 보기</a></div>
-            <ul aria-label="Moonble 이용 특징"><li><Check size={15} aria-hidden="true" />설치 없이 시작</li><li><Check size={15} aria-hidden="true" />학습 기록 자동 저장</li></ul>
-          </div>
+        <div className="landing-hero-glow landing-hero-glow-one" aria-hidden="true" />
+        <div className="landing-hero-glow landing-hero-glow-two" aria-hidden="true" />
+        <div className="landing-hero-copy">
+          <span className="landing-eyebrow">기획자를 위한 워크스페이스</span>
+          <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
+          <p>문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.<br className="landing-desktop-break" /> Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.</p>
+          <div className="landing-actions"><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a><a className="landing-secondary" href="#features">Moonble 살펴보기</a></div>
+          <ul aria-label="Moonble 이용 특징"><li><Check size={15} aria-hidden="true" />설치 없이 바로 시작</li><li><Check size={15} aria-hidden="true" />개인 학습 기록 저장</li></ul>
         </div>
         <ProductPreview />
       </section>
