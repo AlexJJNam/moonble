@@ -342,7 +342,7 @@ function Landing() {
         <div className="landing-hero-glow landing-hero-glow-one" aria-hidden="true" />
         <div className="landing-hero-glow landing-hero-glow-two" aria-hidden="true" />
         <div className="landing-hero-copy">
-          <span className="landing-eyebrow">기획자를 위한 워크스페이스</span>
+          <span className="landing-eyebrow">기획자 워크스페이스</span>
           <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
           <p>문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.<br className="landing-desktop-break" /> Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.</p>
           <div className="landing-actions"><a className="landing-secondary" href="#features">Moonble 살펴보기</a><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
