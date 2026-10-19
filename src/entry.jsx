@@ -110,7 +110,6 @@ function ShowcaseScreen({ type }) {
         {type === 'stats' && <><div className="showcase-title"><small>학습 리포트</small><strong>나의 성취도</strong></div><div className="showcase-score"><span><small>최근 점수</small><b>82점</b></span><span><small>평균 점수</small><b>68점</b></span><span><small>최고 점수</small><b>92점</b></span></div><div className="showcase-chart"><i style={{ height: '34%' }} /><i style={{ height: '48%' }} /><i style={{ height: '43%' }} /><i style={{ height: '62%' }} /><i style={{ height: '74%' }} /><i style={{ height: '91%' }} /><svg viewBox="0 0 320 110" preserveAspectRatio="none"><path d="M8 92 C55 88 66 74 104 79 S164 60 193 55 S254 31 312 18" /></svg></div></>}
       </main>
     </div>
-    <GlowCursor />
   </div>;
 }
 
@@ -143,6 +142,7 @@ function ProductPreview() {
           return <article className={`landing-showcase-slide ${position}`} aria-hidden={index !== activeSlide} key={slide.key}>
             <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
             <ShowcaseScreen type={slide.key} />
+            <GlowCursor />
           </article>;
         })}
       </div>
