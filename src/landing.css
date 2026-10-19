@@ -80,7 +80,17 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-preview-grid article>strong { display: block; margin-top: 5px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .landing-preview-grid article>p { margin: 6px 0 2px; color: var(--mb-text-tertiary); font-size: 9px; line-height: 14px; }
 
-.landing-highlights { padding: 54px 28px 52px; color: #fff; background: linear-gradient(110deg, #377ef1 0%, #78aef8 52%, #4a8cf3 100%); }
+.landing-highlights {
+  padding: 54px 28px 52px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 18% 12%, rgb(255 255 255 / 18%), transparent 31%),
+    radial-gradient(circle at 84% 82%, rgb(123 97 255 / 27%), transparent 35%),
+    linear-gradient(110deg, #377ef1 0%, #78aef8 52%, #4a8cf3 100%);
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
+}
 .landing-highlights-inner { width: min(1120px, 100%); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 auto; }
 .landing-highlights article { min-width: 0; padding: 4px 30px; border-left: 1px solid rgb(255 255 255 / 26%); }
 .landing-highlights article:first-child { padding-left: 0; border-left: 0; }
