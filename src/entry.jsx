@@ -277,7 +277,7 @@ function Landing() {
 
       <ScrollStory />
 
-      <section className="landing-cta"><div><p>Moonble을 시작할 준비가 되셨나요?</p><h2>다음 문제지부터<br />한곳에 기록하세요.</h2></div><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+      <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
     </main>
     <SiteFooter />
   </>;
