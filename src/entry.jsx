@@ -15,7 +15,7 @@ function ProductPreview() {
   return <div className="landing-preview" role="img" aria-label="문제지와 성취도, PRD 메뉴가 있는 Moonble 워크스페이스 미리보기">
     <aside className="landing-preview-sidebar">
       <strong>moonble</strong>
-      <div className="landing-preview-profile"><span>김</span><i /><i /></div>
+      <div className="landing-preview-profile"><span>홍</span><i /><i /></div>
       <nav aria-label="미리보기 메뉴">
         <b><BookOpen size={15} aria-hidden="true" />문제지</b>
         <span><BarChart3 size={15} aria-hidden="true" />나의 성취도</span>
@@ -157,7 +157,7 @@ function ScrollStory() {
         <div className="story-window">
           <aside className="story-app-sidebar" aria-hidden="true">
             <strong className="story-app-logo">moonble</strong>
-            <div className="story-app-profile"><i>김</i><span><b>남제정</b><small>개인 워크스페이스</small></span></div>
+            <div className="story-app-profile"><i>홍</i><span><b>홍길동</b><small>개인 워크스페이스</small></span></div>
             <nav className="story-app-menu">
               <span className="story-app-papers"><BookOpen size={15} />문제지</span>
               <span className="story-app-achievement"><BarChart3 size={15} />나의 성취도</span>
@@ -170,7 +170,7 @@ function ScrollStory() {
             </div>
           </aside>
           <div className="story-app-main">
-            <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>김</i></div>
+            <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>홍</i></div>
 
             <div className="story-screen story-register-screen">
               <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
