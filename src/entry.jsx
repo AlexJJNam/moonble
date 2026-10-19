@@ -41,6 +41,63 @@ const showcaseSlides = [
   { key: 'stats', step: '04', title: '달라진 실력 보기', copy: '점수와 추세를 보며 다음 공부를 정해요.' },
 ];
 
+function GlowCursor() {
+  const cursorRef = useRef(null);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    const surface = cursor?.parentElement;
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    if (!cursor || !surface || !finePointer.matches) return undefined;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    const draw = () => {
+      const easing = reducedMotion.matches ? 1 : .28;
+      currentX += (targetX - currentX) * easing;
+      currentY += (targetY - currentY) * easing;
+      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+      if (Math.abs(targetX - currentX) > .15 || Math.abs(targetY - currentY) > .15) frame = window.requestAnimationFrame(draw);
+      else frame = 0;
+    };
+
+    const readPointer = event => {
+      const bounds = surface.getBoundingClientRect();
+      targetX = event.clientX - bounds.left;
+      targetY = event.clientY - bounds.top;
+    };
+    const handleEnter = event => {
+      readPointer(event);
+      currentX = targetX;
+      currentY = targetY;
+      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+      cursor.classList.add('is-visible');
+    };
+    const handleMove = event => {
+      readPointer(event);
+      if (!frame) frame = window.requestAnimationFrame(draw);
+    };
+    const handleLeave = () => cursor.classList.remove('is-visible');
+
+    surface.addEventListener('pointerenter', handleEnter);
+    surface.addEventListener('pointermove', handleMove);
+    surface.addEventListener('pointerleave', handleLeave);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      surface.removeEventListener('pointerenter', handleEnter);
+      surface.removeEventListener('pointermove', handleMove);
+      surface.removeEventListener('pointerleave', handleLeave);
+    };
+  }, []);
+
+  return <span className="landing-glow-cursor" ref={cursorRef} aria-hidden="true" />;
+}
+
 function ShowcaseScreen({ type }) {
   return <div className={`showcase-screen is-${type}`}>
     <header><strong>moonble</strong><span>내 워크스페이스</span><i>홍</i></header>
@@ -53,6 +110,7 @@ function ShowcaseScreen({ type }) {
         {type === 'stats' && <><div className="showcase-title"><small>학습 리포트</small><strong>나의 성취도</strong></div><div className="showcase-score"><span><small>최근 점수</small><b>82점</b></span><span><small>평균 점수</small><b>68점</b></span><span><small>최고 점수</small><b>92점</b></span></div><div className="showcase-chart"><i style={{ height: '34%' }} /><i style={{ height: '48%' }} /><i style={{ height: '43%' }} /><i style={{ height: '62%' }} /><i style={{ height: '74%' }} /><i style={{ height: '91%' }} /><svg viewBox="0 0 320 110" preserveAspectRatio="none"><path d="M8 92 C55 88 66 74 104 79 S164 60 193 55 S254 31 312 18" /></svg></div></>}
       </main>
     </div>
+    <GlowCursor />
   </div>;
 }
 
@@ -376,6 +434,7 @@ function ScrollStory() {
               <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
             </div>
           </div>
+          <GlowCursor />
         </div>
       </div>
     </div>
