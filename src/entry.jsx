@@ -127,26 +127,30 @@ function AnimatedMetric({ target, active, cycle }) {
 
 function HighlightBand() {
   const sectionRef = useRef(null);
-  const [active, setActive] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return undefined;
-    const observer = new IntersectionObserver(([entry]) => setActive(entry.isIntersecting), { threshold: .25 });
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setHasStarted(true);
+      observer.disconnect();
+    }, { threshold: .25 });
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!active || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (!hasStarted || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     const timer = window.setInterval(() => setCycle(value => value + 1), 10000);
     return () => window.clearInterval(timer);
-  }, [active]);
+  }, [hasStarted]);
 
   return <section className="landing-highlights" aria-label="Moonble 핵심 구성" ref={sectionRef}>
     <div className="landing-highlights-inner">{highlights.map(({ label, value, suffix, detail }) => <article key={label}>
-      <span>{label}</span><strong><b><AnimatedMetric target={value} active={active} cycle={cycle} /></b>{suffix}</strong><p>{detail}</p>
+      <span>{label}</span><strong><b><AnimatedMetric target={value} active={hasStarted} cycle={cycle} /></b>{suffix}</strong><p>{detail}</p>
     </article>)}</div>
   </section>;
 }
