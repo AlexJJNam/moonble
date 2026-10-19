@@ -11,6 +11,29 @@ function moveTo(path) {
   window.location.replace(new URL(path, window.location.href));
 }
 
+const heroDescriptionLines = [
+  '문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.',
+  'Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.',
+];
+
+function HeroDescription() {
+  let revealIndex = 0;
+
+  return <p className="landing-hero-description" aria-label={heroDescriptionLines.join(' ')}>
+    {heroDescriptionLines.map((line, lineIndex) => <React.Fragment key={line}>
+      <span className="landing-reveal-line" aria-hidden="true">
+        {line.split(' ').map((word, wordIndex) => <span className="landing-reveal-word" key={`${lineIndex}-${wordIndex}`}>
+          {[...word].map((character, characterIndex) => {
+            const index = revealIndex++;
+            return <span className="landing-reveal-character" style={{ '--reveal-index': index }} key={`${lineIndex}-${wordIndex}-${characterIndex}`}>{character}</span>;
+          })}
+        </span>)}
+      </span>
+      {lineIndex < heroDescriptionLines.length - 1 && <br className="landing-desktop-break" />}
+    </React.Fragment>)}
+  </p>;
+}
+
 function ProductPreview() {
   return <div className="landing-preview" role="img" aria-label="문제지와 성취도, PRD 메뉴가 있는 Moonble 워크스페이스 미리보기">
     <aside className="landing-preview-sidebar">
@@ -346,7 +369,7 @@ function Landing() {
         <div className="landing-hero-copy">
           <span className="landing-eyebrow">기획자 워크스페이스</span>
           <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
-          <p>문제를 풀며 익힌 내용을 기록하고, 떠오른 아이디어를 PRD로 정리하세요.<br className="landing-desktop-break" /> Moonble은 학습과 기획을 한 흐름으로 이어주는 개인 워크스페이스입니다.</p>
+          <HeroDescription />
           <div className="landing-actions"><a className="landing-secondary" href="#features">Moonble 살펴보기</a><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
         </div>
         <ProductPreview />

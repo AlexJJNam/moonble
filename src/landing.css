@@ -31,6 +31,9 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-hero h1 { margin: 18px 0 22px; font-size: clamp(44px, 3.4vw, 56px); line-height: 1.22; font-weight: 700; letter-spacing: -.038em; }
 .landing-hero h1 em { color: transparent; background: linear-gradient(100deg, #1769e0 10%, #3182f6 50%, #7b61ff 90%); background-clip: text; -webkit-background-clip: text; font-style: normal; }
 .landing-hero-copy>p { max-width: 660px; margin: 0 auto; color: #666; font-size: 18px; line-height: 30px; font-weight: 400; letter-spacing: -.01em; }
+.landing-reveal-line { display: inline; }
+.landing-reveal-word { display: inline-block; margin-right: .28em; white-space: nowrap; }
+.landing-reveal-character { display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(5px); animation: landing-character-reveal 420ms cubic-bezier(.2,.75,.25,1) forwards; animation-delay: calc(420ms + var(--reveal-index) * 22ms); will-change: opacity, filter, transform; }
 .landing-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 34px; }
 .landing-primary, .landing-secondary { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 23px; border-radius: 12px; font-size: 15px; line-height: 24px; font-weight: 650; text-decoration: none; transition: background-color var(--mb-duration), color var(--mb-duration), transform var(--mb-duration); }
 .landing-primary { color: white; background: var(--mb-primary-strong); }
@@ -130,7 +133,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-story-copy>p { max-width: 470px; }
 .landing-story-copy>a { min-height: 46px; display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--mb-primary-strong); font-size: 15px; font-weight: 650; text-decoration: none; }
 .landing-story-nav { position: relative; display: grid; gap: 8px; margin: 32px 0 0; padding: 0; list-style: none; }
-.landing-story-nav::before { content: ''; position: absolute; z-index: 1; top: 27px; bottom: 27px; left: 25px; width: 1px; background: repeating-linear-gradient(to bottom, rgb(49 130 246 / 56%) 0 4px, transparent 4px 8px); pointer-events: none; }
+.landing-story-nav::before { content: ''; position: absolute; z-index: 1; top: 27px; bottom: 27px; left: 24px; width: 0; border-left: 3px dotted rgb(139 187 248 / 58%); pointer-events: none; }
 .landing-story-nav li { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 12px; min-height: 54px; padding: 8px 10px; border-radius: 14px; color: var(--mb-text-disabled); transition: color 240ms, background-color 240ms; }
 .landing-story-nav li>b { position: relative; z-index: 2; width: 30px; height: 30px; display: grid; place-content: center; border-radius: 50%; color: inherit; background: #f2f4f6; font-size: 11px; font-weight: 700; }
 .landing-story-nav li>span { position: relative; z-index: 2; display: grid; gap: 1px; }
@@ -288,6 +291,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 
 @keyframes landing-rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 @keyframes landing-preview-in { from { opacity: 0; transform: translateY(40px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes landing-character-reveal { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @media (max-width: 1040px) {
   .landing-hero { padding: 82px 24px 80px; }
   .landing-preview { height: auto; min-height: 470px; grid-template-columns: 160px minmax(0, 1fr); }
@@ -359,7 +363,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-story-copy>p { max-width: 480px; font-size: 14px; line-height: 22px; }
   .landing-story-copy>a { min-height: 44px; margin-top: 12px; font-size: 14px; }
   .landing-story-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
-  .landing-story-nav::before { top: 17px; right: calc(12.5% - 2px); bottom: auto; left: calc(12.5% - 2px); width: auto; height: 1px; background: repeating-linear-gradient(to right, rgb(49 130 246 / 56%) 0 4px, transparent 4px 8px); }
+  .landing-story-nav::before { top: 16px; right: calc(12.5% - 2px); bottom: auto; left: calc(12.5% - 2px); width: auto; height: 0; border-top: 3px dotted rgb(139 187 248 / 58%); border-left: 0; }
   .landing-story-nav li { min-height: 62px; grid-template-columns: 1fr; justify-items: center; gap: 3px; padding: 6px 3px; border-radius: 12px; text-align: center; }
   .landing-story-nav li>b { width: 23px; height: 23px; font-size: 9px; }
   .landing-story-nav strong { font-size: 12px; line-height: 18px; }
@@ -435,7 +439,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-story-sticky { min-height: 580px; }
   .landing-story-copy>p { display: none; }
   .landing-story-nav li { grid-template-columns: 22px minmax(0, 1fr); gap: 4px; padding: 5px 4px; }
-  .landing-story-nav::before { top: 16px; right: calc(25% - 17px); left: 15px; }
+  .landing-story-nav::before { top: 15px; right: calc(25% - 17px); left: 15px; }
   .landing-story-nav li>b { width: 22px; height: 22px; }
   .landing-story-nav strong { font-size: 11px; line-height: 16px; }
   .landing-story-demo { flex-basis: 350px; }
@@ -448,6 +452,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .landing-hero-copy, .landing-preview, .landing-hero-glow { animation: none; }
+  .landing-reveal-character { opacity: 1; filter: none; transform: none; animation: none; }
   .landing-hero-glow, .landing-features::before, .landing-features::after, .landing-cta::before, .landing-cta::after { transform: none; }
   .landing-login, .landing-primary, .landing-secondary, .landing-feature-grid article, .landing-story-nav li, .landing-primary svg, .landing-cta a svg, .landing-story-copy a svg { transition: none; }
   .landing-story { height: auto; min-height: 0; padding: 112px 0; }
