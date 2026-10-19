@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--mb-bg); color: var(--mb-text-primary); }
 .legal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--mb-surface); border-bottom: 1px solid var(--mb-border); }
-.legal-header a { color: var(--mb-primary-strong); text-decoration: none; padding: 8px; }
+.legal-header a { min-height: 44px; display: inline-flex; align-items: center; color: var(--mb-primary-strong); text-decoration: none; padding: 8px; }
 .legal-header a:first-child { font-size: 28px; font-weight: 800; color: var(--mb-primary); }
 .legal-main { max-width: 800px; margin: 32px auto; padding: 32px; background: var(--mb-surface); border: 1px solid var(--mb-border); border-radius: 16px; overflow-wrap: anywhere; }
 .legal-main h1 { margin: 0; }

@@ -178,12 +178,12 @@ function ScrollStory() {
                 <div className="story-register-copy"><strong>내 문제를 Moonble로 가져오세요</strong><p>CSV 파일이나 Google Sheets 공유 링크로 간단히 등록할 수 있어요.</p></div>
                 <div className="story-register-drop"><Upload size={22} aria-hidden="true" /><b>CSV 파일 선택</b><small>파일을 끌어다 놓아도 돼요</small><em><Check size={12} aria-hidden="true" />20문항 확인</em></div>
                 <div className="story-register-divider">또는</div>
-                <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><button type="button">가져오기</button></div>
+                <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><span className="story-demo-action">가져오기</span></div>
               </article>
             </div>
 
             <div className="story-screen story-library-screen">
-              <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><button type="button"><Plus size={13} />새 문제지 만들기</button></header>
+              <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><span className="story-demo-action"><Plus size={13} />새 문제지 만들기</span></header>
               <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
               <div className="story-paper-grid">
                 <article className="story-paper-picked">
