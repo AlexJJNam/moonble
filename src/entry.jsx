@@ -34,10 +34,26 @@ function ProductPreview() {
   </div>;
 }
 
+const highlights = [
+  { label: '문제지 등록', value: '2가지', detail: 'CSV · Google Sheets' },
+  { label: '기본 문제지', value: '20문항', detail: 'GA4 기본 · 실무 응용' },
+  { label: '학습 흐름', value: '4단계', detail: '등록부터 성취도 확인까지' },
+  { label: '개인 워크스페이스', value: '1곳', detail: '문제풀이 · 성취도 · PRD' },
+];
+
 const features = [
-  { icon: BookOpen, eyebrow: '문제지', title: '직접 만들고 바로 풉니다', copy: '기본 문제지와 직접 등록한 문제지를 한곳에서 관리하고, 필요한 순간 바로 풀이를 시작합니다.' },
-  { icon: BarChart3, eyebrow: '성취도', title: '변화를 기록으로 확인합니다', copy: '회차별 점수와 단기·장기 추세를 함께 비교해 최근의 학습 흐름을 확인합니다.' },
-  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 문서로 남깁니다', copy: '문제를 풀며 떠오른 생각을 PRD로 정리해 학습 기록을 실제 기획 작업으로 연결합니다.' },
+  { icon: Upload, eyebrow: '문제지 등록', title: '내 문제를 간편하게 가져와요', copy: 'CSV 파일이나 Google Sheets 공유 링크로 문제지를 등록하고 한곳에서 관리합니다.' },
+  { icon: BookOpen, eyebrow: '집중 풀이', title: '필요한 문제를 골라 바로 풀어요', copy: '기본·심화 문제지와 직접 만든 문제지 중 오늘 필요한 학습을 선택합니다.' },
+  { icon: BarChart3, eyebrow: '성취도', title: '점수보다 변화의 흐름을 봐요', copy: '회차별 점수와 단기·장기 추세를 비교해 최근의 실력 상승을 확인합니다.' },
+  { icon: FileText, eyebrow: 'PRD', title: '배운 내용을 기획으로 이어가요', copy: '문제를 풀며 떠오른 생각을 PRD로 정리해 실제 기획 작업으로 연결합니다.' },
+];
+
+const faqs = [
+  { question: 'Moonble은 어떤 서비스인가요?', answer: '문제지를 등록하고 풀면서 학습 기록을 확인하고, 떠오른 아이디어를 PRD로 정리할 수 있는 기획자용 개인 워크스페이스입니다.' },
+  { question: '문제지는 어떻게 등록하나요?', answer: 'CSV 파일을 올리거나 Google Sheets 공유 링크를 입력해 등록할 수 있습니다. 등록 과정에서 문항 형식과 개수를 확인할 수 있습니다.' },
+  { question: '학습 기록에는 무엇이 저장되나요?', answer: '문제지별 풀이 회차와 점수, 최근 추세가 계정별로 저장됩니다. 나의 성취도에서 단기·장기 흐름을 함께 확인할 수 있습니다.' },
+  { question: '모바일에서도 사용할 수 있나요?', answer: '네. 소개, 로그인, 문제지 선택과 풀이 화면은 모바일 화면에 맞춰 반응형으로 동작합니다.' },
+  { question: '내 정보 수정이나 회원 탈퇴도 가능한가요?', answer: '내 계정에서 이름과 회사 정보를 수정할 수 있으며, 탈퇴 동의 절차를 거쳐 계정과 관련 데이터를 삭제할 수 있습니다.' },
 ];
 
 const clamp = value => Math.min(1, Math.max(0, value));
@@ -250,7 +266,7 @@ function Landing() {
   return <>
     <header className="landing-header">
       <a className="landing-logo" href="./" aria-label="Moonble 홈">moonble</a>
-      <nav aria-label="소개 페이지 탐색"><a href="#features">기능</a><a href="#workflow">사용 방법</a></nav>
+      <nav aria-label="소개 페이지 탐색"><a href="#features">기능</a><a href="#workflow">사용 방법</a><a href="#faq">FAQ</a></nav>
       <a className="landing-login" href="./login.html">로그인</a>
     </header>
     <main>
@@ -267,15 +283,28 @@ function Landing() {
         <ProductPreview />
       </section>
 
+      <section className="landing-highlights" aria-label="Moonble 핵심 구성">
+        <div className="landing-highlights-inner">{highlights.map(({ label, value, detail }) => <article key={label}>
+          <span>{label}</span><strong>{value}</strong><p>{detail}</p>
+        </article>)}</div>
+      </section>
+
       <section className="landing-features" id="features" aria-labelledby="features-title">
-        <div className="landing-section-heading"><span>워크스페이스 구성</span><h2 id="features-title">문제풀이부터 PRD까지,<br />한곳에서 관리합니다</h2><p>학습과 기획에 필요한 세 가지 기능을 같은 구조 안에 담았습니다.</p></div>
+        <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푸는 데서 끝나지 않도록,</em><br />학습과 기획을 연결합니다</h2><p>등록, 풀이, 기록, 문서화가 끊기지 않도록 하나의 워크스페이스에 담았습니다.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
-          <span>{eyebrow}</span><div><h3>{title}</h3><p>{copy}</p></div>
+          <span>{eyebrow}</span><h3>{title}</h3><p>{copy}</p>
         </article>)}</div>
       </section>
 
       <ScrollStory />
+
+      <section className="landing-faq" id="faq" aria-labelledby="faq-title">
+        <span>FAQ</span><h2 id="faq-title">자주 묻는 질문</h2>
+        <div className="landing-faq-list">{faqs.map(({ question, answer }) => <details key={question}>
+          <summary><strong>{question}</strong><i aria-hidden="true" /></summary><p>{answer}</p>
+        </details>)}</div>
+      </section>
 
       <section className="landing-cta"><p>나만의 학습과 기획 흐름을 시작해보세요.</p><h2>오늘 배운 것을<br />내일의 기획으로</h2><a href="./login.html">Moonble 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
     </main>
