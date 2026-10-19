@@ -38,10 +38,6 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-primary:hover svg, .landing-cta a:hover svg, .landing-story-copy a:hover svg { transform: translateX(3px); }
 .landing-secondary { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
 .landing-secondary:hover { color: var(--mb-text-primary); background: #e9edf2; }
-.landing-hero-copy ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin: 22px 0 0; padding: 0; color: #777; font-size: 13px; line-height: 20px; list-style: none; }
-.landing-hero-copy li { display: inline-flex; align-items: center; gap: 5px; }
-.landing-hero-copy li svg { color: var(--mb-success); }
-
 .landing-hero-glow { position: absolute; z-index: -1; border-radius: 50%; filter: blur(12px); pointer-events: none; animation: landing-drift 10s ease-in-out infinite alternate; }
 .landing-hero-glow-one { width: 620px; height: 620px; top: -180px; left: -330px; background: radial-gradient(circle, rgb(49 130 246 / 19%), rgb(49 130 246 / 5%) 52%, transparent 72%); }
 .landing-hero-glow-two { width: 740px; height: 740px; right: -390px; top: 140px; background: radial-gradient(circle, rgb(123 97 255 / 15%), rgb(49 130 246 / 4%) 50%, transparent 72%); animation-delay: -4s; }
@@ -309,9 +305,10 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-hero h1 { margin: 17px 0 16px; font-size: clamp(36px, 9.8vw, 42px); line-height: 1.2; letter-spacing: -.035em; }
   .landing-hero-copy>p { font-size: 16px; line-height: 26px; }
   .landing-desktop-break { display: none; }
-  .landing-actions { align-items: stretch; flex-direction: column; margin-top: 28px; }
-  .landing-primary, .landing-secondary { width: 100%; }
-  .landing-hero-copy ul { justify-content: flex-start; }
+  .landing-actions { align-items: stretch; flex-wrap: nowrap; gap: 8px; margin-top: 28px; }
+  .landing-primary, .landing-secondary { width: auto; min-width: 0; flex: 1 1 0; padding: 11px 6px; white-space: nowrap; font-size: 13px; }
+  .landing-primary { gap: 4px; }
+  .landing-primary svg { width: 16px; height: 16px; }
   .landing-hero-glow-one { width: 420px; height: 420px; left: -280px; top: -70px; }
   .landing-hero-glow-two { width: 430px; height: 430px; right: -300px; top: 330px; }
   .landing-preview { min-height: 400px; grid-template-columns: 74px minmax(0, 1fr); margin-top: 40px; border-radius: 20px; }
