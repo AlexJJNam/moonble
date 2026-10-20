@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Check, Trash2 } from 'lucide-react';
+import { Check, LogOut, Trash2 } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
@@ -148,6 +148,14 @@ function AccountPage() {
     <main className="account-main">
       <div className="account-heading"><h1 className="mb-page-title">내 계정</h1><p>프로필과 이 기기에 저장된 데이터를 관리할 수 있어요.</p></div>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
+      <section className="profile-card account-mobile-session">
+        <div><h2 className="mb-section-title">로그인 관리</h2><p>현재 기기에서 Moonble 계정 사용을 마칠 수 있어요.</p></div>
+        {error && <p className="account-session-error" role="alert">{error}</p>}
+        <button className="account-logout-action" type="button" disabled={pending} onClick={logout}>
+          {pending ? <span className="moonble-spinner" aria-hidden="true" /> : <LogOut size={18} aria-hidden="true" />}
+          <span>{pending ? '로그아웃 중' : '로그아웃'}</span>
+        </button>
+      </section>
       <LocalData user={user} />
       <PrivacyRequest user={user} />
       <AccountDeletion user={user} />

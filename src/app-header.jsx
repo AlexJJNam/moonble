@@ -169,8 +169,12 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
 
   useEffect(() => {
     document.body.classList.add('mb-has-app-sidebar');
-    return () => document.body.classList.remove('mb-has-app-sidebar');
-  }, []);
+    document.body.classList.toggle('mb-has-app-dock', !solver);
+    return () => {
+      document.body.classList.remove('mb-has-app-sidebar');
+      document.body.classList.remove('mb-has-app-dock');
+    };
+  }, [solver]);
 
   useEffect(() => {
     document.body.classList.toggle('mb-sidebar-collapsed', collapsed);

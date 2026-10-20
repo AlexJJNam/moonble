@@ -67,6 +67,7 @@ export function QuizCreator({ custom, onChange }) {
   const [sheetLink, setSheetLink] = useState('');
   const [dragging, setDragging] = useState(false);
   const [promptFocused, setPromptFocused] = useState(false);
+  const [exampleRevealed, setExampleRevealed] = useState(false);
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
   const uploadInputRef = useRef(null);
@@ -187,7 +188,10 @@ export function QuizCreator({ custom, onChange }) {
           <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> 정보처리기사 필기</span></p>
           <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> 바로 시험을 볼 수 있는 상급</span></p>
           <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
-          <q>정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.</q>
+          <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`}>
+            <q id="creator-prompt-example" aria-hidden={!exampleRevealed}>정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.</q>
+            {!exampleRevealed && <button type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>}
+          </div>
         </div>
       </details>
       <header><span>1</span><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
