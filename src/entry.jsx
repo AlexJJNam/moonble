@@ -11,25 +11,53 @@ function moveTo(path) {
   window.location.replace(new URL(path, window.location.href));
 }
 
-const heroDescriptionLines = [
-  '문제를 풀며 배운 내용은 기록하고, 떠오른 아이디어는 PRD로 정리해보세요.',
-  '학습부터 기획까지, 한곳에서 자연스럽게 이어갈 수 있어요.',
+const heroDescriptions = [
+  ['문제를 풀며 배운 내용은 기록하고, 떠오른 아이디어는 PRD로 정리해보세요.', '학습부터 기획까지, 한곳에서 자연스럽게 이어갈 수 있어요.'],
+  ['오늘 푼 문제에서 놓친 부분을 확인하고, 다음에 볼 내용을 남겨보세요.', '기록이 쌓일수록 무엇을 공부할지 더 선명해져요.'],
+  ['흩어진 문제를 한곳에 모아 풀고, 달라진 실력을 차근차근 확인해보세요.', '어제보다 나아진 지점을 직접 눈으로 확인할 수 있어요.'],
+  ['문제를 풀다 떠오른 생각은 놓치지 말고, 바로 기획의 재료로 남겨보세요.', '배운 내용을 실제 아이디어로 옮기는 흐름이 자연스러워져요.'],
+  ['오늘의 풀이 기록을 돌아보고, 지금 필요한 다음 문제를 골라보세요.', '작은 학습 기록이 모여 나만의 일하는 방식이 만들어져요.'],
 ];
 
 function HeroDescription() {
+  const [descriptionIndex, setDescriptionIndex] = useState(0);
+  const [isErasing, setIsErasing] = useState(false);
+  const lines = heroDescriptions[descriptionIndex];
+  const characterCount = lines.join('').replace(/\s/g, '').length;
   let revealIndex = 0;
 
-  return <p className="landing-hero-description" aria-label={heroDescriptionLines.join(' ')}>
-    {heroDescriptionLines.map((line, lineIndex) => <React.Fragment key={line}>
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let replaceTimer = 0;
+    const rotate = () => {
+      if (reducedMotion.matches) {
+        setDescriptionIndex(index => (index + 1) % heroDescriptions.length);
+        return;
+      }
+      setIsErasing(true);
+      replaceTimer = window.setTimeout(() => {
+        setDescriptionIndex(index => (index + 1) % heroDescriptions.length);
+        setIsErasing(false);
+      }, 680);
+    };
+    const rotationTimer = window.setInterval(rotate, 10000);
+    return () => {
+      window.clearInterval(rotationTimer);
+      window.clearTimeout(replaceTimer);
+    };
+  }, []);
+
+  return <p className={`landing-hero-description${isErasing ? ' is-erasing' : ''}`} aria-label={lines.join(' ')}>
+    {lines.map((line, lineIndex) => <React.Fragment key={`${descriptionIndex}-${line}`}>
       <span className="landing-reveal-line" aria-hidden="true">
         {line.split(' ').map((word, wordIndex) => <span className="landing-reveal-word" key={`${lineIndex}-${wordIndex}`}>
           {[...word].map((character, characterIndex) => {
             const index = revealIndex++;
-            return <span className="landing-reveal-character" style={{ '--reveal-index': index }} key={`${lineIndex}-${wordIndex}-${characterIndex}`}>{character}</span>;
+            return <span className="landing-reveal-character" style={{ '--reveal-index': index, '--reveal-total': characterCount }} key={`${lineIndex}-${wordIndex}-${characterIndex}`}>{character}</span>;
           })}
         </span>)}
       </span>
-      {lineIndex < heroDescriptionLines.length - 1 && <br className="landing-desktop-break" />}
+      {lineIndex < lines.length - 1 && <><br className="landing-desktop-break" />{' '}</>}
     </React.Fragment>)}
   </p>;
 }
