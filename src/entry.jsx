@@ -144,25 +144,55 @@ function ShowcaseScreen({ type }) {
 function ProductPreview() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const touchStart = useRef(null);
+  const mouseDrag = useRef(null);
+  const showcaseRef = useRef(null);
   const changeSlide = next => {
     const normalized = (next + showcaseSlides.length) % showcaseSlides.length;
     setActiveSlide(normalized);
   };
 
   useEffect(() => {
-    if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (paused || dragging || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     const timer = window.setInterval(() => changeSlide(activeSlide + 1), 4800);
     return () => window.clearInterval(timer);
-  }, [activeSlide, paused]);
+  }, [activeSlide, dragging, paused]);
 
-  return <section className="landing-showcase" aria-roledescription="carousel" aria-label="Moonble 사용 화면" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)} onTouchStart={event => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={event => {
+  const startMouseDrag = event => {
+    if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button, a')) return;
+    mouseDrag.current = { pointerId: event.pointerId, startX: event.clientX, distance: 0 };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  };
+  const moveMouseDrag = event => {
+    const drag = mouseDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    drag.distance = Math.max(-150, Math.min(150, event.clientX - drag.startX));
+    showcaseRef.current?.style.setProperty('--showcase-drag-x', `${drag.distance}px`);
+  };
+  const finishMouseDrag = (event, cancelled = false) => {
+    const drag = mouseDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    mouseDrag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    setDragging(false);
+    const distance = drag.distance;
+    if (!cancelled && Math.abs(distance) >= 64) {
+      showcaseRef.current?.style.removeProperty('--showcase-drag-x');
+      changeSlide(activeSlide + (distance < 0 ? 1 : -1));
+    } else {
+      window.requestAnimationFrame(() => showcaseRef.current?.style.removeProperty('--showcase-drag-x'));
+    }
+  };
+
+  return <section className={`landing-showcase${dragging ? ' is-dragging' : ''}`} ref={showcaseRef} aria-roledescription="carousel" aria-label="Moonble 사용 화면" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)} onTouchStart={event => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={event => {
     if (touchStart.current === null) return;
     const distance = event.changedTouches[0].clientX - touchStart.current;
     if (Math.abs(distance) > 42) changeSlide(activeSlide + (distance < 0 ? 1 : -1));
     touchStart.current = null;
   }}>
-    <div className="landing-showcase-viewport">
+    <div className="landing-showcase-viewport" onPointerDown={startMouseDrag} onPointerMove={moveMouseDrag} onPointerUp={event => finishMouseDrag(event)} onPointerCancel={event => finishMouseDrag(event, true)} onDragStart={event => event.preventDefault()}>
       <div className="landing-showcase-track">
         {showcaseSlides.map((slide, index) => {
           const distance = (index - activeSlide + showcaseSlides.length) % showcaseSlides.length;
