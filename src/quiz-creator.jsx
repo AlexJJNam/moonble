@@ -1,8 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Check, Download, FileSpreadsheet, Sparkles, Upload } from 'lucide-react';
+import { Check, Download, FileSpreadsheet, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, getCustomBankMeta, setCustomBank } from './custom-bank.js';
-
-const example = '정보처리기사를 준비하고 있어요. 바로 시험을 준비할 수 있도록 난이도 상 문제를 만들어줘.';
 
 function generationPrompt(query) {
   return `Moonble에서 풀 수 있는 학습 문제지를 만들어주세요.
@@ -30,17 +28,37 @@ export function QuizCreator({ custom, onChange }) {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const inputRef = useRef(null);
+  const promptBarRef = useRef(null);
+  const promptInputRef = useRef(null);
+  const uploadInputRef = useRef(null);
   const preview = useMemo(() => custom?.questions?.slice(0, 8) || [], [custom]);
+
+  function shakePrompt() {
+    const bar = promptBarRef.current;
+    if (!bar) return;
+    bar.classList.remove('shake');
+    void bar.offsetWidth;
+    bar.classList.add('shake');
+    promptInputRef.current?.focus();
+  }
+
+  function openPopup(url) {
+    const width = 480;
+    const height = 760;
+    const left = Math.max(0, (window.screen.width - width) / 2);
+    const top = Math.max(0, (window.screen.height - height) / 2);
+    const popup = window.open(url, 'moonbleChatGPT', `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    if (!popup) window.open(url, '_blank', 'noopener');
+    else popup.focus();
+  }
 
   function requestGeneration() {
     const value = query.trim();
-    if (!value) { setError('어떤 시험이나 주제로 문제를 만들지 입력해주세요.'); return; }
+    if (!value) { shakePrompt(); return; }
     setError('');
     const url = `https://chatgpt.com/?q=${encodeURIComponent(generationPrompt(value))}`;
-    const opened = window.open(url, '_blank');
-    if (opened) opened.opener = null;
-    else window.location.href = url;
+    openPopup(url);
+    setQuery('');
     setMessage('문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
   }
 
@@ -71,12 +89,13 @@ export function QuizCreator({ custom, onChange }) {
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
       <header><span>1</span><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
-      <div className="creator-prompt-box">
-        <Sparkles size={21} aria-hidden="true" />
-        <textarea value={query} onChange={event => setQuery(event.target.value)} placeholder={example} rows={4} maxLength={1200} />
-        <button type="button" onClick={requestGeneration}>ChatGPT에서 문제 만들기</button>
+      <div className="creator-ai-prompt">
+        <div className="creator-ai-prompt-bar" ref={promptBarRef} onAnimationEnd={event => event.currentTarget.classList.remove('shake')}>
+          <Search className="creator-ai-prompt-icon" aria-hidden="true" />
+          <input ref={promptInputRef} type="text" className="creator-ai-prompt-input" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} placeholder="궁금하면 바로 물어보세요." autoComplete="off" maxLength={1200} />
+          <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onClick={requestGeneration}>질문하기</button>
+        </div>
       </div>
-      <button className="creator-example" type="button" onClick={() => setQuery(example)}>예시 문장 사용하기</button>
     </section>
 
     <section className="creator-step" aria-labelledby="creator-upload-title">
@@ -88,11 +107,11 @@ export function QuizCreator({ custom, onChange }) {
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
         onDrop={event => { event.preventDefault(); upload(event.dataTransfer.files[0]); }}
       >
-        <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={event => { upload(event.target.files[0]); event.target.value = ''; }} />
+        <input ref={uploadInputRef} type="file" accept=".csv,text/csv" onChange={event => { upload(event.target.files[0]); event.target.value = ''; }} />
         {pending ? <span className="moonble-spinner" aria-hidden="true" /> : <Upload size={28} aria-hidden="true" />}
         <strong>{pending ? '문제를 확인하고 있어요' : 'CSV 파일을 여기에 놓으세요'}</strong>
         <p>또는</p>
-        <button type="button" disabled={pending} onClick={() => inputRef.current?.click()}>파일 선택</button>
+        <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
       </div>
       <button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button>
     </section>
