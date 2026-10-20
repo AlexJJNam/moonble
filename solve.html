@@ -1270,6 +1270,111 @@
       background: none;
     }
 
+    .quiz-grade-fx[hidden] {
+      display: none;
+    }
+
+    .quiz-grade-fx {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 10px;
+      color: var(--text);
+      background: rgb(255 255 255 / 97%);
+      pointer-events: none;
+    }
+
+    .quiz-grade-fx.is-playing {
+      animation: quiz-grade-fx-out .42s ease 1.12s both;
+    }
+
+    .quiz-grade-fx strong {
+      margin-top: 8px;
+      font-size: 22px;
+      line-height: 30px;
+      letter-spacing: -.02em;
+      opacity: 0;
+    }
+
+    .quiz-grade-fx.is-playing strong {
+      animation: quiz-grade-copy-in .32s ease-out .34s forwards;
+    }
+
+    .quiz-grade-fx>span:last-child {
+      color: var(--muted);
+      font-size: var(--text-sm);
+      line-height: 22px;
+      opacity: 0;
+    }
+
+    .quiz-grade-fx.is-playing>span:last-child {
+      animation: quiz-grade-copy-in .32s ease-out .46s forwards;
+    }
+
+    .quiz-grade-badge {
+      width: 76px;
+      height: 76px;
+      display: grid;
+      place-content: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 14px 30px -12px rgb(49 130 246 / 60%);
+    }
+
+    .quiz-grade-fx.is-playing .quiz-grade-badge {
+      animation: quiz-grade-badge-pop .5s cubic-bezier(.34,1.56,.64,1) both, quiz-grade-badge-grow .42s ease 1.08s forwards;
+    }
+
+    .quiz-grade-badge svg {
+      width: 42px;
+      height: 42px;
+      overflow: visible;
+    }
+
+    .quiz-grade-badge path {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 34;
+      stroke-dashoffset: 34;
+    }
+
+    .quiz-grade-fx.is-playing .quiz-grade-badge path {
+      animation: quiz-grade-check-draw .32s ease-out .2s forwards;
+    }
+
+    #resultBox.is-grade-reveal {
+      animation: quiz-grade-result-in .48s cubic-bezier(.2,.8,.3,1) 1.18s both;
+    }
+
+    @keyframes quiz-grade-badge-pop {
+      0% { opacity: 0; transform: scale(.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes quiz-grade-badge-grow { to { transform: scale(1.1); } }
+    @keyframes quiz-grade-check-draw { to { stroke-dashoffset: 0; } }
+    @keyframes quiz-grade-copy-in {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes quiz-grade-fx-out { to { opacity: 0; } }
+    @keyframes quiz-grade-result-in {
+      from { opacity: 0; transform: translateY(12px) scale(.985); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .quiz-grade-fx { display: none; }
+      #resultBox.is-grade-reveal { animation: none; }
+    }
+
     .muted {
       color: var(--muted);
       font-size: var(--text-sm);
@@ -3078,6 +3183,12 @@
       <div id="historyChart" class="history-chart solver-history-storage" hidden></div>
     </section>
 
+    <div id="quizGradeFx" class="quiz-grade-fx" role="status" aria-live="assertive" hidden>
+      <span class="quiz-grade-badge" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13.5 24.8l7 7L35 17.5"></path></svg></span>
+      <strong>문제 채점이 완료됐어요!</strong>
+      <span>결과를 확인해보세요.</span>
+    </div>
+
     <span id="year" hidden></span><div id="moonble-footer"></div>
   </main>
 
@@ -3244,6 +3355,7 @@
     const csvBtn = byId('csvBtn');
     const modePill = byId('modePill');
     const historyBox = byId('historyBox');
+    const gradeFxEl = byId('quizGradeFx');
 
     const QUESTION_COUNT = 20; // 매회 20문항
     const CSV_THRESHOLD = 80;  // 80점 이상일 때 CSV 버튼 활성화
@@ -3262,6 +3374,36 @@
     let wrongPicked = [];
     let wrongMode = false;
     let isLocked = false;
+    let gradeFxTimer = 0;
+    let gradeScrollTimer = 0;
+
+    function resetGradeCompleteEffect() {
+      window.clearTimeout(gradeFxTimer);
+      window.clearTimeout(gradeScrollTimer);
+      gradeFxEl.classList.remove('is-playing');
+      gradeFxEl.hidden = true;
+      resultEl.classList.remove('is-grade-reveal');
+    }
+
+    function playGradeCompleteEffect() {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.clearTimeout(gradeFxTimer);
+      window.clearTimeout(gradeScrollTimer);
+      gradeFxEl.hidden = false;
+      gradeFxEl.classList.remove('is-playing');
+      resultEl.classList.remove('is-grade-reveal');
+      void gradeFxEl.offsetWidth;
+      gradeFxEl.classList.add('is-playing');
+      resultEl.classList.add('is-grade-reveal');
+
+      gradeScrollTimer = window.setTimeout(() => {
+        window.scrollTo({top: resultEl.getBoundingClientRect().top + window.scrollY - 100, behavior: reducedMotion ? 'auto' : 'smooth'});
+      }, reducedMotion ? 0 : 1050);
+      gradeFxTimer = window.setTimeout(() => {
+        gradeFxEl.classList.remove('is-playing');
+        gradeFxEl.hidden = true;
+      }, reducedMotion ? 0 : 1580);
+    }
 
     function lockQuiz() {
       isLocked = true;
@@ -3298,6 +3440,7 @@
     }
     // ===== Render quiz =====
     function renderQuiz(sourceArray) {
+      resetGradeCompleteEffect();
       quizEl.innerHTML = '';
       resultEl.textContent = '';
       unlockQuiz();
@@ -3446,8 +3589,7 @@
       const total = picked.length;
       const score = Math.round((correctCount / total) * 100);
       resultEl.textContent = `점수: ${score}점 (${correctCount}/${total})`;
-
-      window.scrollTo({top: resultEl.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth'});
+      playGradeCompleteEffect();
 
       retryWrongBtn.disabled = wrongPicked.length === 0;
       pushHistory({

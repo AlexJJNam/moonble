@@ -101,8 +101,11 @@ function PreviewQuiz() {
   const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const questionsRef = useRef(null);
+  const celebrationTimerRef = useRef(0);
+  const resultScrollTimerRef = useRef(0);
   const answeredCount = Object.keys(answers).length;
   const score = previewQuestions.reduce((total, question, index) => total + (answers[index] === question.correct ? 1 : 0), 0);
 
@@ -111,9 +114,15 @@ function PreviewQuiz() {
     if (next) {
       setAnswers({});
       setSubmitted(false);
+      setCelebrating(false);
       setActiveQuestion(0);
     }
   };
+
+  useEffect(() => () => {
+    window.clearTimeout(celebrationTimerRef.current);
+    window.clearTimeout(resultScrollTimerRef.current);
+  }, []);
 
   const goToQuestion = index => {
     setActiveQuestion(index);
@@ -129,11 +138,27 @@ function PreviewQuiz() {
     setActiveQuestion(questionIndex);
   };
 
+  const submitPreview = () => {
+    setSubmitted(true);
+    setCelebrating(true);
+    window.clearTimeout(celebrationTimerRef.current);
+    window.clearTimeout(resultScrollTimerRef.current);
+    resultScrollTimerRef.current = window.setTimeout(() => {
+      questionsRef.current?.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }, 1050);
+    celebrationTimerRef.current = window.setTimeout(() => setCelebrating(false), 1580);
+  };
+
   return <Dialog.Root open={open} onOpenChange={changeOpen}>
     <Dialog.Trigger asChild><button className="landing-secondary" type="button">먼저 둘러보기</button></Dialog.Trigger>
     <Dialog.Portal>
       <Dialog.Overlay className="landing-demo-overlay" />
       <Dialog.Content className="landing-demo-dialog">
+        {celebrating && <div className="landing-demo-grade-fx" role="status" aria-live="assertive">
+          <span className="landing-demo-grade-badge" aria-hidden="true"><Check size={42} strokeWidth={4.2} /></span>
+          <strong>문제 채점이 완료됐어요!</strong>
+          <span>결과를 확인해보세요.</span>
+        </div>}
         <div className="landing-demo-workspace">
           <aside className="landing-demo-sidebar" aria-label="맛보기 문제 탐색">
             <strong className="landing-demo-logo">moonble</strong>
@@ -157,7 +182,7 @@ function PreviewQuiz() {
                 <p>카드형 선택지에서 답을 고르고 채점 결과와 해설을 바로 확인해보세요.</p>
               </div>
 
-              {submitted && <section className="landing-demo-result" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
+              {submitted && <section className="landing-demo-result is-revealing" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
 
               <div className="landing-demo-questions">
                 {previewQuestions.map((question, questionIndex) => <article className="q-card landing-demo-q-card" id={`preview-question-${questionIndex + 1}`} data-preview-question={questionIndex} key={question.question}>
@@ -179,7 +204,7 @@ function PreviewQuiz() {
 
             <footer className="landing-demo-actions">
               <p>{submitted ? '실전에서는 풀이 결과와 실력 변화가 자동으로 기록돼요.' : `${answeredCount} / ${previewQuestions.length}문제 선택`}</p>
-              <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); setActiveQuestion(0); goToQuestion(0); }}>같은 문제 다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={() => setSubmitted(true)}>{submitted ? '채점 완료' : '제출하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
+              <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); setCelebrating(false); setActiveQuestion(0); goToQuestion(0); }}>같은 문제 다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={submitPreview}>{submitted ? '채점 완료' : '제출하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
             </footer>
           </section>
         </div>
