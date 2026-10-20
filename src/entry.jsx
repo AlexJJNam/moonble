@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, Plus, Upload } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, Plus, Upload, X } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -68,6 +69,87 @@ const showcaseSlides = [
   { key: 'solve', step: '03', title: '풀고 바로 확인하기', copy: '답을 고르면 정답과 해설을 바로 볼 수 있어요.' },
   { key: 'stats', step: '04', title: '달라진 실력 보기', copy: '점수와 추세를 보며 다음 공부를 정해요.' },
 ];
+
+const previewQuestions = [
+  {
+    question: 'GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?',
+    options: ['세션', '이벤트', '사용자 속성'],
+    correct: 1,
+    explanation: '페이지 조회, 클릭, 구매 같은 사용자 행동은 이벤트 단위로 수집해요.',
+  },
+  {
+    question: 'PRD에서 가장 먼저 분명하게 정리해야 하는 것은 무엇인가요?',
+    options: ['해결하려는 문제', '버튼의 색상', '출시 후 광고 문구'],
+    correct: 0,
+    explanation: '해결할 문제와 사용자를 먼저 정의해야 목표와 우선순위를 일관되게 정할 수 있어요.',
+  },
+  {
+    question: '사용자가 회원가입 도중 이탈하는 원인을 찾을 때 먼저 볼 지표는 무엇인가요?',
+    options: ['단계별 전환율', '전체 페이지 조회 수', '평균 화면 해상도'],
+    correct: 0,
+    explanation: '가입 단계별 전환율을 비교하면 이탈이 집중되는 구간을 빠르게 찾을 수 있어요.',
+  },
+  {
+    question: 'A/B 테스트 결과를 해석할 때 함께 확인해야 하는 것은 무엇인가요?',
+    options: ['표본 크기와 기간', '팀원의 선호도', '화면에 사용한 아이콘 수'],
+    correct: 0,
+    explanation: '충분한 표본과 관찰 기간을 확보해야 일시적인 변동을 성과로 오해하지 않아요.',
+  },
+];
+
+function PreviewQuiz() {
+  const [open, setOpen] = useState(false);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const answeredCount = Object.keys(answers).length;
+  const score = previewQuestions.reduce((total, question, index) => total + (answers[index] === question.correct ? 1 : 0), 0);
+
+  const changeOpen = next => {
+    setOpen(next);
+    if (next) {
+      setAnswers({});
+      setSubmitted(false);
+    }
+  };
+
+  return <Dialog.Root open={open} onOpenChange={changeOpen}>
+    <Dialog.Trigger asChild><button className="landing-secondary" type="button">먼저 둘러보기</button></Dialog.Trigger>
+    <Dialog.Portal>
+      <Dialog.Overlay className="landing-demo-overlay" />
+      <Dialog.Content className="landing-demo-dialog">
+        <header className="landing-demo-header">
+          <div><span>문제풀이 맛보기</span><Dialog.Title>Moonble 문제를 직접 풀어보세요</Dialog.Title><Dialog.Description>짧은 네 문제를 풀고 바로 결과와 해설을 확인할 수 있어요.</Dialog.Description></div>
+          <Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={21} /></Dialog.Close>
+        </header>
+
+        {submitted && <section className="landing-demo-result" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
+
+        <div className="landing-demo-questions">
+          {previewQuestions.map((question, questionIndex) => <article className="landing-demo-question" key={question.question}>
+            <div className="landing-demo-question-heading"><b>Q{questionIndex + 1}</b><span>단일 선택</span></div>
+            <h3>{question.question}</h3>
+            <div className="landing-demo-options" role="radiogroup" aria-label={`${questionIndex + 1}번 문제 선택지`}>
+              {question.options.map((option, optionIndex) => {
+                const selected = answers[questionIndex] === optionIndex;
+                const correct = submitted && optionIndex === question.correct;
+                const incorrect = submitted && selected && optionIndex !== question.correct;
+                return <button className={`${selected ? 'is-selected' : ''}${correct ? ' is-correct' : ''}${incorrect ? ' is-incorrect' : ''}`} type="button" role="radio" aria-checked={selected} disabled={submitted} onClick={() => setAnswers(current => ({ ...current, [questionIndex]: optionIndex }))} key={option}>
+                  <i aria-hidden="true">{correct ? <Check size={14} /> : incorrect ? <X size={14} /> : null}</i><span>{option}</span>
+                </button>;
+              })}
+            </div>
+            {submitted && <p className="landing-demo-explanation"><strong>{answers[questionIndex] === question.correct ? '정답이에요.' : '정답을 확인해보세요.'}</strong>{question.explanation}</p>}
+          </article>)}
+        </div>
+
+        <footer className="landing-demo-actions">
+          <p>{submitted ? '실전에서는 풀이 결과와 실력 변화가 자동으로 기록돼요.' : `${answeredCount} / ${previewQuestions.length}문제 선택`}</p>
+          <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); }}>다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={() => setSubmitted(true)}>{submitted ? '채점 완료' : '채점하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
+        </footer>
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>;
+}
 
 function GlowCursor() {
   const cursorRef = useRef(null);
@@ -201,11 +283,10 @@ function ProductPreview() {
             <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
             <ShowcaseScreen type={slide.key} />
             <GlowCursor />
+            {index === activeSlide && <><button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button><button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button></>}
           </article>;
         })}
       </div>
-      <button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button>
-      <button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button>
     </div>
     <div className="landing-showcase-pagination" aria-label="화면 선택">{showcaseSlides.map((slide, index) => <button className={index === activeSlide ? 'is-active' : ''} type="button" aria-label={`${slide.title} 화면 보기`} aria-current={index === activeSlide ? 'true' : undefined} onClick={() => changeSlide(index)} key={slide.key} />)}</div>
   </section>;
@@ -602,7 +683,7 @@ function Landing() {
           <span className="landing-eyebrow">기획자 워크스페이스</span>
           <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
           <HeroDescription />
-          <div className="landing-actions"><a className="landing-secondary" href="#features">먼저 둘러보기</a><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
+          <div className="landing-actions"><PreviewQuiz /><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
         </div>
         <ProductPreview />
       </section>
