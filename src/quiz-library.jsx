@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LayoutGrid, List, Plus, Search } from 'lucide-react';
+import { BookOpen, LayoutGrid, List, Plus, Search } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -47,7 +47,7 @@ function PaperPreview({ paper }) {
         {sample.options.map(option => <span className="preview-option" key={option}><i />{option}</span>)}
       </div>)}
     </div>
-    <span className="preview-tag">미리보기</span>
+    <span className="preview-count">{paper.count}문항</span>
   </div>;
 }
 
@@ -138,7 +138,7 @@ function QuizLibrary() {
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => <a className="paper-card" key={paper.id} href={`./solve.html?paper=${paper.id}#quiz`} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`}>
             <PaperPreview paper={paper} />
-            <div className="paper-info"><div className="paper-meta"><span className={`paper-badge badge-${paper.id}`}>{paper.level}</span><span>{paper.count}문항</span></div><h2 className="mb-card-title">{paper.label}</h2><p>{paper.description}</p></div>
+            <div className="paper-info"><span className={`paper-file-icon icon-${paper.id}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><h2 className="mb-card-title">{paper.label}</h2><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
           </a>)}
         </section>
         {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? '원하는 문제를 만들고 CSV로 등록해보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? (window.location.hash = 'create') : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '문제 생성하기' : '전체 문제지 보기'}</button></div>}
