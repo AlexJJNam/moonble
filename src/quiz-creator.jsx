@@ -196,7 +196,7 @@ export function QuizCreator({ custom, onChange }) {
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
           <span className="creator-ai-prompt-field">
             <PromptSample hidden={Boolean(query)} />
-            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={() => setPromptFocused(true)} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(88, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
+            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={() => setPromptFocused(true)} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
           <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>문제 만들기</button>
         </div>

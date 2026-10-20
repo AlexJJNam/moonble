@@ -19,7 +19,7 @@ export function HandwritingLogo({ className = '' }) {
     <defs>
       <mask id="moonble-handwriting-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="2172" height="724">
         <rect width="2172" height="724" fill="#000" />
-        <g className="mb-handwriting-mask-strokes" fill="none" stroke="#fff" strokeWidth="178" strokeLinecap="round" strokeLinejoin="round">
+        <g className="mb-handwriting-mask-strokes" fill="none" stroke="#fff" strokeWidth="204" strokeLinecap="round" strokeLinejoin="round">
           <path pathLength="1" d="M96 498 C174 528 205 356 311 356 C398 356 332 522 432 500 C509 483 477 354 568 350 C650 346 598 512 687 501" />
           <path pathLength="1" d="M683 480 C639 409 681 326 775 326 C881 326 907 468 821 503 C724 543 655 459 699 374 C742 291 875 319 900 416" />
           <path pathLength="1" d="M900 460 C882 383 937 326 1024 333 C1127 342 1132 483 1048 513 C951 548 884 459 932 378 C975 306 1095 323 1131 402" />
@@ -31,6 +31,7 @@ export function HandwritingLogo({ className = '' }) {
         </g>
       </mask>
     </defs>
-    <image href="./assets/moonble-wordmark.png" width="2172" height="724" mask="url(#moonble-handwriting-mask)" />
+    <image className="mb-handwriting-wordmark-traced" href="./assets/moonble-wordmark.png" width="2172" height="724" mask="url(#moonble-handwriting-mask)" />
+    <image className="mb-handwriting-wordmark-complete" href="./assets/moonble-wordmark.png" width="2172" height="724" />
   </svg>;
 }
