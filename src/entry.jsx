@@ -561,7 +561,7 @@ function useLandingOrbMotion() {
   useEffect(() => {
     const sections = [
       { element: document.querySelector('.landing-hero'), vector: [42, 76] },
-      { element: document.querySelector('.landing-features'), vector: [-52, 86] },
+      { element: document.querySelector('.landing-features'), vector: [-92, 148] },
       { element: document.querySelector('.landing-cta'), vector: [38, 58] },
     ].filter(({ element }) => element);
     if (!sections.length) return undefined;
@@ -687,6 +687,7 @@ function Landing() {
       <HighlightBand />
 
       <section className="landing-features" id="features" aria-labelledby="features-title">
+        <img className="landing-features-wordmark" src="./assets/moonble-script.png" alt="" aria-hidden="true" />
         <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푼 뒤에도 배움이 남도록,</em><br />학습과 기획을 자연스럽게 잇습니다</h2><p>문제 등록부터 풀이, 기록, PRD 작성까지 한곳에서 이어가세요.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
