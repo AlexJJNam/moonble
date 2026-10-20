@@ -101,6 +101,8 @@ function PreviewQuiz() {
   const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [activeQuestion, setActiveQuestion] = useState(0);
+  const questionsRef = useRef(null);
   const answeredCount = Object.keys(answers).length;
   const score = previewQuestions.reduce((total, question, index) => total + (answers[index] === question.correct ? 1 : 0), 0);
 
@@ -109,7 +111,22 @@ function PreviewQuiz() {
     if (next) {
       setAnswers({});
       setSubmitted(false);
+      setActiveQuestion(0);
     }
+  };
+
+  const goToQuestion = index => {
+    setActiveQuestion(index);
+    const container = questionsRef.current;
+    const question = container?.querySelector(`[data-preview-question="${index}"]`);
+    if (!container || !question) return;
+    container.scrollTo({ top: Math.max(0, question.offsetTop - 20), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+
+  const chooseAnswer = (questionIndex, optionIndex) => {
+    if (submitted) return;
+    setAnswers(current => ({ ...current, [questionIndex]: optionIndex }));
+    setActiveQuestion(questionIndex);
   };
 
   return <Dialog.Root open={open} onOpenChange={changeOpen}>
@@ -117,35 +134,55 @@ function PreviewQuiz() {
     <Dialog.Portal>
       <Dialog.Overlay className="landing-demo-overlay" />
       <Dialog.Content className="landing-demo-dialog">
-        <header className="landing-demo-header">
-          <div><span>문제풀이 맛보기</span><Dialog.Title>Moonble 문제를 직접 풀어보세요</Dialog.Title><Dialog.Description>짧은 네 문제를 풀고 바로 결과와 해설을 확인할 수 있어요.</Dialog.Description></div>
-          <Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={21} /></Dialog.Close>
-        </header>
+        <div className="landing-demo-workspace">
+          <aside className="landing-demo-sidebar" aria-label="맛보기 문제 탐색">
+            <strong className="landing-demo-logo">moonble</strong>
+            <div className="landing-demo-profile"><span>홍</span><div><b>홍길동</b><small>개인 워크스페이스</small></div></div>
+            <div className="landing-demo-back"><ChevronLeft size={17} aria-hidden="true" /><span>문제지</span></div>
+            <strong className="landing-demo-list-title">문제 목록</strong>
+            <nav className="landing-demo-question-nav">{previewQuestions.map((question, index) => {
+              const answered = answers[index] !== undefined;
+              const correct = submitted && answers[index] === question.correct;
+              const wrong = submitted && answered && !correct;
+              return <button className={`${answered ? 'is-answered' : ''}${correct ? ' is-correct' : ''}${wrong ? ' is-wrong' : ''}`} type="button" aria-current={activeQuestion === index ? 'true' : undefined} aria-label={`${index + 1}번 문제로 이동`} onClick={() => goToQuestion(index)} key={question.question}><span>{index + 1}</span><i aria-hidden="true">{correct ? 'O' : wrong ? 'X' : ''}</i></button>;
+            })}</nav>
+          </aside>
 
-        {submitted && <section className="landing-demo-result" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
+          <section className="landing-demo-main">
+            <header className="landing-demo-topbar"><span>내 워크스페이스</span><div><i aria-hidden="true">홍</i><Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={20} /></Dialog.Close></div></header>
+            <div className="landing-demo-scroll" ref={questionsRef}>
+              <div className="landing-demo-intro">
+                <a href="#preview-question-1" onClick={event => { event.preventDefault(); goToQuestion(0); }}><ChevronLeft size={17} aria-hidden="true" />문제지 목록</a>
+                <div><span>GA4 핵심 개념 · 맛보기</span><strong>문제풀이</strong></div>
+                <p>카드형 선택지에서 답을 고르고 채점 결과와 해설을 바로 확인해보세요.</p>
+              </div>
 
-        <div className="landing-demo-questions">
-          {previewQuestions.map((question, questionIndex) => <article className="landing-demo-question" key={question.question}>
-            <div className="landing-demo-question-heading"><b>Q{questionIndex + 1}</b><span>단일 선택</span></div>
-            <h3>{question.question}</h3>
-            <div className="landing-demo-options" role="radiogroup" aria-label={`${questionIndex + 1}번 문제 선택지`}>
-              {question.options.map((option, optionIndex) => {
-                const selected = answers[questionIndex] === optionIndex;
-                const correct = submitted && optionIndex === question.correct;
-                const incorrect = submitted && selected && optionIndex !== question.correct;
-                return <button className={`${selected ? 'is-selected' : ''}${correct ? ' is-correct' : ''}${incorrect ? ' is-incorrect' : ''}`} type="button" role="radio" aria-checked={selected} disabled={submitted} onClick={() => setAnswers(current => ({ ...current, [questionIndex]: optionIndex }))} key={option}>
-                  <i aria-hidden="true">{correct ? <Check size={14} /> : incorrect ? <X size={14} /> : null}</i><span>{option}</span>
-                </button>;
-              })}
+              {submitted && <section className="landing-demo-result" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
+
+              <div className="landing-demo-questions">
+                {previewQuestions.map((question, questionIndex) => <article className="q-card landing-demo-q-card" id={`preview-question-${questionIndex + 1}`} data-preview-question={questionIndex} key={question.question}>
+                  <div className="q-title"><span className="q-number">Q{questionIndex + 1}</span><h3>{question.question}</h3></div>
+                  <div className="options" role="radiogroup" aria-label={`${questionIndex + 1}번 문제 선택지`}>
+                    {question.options.map((option, optionIndex) => {
+                      const selected = answers[questionIndex] === optionIndex;
+                      const correct = submitted && optionIndex === question.correct;
+                      const incorrect = submitted && selected && optionIndex !== question.correct;
+                      return <label className={`opt-col option-card${selected ? ' selected' : ''}${correct ? ' correct' : ''}${incorrect ? ' incorrect' : ''}`} role="radio" aria-checked={selected} aria-disabled={submitted} tabIndex={submitted ? -1 : 0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); chooseAnswer(questionIndex, optionIndex); } }} key={option}>
+                        <input type="radio" name={`preview-question-${questionIndex}`} checked={selected} disabled={submitted} onChange={() => chooseAnswer(questionIndex, optionIndex)} /><span className="tick" aria-hidden="true">{correct ? 'O' : incorrect ? 'X' : '✓'}</span><span>{option}</span>
+                      </label>;
+                    })}
+                  </div>
+                  {submitted && <div className="explain"><b>{answers[questionIndex] === question.correct ? '정답이에요.' : '정답을 확인해보세요.'}</b><span>{question.explanation}</span></div>}
+                </article>)}
+              </div>
             </div>
-            {submitted && <p className="landing-demo-explanation"><strong>{answers[questionIndex] === question.correct ? '정답이에요.' : '정답을 확인해보세요.'}</strong>{question.explanation}</p>}
-          </article>)}
-        </div>
 
-        <footer className="landing-demo-actions">
-          <p>{submitted ? '실전에서는 풀이 결과와 실력 변화가 자동으로 기록돼요.' : `${answeredCount} / ${previewQuestions.length}문제 선택`}</p>
-          <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); }}>다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={() => setSubmitted(true)}>{submitted ? '채점 완료' : '채점하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
-        </footer>
+            <footer className="landing-demo-actions">
+              <p>{submitted ? '실전에서는 풀이 결과와 실력 변화가 자동으로 기록돼요.' : `${answeredCount} / ${previewQuestions.length}문제 선택`}</p>
+              <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); setActiveQuestion(0); goToQuestion(0); }}>같은 문제 다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={() => setSubmitted(true)}>{submitted ? '채점 완료' : '제출하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
+            </footer>
+          </section>
+        </div>
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;
