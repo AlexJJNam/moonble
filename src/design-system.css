@@ -84,6 +84,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.mb-brand-wordmark { display: block; width: auto; height: auto; object-fit: contain; }
+
 button, input, textarea, select, svg text {
   font-family: var(--mb-font-sans);
 }

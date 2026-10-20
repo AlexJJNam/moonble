@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { SiteFooter } from './site-footer.jsx';
 import { POLICY_VERSION } from './policy.js';
+import { BrandLogo } from './brand-logo.jsx';
 import './design-system.css';
 import './legal.css';
 
@@ -34,5 +35,5 @@ function Terms() {
     <h2>5. 의견과 개인정보 요청</h2><p>기능 제안과 오류 신고는 하단의 의견 보내기로 전달할 수 있습니다. GitHub 계정이 필요할 수 있으며 게시한 내용은 공개됩니다. 비밀번호·이메일 등 개인정보는 게시하지 말고, 개인정보 관련 요청은 로그인 후 내 정보 수정 화면을 이용해주세요.</p>
   </>;
 }
-function Legal() { return <><header className="legal-header"><a href="./quiz.html" aria-label="Moonble 문제지 홈">moonble</a><a href="./login.html">로그인</a></header><main className="legal-main"><h1 className="mb-page-title">{privacy ? '개인정보 처리방침' : '이용 안내'}</h1><p className="legal-date">시행일 · {POLICY_VERSION}</p>{privacy ? <Privacy /> : <Terms />}</main><SiteFooter /></>; }
+function Legal() { return <><header className="legal-header"><a href="./quiz.html" aria-label="Moonble 문제지 홈"><BrandLogo decorative /></a><a href="./login.html">로그인</a></header><main className="legal-main"><h1 className="mb-page-title">{privacy ? '개인정보 처리방침' : '이용 안내'}</h1><p className="legal-date">시행일 · {POLICY_VERSION}</p>{privacy ? <Privacy /> : <Terms />}</main><SiteFooter /></>; }
 createRoot(document.getElementById('root')).render(<Legal />);

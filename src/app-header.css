@@ -3,8 +3,8 @@ body.mb-has-app-sidebar.mb-sidebar-collapsed { padding-left: 68px; }
 body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header { position: fixed; inset: 0 auto 0 0; z-index: 50; width: 224px; height: 100vh; height: 100dvh; border-right: 1px solid var(--mb-border); background: rgb(255 255 255 / 96%); backdrop-filter: blur(18px); transition: width 280ms cubic-bezier(.22, 1, .36, 1); }
 .mb-app-header-inner { min-height: 100%; padding: 16px; display: flex; flex-direction: column; }
-.mb-app-logo { min-height: 48px; display: flex; align-items: center; padding: 8px 12px; margin-bottom: 8px; color: var(--mb-primary); font-size: var(--mb-font-24); line-height: 32px; font-weight: 800; letter-spacing: -.04em; text-decoration: none; }
-.mb-app-logo-compact { display: none; }
+.mb-app-logo { min-height: 48px; display: flex; align-items: center; padding: 8px 12px; margin-bottom: 8px; text-decoration: none; }
+.mb-app-logo .mb-brand-wordmark { width: 112px; }
 .mb-app-profile { min-width: 0; min-height: 56px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); text-decoration: none; }
 .mb-app-profile:hover, .mb-app-profile[aria-current='page'] { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
 .mb-app-avatar { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-content: center; border-radius: 50%; background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-size: var(--mb-font-14); font-weight: 700; }
@@ -43,8 +43,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed { width: 68px; }
 .mb-app-header.is-collapsed .mb-app-header-inner { padding-right: 10px; padding-left: 10px; }
 .mb-app-header.is-collapsed .mb-app-logo { justify-content: center; padding-right: 0; padding-left: 0; }
-.mb-app-header.is-collapsed .mb-app-logo-full { display: none; }
-.mb-app-header.is-collapsed .mb-app-logo-compact { display: inline; }
+.mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 46px; }
 .mb-app-header.is-collapsed .mb-app-profile { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-profile-copy, .mb-app-header.is-collapsed .mb-app-profile>svg { display: none; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a { justify-content: center; padding-right: 0; padding-left: 0; }
@@ -75,15 +74,16 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header { position: sticky; inset: 0 auto auto; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--mb-border); backdrop-filter: blur(16px); }
   .mb-app-header.is-collapsed { width: 100%; }
   .mb-app-header-inner { min-height: auto; padding: 10px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; }
-  .mb-app-logo { min-height: 44px; margin: 0; padding: 6px 4px; font-size: var(--mb-font-22); line-height: 28px; }
+  .mb-app-logo { min-height: 44px; margin: 0; padding: 6px 4px; }
+  .mb-app-logo .mb-brand-wordmark, .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 98px; }
   .mb-app-profile { grid-column: 2; grid-row: 1; min-height: 44px; margin: 0; padding: 4px; }
   .mb-app-profile-copy, .mb-app-profile>svg { display: none; }
   .mb-app-account { grid-column: 3; grid-row: 1; margin: 0; padding: 0; border: 0; }
   .mb-app-logout { width: 44px; justify-content: center; padding: 0; }
   .mb-app-logout>span:not(.moonble-spinner) { display: none; }
   .mb-app-error { position: absolute; top: calc(100% + 8px); left: 16px; right: 16px; z-index: 2; }
-  .mb-app-nav { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding-top: 4px; }
-  .mb-app-nav a { min-width: 0; justify-content: center; gap: 6px; padding: 10px 6px; font-size: var(--mb-font-12); }
+  .mb-app-nav { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding-top: 4px; }
+  .mb-app-nav:not(.mb-solver-nav) a { min-width: 0; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 2px; font-size: 11px; line-height: 16px; white-space: nowrap; }
   .mb-app-nav a svg { width: 16px; height: 16px; }
   .mb-app-nav.mb-solver-nav { min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 6px 0 10px; overflow: hidden; }
   .mb-solver-heading { flex: 0 0 auto; display: block; padding: 0 8px 0 0; border-right: 1px solid var(--mb-border); border-bottom: 0; }

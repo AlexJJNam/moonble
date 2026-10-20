@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, LayoutGrid, List, Plus, Search } from 'lucide-react';
+import { LayoutGrid, List, Plus, Search } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
-import { CustomBankDialog } from './custom-bank-dialog.jsx';
 import { getCustomBankMeta, setCustomBankUser } from './custom-bank.js';
 import { QuizAchievement } from './quiz-achievement.jsx';
+import { QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
+import { BrandLogo } from './brand-logo.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -38,7 +39,7 @@ if (initialUser) {
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.id}`} aria-hidden="true">
     <div className="preview-sheet">
-      <div className="preview-sheet-brand"><span>moonble</span><span>{paper.id === 'custom' ? 'CUSTOM' : 'GA4'}</span></div>
+      <div className="preview-sheet-brand"><BrandLogo decorative /><span>{paper.id === 'custom' ? 'CUSTOM' : 'GA4'}</span></div>
       <div className="preview-sheet-title">{paper.label}</div>
       <div className="preview-sheet-subtitle">개념을 확인하는 작은 시작</div>
       {paper.samples.map((sample, index) => <div className="preview-question" key={sample.title}>
@@ -47,8 +48,13 @@ function PaperPreview({ paper }) {
       </div>)}
     </div>
     <span className="preview-tag">미리보기</span>
-    <span className="preview-open"><ArrowRight size={18} /></span>
   </div>;
+}
+
+function sectionFromHash() {
+  if (window.location.hash === '#achievement') return 'achievement';
+  if (window.location.hash === '#create') return 'create';
+  return 'papers';
 }
 
 function QuizLibrary() {
@@ -59,11 +65,10 @@ function QuizLibrary() {
   const [category, setCategory] = useState('전체');
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
-  const [creating, setCreating] = useState(false);
   const [custom, setCustom] = useState(() => initialUser ? getCustomBankMeta(initialUser.id) : null);
-  const [section, setSection] = useState(window.location.hash === '#achievement' ? 'achievement' : 'papers');
+  const [section, setSection] = useState(sectionFromHash);
   useEffect(() => {
-    const syncSection = () => setSection(window.location.hash === '#achievement' ? 'achievement' : 'papers');
+    const syncSection = () => setSection(sectionFromHash());
     window.addEventListener('hashchange', syncSection);
     return () => window.removeEventListener('hashchange', syncSection);
   }, []);
@@ -117,11 +122,11 @@ function QuizLibrary() {
     return categoryMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   });
   return <div className="quiz-page">
-    <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
+    <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton onClick={() => setCreating(true)}><Plus size={18} aria-hidden="true" />새 문제지 만들기</FlowActionButton></div>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={custom} onChange={setCustom} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" />새 문제지 만들기</FlowActionButton></div>
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><div className="quiz-filters" role="group" aria-label="문제지 소유 구분">{categories.map(item => <button key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="quiz-difficulties" role="group" aria-label="난이도">{difficulties.map(item => <button key={item} aria-pressed={difficulty === item} onClick={() => setDifficulty(item)}>{item}</button>)}</div></div>
           <div className="quiz-display-tools">
@@ -136,10 +141,9 @@ function QuizLibrary() {
             <div className="paper-info"><div className="paper-meta"><span className={`paper-badge badge-${paper.id}`}>{paper.level}</span><span>{paper.count}문항</span></div><h2 className="mb-card-title">{paper.label}</h2><p>{paper.description}</p></div>
           </a>)}
         </section>
-        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? 'CSV 또는 Google Sheets로 첫 문제지를 만들어보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? setCreating(true) : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '새 문제지 만들기' : '전체 문제지 보기'}</button></div>}
+        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? '원하는 문제를 만들고 CSV로 등록해보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? (window.location.hash = 'create') : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '문제 생성하기' : '전체 문제지 보기'}</button></div>}
         <p className="quiz-library-note">미리보기는 예시 문항이에요. 풀이를 시작하면 선택한 범위에서 20문항이 출제됩니다.</p>
       </main>}<SiteFooter />
-      {creating && <CustomBankDialog onClose={() => setCreating(false)} onChange={meta => { setCustom(meta); if (meta) { setCategory('내 문제지'); setDifficulty('전체 난이도'); setQuery(''); } }} />}
     </div>
   </div>;
 }

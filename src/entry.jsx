@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, MousePointer2, Plus, Upload, X } from 'lucide-react';
+import { BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, MousePointer2, Plus, Upload, X } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
+import { BrandLogo, HandwritingLogo } from './brand-logo.jsx';
 import './design-system.css';
 import './landing.css';
 
@@ -229,7 +230,7 @@ function PreviewQuiz() {
         </div>}
         <div className="landing-demo-workspace">
           <aside className="landing-demo-sidebar" aria-label="맛보기 문제 탐색">
-            <strong className="landing-demo-logo">moonble</strong>
+            <strong className="landing-demo-logo"><BrandLogo decorative /></strong>
             <div className="landing-demo-profile"><span>홍</span><div><b>홍길동</b><small>개인 워크스페이스</small></div></div>
             <div className="landing-demo-back"><ChevronLeft size={17} aria-hidden="true" /><span>문제지</span></div>
             <strong className="landing-demo-list-title">문제 목록</strong>
@@ -242,7 +243,7 @@ function PreviewQuiz() {
           </aside>
 
           <section className="landing-demo-main">
-            <header className="landing-demo-topbar"><div><i aria-hidden="true">홍</i><Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={20} /></Dialog.Close></div></header>
+            <Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={20} /></Dialog.Close>
             <div className="landing-demo-scroll" ref={questionsRef}>
               <div className="landing-demo-intro">
                 <a href="#preview-question-1" onClick={event => { event.preventDefault(); goToQuestion(0); }}><ChevronLeft size={17} aria-hidden="true" />문제지 목록</a>
@@ -274,7 +275,7 @@ function PreviewQuiz() {
             </div>
 
             <footer className="landing-demo-actions">
-              <div>{submitted ? <><button className="landing-demo-retry" type="button" onClick={loadDifferentQuestions}>다른 문제 체험하기</button><a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a></> : <button className="landing-demo-submit" type="button" disabled={answeredCount !== questions.length} onClick={submitPreview}>제출하기</button>}</div>
+              <div>{submitted ? <><button className="landing-demo-retry" type="button" onClick={loadDifferentQuestions}>다른 문제 체험하기</button><a href="./login.html">무료로 시작하기</a></> : <button className="landing-demo-submit" type="button" disabled={answeredCount !== questions.length} onClick={submitPreview}>제출하기</button>}</div>
             </footer>
           </section>
         </div>
@@ -348,7 +349,7 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
   const isFlow = stage === 'flow';
   return <div className={`story-window moonble-workspace-demo${isFlow ? ' is-flow' : ` is-static is-stage-${stage}`}`}>
     <aside className="story-app-sidebar" aria-hidden="true">
-      <strong className="story-app-logo">moonble</strong>
+      <strong className="story-app-logo"><BrandLogo decorative /></strong>
       <div className="story-app-profile"><i>홍</i><span><b>홍길동</b><small>개인 워크스페이스</small></span></div>
       <nav className="story-app-menu">
         <span className="story-app-papers"><BookOpen size={15} />문제지</span>
@@ -362,7 +363,6 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
       </div>
     </aside>
     <div className="story-app-main">
-      <div className="story-app-topbar" aria-hidden="true"><i>홍</i></div>
 
       <div className="story-screen story-register-screen">
         <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
@@ -379,11 +379,11 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
         <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
         <div className="story-paper-grid">
           <article className="story-paper-picked">
-            <div className="story-paper-preview"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
+            <div className="story-paper-preview"><div className="story-preview-sheet"><small><BrandLogo decorative /><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
             <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.</p>
           </article>
           <article>
-            <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
+            <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><BrandLogo decorative /><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
             <span><b>심화</b> · 20문항</span><strong>GA4 실무 응용</strong><p>전자상거래와 데이터 품질, 실무 개념을 익혀보세요.</p>
           </article>
         </div>
@@ -400,6 +400,7 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
           </div>
           <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인해보세요.</span></div>
         </article>
+        <div className="story-grade-complete" aria-hidden="true"><span><Check size={28} strokeWidth={4} /></span><strong>문제 채점이 완료됐어요!</strong><small>결과를 확인해보세요.</small></div>
       </div>
 
       <div className="story-screen story-stats-screen">
@@ -701,7 +702,7 @@ function ScrollStory() {
           <li><b>03</b><span><strong>풀이와 채점</strong><small>정답과 해설을 바로 확인해요</small></span></li>
           <li><b>04</b><span><strong>성취도 확인</strong><small>달라진 실력을 살펴봐요</small></span></li>
         </ol>
-        <a href="./login.html">내 워크스페이스 열기<ArrowRight size={18} aria-hidden="true" /></a>
+        <a href="./login.html">내 워크스페이스 열기</a>
       </div>
 
       <div className="landing-story-demo" role="img" aria-label="문제지를 등록하고 선택한 뒤 문제를 채점하고 성취도 통계를 확인하는 Moonble 화면 애니메이션">
@@ -839,7 +840,7 @@ function Landing() {
 
   return <>
     <header className={`landing-header${headerScrolled ? ' is-scrolled' : ''}`}>
-      <a className="landing-logo" href="./" aria-label="Moonble 홈">moonble</a>
+      <a className="landing-logo" href="./" aria-label="Moonble 홈"><BrandLogo decorative /></a>
       <nav aria-label="소개 페이지 탐색"><a href="#features">기능</a><a href="#workflow">사용 방법</a><a href="#faq">FAQ</a></nav>
       <a className="landing-login" href="./login.html">로그인</a>
     </header>
@@ -851,7 +852,7 @@ function Landing() {
           <span className="landing-eyebrow">기획자 워크스페이스</span>
           <h1>배운 것을 쌓고,<br /><em>생각을 기획으로.</em></h1>
           <HeroDescription />
-          <div className="landing-actions"><PreviewQuiz /><a className="landing-primary" href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></div>
+          <div className="landing-actions"><PreviewQuiz /><a className="landing-primary" href="./login.html">무료로 시작하기</a></div>
         </div>
         <ProductPreview />
       </section>
@@ -859,7 +860,7 @@ function Landing() {
       <HighlightBand />
 
       <section className="landing-features" id="features" aria-labelledby="features-title" ref={featuresRef}>
-        <img className="landing-features-wordmark" src="./assets/moonble-script.png" alt="" aria-hidden="true" />
+        <HandwritingLogo className="landing-features-wordmark" />
         <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푼 뒤에도 배움이 남도록,</em><br />학습과 기획을 자연스럽게 잇습니다</h2><p>문제 등록부터 풀이, 기록, PRD 작성까지 한곳에서 이어가세요.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>
@@ -869,7 +870,7 @@ function Landing() {
 
       <ScrollStory />
 
-      <section className="landing-cta"><p>오늘 배운 내용을 흘려보내지 마세요.</p><h2>오늘의 배움을<br />내일의 기획으로</h2><a href="./login.html">무료로 시작하기<ArrowRight size={18} aria-hidden="true" /></a></section>
+      <section className="landing-cta"><p>오늘 배운 내용을 흘려보내지 마세요.</p><h2>오늘의 배움을<br />내일의 기획으로</h2><a href="./login.html">무료로 시작하기</a></section>
 
       <LandingFaq />
     </main>
