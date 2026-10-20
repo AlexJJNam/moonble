@@ -28,6 +28,7 @@ const promptSamples = [
   'GA4 전자상거래 이벤트 문제를 만들어줘',
   '신입 기획자를 위한 데이터 분석 문제를 만들어줘',
 ];
+const examplePrompt = '정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.';
 
 function PromptSample({ hidden }) {
   const [sampleIndex, setSampleIndex] = useState(0);
@@ -181,7 +182,7 @@ export function QuizCreator({ custom, onChange }) {
     <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
-      <details className="creator-prompt-guide">
+      <details className="creator-prompt-guide" onToggle={event => { if (!event.currentTarget.open) setExampleRevealed(false); }}>
         <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
         <div className="creator-prompt-guide-panel">
           <strong>이렇게 적어보세요</strong>
@@ -189,7 +190,7 @@ export function QuizCreator({ custom, onChange }) {
           <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> 바로 시험을 볼 수 있는 상급</span></p>
           <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
           <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`}>
-            <q id="creator-prompt-example" aria-hidden={!exampleRevealed}>정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.</q>
+            <q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>
             {!exampleRevealed && <button type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>}
           </div>
         </div>

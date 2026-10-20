@@ -161,6 +161,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     try { return sessionStorage.getItem('moonble:sidebar-hidden') === 'true'; }
     catch { return false; }
   });
+  const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
   const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
@@ -201,7 +202,57 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     return () => window.removeEventListener('keydown', toggleSidebar);
   }, []);
 
-  return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  useEffect(() => {
+    let previousY = window.scrollY;
+    let direction = 0;
+    let distance = 0;
+    let frame = 0;
+
+    function updateHeader() {
+      frame = 0;
+      if (!window.matchMedia('(max-width: 767px)').matches) {
+        setMobileHeaderHidden(false);
+        previousY = window.scrollY;
+        return;
+      }
+
+      const currentY = Math.max(0, window.scrollY);
+      const delta = currentY - previousY;
+      const nextDirection = delta > 0 ? 1 : delta < 0 ? -1 : 0;
+
+      if (currentY < 24) {
+        setMobileHeaderHidden(false);
+        direction = 0;
+        distance = 0;
+      } else if (nextDirection) {
+        if (nextDirection !== direction) {
+          direction = nextDirection;
+          distance = 0;
+        }
+        distance += Math.abs(delta);
+        if (distance >= 18) {
+          setMobileHeaderHidden(nextDirection > 0);
+          distance = 0;
+        }
+      }
+      previousY = currentY;
+    }
+
+    function scheduleHeader() {
+      if (frame) return;
+      frame = requestAnimationFrame(updateHeader);
+    }
+
+    window.addEventListener('scroll', scheduleHeader, { passive: true });
+    window.addEventListener('resize', scheduleHeader);
+    return () => {
+      window.removeEventListener('scroll', scheduleHeader);
+      window.removeEventListener('resize', scheduleHeader);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
       <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>

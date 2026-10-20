@@ -28,9 +28,7 @@ const papers = [
     { title: '앱의 화면 조회에 사용하는 이벤트는?', options: ['screen_view', 'page_view', 'first_visit'] },
   ] },
 ];
-const categories = ['전체', '기본 제공', '내 문제지'];
 const difficulties = ['전체 난이도', '기본', '심화'];
-const categorySegments = categories.map(item => ({ label: item, value: item }));
 const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
 const viewSegments = [
   { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
@@ -69,7 +67,6 @@ function QuizLibrary() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('전체');
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [custom, setCustom] = useState(() => initialUser ? getCustomBankMeta(initialUser.id) : null);
@@ -124,9 +121,8 @@ function QuizLibrary() {
     samples: custom.questions.slice(0, 2).map(q => ({ title: q.q, options: q.options.slice(0, 3) })),
   }] : papers;
   const visiblePapers = allPapers.filter(paper => {
-    const categoryMatch = category === '전체' || (category === '내 문제지' ? paper.id === 'custom' : paper.id !== 'custom');
     const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
-    return categoryMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
+    return difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   });
   return <div className="quiz-page">
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
@@ -135,21 +131,20 @@ function QuizLibrary() {
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={custom} onChange={setCustom} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="quiz-library-tools">
-          <div className="quiz-filter-groups"><SegmentedControl className="quiz-filters" ariaLabel="문제지 소유 구분" items={categorySegments} value={category} onChange={setCategory} /><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
+          <div className="quiz-filter-groups"><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
           <div className="quiz-display-tools">
             <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="문제지 검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
             <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
-        <div className="quiz-results"><p role="status">{category} <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
+        <div className="quiz-results"><p role="status">문제지 <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => <a className="paper-card" key={paper.id} href={`./solve.html?paper=${paper.id}#quiz`} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`}>
             <PaperPreview paper={paper} />
             <div className="paper-info"><span className={`paper-file-icon icon-${paper.id}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><h2 className="mb-card-title">{paper.label}</h2><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
           </a>)}
         </section>
-        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{category === '내 문제지' && !custom ? '아직 만든 문제지가 없어요' : '검색 결과가 없어요'}</h2><p>{category === '내 문제지' && !custom ? '원하는 문제를 만들고 CSV로 등록해보세요.' : '다른 검색어나 분류로 찾아보세요.'}</p><button onClick={() => category === '내 문제지' && !custom ? (window.location.hash = 'create') : (setQuery(''), setCategory('전체'), setDifficulty('전체 난이도'))}>{category === '내 문제지' && !custom ? '문제 생성하기' : '전체 문제지 보기'}</button></div>}
-        <p className="quiz-library-note">미리보기는 예시 문항이에요. 풀이를 시작하면 선택한 범위에서 20문항이 출제됩니다.</p>
+        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어나 난이도로 찾아보세요.</p><button onClick={() => { setQuery(''); setDifficulty('전체 난이도'); }}>전체 문제지 보기</button></div>}
       </main>}<SiteFooter />
     </div>
   </div>;
