@@ -4,6 +4,7 @@
 :root {
   --mb-font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --mb-font-12: .75rem;
+  --mb-font-13: .8125rem;
   --mb-font-14: .875rem;
   --mb-font-16: 1rem;
   --mb-font-18: 1.125rem;
@@ -208,6 +209,12 @@ button, input, textarea, select {
 @media (max-width: 640px) {
   .mb-display { font-size: var(--mb-font-28); line-height: 1.285714; }
   .mb-page-title { font-size: var(--mb-font-24); line-height: 1.333333; }
+}
+
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  textarea,
+  select { font-size: var(--mb-font-16) !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

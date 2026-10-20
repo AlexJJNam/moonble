@@ -10,6 +10,7 @@ import { QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
 import { BrandLogo } from './brand-logo.jsx';
+import { SegmentedControl } from './segmented-control.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -29,6 +30,12 @@ const papers = [
 ];
 const categories = ['전체', '기본 제공', '내 문제지'];
 const difficulties = ['전체 난이도', '기본', '심화'];
+const categorySegments = categories.map(item => ({ label: item, value: item }));
+const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
+const viewSegments = [
+  { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
+  { value: 'list', label: '1열 목록 보기', ariaLabel: '1열 목록 보기', icon: List },
+];
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
 if (initialUser) {
@@ -126,12 +133,12 @@ function QuizLibrary() {
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={custom} onChange={setCustom} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" />새 문제지 만들기</FlowActionButton></div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="quiz-library-tools">
-          <div className="quiz-filter-groups"><div className="quiz-filters" role="group" aria-label="문제지 소유 구분">{categories.map(item => <button key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="quiz-difficulties" role="group" aria-label="난이도">{difficulties.map(item => <button key={item} aria-pressed={difficulty === item} onClick={() => setDifficulty(item)}>{item}</button>)}</div></div>
+          <div className="quiz-filter-groups"><SegmentedControl className="quiz-filters" ariaLabel="문제지 소유 구분" items={categorySegments} value={category} onChange={setCategory} /><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
           <div className="quiz-display-tools">
             <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="문제지 검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
-            <div className="quiz-view-toggle" role="group" aria-label="보기 방식"><button aria-label="카드 보기" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={18} /></button><button aria-label="목록 보기" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={18} /></button></div>
+            <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
         <div className="quiz-results"><p role="status">{category} <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
