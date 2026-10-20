@@ -70,7 +70,7 @@ const showcaseSlides = [
   { key: 'stats', step: '04', title: '달라진 실력 보기', copy: '점수와 추세를 보며 다음 공부를 정해요.' },
 ];
 
-const previewQuestions = [
+const previewQuestionPool = [
   {
     question: 'GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?',
     options: ['세션', '이벤트', '사용자 속성'],
@@ -95,7 +95,64 @@ const previewQuestions = [
     correct: 0,
     explanation: '충분한 표본과 관찰 기간을 확보해야 일시적인 변동을 성과로 오해하지 않아요.',
   },
+  {
+    question: 'GA4에서 새 세션이 시작될 때 자동으로 수집되는 이벤트는 무엇인가요?',
+    options: ['session_start', 'first_visit', 'purchase'],
+    correct: 0,
+    explanation: '새 세션이 시작되면 session_start 이벤트가 자동으로 기록돼요.',
+  },
+  {
+    question: '참여율을 계산하는 방식으로 가장 가까운 것은 무엇인가요?',
+    options: ['참여 세션 ÷ 전체 세션', '전환 ÷ 사용자', '클릭 ÷ 페이지뷰'],
+    correct: 0,
+    explanation: '참여율은 전체 세션 중 참여 세션이 차지하는 비율이에요.',
+  },
+  {
+    question: '사용자 인터뷰를 준비할 때 가장 먼저 정해야 하는 것은 무엇인가요?',
+    options: ['알고 싶은 것과 대상 사용자', '질문지의 글꼴', '인터뷰 후 발표 순서'],
+    correct: 0,
+    explanation: '조사 목적과 대상 사용자를 먼저 정해야 필요한 질문을 일관되게 설계할 수 있어요.',
+  },
+  {
+    question: '기획서에서 성공 지표를 적는 주요 이유는 무엇인가요?',
+    options: ['결과를 판단할 기준을 맞추기 위해', '문서를 길게 만들기 위해', '화면 수를 미리 확정하기 위해'],
+    correct: 0,
+    explanation: '성공 지표는 실행 후 결과를 같은 기준으로 판단하게 해줘요.',
+  },
+  {
+    question: '퍼널에서 특정 단계의 이탈률이 높을 때 우선 할 일은 무엇인가요?',
+    options: ['해당 단계의 사용 흐름과 오류를 확인한다', '전체 서비스의 색상을 바꾼다', '광고 예산을 먼저 늘린다'],
+    correct: 0,
+    explanation: '이탈이 발생하는 단계의 행동 데이터와 오류, 사용자 피드백을 먼저 확인해야 해요.',
+  },
+  {
+    question: '우선순위를 정할 때 효과와 비용을 함께 보는 이유는 무엇인가요?',
+    options: ['한정된 자원으로 효과가 큰 일을 고르기 위해', '모든 요청을 동시에 처리하기 위해', '일정을 더 길게 잡기 위해'],
+    correct: 0,
+    explanation: '기대 효과와 구현 비용을 함께 보면 팀이 집중할 일을 더 명확히 정할 수 있어요.',
+  },
+  {
+    question: 'MVP를 만드는 핵심 목적은 무엇인가요?',
+    options: ['핵심 가설을 빠르게 검증하기 위해', '첫 번째 버전에 모든 기능을 넣기 위해', '경쟁 제품과 화면을 같게 만들기 위해'],
+    correct: 0,
+    explanation: 'MVP는 가장 중요한 가설을 적은 비용으로 빠르게 확인하는 방법이에요.',
+  },
+  {
+    question: '사용자 피드백을 정리할 때 가장 먼저 구분하면 좋은 것은 무엇인가요?',
+    options: ['반복되는 문제와 개별 의견', '글자 수가 긴 의견과 짧은 의견', '긍정 표현과 부정 표현만'],
+    correct: 0,
+    explanation: '반복되는 문제를 먼저 묶으면 실제 개선 우선순위를 정하기 쉬워요.',
+  },
 ];
+
+const PREVIEW_QUESTION_COUNT = 4;
+
+function samplePreviewQuestions(previous = []) {
+  const previousQuestions = new Set(previous.map(({ question }) => question));
+  const candidates = previewQuestionPool.filter(({ question }) => !previousQuestions.has(question));
+  const source = candidates.length >= PREVIEW_QUESTION_COUNT ? candidates : previewQuestionPool;
+  return [...source].sort(() => Math.random() - .5).slice(0, PREVIEW_QUESTION_COUNT);
+}
 
 function PreviewQuiz() {
   const [open, setOpen] = useState(false);
@@ -103,15 +160,17 @@ function PreviewQuiz() {
   const [submitted, setSubmitted] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState(0);
+  const [questions, setQuestions] = useState(() => samplePreviewQuestions());
   const questionsRef = useRef(null);
   const celebrationTimerRef = useRef(0);
   const resultScrollTimerRef = useRef(0);
   const answeredCount = Object.keys(answers).length;
-  const score = previewQuestions.reduce((total, question, index) => total + (answers[index] === question.correct ? 1 : 0), 0);
+  const score = questions.reduce((total, question, index) => total + (answers[index] === question.correct ? 1 : 0), 0);
 
   const changeOpen = next => {
     setOpen(next);
     if (next) {
+      setQuestions(current => samplePreviewQuestions(current));
       setAnswers({});
       setSubmitted(false);
       setCelebrating(false);
@@ -149,6 +208,15 @@ function PreviewQuiz() {
     celebrationTimerRef.current = window.setTimeout(() => setCelebrating(false), 1580);
   };
 
+  const loadDifferentQuestions = () => {
+    setQuestions(current => samplePreviewQuestions(current));
+    setAnswers({});
+    setSubmitted(false);
+    setCelebrating(false);
+    setActiveQuestion(0);
+    questionsRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
   return <Dialog.Root open={open} onOpenChange={changeOpen}>
     <Dialog.Trigger asChild><button className="landing-secondary" type="button">먼저 둘러보기</button></Dialog.Trigger>
     <Dialog.Portal>
@@ -165,7 +233,7 @@ function PreviewQuiz() {
             <div className="landing-demo-profile"><span>홍</span><div><b>홍길동</b><small>개인 워크스페이스</small></div></div>
             <div className="landing-demo-back"><ChevronLeft size={17} aria-hidden="true" /><span>문제지</span></div>
             <strong className="landing-demo-list-title">문제 목록</strong>
-            <nav className="landing-demo-question-nav">{previewQuestions.map((question, index) => {
+            <nav className="landing-demo-question-nav">{questions.map((question, index) => {
               const answered = answers[index] !== undefined;
               const correct = submitted && answers[index] === question.correct;
               const wrong = submitted && answered && !correct;
@@ -174,37 +242,39 @@ function PreviewQuiz() {
           </aside>
 
           <section className="landing-demo-main">
-            <header className="landing-demo-topbar"><span>내 워크스페이스</span><div><i aria-hidden="true">홍</i><Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={20} /></Dialog.Close></div></header>
+            <header className="landing-demo-topbar"><div><i aria-hidden="true">홍</i><Dialog.Close className="landing-demo-close" aria-label="맛보기 닫기"><X size={20} /></Dialog.Close></div></header>
             <div className="landing-demo-scroll" ref={questionsRef}>
               <div className="landing-demo-intro">
                 <a href="#preview-question-1" onClick={event => { event.preventDefault(); goToQuestion(0); }}><ChevronLeft size={17} aria-hidden="true" />문제지 목록</a>
-                <div><span>GA4 핵심 개념 · 맛보기</span><strong>문제풀이</strong></div>
+                <div><strong>문제풀이</strong></div>
                 <p>카드형 선택지에서 답을 고르고 채점 결과와 해설을 바로 확인해보세요.</p>
               </div>
 
-              {submitted && <section className="landing-demo-result is-revealing" aria-live="polite"><span>채점 완료</span><strong>{score} / {previewQuestions.length}</strong><p>{score === previewQuestions.length ? '모두 맞혔어요. 바로 실전 문제지를 시작해도 좋겠어요.' : '해설을 확인하고 놓친 개념을 다시 살펴보세요.'}</p></section>}
+              {submitted && <section className="landing-demo-result is-revealing" aria-live="polite">점수: {Math.round((score / questions.length) * 100)}점 ({score}/{questions.length})</section>}
 
               <div className="landing-demo-questions">
-                {previewQuestions.map((question, questionIndex) => <article className="q-card landing-demo-q-card" id={`preview-question-${questionIndex + 1}`} data-preview-question={questionIndex} key={question.question}>
-                  <div className="q-title"><span className="q-number">Q{questionIndex + 1}</span><h3>{question.question}</h3></div>
+                {questions.map((question, questionIndex) => {
+                  const isRight = submitted && answers[questionIndex] === question.correct;
+                  return <article className="q-card landing-demo-q-card" id={`preview-question-${questionIndex + 1}`} data-preview-question={questionIndex} key={question.question}>
+                  <div className="q-title"><span className={`q-number${submitted ? isRight ? ' right' : ' wrong' : ''}`}>Q{questionIndex + 1}{submitted ? isRight ? ' 정답' : ' 오답' : ''}</span><h3>{question.question}</h3></div>
                   <div className="options" role="radiogroup" aria-label={`${questionIndex + 1}번 문제 선택지`}>
                     {question.options.map((option, optionIndex) => {
                       const selected = answers[questionIndex] === optionIndex;
                       const correct = submitted && optionIndex === question.correct;
                       const incorrect = submitted && selected && optionIndex !== question.correct;
                       return <label className={`opt-col option-card${selected ? ' selected' : ''}${correct ? ' correct' : ''}${incorrect ? ' incorrect' : ''}`} role="radio" aria-checked={selected} aria-disabled={submitted} tabIndex={submitted ? -1 : 0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); chooseAnswer(questionIndex, optionIndex); } }} key={option}>
-                        <input type="radio" name={`preview-question-${questionIndex}`} checked={selected} disabled={submitted} onChange={() => chooseAnswer(questionIndex, optionIndex)} /><span className="tick" aria-hidden="true">{correct ? 'O' : incorrect ? 'X' : '✓'}</span><span>{option}</span>
+                        <input type="radio" name={`preview-question-${questionIndex}`} checked={selected} disabled={submitted} onChange={() => chooseAnswer(questionIndex, optionIndex)} /><span className="tick" aria-hidden="true">✓</span><span>{option}</span>
                       </label>;
                     })}
                   </div>
-                  {submitted && <div className="explain"><b>{answers[questionIndex] === question.correct ? '정답이에요.' : '정답을 확인해보세요.'}</b><span>{question.explanation}</span></div>}
-                </article>)}
+                  {submitted && <div className="explain"><span><b>정답</b>: {question.options[question.correct]}</span><span><b>해설</b>: {question.explanation}</span></div>}
+                </article>;
+                })}
               </div>
             </div>
 
             <footer className="landing-demo-actions">
-              <p>{submitted ? '실전에서는 풀이 결과와 실력 변화가 자동으로 기록돼요.' : `${answeredCount} / ${previewQuestions.length}문제 선택`}</p>
-              <div>{submitted && <button className="landing-demo-retry" type="button" onClick={() => { setAnswers({}); setSubmitted(false); setCelebrating(false); setActiveQuestion(0); goToQuestion(0); }}>같은 문제 다시 풀기</button>}<button className="landing-demo-submit" type="button" disabled={submitted || answeredCount !== previewQuestions.length} onClick={submitPreview}>{submitted ? '채점 완료' : '제출하기'}</button>{submitted && <a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a>}</div>
+              <div>{submitted ? <><button className="landing-demo-retry" type="button" onClick={loadDifferentQuestions}>다른 문제 체험하기</button><a href="./login.html">무료로 시작하기<ArrowRight size={16} /></a></> : <button className="landing-demo-submit" type="button" disabled={answeredCount !== questions.length} onClick={submitPreview}>제출하기</button>}</div>
             </footer>
           </section>
         </div>
@@ -292,7 +362,7 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
       </div>
     </aside>
     <div className="story-app-main">
-      <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>홍</i></div>
+      <div className="story-app-topbar" aria-hidden="true"><i>홍</i></div>
 
       <div className="story-screen story-register-screen">
         <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
@@ -712,6 +782,7 @@ function useLandingOrbMotion() {
 function Landing() {
   useLandingOrbMotion();
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const featuresRef = useRef(null);
 
   useEffect(() => {
     let frame = 0;
@@ -729,6 +800,23 @@ function Landing() {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestUpdate);
     };
+  }, []);
+
+  useEffect(() => {
+    const section = featuresRef.current;
+    if (!section) return undefined;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reducedMotion.matches) {
+      section.classList.add('is-wordmark-revealed');
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      section.classList.add('is-wordmark-revealed');
+      observer.disconnect();
+    }, { threshold: .18 });
+    observer.observe(section);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -770,7 +858,7 @@ function Landing() {
 
       <HighlightBand />
 
-      <section className="landing-features" id="features" aria-labelledby="features-title">
+      <section className="landing-features" id="features" aria-labelledby="features-title" ref={featuresRef}>
         <img className="landing-features-wordmark" src="./assets/moonble-script.png" alt="" aria-hidden="true" />
         <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푼 뒤에도 배움이 남도록,</em><br />학습과 기획을 자연스럽게 잇습니다</h2><p>문제 등록부터 풀이, 기록, PRD 작성까지 한곳에서 이어가세요.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
