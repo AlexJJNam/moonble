@@ -4041,13 +4041,16 @@
   var scrollLockActive = false;
 
   function openPopup(url) {
-    var w = 480, h = 760;
-    var left = Math.max(0, (window.screen.width - w) / 2);
-    var top = Math.max(0, (window.screen.height - h) / 2);
+    var screenWidth = window.screen.availWidth || window.screen.width;
+    var screenHeight = window.screen.availHeight || window.screen.height;
+    var w = Math.min(480, Math.max(320, screenWidth - 32));
+    var h = Math.min(760, Math.max(560, screenHeight - 32));
+    var left = Math.max(0, Math.round((screenWidth - w) / 2));
+    var top = Math.max(0, Math.round((screenHeight - h) / 2));
     var popup = window.open(
       url,
       'moonbleChatGPT',
-      'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',resizable=yes,scrollbars=yes'
+      'popup=yes,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',resizable=yes,scrollbars=yes'
     );
     if (!popup) {
       window.open(url, '_blank', 'noopener');

@@ -43,11 +43,13 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function openPopup(url) {
-    const width = 480;
-    const height = 760;
-    const left = Math.max(0, (window.screen.width - width) / 2);
-    const top = Math.max(0, (window.screen.height - height) / 2);
-    const popup = window.open(url, 'moonbleChatGPT', `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    const screenWidth = window.screen.availWidth || window.screen.width;
+    const screenHeight = window.screen.availHeight || window.screen.height;
+    const width = Math.min(480, Math.max(320, screenWidth - 32));
+    const height = Math.min(760, Math.max(560, screenHeight - 32));
+    const left = Math.max(0, Math.round((screenWidth - width) / 2));
+    const top = Math.max(0, Math.round((screenHeight - height) / 2));
+    const popup = window.open(url, 'moonbleChatGPT', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
     if (!popup) window.open(url, '_blank', 'noopener');
     else popup.focus();
   }
