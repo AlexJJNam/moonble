@@ -650,6 +650,25 @@ function useLandingOrbMotion() {
 
 function Landing() {
   useLandingOrbMotion();
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateHeader = () => {
+      frame = 0;
+      setHeaderScrolled(window.scrollY > 16);
+    };
+    const requestUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateHeader);
+    };
+
+    updateHeader();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', requestUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -670,7 +689,7 @@ function Landing() {
   }, []);
 
   return <>
-    <header className="landing-header">
+    <header className={`landing-header${headerScrolled ? ' is-scrolled' : ''}`}>
       <a className="landing-logo" href="./" aria-label="Moonble 홈">moonble</a>
       <nav aria-label="소개 페이지 탐색"><a href="#features">기능</a><a href="#workflow">사용 방법</a><a href="#faq">FAQ</a></nav>
       <a className="landing-login" href="./login.html">로그인</a>

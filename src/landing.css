@@ -12,13 +12,20 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   background: rgb(255 255 255 / 84%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   backdrop-filter: blur(18px) saturate(140%);
+  transition: background-color 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease;
 }
-.landing-logo { justify-self: start; color: var(--mb-primary); font-size: 21px; line-height: 30px; font-weight: 700; letter-spacing: -.04em; text-decoration: none; }
+.landing-logo { justify-self: start; color: var(--mb-primary); font-size: 21px; line-height: 30px; font-weight: 700; letter-spacing: -.04em; text-decoration: none; transition: color 260ms ease; }
 .landing-header nav { display: flex; align-items: center; gap: 34px; }
 .landing-header nav a { min-height: 44px; display: inline-flex; align-items: center; color: #555; font-size: 15px; line-height: 22px; font-weight: 500; text-decoration: none; transition: color var(--mb-duration); }
 .landing-header nav a:hover { color: #1f1f1f; }
-.landing-login { justify-self: end; min-width: 74px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 9px 17px; border-radius: 10px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-14); font-weight: 600; text-decoration: none; transition: background-color var(--mb-duration); }
+.landing-login { justify-self: end; min-width: 74px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 9px 17px; border: 1px solid transparent; border-radius: 10px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-14); font-weight: 600; text-decoration: none; transition: color 260ms ease, border-color 260ms ease, background-color 260ms ease; }
 .landing-login:hover { background: var(--mb-primary-hover); }
+.landing-header.is-scrolled { border-bottom-color: rgb(255 255 255 / 12%); background: rgb(15 17 20 / 78%); -webkit-backdrop-filter: blur(22px) saturate(125%); backdrop-filter: blur(22px) saturate(125%); }
+.landing-header.is-scrolled .landing-logo { color: #fff; }
+.landing-header.is-scrolled nav a { color: rgb(255 255 255 / 72%); }
+.landing-header.is-scrolled nav a:hover { color: #fff; }
+.landing-header.is-scrolled .landing-login { border-color: rgb(255 255 255 / 20%); color: #fff; background: rgb(255 255 255 / 12%); }
+.landing-header.is-scrolled .landing-login:hover { background: rgb(255 255 255 / 20%); }
 
 .landing-hero {
   --orb-a-x: 0px; --orb-a-y: 0px; --orb-b-x: 0px; --orb-b-y: 0px;
@@ -257,8 +264,8 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
 .landing-story-copy>p { max-width: 470px; }
 .landing-story-copy>a { min-height: 46px; display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--mb-primary-strong); font-size: 15px; font-weight: 650; text-decoration: none; }
 .landing-story-nav { position: relative; display: grid; gap: 8px; margin: 32px 0 0; padding: 0; list-style: none; }
-.landing-story-nav::before, .landing-story-nav::after { content: ''; position: absolute; z-index: 1; top: 27px; bottom: 27px; left: 24px; width: 0; border-left: 3px dotted rgb(176 184 196 / 46%); pointer-events: none; }
-.landing-story-nav::after { border-left-color: #b8d9ff; clip-path: inset(0 0 var(--story-nav-remaining) 0); }
+.landing-story-nav::before, .landing-story-nav::after { content: ''; position: absolute; z-index: 1; top: 27px; bottom: 27px; left: 24px; width: 4px; border: 0; background: radial-gradient(circle, rgb(176 184 196 / 50%) 0 1.6px, transparent 1.8px) center top / 4px 8px repeat-y; transform: translateX(-50%); pointer-events: none; }
+.landing-story-nav::after { background-image: radial-gradient(circle, #b8d9ff 0 1.6px, transparent 1.8px); clip-path: inset(0 0 var(--story-nav-remaining) 0); }
 .landing-story-nav li { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 12px; min-height: 54px; padding: 8px 10px; border-radius: 14px; color: var(--mb-text-disabled); transition: color 240ms; }
 .landing-story-nav li>b { position: relative; z-index: 2; width: 30px; height: 30px; display: grid; place-content: center; border-radius: 50%; color: inherit; background: #f2f4f6; font-size: 11px; font-weight: 700; }
 .landing-story-nav li>span { position: relative; z-index: 2; display: grid; gap: 1px; }
@@ -556,8 +563,8 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-story-copy>p { max-width: 480px; font-size: 14px; line-height: 22px; }
   .landing-story-copy>a { min-height: 44px; margin-top: 12px; font-size: 14px; }
   .landing-story-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
-  .landing-story-nav::before, .landing-story-nav::after { top: 17px; right: calc(12.5% - 1px); bottom: auto; left: calc(12.5% - 1px); width: auto; height: 0; border-top: 3px dotted rgb(176 184 196 / 46%); border-left: 0; }
-  .landing-story-nav::after { border-top-color: #b8d9ff; clip-path: inset(0 var(--story-nav-remaining) 0 0); }
+  .landing-story-nav::before, .landing-story-nav::after { top: 17px; right: calc(12.5% - 1px); bottom: auto; left: calc(12.5% - 1px); width: auto; height: 4px; border: 0; background: radial-gradient(circle, rgb(176 184 196 / 50%) 0 1.6px, transparent 1.8px) left center / 8px 4px repeat-x; transform: translateY(-50%); }
+  .landing-story-nav::after { background-image: radial-gradient(circle, #b8d9ff 0 1.6px, transparent 1.8px); clip-path: inset(0 var(--story-nav-remaining) 0 0); }
   .landing-story-nav li { min-height: 62px; grid-template-columns: 1fr; justify-items: center; gap: 3px; padding: 6px 3px; border-radius: 12px; text-align: center; }
   .landing-story-nav li>b { width: 23px; height: 23px; font-size: 9px; }
   .landing-story-nav strong { font-size: 12px; line-height: 18px; }
@@ -663,6 +670,7 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .story-chart path { stroke-dashoffset: 0; }
 }
 @media (prefers-reduced-transparency: reduce) {
+  .landing-header.is-scrolled { background: #0f1114; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .landing-features { background: #edf4ff; }
   .landing-feature-grid article { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
