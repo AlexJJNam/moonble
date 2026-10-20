@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Check, Download, FileSpreadsheet, Search, Upload } from 'lucide-react';
-import { csvToQuestions, downloadSampleCSV, getCustomBankMeta, setCustomBank } from './custom-bank.js';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BookOpen, Check, CircleHelp, Download, FileSpreadsheet, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
+import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank } from './custom-bank.js';
 
 function generationPrompt(query) {
   return `Moonble에서 풀 수 있는 학습 문제지를 만들어주세요.
@@ -22,16 +22,74 @@ ${query}
 - CSV 외의 부가 설명은 파일 내용에 넣지 않기`;
 }
 
+const promptSamples = [
+  '정보처리기사 문제를 난이도 상으로 만들어줘',
+  'SQL 조인 개념을 실무 난이도로 복습하고 싶어',
+  'GA4 전자상거래 이벤트 문제를 만들어줘',
+  '신입 기획자를 위한 데이터 분석 문제를 만들어줘',
+];
+
+function PromptSample({ hidden }) {
+  const [sampleIndex, setSampleIndex] = useState(0);
+  const [erasing, setErasing] = useState(false);
+  const sample = promptSamples[sampleIndex];
+
+  useEffect(() => {
+    if (hidden) {
+      setErasing(false);
+      return undefined;
+    }
+    let replaceTimer = 0;
+    const rotationTimer = window.setInterval(() => {
+      setErasing(true);
+      replaceTimer = window.setTimeout(() => {
+        setSampleIndex(index => (index + 1) % promptSamples.length);
+        setErasing(false);
+      }, 520);
+    }, 6000);
+    return () => {
+      window.clearInterval(rotationTimer);
+      window.clearTimeout(replaceTimer);
+    };
+  }, [hidden]);
+
+  return <span className={`creator-prompt-sample${hidden ? ' is-hidden' : ''}${erasing ? ' is-erasing' : ''}`} aria-hidden="true">
+    {[...sample].map((character, index) => <span className="creator-prompt-character" style={{ '--sample-index': index, '--sample-total': sample.length }} key={`${sampleIndex}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}
+  </span>;
+}
+
 export function QuizCreator({ custom, onChange }) {
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [sheetPending, setSheetPending] = useState(false);
+  const [sheetLink, setSheetLink] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [promptFocused, setPromptFocused] = useState(false);
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
   const uploadInputRef = useRef(null);
   const preview = useMemo(() => custom?.questions?.slice(0, 8) || [], [custom]);
+
+  useEffect(() => {
+    if (!promptFocused) return undefined;
+    const viewport = window.visualViewport;
+    const updateKeyboardOffset = () => {
+      const bar = promptBarRef.current;
+      if (!bar || !viewport) return;
+      const keyboardGap = Math.max(0, window.innerHeight - (viewport.offsetTop + viewport.height));
+      bar.style.setProperty('--creator-keyboard-offset', `${keyboardGap}px`);
+    };
+    updateKeyboardOffset();
+    viewport?.addEventListener('resize', updateKeyboardOffset);
+    viewport?.addEventListener('scroll', updateKeyboardOffset);
+    return () => {
+      viewport?.removeEventListener('resize', updateKeyboardOffset);
+      viewport?.removeEventListener('scroll', updateKeyboardOffset);
+      promptBarRef.current?.style.removeProperty('--creator-keyboard-offset');
+    };
+  }, [promptFocused]);
 
   function shakePrompt() {
     const bar = promptBarRef.current;
@@ -61,6 +119,10 @@ export function QuizCreator({ custom, onChange }) {
     const url = `https://chatgpt.com/?q=${encodeURIComponent(generationPrompt(value))}`;
     openPopup(url);
     setQuery('');
+    if (promptInputRef.current) {
+      promptInputRef.current.style.height = 'auto';
+      promptInputRef.current.blur();
+    }
     setMessage('문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
   }
 
@@ -74,7 +136,7 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   async function upload(file) {
-    if (!file || pending) return;
+    if (!file || pending || sheetPending) return;
     setDragging(false);
     setError('');
     setMessage('');
@@ -86,16 +148,57 @@ export function QuizCreator({ custom, onChange }) {
     finally { setPending(false); }
   }
 
+  async function importSheet() {
+    if (sheetPending || pending) return;
+    const value = sheetLink.trim();
+    if (!value) { setError('구글 시트 공유 링크를 입력해주세요.'); return; }
+    const exportUrl = extractSheetExportUrl(value);
+    if (!exportUrl) { setError('올바른 구글 시트 공유 링크가 아닙니다.'); return; }
+    setError('');
+    setMessage('');
+    setSheetPending(true);
+    try {
+      const response = await fetch(exportUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      const trimmed = text.trim().toLocaleLowerCase();
+      if (trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+        throw new Error('private-sheet');
+      }
+      saveQuestions(text, 'Google Sheets');
+      setSheetLink('');
+    } catch (sheetError) {
+      setError(sheetError.message === 'private-sheet'
+        ? '구글 시트가 공개되어 있지 않아요. 공유 설정을 ‘링크가 있는 모든 사용자 · 뷰어’로 바꿔주세요.'
+        : '구글 시트를 불러오지 못했어요. 공유 권한과 링크를 다시 확인해주세요.');
+    } finally {
+      setSheetPending(false);
+    }
+  }
+
   return <main className="quiz-main quiz-creator" id="quiz-creator" tabIndex={-1}>
     <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
+      <details className="creator-prompt-guide">
+        <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
+        <div className="creator-prompt-guide-panel">
+          <strong>이렇게 적어보세요</strong>
+          <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> 정보처리기사 필기</span></p>
+          <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> 바로 시험을 볼 수 있는 상급</span></p>
+          <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
+          <q>정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.</q>
+        </div>
+      </details>
       <header><span>1</span><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
       <div className="creator-ai-prompt">
-        <div className="creator-ai-prompt-bar" ref={promptBarRef} onAnimationEnd={event => event.currentTarget.classList.remove('shake')}>
+        <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
-          <input ref={promptInputRef} type="text" className="creator-ai-prompt-input" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} placeholder="궁금하면 바로 물어보세요." autoComplete="off" maxLength={1200} />
-          <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onClick={requestGeneration}>질문하기</button>
+          <span className="creator-ai-prompt-field">
+            <PromptSample hidden={Boolean(query)} />
+            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={() => setPromptFocused(true)} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(88, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
+          </span>
+          <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>문제 만들기</button>
         </div>
       </div>
     </section>
@@ -115,7 +218,13 @@ export function QuizCreator({ custom, onChange }) {
         <p>또는</p>
         <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
       </div>
-      <button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button>
+      <div className="creator-source-divider"><span>또는</span></div>
+      <div className="creator-sheet-link">
+        <Link2 size={18} aria-hidden="true" />
+        <input type="url" value={sheetLink} onChange={event => setSheetLink(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); importSheet(); } }} placeholder="Google Sheets 공유 링크 붙여넣기" aria-label="Google Sheets 공유 링크" />
+        <button type="button" disabled={sheetPending || pending} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
+      </div>
+      <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
     </section>
 
     <section className="creator-step" aria-labelledby="creator-list-title">
