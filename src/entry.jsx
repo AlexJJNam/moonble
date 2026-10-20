@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, Plus, Upload, X } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, MousePointer2, Plus, Upload, X } from 'lucide-react';
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -151,76 +151,86 @@ function PreviewQuiz() {
   </Dialog.Root>;
 }
 
-function GlowCursor() {
-  const cursorRef = useRef(null);
+function DemoActionCursor({ stage }) {
+  return <span className={`landing-action-cursor is-${stage}`} aria-hidden="true"><MousePointer2 size={23} strokeWidth={2.3} /><i /></span>;
+}
 
-  useEffect(() => {
-    const cursor = cursorRef.current;
-    const surface = cursor?.parentElement;
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-    if (!cursor || !surface || !finePointer.matches) return undefined;
+function MoonbleWorkspaceDemo({ stage = 'flow' }) {
+  const isFlow = stage === 'flow';
+  return <div className={`story-window moonble-workspace-demo${isFlow ? ' is-flow' : ` is-static is-stage-${stage}`}`}>
+    <aside className="story-app-sidebar" aria-hidden="true">
+      <strong className="story-app-logo">moonble</strong>
+      <div className="story-app-profile"><i>홍</i><span><b>홍길동</b><small>개인 워크스페이스</small></span></div>
+      <nav className="story-app-menu">
+        <span className="story-app-papers"><BookOpen size={15} />문제지</span>
+        <span className="story-app-achievement"><BarChart3 size={15} />나의 성취도</span>
+        <span><FileText size={15} />PRD</span>
+      </nav>
+      <div className="story-question-menu">
+        <span><ChevronLeft size={15} />문제지</span>
+        <strong>문제 목록</strong>
+        <ol>{[1, 2, 3, 4, 5].map(number => <li className={number === 2 ? 'is-current' : number === 1 ? 'is-done' : ''} key={number}>{number}</li>)}</ol>
+      </div>
+    </aside>
+    <div className="story-app-main">
+      <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>홍</i></div>
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let targetX = 0;
-    let targetY = 0;
+      <div className="story-screen story-register-screen">
+        <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
+        <article className="story-register-card">
+          <div className="story-register-copy"><strong>정리해둔 문제를 가져오세요</strong><p>CSV 파일을 올리거나 Google Sheets 링크를 붙여 넣으면 돼요.</p></div>
+          <div className="story-register-drop"><Upload size={22} aria-hidden="true" /><b>CSV 파일 선택</b><small>파일을 끌어다 놓아도 돼요</small><em><Check size={12} aria-hidden="true" />20문항 확인</em></div>
+          <div className="story-register-divider">또는</div>
+          <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><span className="story-demo-action">가져오기</span></div>
+        </article>
+      </div>
 
-    const draw = () => {
-      const easing = reducedMotion.matches ? 1 : .28;
-      currentX += (targetX - currentX) * easing;
-      currentY += (targetY - currentY) * easing;
-      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
-      if (Math.abs(targetX - currentX) > .15 || Math.abs(targetY - currentY) > .15) frame = window.requestAnimationFrame(draw);
-      else frame = 0;
-    };
+      <div className="story-screen story-library-screen">
+        <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><span className="story-demo-action"><Plus size={13} />새 문제지 만들기</span></header>
+        <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
+        <div className="story-paper-grid">
+          <article className="story-paper-picked">
+            <div className="story-paper-preview"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
+            <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.</p>
+          </article>
+          <article>
+            <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
+            <span><b>심화</b> · 20문항</span><strong>GA4 실무 응용</strong><p>전자상거래와 데이터 품질, 실무 개념을 익혀보세요.</p>
+          </article>
+        </div>
+      </div>
 
-    const readPointer = event => {
-      const bounds = surface.getBoundingClientRect();
-      targetX = event.clientX - bounds.left;
-      targetY = event.clientY - bounds.top;
-    };
-    const handleEnter = event => {
-      readPointer(event);
-      currentX = targetX;
-      currentY = targetY;
-      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
-      cursor.classList.add('is-visible');
-    };
-    const handleMove = event => {
-      readPointer(event);
-      if (!frame) frame = window.requestAnimationFrame(draw);
-    };
-    const handleLeave = () => cursor.classList.remove('is-visible');
+      <div className="story-screen story-question-screen">
+        <header><div><small>GA4 핵심 개념</small><strong>문제 풀이</strong></div><span>2 / 20</span></header>
+        <article className="story-question-card"><div className="story-question-title"><b>Q2</b><span>단일 선택</span></div>
+          <p className="story-question">GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</p>
+          <div className="story-options">
+            <div className="story-option story-option-wrong"><i />세션<b>×</b></div>
+            <div className="story-option story-option-correct"><i />이벤트<b>○</b></div>
+            <div className="story-option"><i />사용자 속성</div>
+          </div>
+          <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인해보세요.</span></div>
+        </article>
+      </div>
 
-    surface.addEventListener('pointerenter', handleEnter);
-    surface.addEventListener('pointermove', handleMove);
-    surface.addEventListener('pointerleave', handleLeave);
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      surface.removeEventListener('pointerenter', handleEnter);
-      surface.removeEventListener('pointermove', handleMove);
-      surface.removeEventListener('pointerleave', handleLeave);
-    };
-  }, []);
-
-  return <span className="landing-glow-cursor" ref={cursorRef} aria-hidden="true" />;
+      <div className="story-screen story-stats-screen">
+        <header><div><small>학습 리포트</small><strong>나의 성취도</strong></div><span>CSV 내보내기</span></header>
+        <div className="story-performance"><h3>학습 실적</h3><div className="story-score-row"><div><small>최근 풀이</small><strong>오늘</strong><em>6회 완료</em></div><div><small>최근 점수</small><strong>82<em>점</em></strong></div><div><small>평균 점수</small><strong>68<em>점</em></strong></div><div><small>최고 점수</small><strong>92<em>점</em></strong></div></div></div>
+        <div className="story-chart-heading"><div><strong>실력 추세</strong><small>최근 3회 평균이 장기 추세보다 6점 높아요.</small></div><p><span><i className="score" />회차 점수</span><span><i className="recent" />최근 3회</span><span><i className="long" />최근 10회</span></p></div>
+        <div className="story-chart">
+          <div className="story-chart-grid"><i /><i /><i /></div>
+          <div className="story-bars">{['38%', '47%', '45%', '59%', '68%', '82%'].map(height => <i key={height} style={{ '--bar-height': height }} />)}</div>
+          <svg viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true"><path className="story-line-long" d="M12 105 C54 101 78 98 105 93 S166 82 192 73 S251 61 283 49 S326 38 348 31" /><path className="story-line-recent" d="M12 112 C52 104 62 92 84 96 S132 92 152 79 S199 72 220 55 S270 55 292 35 S330 29 348 19" /></svg>
+        </div>
+        <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
+      </div>
+    </div>
+    <DemoActionCursor stage={stage} />
+  </div>;
 }
 
 function ShowcaseScreen({ type }) {
-  return <div className={`showcase-screen is-${type}`}>
-    <header><strong>moonble</strong><span>내 워크스페이스</span><i>홍</i></header>
-    <div className="showcase-screen-body">
-      <aside><i /><i /><i /><i /></aside>
-      <main>
-        {type === 'register' && <><div className="showcase-title"><small>내 문제지</small><strong>문제지 등록</strong></div><div className="showcase-upload"><Upload size={25} /><b>CSV 파일 선택</b><span>파일을 끌어다 놓아도 돼요</span><em><Check size={12} />20문항 확인</em></div><div className="showcase-link"><Link size={16} /><span>Google Sheets 공유 링크</span><b>가져오기</b></div></>}
-        {type === 'library' && <><div className="showcase-title"><small>내 워크스페이스</small><strong>문제지</strong></div><div className="showcase-papers"><article><div><b>moonble</b><span>GA4 핵심 개념</span><i /><i /><i /></div><small>기본 · 20문항</small><strong>GA4 핵심 개념</strong></article><article><div><b>moonble</b><span>GA4 실무 응용</span><i /><i /><i /></div><small>심화 · 20문항</small><strong>GA4 실무 응용</strong></article></div></>}
-        {type === 'solve' && <><div className="showcase-title"><small>GA4 핵심 개념 · 2 / 20</small><strong>문제 풀이</strong></div><div className="showcase-question"><b>Q2</b><strong>GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</strong><span className="is-wrong">세션 <i>×</i></span><span className="is-correct">이벤트 <i>○</i></span><span>사용자 속성</span></div></>}
-        {type === 'stats' && <><div className="showcase-title"><small>학습 리포트</small><strong>나의 성취도</strong></div><div className="showcase-score"><span><small>최근 점수</small><b>82점</b></span><span><small>평균 점수</small><b>68점</b></span><span><small>최고 점수</small><b>92점</b></span></div><div className="showcase-chart"><i style={{ height: '34%' }} /><i style={{ height: '48%' }} /><i style={{ height: '43%' }} /><i style={{ height: '62%' }} /><i style={{ height: '74%' }} /><i style={{ height: '91%' }} /><svg viewBox="0 0 320 110" preserveAspectRatio="none"><path d="M8 92 C55 88 66 74 104 79 S164 60 193 55 S254 31 312 18" /></svg></div></>}
-      </main>
-    </div>
-  </div>;
+  return <MoonbleWorkspaceDemo stage={type} />;
 }
 
 function ProductPreview() {
@@ -282,7 +292,6 @@ function ProductPreview() {
           return <article className={`landing-showcase-slide ${position}`} aria-hidden={index !== activeSlide} key={slide.key}>
             <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
             <ShowcaseScreen type={slide.key} />
-            <GlowCursor />
             {index === activeSlide && <><button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button><button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button></>}
           </article>;
         })}
@@ -505,76 +514,7 @@ function ScrollStory() {
       </div>
 
       <div className="landing-story-demo" role="img" aria-label="문제지를 등록하고 선택한 뒤 문제를 채점하고 성취도 통계를 확인하는 Moonble 화면 애니메이션">
-        <div className="story-window">
-          <aside className="story-app-sidebar" aria-hidden="true">
-            <strong className="story-app-logo">moonble</strong>
-            <div className="story-app-profile"><i>홍</i><span><b>홍길동</b><small>개인 워크스페이스</small></span></div>
-            <nav className="story-app-menu">
-              <span className="story-app-papers"><BookOpen size={15} />문제지</span>
-              <span className="story-app-achievement"><BarChart3 size={15} />나의 성취도</span>
-              <span><FileText size={15} />PRD</span>
-            </nav>
-            <div className="story-question-menu">
-              <span><ChevronLeft size={15} />문제지</span>
-              <strong>문제 목록</strong>
-              <ol>{[1, 2, 3, 4, 5].map(number => <li className={number === 2 ? 'is-current' : number === 1 ? 'is-done' : ''} key={number}>{number}</li>)}</ol>
-            </div>
-          </aside>
-          <div className="story-app-main">
-            <div className="story-app-topbar" aria-hidden="true"><span>내 워크스페이스</span><i>홍</i></div>
-
-            <div className="story-screen story-register-screen">
-              <header><div><small>내 문제지</small><strong>문제지 등록</strong></div><span>최소 20문항</span></header>
-              <article className="story-register-card">
-                <div className="story-register-copy"><strong>정리해둔 문제를 가져오세요</strong><p>CSV 파일을 올리거나 Google Sheets 링크를 붙여 넣으면 돼요.</p></div>
-                <div className="story-register-drop"><Upload size={22} aria-hidden="true" /><b>CSV 파일 선택</b><small>파일을 끌어다 놓아도 돼요</small><em><Check size={12} aria-hidden="true" />20문항 확인</em></div>
-                <div className="story-register-divider">또는</div>
-                <div className="story-register-link"><Link size={15} aria-hidden="true" /><span>Google Sheets 공유 링크</span><span className="story-demo-action">가져오기</span></div>
-              </article>
-            </div>
-
-            <div className="story-screen story-library-screen">
-              <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><span className="story-demo-action"><Plus size={13} />새 문제지 만들기</span></header>
-              <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
-              <div className="story-paper-grid">
-                <article className="story-paper-picked">
-                  <div className="story-paper-preview"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 핵심 개념</strong><i /><i /><i /></div><b><Check size={13} aria-hidden="true" />선택됨</b></div>
-                  <span><b>기본</b> · 20문항</span><strong>GA4 핵심 개념</strong><p>이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.</p>
-                </article>
-                <article>
-                  <div className="story-paper-preview is-advanced"><div className="story-preview-sheet"><small><b>moonble</b><em>GA4</em></small><strong>GA4 실무 응용</strong><i /><i /><i /></div></div>
-                  <span><b>심화</b> · 20문항</span><strong>GA4 실무 응용</strong><p>전자상거래와 데이터 품질, 실무 개념을 익혀보세요.</p>
-                </article>
-              </div>
-            </div>
-
-            <div className="story-screen story-question-screen">
-              <header><div><small>GA4 핵심 개념</small><strong>문제 풀이</strong></div><span>2 / 20</span></header>
-              <article className="story-question-card"><div className="story-question-title"><b>Q2</b><span>단일 선택</span></div>
-                <p className="story-question">GA4에서 사용자 행동을 수집하는 기본 단위는 무엇인가요?</p>
-                <div className="story-options">
-                  <div className="story-option story-option-wrong"><i />세션<b>×</b></div>
-                  <div className="story-option story-option-correct"><i />이벤트<b>○</b></div>
-                  <div className="story-option"><i />사용자 속성</div>
-                </div>
-                <div className="story-grade-message"><Check size={17} aria-hidden="true" /><span><strong>채점 완료</strong>정답과 해설을 확인해보세요.</span></div>
-              </article>
-            </div>
-
-            <div className="story-screen story-stats-screen">
-              <header><div><small>학습 리포트</small><strong>나의 성취도</strong></div><span>CSV 내보내기</span></header>
-              <div className="story-performance"><h3>학습 실적</h3><div className="story-score-row"><div><small>최근 풀이</small><strong>오늘</strong><em>6회 완료</em></div><div><small>최근 점수</small><strong>82<em>점</em></strong></div><div><small>평균 점수</small><strong>68<em>점</em></strong></div><div><small>최고 점수</small><strong>92<em>점</em></strong></div></div></div>
-              <div className="story-chart-heading"><div><strong>실력 추세</strong><small>최근 3회 평균이 장기 추세보다 6점 높아요.</small></div><p><span><i className="score" />회차 점수</span><span><i className="recent" />최근 3회</span><span><i className="long" />최근 10회</span></p></div>
-              <div className="story-chart">
-                <div className="story-chart-grid"><i /><i /><i /></div>
-                <div className="story-bars">{['38%', '47%', '45%', '59%', '68%', '82%'].map(height => <i key={height} style={{ '--bar-height': height }} />)}</div>
-                <svg viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true"><path className="story-line-long" d="M12 105 C54 101 78 98 105 93 S166 82 192 73 S251 61 283 49 S326 38 348 31" /><path className="story-line-recent" d="M12 112 C52 104 62 92 84 96 S132 92 152 79 S199 72 220 55 S270 55 292 35 S330 29 348 19" /></svg>
-              </div>
-              <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
-            </div>
-          </div>
-          <GlowCursor />
-        </div>
+        <MoonbleWorkspaceDemo stage="flow" />
       </div>
     </div>
   </section>;
