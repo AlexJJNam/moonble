@@ -192,7 +192,64 @@ function DemoActionCursor({ stage }) {
   return <span className={`landing-action-cursor is-${stage}`} aria-hidden="true"><MousePointer2 size={23} strokeWidth={2.3} /><i /></span>;
 }
 
-function MoonbleWorkspaceDemo({ stage = 'flow' }) {
+function GlowCursor() {
+  const cursorRef = useRef(null);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    const surface = cursor?.parentElement;
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    if (!cursor || !surface || !finePointer.matches) return undefined;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    const draw = () => {
+      const easing = reducedMotion.matches ? 1 : .28;
+      currentX += (targetX - currentX) * easing;
+      currentY += (targetY - currentY) * easing;
+      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+      if (Math.abs(targetX - currentX) > .15 || Math.abs(targetY - currentY) > .15) frame = window.requestAnimationFrame(draw);
+      else frame = 0;
+    };
+
+    const readPointer = event => {
+      const bounds = surface.getBoundingClientRect();
+      targetX = event.clientX - bounds.left;
+      targetY = event.clientY - bounds.top;
+    };
+    const handleEnter = event => {
+      readPointer(event);
+      currentX = targetX;
+      currentY = targetY;
+      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+      cursor.classList.add('is-visible');
+    };
+    const handleMove = event => {
+      readPointer(event);
+      if (!frame) frame = window.requestAnimationFrame(draw);
+    };
+    const handleLeave = () => cursor.classList.remove('is-visible');
+
+    surface.addEventListener('pointerenter', handleEnter);
+    surface.addEventListener('pointermove', handleMove);
+    surface.addEventListener('pointerleave', handleLeave);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      surface.removeEventListener('pointerenter', handleEnter);
+      surface.removeEventListener('pointermove', handleMove);
+      surface.removeEventListener('pointerleave', handleLeave);
+    };
+  }, []);
+
+  return <span className="landing-glow-cursor" ref={cursorRef} aria-hidden="true" />;
+}
+
+function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
   const isFlow = stage === 'flow';
   return <div className={`story-window moonble-workspace-demo${isFlow ? ' is-flow' : ` is-static is-stage-${stage}`}`}>
     <aside className="story-app-sidebar" aria-hidden="true">
@@ -262,7 +319,8 @@ function MoonbleWorkspaceDemo({ stage = 'flow' }) {
         <p className="story-insight"><b>최근 실력이 빠르게 오르고 있어요.</b><span>다음에는 심화 문제지에 도전해보세요.</span></p>
       </div>
     </div>
-    <DemoActionCursor stage={stage} />
+    {!isFlow && <DemoActionCursor stage={stage} />}
+    {showGlowCursor && <GlowCursor />}
   </div>;
 }
 
@@ -329,6 +387,7 @@ function ProductPreview() {
           return <article className={`landing-showcase-slide ${position}`} aria-hidden={index !== activeSlide} key={slide.key}>
             <div className="landing-showcase-copy"><span>{slide.step}</span><strong>{slide.title}</strong><p>{slide.copy}</p></div>
             <ShowcaseScreen type={slide.key} />
+            {index === activeSlide && <GlowCursor />}
             {index === activeSlide && <><button className="landing-showcase-arrow is-prev" type="button" aria-label="이전 화면" onClick={() => changeSlide(activeSlide - 1)}><ChevronLeft size={22} /></button><button className="landing-showcase-arrow is-next" type="button" aria-label="다음 화면" onClick={() => changeSlide(activeSlide + 1)}><ChevronRight size={22} /></button></>}
           </article>;
         })}
@@ -551,7 +610,7 @@ function ScrollStory() {
       </div>
 
       <div className="landing-story-demo" role="img" aria-label="문제지를 등록하고 선택한 뒤 문제를 채점하고 성취도 통계를 확인하는 Moonble 화면 애니메이션">
-        <MoonbleWorkspaceDemo stage="flow" />
+        <MoonbleWorkspaceDemo stage="flow" showGlowCursor />
       </div>
     </div>
   </section>;
