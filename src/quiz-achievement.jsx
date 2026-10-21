@@ -424,14 +424,17 @@ export function QuizAchievement({ userId }) {
         <div className="achievement-period-filter" ref={periodFilterRef}>
           <span className="achievement-period-icon"><CalendarDays size={17} aria-hidden="true" /></span>
           <div className="achievement-period-tabs" role="group" aria-label="조회 기간">
-            {PERIOD_OPTIONS.map(([value, label]) => <button className={period === value || (value === 'custom' && customPopoverOpen) ? 'is-active' : ''} type="button" aria-pressed={period === value} aria-expanded={value === 'custom' ? customPopoverOpen : undefined} onClick={() => chooseDesktopPeriod(value)} key={value}>{label}</button>)}
+            {PERIOD_OPTIONS.filter(([value]) => value !== 'custom').map(([value, label]) => <button className={period === value ? 'is-active' : ''} type="button" aria-pressed={period === value} onClick={() => chooseDesktopPeriod(value)} key={value}>{label}</button>)}
+          </div>
+          <div className="achievement-custom-anchor">
+            <button className={period === 'custom' || customPopoverOpen ? 'is-active' : ''} type="button" aria-pressed={period === 'custom'} aria-haspopup="dialog" aria-expanded={customPopoverOpen} onClick={() => chooseDesktopPeriod('custom')}>직접 선택</button>
+            {customPopoverOpen && <div className="achievement-custom-popover" role="dialog" aria-label="직접 조회 기간 선택">
+              <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || undefined} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
+              {periodError && <p role="alert">{periodError}</p>}
+              <button type="button" onClick={applyCustomPeriod}>이 기간으로 보기</button>
+            </div>}
           </div>
           <button className="achievement-period-mobile-trigger" type="button" aria-haspopup="dialog" aria-expanded={periodSheetOpen} onClick={openPeriodSheet}>{selectedPeriodLabel}<ChevronDown size={15} aria-hidden="true" /></button>
-          {customPopoverOpen && <div className="achievement-custom-popover" role="dialog" aria-label="직접 조회 기간 선택">
-            <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || undefined} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
-            {periodError && <p role="alert">{periodError}</p>}
-            <button type="button" onClick={applyCustomPeriod}>이 기간으로 보기</button>
-          </div>}
         </div>
       </section>
       {filteredHistory.length ? <>

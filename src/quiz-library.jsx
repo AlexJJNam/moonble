@@ -52,7 +52,7 @@ if (initialUser) {
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.kind}`} aria-hidden="true">
     <div className="preview-sheet">
-      <div className="preview-sheet-brand"><BrandLogo decorative />{paper.kind === 'custom' && <span>CUSTOM</span>}</div>
+      <div className="preview-sheet-brand"><BrandLogo decorative /></div>
       <div className="preview-sheet-title">{paper.label}</div>
       <div className="preview-sheet-subtitle">개념을 확인하는 작은 시작</div>
       {paper.samples.map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
