@@ -842,15 +842,15 @@ export default function PrdListPage() {
   
   return (
     <>
-    <main className="min-h-screen bg-gray-50 no-print">
+    <main className="prd-list-page min-h-screen bg-gray-50 no-print">
 
 
-      <div className="max-w-4xl mx-auto p-4 sm:p-8">
-        <div className="mb-8">
+      <div className="prd-list-shell max-w-4xl mx-auto p-4 sm:p-8">
+        <div className="prd-list-heading mb-8">
           <h1 className="mb-page-title">나의 PRD</h1>
           <p className="mt-2 text-base text-gray-500">아이디어를 정리하고 제품의 방향을 구체화해보세요.</p>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="prd-list-toolbar flex justify-between items-center mb-4">
             <div className='flex items-center gap-2'>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -897,7 +897,7 @@ export default function PrdListPage() {
 
 
         {stats.totalDocs > 0 && !isAdmin && (
-            <div className="mb-4 p-4 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg flex items-start sm:items-center gap-3">
+            <div className="prd-list-summary mb-4 p-4 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg flex items-start sm:items-center gap-3">
                 <Info className="h-5 w-5 shrink-0 mt-1 sm:mt-0"/>
                 <div>
                   {isMobile ? (
@@ -910,7 +910,7 @@ export default function PrdListPage() {
             </div>
         )}
 
-        <div className="space-y-4">
+        <div className="prd-document-list space-y-4">
             {paginatedGroups.length > 0 ? (
             paginatedGroups.map(({ documentId, prds }) => {
                 const latestVersion = prds[0];
@@ -933,25 +933,25 @@ export default function PrdListPage() {
                 const isAnimatingOut = animatingOut.has(documentId);
 
                 return (
-                <div key={documentId} className={cn("flex items-start gap-2", 
+                <div key={documentId} className={cn("prd-document-row flex items-start gap-2",
                     isAnimatingFavorite && "animate-slide-in-from-bottom",
                     isAnimatingOut && "animate-slide-out-to-bottom",
                     isRestoring && "animate-slide-in")}>
-                    <Card className="flex-grow">
-                        <CardContent className="p-4">
+                    <Card className="prd-document-card flex-grow">
+                        <CardContent className="prd-document-content p-4">
                         <div className="flex justify-between items-start gap-2">
                             <div 
                             className="flex-grow cursor-pointer"
                             onClick={() => router.push(`/edit/${latestVersion.id}`)}
                             >
-                            <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <h3 className="prd-document-title font-semibold text-lg flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-primary"/>
                                 <span className="hover:underline">{latestVersion.title}</span>
                                 {isNew && <Badge>NEW</Badge>}
                                 {isUpdated && <Badge variant="secondary" style={{ backgroundColor: '#8B5CF6', color: 'white' }}>UPDATE</Badge>}
                             </h3>
-                            <p className="text-md text-gray-600 mt-1 truncate">{latestVersion.mission}</p>
-                            <div className="text-sm text-gray-500 mt-2">
+                            <p className="prd-document-mission text-md text-gray-600 mt-1 truncate">{latestVersion.mission}</p>
+                            <div className="prd-document-meta text-sm text-gray-500 mt-2">
                                 {latestVersion.projectName && <Badge variant="outline" className="mr-2">{latestVersion.projectName}</Badge>}
                                 총 {prds.length}개 버전
                             </div>
@@ -996,18 +996,18 @@ export default function PrdListPage() {
                             </div>
                         </div>
                         {isAdmin && <div className="mt-1"><Badge variant="secondary" className="text-xs">{`${latestVersion.author} - ${latestVersion.authorId}`}</Badge></div>}
-                        <div className="mt-2 pl-4 border-l-2 ml-2">
+                        <div className="prd-version-list mt-2 pl-4 border-l-2 ml-2">
                         {versionsToShow.map((prd, index) => {
                             const isRestoringItem = justRestored.has(prd.id);
 
                              return (
-                            <div key={`${prd.id}-${index}`} className={cn("flex justify-between items-center text-sm group", isRestoringItem && 'animate-slide-in')}>
+                            <div key={`${prd.id}-${index}`} className={cn("prd-version-row flex justify-between items-center text-sm group", isRestoringItem && 'animate-slide-in')}>
                                 <div 
-                                    className="flex-grow block py-1 px-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                                    className="prd-version-link flex-grow block py-1 px-2 rounded-md hover:bg-gray-100 cursor-pointer"
                                     onClick={() => router.push(`/edit/${prd.id}`)}
                                 >
                                     <Badge variant="secondary" className="mr-2">v{prd.version}</Badge>
-                                    <span className="text-gray-600">수정일: {prd.updatedAt}</span>
+                                    <span className="prd-version-date text-gray-600">수정일: {prd.updatedAt}</span>
                                 </div>
                                 <div className="flex items-center opacity-0 group-hover:opacity-100">
                                     <Button 
@@ -1080,7 +1080,7 @@ export default function PrdListPage() {
                 )
             })
             ) : (
-            <Card>
+            <Card className="prd-empty-card">
                 <CardContent className="text-center p-8 text-gray-500">
                     <p>아직 작성된 PRD가 없습니다.</p>
                     <p>새로운 PRD를 작성해보세요!</p>

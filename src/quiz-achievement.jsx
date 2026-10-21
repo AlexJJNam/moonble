@@ -411,7 +411,7 @@ export function QuizAchievement({ userId }) {
 
   return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
-      <div><span className="achievement-eyebrow"><Trophy size={15} aria-hidden="true" />학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
+      <div><span className="achievement-eyebrow">학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
       <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={18} aria-hidden="true" />CSV 내보내기</button>
     </div>
 

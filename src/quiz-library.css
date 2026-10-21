@@ -480,9 +480,22 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-title { align-items: stretch; }
   .achievement-export { width: 100%; }
   .achievement-title { margin-bottom: 28px; }
+  .achievement-title .achievement-eyebrow { width: fit-content; gap: 0; padding: 4px 9px; border-radius: 999px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-12); line-height: 18px; font-weight: 650; }
+  .achievement-title h1 { margin-top: 8px; color: var(--mb-text-primary); font-size: var(--mb-font-24); line-height: 32px; letter-spacing: -.02em; }
+  .achievement-title p { margin-top: 6px; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; }
+  .achievement-export { min-height: 44px; border-radius: 12px; color: var(--mb-text-secondary); background: var(--mb-surface); box-shadow: none; font-size: var(--mb-font-13); }
   .achievement-performance, .achievement-chart, .achievement-history { padding: 20px; border-radius: 16px; }
+  .achievement-performance, .achievement-chart, .achievement-history { border: 0; background: var(--mb-surface); box-shadow: none; }
   .achievement-summary article { padding: 16px; }
   .achievement-section-heading { align-items: flex-start; flex-direction: column; }
+  .achievement-section-heading h2 { color: var(--mb-text-primary); font-size: var(--mb-font-18); line-height: 26px; letter-spacing: -.015em; }
+  .achievement-section-heading p { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+  .achievement-summary { border-radius: 14px; background: var(--mb-surface-muted); }
+  .achievement-summary span { font-size: var(--mb-font-12); line-height: 18px; }
+  .achievement-summary strong { font-size: var(--mb-font-22); line-height: 30px; }
+  .achievement-group-filters button { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; }
+  .achievement-group-filters button.is-active { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+  .achievement-period-mobile-trigger { color: var(--mb-text-secondary); background: var(--mb-surface); box-shadow: none; }
   .achievement-legend { width: 100%; flex-wrap: wrap; }
   .achievement-confirm { width: 100%; flex-wrap: wrap; }
   .achievement-group-filters { gap: 4px; margin-right: -16px; padding-right: 16px; }
