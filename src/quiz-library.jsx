@@ -429,7 +429,7 @@ function QuizLibrary() {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             return <article
-              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget?.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
+              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
               draggable={Boolean(paper.customBankId)}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? endPaperPress : undefined}
