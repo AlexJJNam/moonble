@@ -110,9 +110,12 @@ function QuizLibrary() {
   const [draggedBankId, setDraggedBankId] = useState(null);
   const [dropGroupId, setDropGroupId] = useState(null);
   const [folderPulse, setFolderPulse] = useState(null);
+  const [pressedBankId, setPressedBankId] = useState(null);
   const [reorderingGroupId, setReorderingGroupId] = useState(null);
   const [orderedGroupIds, setOrderedGroupIds] = useState(() => collection.groups.map(group => group.id));
   const longPressTimer = useRef(0);
+  const paperPressTimer = useRef(0);
+  const dragPreviewNode = useRef(null);
   const groupPress = useRef(null);
   const groupOrderRef = useRef(orderedGroupIds);
   const suppressGroupClick = useRef(false);
@@ -176,6 +179,10 @@ function QuizLibrary() {
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
     };
+  }, []);
+  useEffect(() => () => {
+    window.clearTimeout(paperPressTimer.current);
+    dragPreviewNode.current?.remove();
   }, []);
   useEffect(() => {
     const syncSection = () => setSection(sectionFromHash());
@@ -288,6 +295,45 @@ function QuizLibrary() {
       setNotice(moveError.message || '문제지를 옮기지 못했어요.');
     }
   }
+  function beginPaperPress(event, bankId) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    window.clearTimeout(paperPressTimer.current);
+    paperPressTimer.current = window.setTimeout(() => {
+      setPressedBankId(bankId);
+      navigator.vibrate?.(12);
+    }, 180);
+  }
+  function endPaperPress() {
+    window.clearTimeout(paperPressTimer.current);
+    if (!draggedBankId) setPressedBankId(null);
+  }
+  function createPaperDragPreview(event, bankId) {
+    window.clearTimeout(paperPressTimer.current);
+    dragPreviewNode.current?.remove();
+    const source = event.currentTarget;
+    const bounds = source.getBoundingClientRect();
+    const preview = source.cloneNode(true);
+    preview.removeAttribute('draggable');
+    preview.querySelector('.paper-card-actions')?.remove();
+    preview.classList.remove('is-dragging', 'is-pressing');
+    preview.classList.add('paper-drag-preview');
+    preview.style.width = `${Math.max(148, Math.min(220, bounds.width * .7))}px`;
+    document.body.appendChild(preview);
+    dragPreviewNode.current = preview;
+    event.dataTransfer.setDragImage(preview, preview.offsetWidth / 2, Math.min(34, preview.offsetHeight / 2));
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/x-moonble-bank', bankId);
+    setPressedBankId(null);
+    setDraggedBankId(bankId);
+  }
+  function finishPaperDrag() {
+    window.clearTimeout(paperPressTimer.current);
+    dragPreviewNode.current?.remove();
+    dragPreviewNode.current = null;
+    setPressedBankId(null);
+    setDraggedBankId(null);
+    setDropGroupId(null);
+  }
   if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const customPapers = collection.banks.slice().sort((a, b) => new Date(b.updatedAt || b.savedAt || 0) - new Date(a.updatedAt || a.savedAt || 0)).map(bank => ({
     id: `custom:${bank.id}`,
@@ -319,7 +365,7 @@ function QuizLibrary() {
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main" id="paper-library" tabIndex={-1}>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main quiz-library-main" id="paper-library" tabIndex={-1}>
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="paper-group-bar">
           <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
@@ -336,14 +382,14 @@ function QuizLibrary() {
             >
               <button type="button" role="tab" aria-selected={activeGroup === group.id} onClick={event => { event.stopPropagation(); if (suppressGroupClick.current) return; setActiveGroup(group.id); setOpenMenu(null); }}>{group.name}<small>{group.count}</small></button>
             </span>)}
-            {!!collection.groups.length && <span className="paper-group-manage" role="presentation">
-              <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
-              {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
-                <strong>그룹 편집</strong>
-                {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 이름 바꾸기`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
-              </span>}
-            </span>}
           </div>
+          {!!collection.groups.length && <span className="paper-group-manage" role="presentation">
+            <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
+            {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
+              <strong>그룹 편집</strong>
+              {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 이름 바꾸기`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+            </span>}
+          </span>}
           <button className="paper-group-add" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '' }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
         <div className="quiz-library-tools">
@@ -353,16 +399,19 @@ function QuizLibrary() {
             <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
-        <div className="quiz-results"><p role="status">문제지 <strong>{visiblePapers.length}</strong></p><span>문제지를 선택하면 풀이가 시작돼요</span></div>
+        <div className="quiz-results"><p role="status">문제지 <strong>{visiblePapers.length}</strong></p></div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             return <article
-              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}`}
+              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               draggable={Boolean(paper.customBankId)}
-              onDragStart={paper.customBankId ? event => { setDraggedBankId(paper.customBankId); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-moonble-bank', paper.customBankId); } : undefined}
-              onDragEnd={() => { setDraggedBankId(null); setDropGroupId(null); }}
+              onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
+              onPointerUp={paper.customBankId ? endPaperPress : undefined}
+              onPointerCancel={paper.customBankId ? endPaperPress : undefined}
+              onDragStart={paper.customBankId ? event => createPaperDragPreview(event, paper.customBankId) : undefined}
+              onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
               key={paper.id}
             >
               <a className="paper-card-link" href={href} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`} onClick={() => { if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
