@@ -116,8 +116,8 @@ function QuizLibrary() {
   if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const search = query.trim().toLocaleLowerCase();
   const allPapers = custom ? [...papers, {
-    id: 'custom', label: (custom.source || '내 문제지').replace(/\.csv$/i, ''), level: '내 문제지', count: 20,
-    description: '직접 등록한 문제로 학습을 시작해보세요.', topics: `등록 ${custom.questions.length}문항 · 매회 20문항 출제`,
+    id: 'custom', label: custom.title || (custom.source || '내 문제지').replace(/\.csv$/i, ''), level: '내 문제지', count: 20,
+    description: custom.description || '직접 등록한 문제로 학습을 시작해보세요.', topics: `등록 ${custom.questions.length}문항 · 매회 20문항 출제`,
     samples: custom.questions.slice(0, 2).map(q => ({ title: q.q, options: q.options.slice(0, 3) })),
   }] : papers;
   const visiblePapers = allPapers.filter(paper => {

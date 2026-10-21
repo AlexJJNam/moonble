@@ -1,9 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Check, CircleHelp, Download, FileSpreadsheet, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
-import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank } from './custom-bank.js';
+import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+import { SegmentedControl } from './segmented-control.jsx';
 
-function generationPrompt(query) {
-  return `Moonble에서 풀 수 있는 학습 문제지를 만들어주세요.
+function generationPrompt(query, provider) {
+  const format = `시트와 CSV의 맨 위에 다음 문제지 정보 2개 행을 반드시 먼저 넣어주세요.
+# title,문제지 이름
+# description,문제지를 설명하는 한 문장
+그 다음 행부터 헤더를 정확히 다음 순서로 사용해주세요.
+번호,question,option1,option2,option3,option4,correct,explain
+- correct에는 정답 보기 번호를 1~4로 입력
+- 복수 정답이면 1,3처럼 쉼표로 구분하고 해당 셀을 큰따옴표로 감싸기`;
+  const common = `Moonble에서 풀 수 있는 학습 문제지를 만들어주세요.
 
 사용자 요청:
 ${query}
@@ -13,12 +21,21 @@ ${query}
 - 문항마다 보기 4개, 정답, 짧고 명확한 해설 포함
 - 사용자의 목적과 난이도 요청을 우선 반영
 - 사실 확인이 필요한 내용은 최신 기준으로 검토
-- 결과는 다운로드 가능한 UTF-8 CSV 파일로 제공
+- 문제지 이름과 한 문장 설명을 문제 내용에 맞게 작성
+
+${format}`;
+  if (provider === 'gemini') {
+    return `${common}
+
+결과는 다운로드 파일만 만들지 말고 Google Sheets를 직접 생성해주세요.
+- 시트에 위 형식의 메타데이터와 20문항을 넣기
+- 공유 권한을 ‘링크가 있는 모든 사용자 · 뷰어’로 설정
+- 답변 마지막에 생성한 Google Sheets 공유 링크를 복사해 붙여넣기 쉬운 독립된 한 줄로 제공`;
+  }
+  return `${common}
+
+결과는 다운로드 가능한 UTF-8 CSV 파일로 제공해주세요.
 - 파일명은 moonble_questions.csv
-- 첫 행 헤더는 정확히 다음 순서 사용
-번호,question,option1,option2,option3,option4,correct,explain
-- correct에는 정답 보기 번호를 1~4로 입력
-- 복수 정답이면 1,3처럼 쉼표로 구분하고 해당 CSV 셀을 큰따옴표로 감싸기
 - CSV 외의 부가 설명은 파일 내용에 넣지 않기`;
 }
 
@@ -29,6 +46,10 @@ const promptSamples = [
   '신입 기획자를 위한 데이터 분석 문제를 만들어줘',
 ];
 const examplePrompt = '정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.';
+const providerSegments = [
+  { value: 'chatgpt', label: 'ChatGPT' },
+  { value: 'gemini', label: 'Gemini' },
+];
 
 function PromptSample({ hidden }) {
   const [sampleIndex, setSampleIndex] = useState(0);
@@ -61,6 +82,7 @@ function PromptSample({ hidden }) {
 
 export function QuizCreator({ custom, onChange }) {
   const [query, setQuery] = useState('');
+  const [provider, setProvider] = useState('chatgpt');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -69,10 +91,18 @@ export function QuizCreator({ custom, onChange }) {
   const [dragging, setDragging] = useState(false);
   const [promptFocused, setPromptFocused] = useState(false);
   const [exampleRevealed, setExampleRevealed] = useState(false);
+  const [bankTitle, setBankTitle] = useState(custom?.title || '');
+  const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
+  const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
   const preview = useMemo(() => custom?.questions?.slice(0, 8) || [], [custom]);
+
+  useEffect(() => {
+    setBankTitle(custom?.title || '');
+    setBankDescription(custom?.description || '');
+  }, [custom?.title, custom?.description, custom?.savedAt]);
 
   useEffect(() => {
     if (!promptFocused) return undefined;
@@ -109,7 +139,7 @@ export function QuizCreator({ custom, onChange }) {
     const height = Math.min(760, Math.max(560, screenHeight - 32));
     const left = Math.max(0, Math.round((screenWidth - width) / 2));
     const top = Math.max(0, Math.round((screenHeight - height) / 2));
-    const popup = window.open(url, 'moonbleChatGPT', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    const popup = window.open(url, 'moonbleAI', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
     if (!popup) window.open(url, '_blank', 'noopener');
     else popup.focus();
   }
@@ -118,23 +148,48 @@ export function QuizCreator({ custom, onChange }) {
     const value = query.trim();
     if (!value) { shakePrompt(); return; }
     setError('');
-    const url = `https://chatgpt.com/?q=${encodeURIComponent(generationPrompt(value))}`;
+    const prompt = encodeURIComponent(generationPrompt(value, provider));
+    const url = provider === 'gemini' ? `https://gemini.google.com/app?q=${prompt}` : `https://chatgpt.com/?q=${prompt}`;
     openPopup(url);
     setQuery('');
     if (promptInputRef.current) {
       promptInputRef.current.style.height = 'auto';
       promptInputRef.current.blur();
     }
-    setMessage('문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
+    setMessage(provider === 'gemini'
+      ? 'Gemini에 문제 생성 요청을 열었어요. 완성된 Google Sheets 링크를 아래에 붙여넣어주세요.'
+      : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
+  }
+
+  function useExample() {
+    setQuery(examplePrompt);
+    if (promptGuideRef.current) promptGuideRef.current.open = false;
+    requestAnimationFrame(() => {
+      const input = promptInputRef.current;
+      if (!input) return;
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(110, input.scrollHeight)}px`;
+      input.focus();
+      input.setSelectionRange(examplePrompt.length, examplePrompt.length);
+    });
   }
 
   function saveQuestions(text, source) {
     const result = csvToQuestions(text);
     if (result.error) throw new Error(result.error);
-    setCustomBank(result.questions, source);
+    setCustomBank(result.questions, source, undefined, { title: result.title, description: result.description });
     const next = getCustomBankMeta();
     onChange(next);
     setMessage('문제지 등록이 완료됐어요. 바로 풀어볼까요?');
+  }
+
+  function persistBankMeta() {
+    try {
+      const next = updateCustomBankMeta(bankTitle, bankDescription);
+      if (next) onChange(next);
+    } catch (metaError) {
+      setError(metaError.message || '문제지 정보를 저장하지 못했어요.');
+    }
   }
 
   async function upload(file) {
@@ -182,7 +237,7 @@ export function QuizCreator({ custom, onChange }) {
     <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
-      <details className="creator-prompt-guide" onToggle={event => { if (!event.currentTarget.open) setExampleRevealed(false); }}>
+      <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { if (!event.currentTarget.open) setExampleRevealed(false); }}>
         <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
         <div className="creator-prompt-guide-panel">
           <strong>이렇게 적어보세요</strong>
@@ -191,7 +246,9 @@ export function QuizCreator({ custom, onChange }) {
           <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
           <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`}>
             <q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>
-            {!exampleRevealed && <button type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>}
+            {!exampleRevealed
+              ? <button className="creator-example-reveal" type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>
+              : <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}
           </div>
         </div>
       </details>
@@ -203,13 +260,18 @@ export function QuizCreator({ custom, onChange }) {
             <PromptSample hidden={Boolean(query)} />
             <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={() => setPromptFocused(true)} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
-          <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>문제 만들기</button>
+          <div className="creator-ai-actions">
+            <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
+              <SegmentedControl ariaLabel="문제 생성 AI 선택" className="creator-provider" items={providerSegments} value={provider} onChange={setProvider} />
+            </div>
+            <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>문제 만들기</button>
+          </div>
         </div>
       </div>
     </section>
 
     <section className="creator-step" aria-labelledby="creator-upload-title">
-      <header><span>2</span><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>ChatGPT에서 받은 CSV를 끌어다 놓거나 직접 선택하세요. 20문항부터 등록할 수 있어요.</p></div></header>
+      <header><span>2</span><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
         className={`creator-drop${dragging ? ' is-dragging' : ''}`}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
@@ -235,6 +297,10 @@ export function QuizCreator({ custom, onChange }) {
     <section className="creator-step" aria-labelledby="creator-list-title">
       <header><span>3</span><div><h2 id="creator-list-title">등록된 문제를 확인하세요</h2><p>문제와 보기가 제대로 들어왔는지 확인한 뒤 풀이를 시작하세요.</p></div></header>
       {custom ? <>
+        <div className="creator-bank-meta">
+          <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
+          <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
+        </div>
         <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{custom.source} · {custom.questions.length}문항</p></div><a href="./solve.html?paper=custom#quiz">문제 풀이하기</a></div>
         <div className="creator-question-list">{preview.map((question, index) => <article key={question.id}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{question.q}</strong><p>{question.options.join(' · ')}</p></div></article>)}</div>
         {custom.questions.length > preview.length && <p className="creator-more">외 {custom.questions.length - preview.length}문항이 등록되어 있어요.</p>}

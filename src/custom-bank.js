@@ -10,6 +10,9 @@
     var id = userId || activeUserId;
     return id ? CUSTOM_BANK_KEY_PREFIX + id + ':custom-bank-v2' : null;
   }
+  function defaultTitle(sourceLabel) {
+    return (typeof sourceLabel === 'string' && sourceLabel ? sourceLabel : '내 문제지').replace(/\.csv$/i, '');
+  }
   export function setCustomBankUser(userId) {
     activeUserId = typeof userId === 'string' && userId ? userId : null;
     var key = storageKey();
@@ -31,21 +34,45 @@
       var parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length < MIN_QUESTIONS) return null;
       if (!parsed.questions.every(q => q && Number.isInteger(q.id) && typeof q.q === 'string' && Array.isArray(q.options) && q.options.length >= 2 && q.options.every(o => typeof o === 'string') && Array.isArray(q.correct) && q.correct.length && q.correct.every(i => Number.isInteger(i) && i >= 0 && i < q.options.length))) return null;
-      return { ...parsed, source: typeof parsed.source === 'string' ? parsed.source : '커스텀 문제' };
+      var source = typeof parsed.source === 'string' ? parsed.source : '커스텀 문제';
+      return {
+        ...parsed,
+        source: source,
+        title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : defaultTitle(source),
+        description: typeof parsed.description === 'string' && parsed.description.trim() ? parsed.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.'
+      };
     } catch (e) { return null; }
   }
   export function getCustomBank(userId) {
     var meta = getCustomBankMeta(userId);
     return meta ? meta.questions : null;
   }
-  export function setCustomBank(questions, sourceLabel, userId) {
+  export function setCustomBank(questions, sourceLabel, userId, details) {
     try {
       var key = storageKey(userId);
       if (!key) throw new Error('로그인 상태를 확인해주세요.');
+      var meta = details || {};
       localStorage.setItem(key, JSON.stringify({
-        questions: questions, source: sourceLabel, savedAt: new Date().toISOString()
+        questions: questions,
+        source: sourceLabel,
+        title: typeof meta.title === 'string' && meta.title.trim() ? meta.title.trim() : defaultTitle(sourceLabel),
+        description: typeof meta.description === 'string' && meta.description.trim() ? meta.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
+        savedAt: new Date().toISOString()
       }));
     } catch (e) { throw new Error('브라우저 저장 공간에 문제지를 저장하지 못했습니다.'); }
+  }
+  export function updateCustomBankMeta(title, description, userId) {
+    try {
+      var key = storageKey(userId);
+      if (!key) throw new Error('로그인 상태를 확인해주세요.');
+      var raw = localStorage.getItem(key);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      parsed.title = typeof title === 'string' && title.trim() ? title.trim() : defaultTitle(parsed.source);
+      parsed.description = typeof description === 'string' && description.trim() ? description.trim() : '직접 등록한 문제로 학습을 시작해보세요.';
+      localStorage.setItem(key, JSON.stringify(parsed));
+      return getCustomBankMeta(userId);
+    } catch (e) { throw new Error('문제지 정보를 저장하지 못했습니다.'); }
   }
   export function clearCustomBank(userId) {
     try {
@@ -86,12 +113,19 @@
   }
 
   export function csvToQuestions(text) {
-    // '#'로 시작하는 행은 가이드/주석 행으로 보고 건너뛴다(샘플 CSV 맨 위 작성 가이드용).
-    var rows = parseCSVText(text).filter(function (r) {
-      return !(r[0] && r[0].trim().charAt(0) === '#');
+    var parsedRows = parseCSVText(text);
+    var meta = { title: '', description: '' };
+    parsedRows.forEach(function (r) {
+      var key = (r[0] || '').replace(/^\uFEFF/, '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (key === '# title' || key === '#title') meta.title = r.slice(1).join(',').trim();
+      if (key === '# description' || key === '#description') meta.description = r.slice(1).join(',').trim();
+    });
+    // '#'로 시작하는 행은 문제지 메타데이터/주석 행으로 보고 건너뛴다.
+    var rows = parsedRows.filter(function (r) {
+      return !(r[0] && r[0].replace(/^\uFEFF/, '').trim().charAt(0) === '#');
     });
     if (!rows.length) return { error: 'CSV 내용이 비어 있습니다.' };
-    var header = rows[0].map(function (h) { return (h || '').trim().toLowerCase(); });
+    var header = rows[0].map(function (h) { return (h || '').replace(/^\uFEFF/, '').trim().toLowerCase(); });
     var qIdx = header.indexOf('question');
     var cIdx = header.indexOf('correct');
     var optIdx = [
@@ -133,7 +167,7 @@
       if (errors.length) msg += ' (' + errors.slice(0, 3).join(' / ') + (errors.length > 3 ? ' 외 ' + (errors.length - 3) + '건' : '') + ')';
       return { error: msg };
     }
-    return { questions: questions };
+    return { questions: questions, title: meta.title, description: meta.description };
   }
 
   // ---- 샘플 CSV 다운로드 ----
@@ -153,7 +187,8 @@
         dataRows.push(['Q.' + i, '', '', '', '', '', '', '']);
       }
     }
-    var csv = [header].concat(dataRows).map(function (r) {
+    var metadataRows = [['# title', '나만의 문제지'], ['# description', '학습 목표와 범위를 한 줄로 적어주세요.']];
+    var csv = metadataRows.concat([header], dataRows).map(function (r) {
       return r.map(function (v) {
         v = String(v);
         return (v.indexOf(',') !== -1 || v.indexOf('"') !== -1) ? '"' + v.replace(/"/g, '""') + '"' : v;
