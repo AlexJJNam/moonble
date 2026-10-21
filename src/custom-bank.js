@@ -195,6 +195,20 @@
       writeCollection(collection, userId);
     } catch (e) { throw new Error('그룹을 삭제하지 못했습니다.'); }
   }
+  export function reorderCustomGroups(groupIds, userId) {
+    try {
+      var collection = readCollection(userId);
+      var order = Array.isArray(groupIds) ? groupIds : [];
+      var rank = new Map(order.map(function (id, index) { return [id, index]; }));
+      collection.groups = collection.groups.slice().sort(function (a, b) {
+        var aRank = rank.has(a.id) ? rank.get(a.id) : Number.MAX_SAFE_INTEGER;
+        var bRank = rank.has(b.id) ? rank.get(b.id) : Number.MAX_SAFE_INTEGER;
+        return aRank - bRank;
+      });
+      writeCollection(collection, userId);
+      return collection.groups;
+    } catch (e) { throw new Error('그룹 순서를 저장하지 못했습니다.'); }
+  }
   export { DEFAULT_GROUP_ID };
   // ---- CSV 파싱 (따옴표로 감싼 콤마를 처리하는 간단한 RFC4180 스타일 파서) ----
   function parseCSVText(text) {

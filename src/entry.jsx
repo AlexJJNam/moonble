@@ -5,7 +5,7 @@ import { BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, 
 import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
-import { BrandLogo, HandwritingLogo } from './brand-logo.jsx';
+import { BrandLogo } from './brand-logo.jsx';
 import './design-system.css';
 import './landing.css';
 
@@ -783,7 +783,6 @@ function useLandingOrbMotion() {
 function Landing() {
   useLandingOrbMotion();
   const [headerScrolled, setHeaderScrolled] = useState(false);
-  const featuresRef = useRef(null);
 
   useEffect(() => {
     let frame = 0;
@@ -801,23 +800,6 @@ function Landing() {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestUpdate);
     };
-  }, []);
-
-  useEffect(() => {
-    const section = featuresRef.current;
-    if (!section) return undefined;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reducedMotion.matches) {
-      section.classList.add('is-wordmark-revealed');
-      return undefined;
-    }
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      section.classList.add('is-wordmark-revealed');
-      observer.disconnect();
-    }, { threshold: .18 });
-    observer.observe(section);
-    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -859,8 +841,8 @@ function Landing() {
 
       <HighlightBand />
 
-      <section className="landing-features" id="features" aria-labelledby="features-title" ref={featuresRef}>
-        <HandwritingLogo className="landing-features-wordmark" />
+      <section className="landing-features" id="features" aria-labelledby="features-title">
+        <BrandLogo className="landing-features-wordmark" decorative />
         <div className="landing-section-heading"><span>Moonble의 차이</span><h2 id="features-title"><em>문제를 푼 뒤에도 배움이 남도록,</em><br />학습과 기획을 자연스럽게 잇습니다</h2><p>문제 등록부터 풀이, 기록, PRD 작성까지 한곳에서 이어가세요.</p></div>
         <div className="landing-feature-grid">{features.map(({ icon: Icon, eyebrow, title, copy }) => <article key={eyebrow}>
           <div className="landing-feature-icon"><Icon size={22} aria-hidden="true" /></div>

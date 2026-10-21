@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, CircleHelp, Download, FileSpreadsheet, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronLeft, CircleHelp, Download, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 
@@ -107,6 +107,9 @@ export function QuizCreator({ custom, onChange }) {
   const [guideOpen, setGuideOpen] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [metaReveal, setMetaReveal] = useState(false);
+  const [screen, setScreen] = useState('create');
+  const [resultBank, setResultBank] = useState(null);
+  const [resultReady, setResultReady] = useState(true);
   const [bankTitle, setBankTitle] = useState(custom?.title || '');
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const promptBarRef = useRef(null);
@@ -115,10 +118,14 @@ export function QuizCreator({ custom, onChange }) {
   const uploadInputRef = useRef(null);
   const uploadSuccessTimer = useRef(0);
   const metaRevealTimer = useRef(0);
-  const preview = useMemo(() => custom?.questions?.slice(0, 8) || [], [custom]);
+  const resultScreenTimer = useRef(0);
+  const resultRevealTimer = useRef(0);
+  const displayBank = resultBank || custom;
+  const preview = useMemo(() => displayBank?.questions?.slice(0, 8) || [], [displayBank]);
   const examplePrompt = examplePrompts[exampleIndex];
 
   useEffect(() => {
+    if (resultBank && custom?.id !== resultBank.id) return;
     setBankTitle(custom?.title || '');
     setBankDescription(custom?.description || '');
   }, [custom?.title, custom?.description, custom?.savedAt]);
@@ -126,6 +133,8 @@ export function QuizCreator({ custom, onChange }) {
   useEffect(() => () => {
     window.clearTimeout(uploadSuccessTimer.current);
     window.clearTimeout(metaRevealTimer.current);
+    window.clearTimeout(resultScreenTimer.current);
+    window.clearTimeout(resultRevealTimer.current);
   }, []);
 
   useEffect(() => {
@@ -212,26 +221,39 @@ export function QuizCreator({ custom, onChange }) {
     const result = csvToQuestions(text);
     if (result.error) throw new Error(result.error);
     const next = setCustomBank(result.questions, source, undefined, { title: result.title, description: result.description, create: true });
+    setResultBank(next);
+    setBankTitle(next.title || '');
+    setBankDescription(next.description || '');
     onChange(next);
     setUploadSuccess(false);
     window.clearTimeout(uploadSuccessTimer.current);
     requestAnimationFrame(() => {
       setUploadSuccess(true);
-      uploadSuccessTimer.current = window.setTimeout(() => setUploadSuccess(false), 1750);
+      uploadSuccessTimer.current = window.setTimeout(() => setUploadSuccess(false), 1250);
     });
-    setMetaReveal(false);
-    window.clearTimeout(metaRevealTimer.current);
-    requestAnimationFrame(() => {
-      setMetaReveal(true);
-      metaRevealTimer.current = window.setTimeout(() => setMetaReveal(false), 1100);
-    });
+    setResultReady(false);
+    window.clearTimeout(resultScreenTimer.current);
+    window.clearTimeout(resultRevealTimer.current);
+    resultScreenTimer.current = window.setTimeout(() => {
+      setScreen('result');
+      setUploadSuccess(false);
+      resultRevealTimer.current = window.setTimeout(() => {
+        setResultReady(true);
+        setMetaReveal(true);
+        window.clearTimeout(metaRevealTimer.current);
+        metaRevealTimer.current = window.setTimeout(() => setMetaReveal(false), 1100);
+      }, 520);
+    }, 1180);
     setMessage('문제지 등록이 완료됐어요. 바로 풀어볼까요?');
   }
 
   function persistBankMeta() {
     try {
-      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, custom?.id);
-      if (next) onChange(next);
+      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, displayBank?.id);
+      if (next) {
+        setResultBank(next);
+        onChange(next);
+      }
     } catch (metaError) {
       setError(metaError.message || '문제지 정보를 저장하지 못했어요.');
     }
@@ -283,6 +305,25 @@ export function QuizCreator({ custom, onChange }) {
       setSheetPending(false);
     }
   }
+
+  if (screen === 'result') return <main className="quiz-main quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
+    <button className="creator-result-back" type="button" onClick={() => { setScreen('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
+    <div className="quiz-title creator-result-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">등록된 문제를 확인하세요</h1><p>문제와 보기가 제대로 들어왔는지 확인한 뒤 풀이를 시작하세요.</p></div></div>
+    <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
+      <header><span>3</span><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
+      {!resultReady ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">생성한 문제지 목록을 정리하고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : displayBank ? <div className="creator-result-reveal">
+        <div className={`creator-bank-meta${metaReveal ? ' is-revealing' : ''}`}>
+          <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
+          <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
+        </div>
+        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{displayBank.source} · {displayBank.questions.length}문항</p></div><a href={`./solve.html?paper=custom&bank=${encodeURIComponent(displayBank.id)}#quiz`}>문제 풀이하기</a></div>
+        <div className="creator-question-list">{preview.map((question, index) => <article style={{ '--result-index': index }} key={question.id}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{question.q}</strong><p>{question.options.join(' · ')}</p></div></article>)}</div>
+        {displayBank.questions.length > preview.length && <p className="creator-more">외 {displayBank.questions.length - preview.length}문항이 등록되어 있어요.</p>}
+      </div> : null}
+    </section>
+    {message && <p className="creator-message" role="status">{message}</p>}
+    {error && <p className="creator-error" role="alert">{error}</p>}
+  </main>;
 
   return <main className="quiz-main quiz-creator" id="quiz-creator" tabIndex={-1}>
     <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
@@ -344,19 +385,7 @@ export function QuizCreator({ custom, onChange }) {
         <button type="button" disabled={sheetPending || pending} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
       </div>
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
-    </section>
-
-    <section className="creator-step" aria-labelledby="creator-list-title">
-      <header><span>3</span><div><h2 id="creator-list-title">등록된 문제를 확인하세요</h2><p>문제와 보기가 제대로 들어왔는지 확인한 뒤 풀이를 시작하세요.</p></div></header>
-      {pending || sheetPending ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">문제지 목록을 만들고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : custom ? <>
-        <div className={`creator-bank-meta${metaReveal ? ' is-revealing' : ''}`}>
-          <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
-          <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
-        </div>
-        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{custom.source} · {custom.questions.length}문항</p></div><a href={`./solve.html?paper=custom&bank=${encodeURIComponent(custom.id)}#quiz`}>문제 풀이하기</a></div>
-        <div className="creator-question-list">{preview.map((question, index) => <article key={question.id}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{question.q}</strong><p>{question.options.join(' · ')}</p></div></article>)}</div>
-        {custom.questions.length > preview.length && <p className="creator-more">외 {custom.questions.length - preview.length}문항이 등록되어 있어요.</p>}
-      </> : <div className="creator-empty"><FileSpreadsheet size={30} aria-hidden="true" /><strong>아직 등록된 문제가 없어요</strong><p>위에서 만든 CSV를 등록하면 문제 목록이 여기에 나타납니다.</p></div>}
+      {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
 
     {message && <p className="creator-message" role="status">{message}</p>}

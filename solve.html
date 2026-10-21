@@ -3603,8 +3603,25 @@
       playGradeCompleteEffect();
 
       retryWrongBtn.disabled = wrongPicked.length === 0;
+      const solveParams = new URLSearchParams(window.location.search);
+      const paperId = solveParams.get('paper') || 'random';
+      let bankId = solveParams.get('bank') || null;
+      let groupId = 'ungrouped';
+      let paperTitle = paperId === 'basics' ? 'GA4 핵심 개념' : paperId === 'advanced' ? 'GA4 실무 응용' : paperId === 'random' ? '전체 랜덤 문제지' : '문제지';
+      if (paperId === 'custom' && typeof window.getCustomBankMeta === 'function') {
+        const bankMeta = window.getCustomBankMeta(bankId);
+        if (bankMeta) { groupId = bankMeta.groupId || 'ungrouped'; paperTitle = bankMeta.title || paperTitle; }
+      } else if (paperId === 'retry') {
+        try {
+          const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
+          bankId = retryMeta.bankId || null;
+          groupId = retryMeta.groupId || 'ungrouped';
+          paperTitle = retryMeta.paperTitle || paperTitle;
+        } catch { /* 재풀이 메타데이터가 없어도 결과는 저장한다. */ }
+      }
       pushHistory({
         score, correct: correctCount, total, date: new Date().toISOString(),
+        paperId, bankId, groupId, paperTitle,
         questionIds: picked.map(q => q.id),
         wrongIds: wrongPicked.map(q => q.id)
       });
@@ -3626,11 +3643,11 @@
     function pushHistory(item) {
       const hist = getHistory();
       hist.unshift(item);
-      const trimmed = hist.slice(0, 10);
+      const trimmed = hist.slice(0, 200);
       setHistory(trimmed);
     }
     function renderHistory() {
-      const hist = getHistory();
+      const hist = getHistory().slice(0, 10);
       if (!hist.length) {historyBox.innerHTML = ''; return;}
       let html = '<h3 style="margin:6px 0 4px">성취도 (최근 기준, 최대 10회)</h3><ul>';
       hist.forEach((h, i) => {
@@ -5148,7 +5165,7 @@
 </script>
 <script type="module">
 import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
-import { getCustomBank, setCustomBankUser } from '/src/custom-bank.js';
+import { getCustomBank, getCustomBankMeta, setCustomBankUser } from '/src/custom-bank.js';
 
 if (supabase) {
   const session = cachedAuthSession() || (await getSessionSafely()).session;
@@ -5168,6 +5185,7 @@ if (supabase) {
     } catch (error) { /* 저장소가 제한된 환경에서는 기록 없이 계속 진행한다. */ }
 
     window.getCustomBank = bankId => getCustomBank(user.id, bankId);
+    window.getCustomBankMeta = bankId => getCustomBankMeta(user.id, bankId);
     window.getActiveBank = function () {
       const selected = getSelectedPaperBank();
       return selected || getCustomBank(user.id) || BANK;

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Download, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, Download, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
+import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 
 const HISTORY_KEY_PREFIX = 'moonble:user:';
 
@@ -12,7 +13,7 @@ function readHistory(userId) {
   try {
     const key = historyKey(userId);
     const value = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
-    return Array.isArray(value) ? value.slice(0, 10) : [];
+    return Array.isArray(value) ? value.slice(0, 200) : [];
   } catch {
     return [];
   }
@@ -21,7 +22,7 @@ function readHistory(userId) {
 function writeHistory(userId, history) {
   try {
     const key = historyKey(userId);
-    if (key) localStorage.setItem(key, JSON.stringify(history.slice(0, 10)));
+    if (key) localStorage.setItem(key, JSON.stringify(history.slice(0, 200)));
   } catch { /* 저장소가 제한된 환경에서는 현재 화면만 갱신한다. */ }
 }
 
@@ -226,9 +227,17 @@ function ScoreChart({ history }) {
 export function QuizAchievement({ userId }) {
   const [history, setHistory] = useState(() => readHistory(userId));
   const [confirming, setConfirming] = useState(null);
+  const [collection, setCollection] = useState(() => getCustomBankCollection(userId));
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [period, setPeriod] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
-    const refresh = () => setHistory(readHistory(userId));
+    const refresh = () => {
+      setHistory(readHistory(userId));
+      setCollection(getCustomBankCollection(userId));
+    };
     refresh();
     window.addEventListener('storage', refresh);
     window.addEventListener('pageshow', refresh);
@@ -238,16 +247,43 @@ export function QuizAchievement({ userId }) {
     };
   }, [userId]);
 
+  const groupFilters = useMemo(() => [
+    { id: DEFAULT_GROUP_ID, name: '미분류' },
+    ...collection.groups,
+  ].map(group => ({
+    ...group,
+    count: history.filter(item => (item.groupId || DEFAULT_GROUP_ID) === group.id).length,
+  })), [collection.groups, history]);
+
+  const filteredHistory = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now);
+    if (period === '1m') start.setMonth(start.getMonth() - 1);
+    if (period === '3m') start.setMonth(start.getMonth() - 3);
+    if (period === '6m') start.setMonth(start.getMonth() - 6);
+    return history.filter(item => {
+      const groupMatch = !selectedGroups.length || selectedGroups.includes(item.groupId || DEFAULT_GROUP_ID);
+      const itemDate = new Date(item.date);
+      if (!groupMatch || Number.isNaN(itemDate.getTime())) return false;
+      if (period === 'custom') {
+        const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+        const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+        return (!from || itemDate >= from) && (!to || itemDate <= to);
+      }
+      return period === 'all' || itemDate >= start;
+    });
+  }, [dateFrom, dateTo, history, period, selectedGroups]);
+
   const stats = useMemo(() => {
-    if (!history.length) return { latest: 0, average: 0, best: 0, latestDate: '-' };
-    const scores = history.map(item => Number(item.score) || 0);
+    if (!filteredHistory.length) return { latest: 0, average: 0, best: 0, latestDate: '-' };
+    const scores = filteredHistory.map(item => Number(item.score) || 0);
     return {
       latest: scores[0],
       average: Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length),
       best: Math.max(...scores),
-      latestDate: formatShortDate(history[0].date),
+      latestDate: formatShortDate(filteredHistory[0].date),
     };
-  }, [history]);
+  }, [filteredHistory]);
 
   function update(next) {
     setHistory(next);
@@ -255,17 +291,20 @@ export function QuizAchievement({ userId }) {
     setConfirming(null);
   }
 
-  function retry(ids) {
+  function retry(item, ids) {
     if (!Array.isArray(ids) || !ids.length) return;
-    try { sessionStorage.setItem('moonble:retry-question-ids', JSON.stringify(ids)); } catch { /* URL 이동은 계속한다. */ }
+    try {
+      sessionStorage.setItem('moonble:retry-question-ids', JSON.stringify(ids));
+      sessionStorage.setItem('moonble:retry-meta', JSON.stringify({ paperId: item.paperId, bankId: item.bankId, groupId: item.groupId, paperTitle: item.paperTitle }));
+    } catch { /* URL 이동은 계속한다. */ }
     window.location.href = './solve.html?paper=retry#quiz';
   }
 
   function exportHistory() {
-    if (!history.length) return;
+    if (!filteredHistory.length) return;
     const rows = [
       ['회차(최근기준)', '날짜', '점수', '정답수', '전체문항'],
-      ...history.map((item, index) => [index + 1, item.date, item.score, item.correct, item.total]),
+      ...filteredHistory.map((item, index) => [index + 1, item.date, item.score, item.correct, item.total]),
     ];
     const csv = rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' }));
@@ -279,37 +318,52 @@ export function QuizAchievement({ userId }) {
   return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
       <div><span className="achievement-eyebrow"><Trophy size={15} aria-hidden="true" />학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
-      <button className="achievement-export" type="button" disabled={!history.length} onClick={exportHistory}><Download size={18} aria-hidden="true" />CSV 내보내기</button>
+      <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={18} aria-hidden="true" />CSV 내보내기</button>
     </div>
 
     {history.length ? <>
+      <section className="achievement-filters" aria-label="성취도 조회 조건">
+        <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
+          <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
+          {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
+        </div>
+        <div className="achievement-period-filter">
+          <span className="achievement-period-icon"><CalendarDays size={17} aria-hidden="true" /></span>
+          <div className="achievement-period-tabs" role="group" aria-label="조회 기간">
+            {[['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['all', '전체'], ['custom', '직접 선택']].map(([value, label]) => <button className={period === value ? 'is-active' : ''} type="button" aria-pressed={period === value} onClick={() => setPeriod(value)} key={value}>{label}</button>)}
+          </div>
+          {period === 'custom' && <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={dateFrom} max={dateTo || undefined} onChange={event => setDateFrom(event.target.value)} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={dateTo} min={dateFrom || undefined} onChange={event => setDateTo(event.target.value)} /></label></div>}
+        </div>
+      </section>
+      {filteredHistory.length ? <>
       <section className="achievement-performance" aria-labelledby="achievement-performance-title">
-        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>최근 10회까지 현재 기기에 안전하게 저장돼요.</p></div></div>
+        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>선택한 그룹과 기간의 기록을 함께 비교해요.</p></div></div>
         <div className="achievement-summary" aria-label="성취도 요약">
-          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{history.length}회 완료</small></article>
+          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{filteredHistory.length}회 완료</small></article>
           <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
           <article><span>평균 점수</span><strong>{stats.average}<small>점</small></strong></article>
           <article><span>최고 점수</span><strong>{stats.best}<small>점</small></strong></article>
         </div>
       </section>
-      <ScoreChart history={history} />
+      <ScoreChart history={filteredHistory} />
       <section className="achievement-history" aria-labelledby="achievement-history-title">
         <div className="achievement-section-heading">
-          <div><h2 id="achievement-history-title" className="mb-section-title">최근 풀이 기록</h2><p>기록은 현재 기기에 계정별로 최대 10회까지 저장돼요.</p></div>
+          <div><h2 id="achievement-history-title" className="mb-section-title">최근 풀이 기록</h2><p>선택한 조건에 맞는 기록 {filteredHistory.length}건이에요.</p></div>
           {confirming === 'all' ? <div className="achievement-confirm"><span>모두 지울까요?</span><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update([])}>초기화</button></div> : <button className="achievement-reset" type="button" onClick={() => setConfirming('all')}>전체 초기화</button>}
         </div>
         <ol className="achievement-list">
-          {history.map((item, index) => <li key={`${item.date}-${index}`}>
+          {filteredHistory.map((item, index) => <li key={`${item.date}-${index}`}>
             <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
             <div className="achievement-attempt"><strong>{item.score}점 <small>({item.correct}/{item.total})</small></strong><time dateTime={item.date}>{formatDate(item.date)}</time></div>
             <div className="achievement-actions">
-              <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
-              {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
-              {confirming === index ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(index)}><Trash2 size={17} aria-hidden="true" /></button>}
+              <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
+              {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
+              {confirming === item.date ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter(record => record !== item))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(item.date)}><Trash2 size={17} aria-hidden="true" /></button>}
             </div>
           </li>)}
         </ol>
       </section>
+      </> : <section className="achievement-filter-empty"><Search size={26} aria-hidden="true" /><h2>선택한 조건의 기록이 없어요</h2><p>그룹이나 기간을 바꾸면 다른 풀이 기록을 확인할 수 있어요.</p><button type="button" onClick={() => { setSelectedGroups([]); setPeriod('all'); setDateFrom(''); setDateTo(''); }}>전체 기록 보기</button></section>}
     </> : <section className="achievement-empty">
       <span><Trophy size={30} aria-hidden="true" /></span>
       <h2 className="mb-card-title">아직 성취도 기록이 없어요</h2>

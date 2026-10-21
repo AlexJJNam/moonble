@@ -3,8 +3,16 @@ body.mb-has-app-sidebar.mb-sidebar-collapsed { padding-left: 68px; }
 body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header { position: fixed; inset: 0 auto 0 0; z-index: 50; width: 224px; height: 100vh; height: 100dvh; border-right: 1px solid var(--mb-border); background: rgb(255 255 255 / 96%); backdrop-filter: blur(18px); transition: width 280ms cubic-bezier(.22, 1, .36, 1); }
 .mb-app-header-inner { min-height: 100%; padding: 16px; display: flex; flex-direction: column; }
-.mb-app-logo { min-height: 48px; display: flex; align-items: center; padding: 8px 12px; margin-bottom: 8px; text-decoration: none; }
+.mb-app-brand-row { position: relative; min-width: 0; display: flex; align-items: center; margin-bottom: 8px; }
+.mb-app-logo { min-width: 0; min-height: 48px; display: flex; flex: 1; align-items: center; padding: 8px 12px; text-decoration: none; }
 .mb-app-logo .mb-brand-wordmark { width: 112px; }
+.mb-sidebar-help { position: relative; flex: 0 0 auto; }
+.mb-sidebar-help>button { width: 32px; height: 32px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; }
+.mb-sidebar-help>button:hover, .mb-sidebar-help>button:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.mb-sidebar-help>span { position: absolute; z-index: 80; top: calc(100% + 8px); left: 50%; width: 196px; padding: 10px 12px; border-radius: 10px; color: #fff; background: rgb(25 31 40 / 94%); font-size: var(--mb-font-12); line-height: 18px; opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, -4px); transition: opacity 140ms ease, transform 140ms ease, visibility 140ms; }
+.mb-sidebar-help>span::before { content: ''; position: absolute; bottom: 100%; left: 50%; border: 5px solid transparent; border-bottom-color: rgb(25 31 40 / 94%); transform: translateX(-50%); }
+.mb-sidebar-help:hover>span, .mb-sidebar-help:focus-within>span { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.mb-sidebar-help kbd { padding: 1px 4px; border-radius: 4px; color: #fff; background: rgb(255 255 255 / 14%); font: inherit; font-weight: 650; }
 .mb-app-profile { min-width: 0; min-height: 56px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); text-decoration: none; }
 .mb-app-profile:hover, .mb-app-profile[aria-current='page'] { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
 .mb-app-avatar { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-content: center; border-radius: 50%; background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-size: var(--mb-font-14); font-weight: 700; }
@@ -43,8 +51,10 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-sidebar-toggle:hover { color: var(--mb-primary-strong); }
 .mb-app-header.is-collapsed { width: 68px; }
 .mb-app-header.is-collapsed .mb-app-header-inner { padding-right: 10px; padding-left: 10px; }
+.mb-app-header.is-collapsed .mb-app-brand-row { justify-content: center; }
 .mb-app-header.is-collapsed .mb-app-logo { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 46px; }
+.mb-app-header.is-collapsed .mb-sidebar-help { display: none; }
 .mb-app-header.is-collapsed .mb-app-profile { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-profile-copy, .mb-app-header.is-collapsed .mb-app-profile>svg { display: none; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a { justify-content: center; padding-right: 0; padding-left: 0; }
@@ -78,7 +88,9 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar.is-mobile-hidden { top: -132px; }
   .mb-app-header.is-collapsed { width: 100%; }
   .mb-app-header-inner { min-height: auto; padding: 10px max(16px, env(safe-area-inset-right)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .mb-app-brand-row { margin: 0; }
   .mb-app-logo { min-height: 44px; margin: 0; padding: 6px 4px; }
+  .mb-sidebar-help { display: none; }
   .mb-app-logo .mb-brand-wordmark, .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 98px; }
   .mb-app-profile { grid-column: 2; grid-row: 1; min-height: 44px; margin: 0; padding: 4px; }
   .mb-app-profile:hover, .mb-app-profile[aria-current='page'] { background: transparent; }

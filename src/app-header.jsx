@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BarChart3, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
 import './app-header.css';
@@ -254,7 +254,13 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
 
   return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
-      <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
+      <div className="mb-app-brand-row">
+        <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
+        <span className="mb-sidebar-help">
+          <button type="button" aria-label="사이드바 단축키 안내"><CircleHelp size={17} aria-hidden="true" /></button>
+          <span role="tooltip"><kbd>Shift</kbd>와 <kbd>\</kbd>를 함께 누르면 사이드바가 사라지고, 다시 누르면 나타나요.</span>
+        </span>
+      </div>
       <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
         <span className="mb-app-avatar" aria-hidden="true">{initial}</span>
         <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BookOpen, FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
@@ -10,6 +10,7 @@ import {
   createCustomGroup,
   deleteCustomGroup,
   getCustomBankCollection,
+  reorderCustomGroups,
   setActiveCustomBank,
   setCustomBankUser,
   updateCustomBankMeta,
@@ -29,14 +30,6 @@ const papers = [
     { title: 'GA4의 데이터 모델은 무엇인가요?', options: ['세션 기반', '페이지뷰 기반', '이벤트 기반'] },
     { title: 'DebugView를 활성화하는 방법은?', options: ['debug_mode 매개변수 설정', 'Google Analytics Debugger 사용'] },
   ] },
-  { id: 'advanced', kind: 'advanced', label: 'GA4 실무 응용', description: '전자상거래와 데이터 품질, 실무에 필요한 개념을 익혀보세요.', count: 20, level: '심화', topics: '전자상거래 · 탐색 · 데이터 품질', samples: [
-    { title: '전자상거래 items 배열에 포함되는 정보는?', options: ['상품 ID와 이름', '가격과 수량', '쿠폰과 할인'] },
-    { title: '탐색에서 활용할 수 있는 분석 기법은?', options: ['퍼널 탐색', '경로 탐색', '코호트 탐색'] },
-  ] },
-  { id: 'random', kind: 'random', label: '전체 랜덤 문제지', description: '전체 문제은행에서 새로운 20문항을 만나보세요.', count: 20, level: '랜덤', topics: '전체 범위 · 매번 새로운 조합', samples: [
-    { title: 'BigQuery 연결로 할 수 있는 일은?', options: ['원시 이벤트 데이터 분석', 'SQL로 데이터 조회'] },
-    { title: '앱의 화면 조회에 사용하는 이벤트는?', options: ['screen_view', 'page_view', 'first_visit'] },
-  ] },
 ];
 const difficulties = ['전체 난이도', '기본', '심화'];
 const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
@@ -46,6 +39,11 @@ const viewSegments = [
 ];
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+const sampleVisibilityKey = userId => `moonble:user:${userId}:sample-paper-hidden-v1`;
+const sampleIsVisible = userId => {
+  try { return !userId || localStorage.getItem(sampleVisibilityKey(userId)) !== 'true'; }
+  catch { return true; }
+};
 if (initialUser) {
   setCustomBankUser(initialUser.id);
   document.documentElement.removeAttribute('data-auth-pending');
@@ -54,7 +52,7 @@ if (initialUser) {
 function PaperPreview({ paper }) {
   return <div className={`paper-preview preview-${paper.kind}`} aria-hidden="true">
     <div className="preview-sheet">
-      <div className="preview-sheet-brand"><BrandLogo decorative /><span>{paper.kind === 'custom' ? 'CUSTOM' : 'GA4'}</span></div>
+      <div className="preview-sheet-brand"><BrandLogo decorative />{paper.kind === 'custom' && <span>CUSTOM</span>}</div>
       <div className="preview-sheet-title">{paper.label}</div>
       <div className="preview-sheet-subtitle">개념을 확인하는 작은 시작</div>
       {paper.samples.map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
@@ -76,13 +74,14 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   if (!editor) return null;
   const isBank = editor.type.startsWith('bank-');
   const isDelete = editor.type.endsWith('delete');
-  const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 이름 바꾸기' : '그룹을 삭제할까요?';
+  const isSample = editor.type === 'sample-delete';
+  const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 이름 바꾸기' : '그룹을 삭제할까요?';
   return <div className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className="quiz-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
       <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
       {isDelete ? <>
-        <p><strong>{editor.title || editor.name}</strong>{isBank ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
-        {!isBank && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
+        <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
+        {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
       </> : isBank ? <div className="quiz-manage-fields">
         <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
         <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
@@ -107,7 +106,77 @@ function QuizLibrary() {
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
   const [section, setSection] = useState(sectionFromHash);
+  const [sampleVisible, setSampleVisible] = useState(() => sampleIsVisible(initialUser?.id));
+  const [draggedBankId, setDraggedBankId] = useState(null);
+  const [dropGroupId, setDropGroupId] = useState(null);
+  const [folderPulse, setFolderPulse] = useState(null);
+  const [reorderingGroupId, setReorderingGroupId] = useState(null);
+  const [orderedGroupIds, setOrderedGroupIds] = useState(() => collection.groups.map(group => group.id));
+  const longPressTimer = useRef(0);
+  const groupPress = useRef(null);
+  const groupOrderRef = useRef(orderedGroupIds);
+  const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
+  useEffect(() => {
+    if (reorderingGroupId) return;
+    const next = collection.groups.map(group => group.id);
+    groupOrderRef.current = next;
+    setOrderedGroupIds(next);
+  }, [collection.groups, reorderingGroupId]);
+  useEffect(() => {
+    groupOrderRef.current = orderedGroupIds;
+  }, [orderedGroupIds]);
+  useEffect(() => {
+    function move(event) {
+      const press = groupPress.current;
+      if (!press) return;
+      if (!press.active) {
+        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > 9) {
+          window.clearTimeout(longPressTimer.current);
+          groupPress.current = null;
+        }
+        return;
+      }
+      event.preventDefault();
+      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest?.('[data-reorder-group]');
+      const targetId = target?.dataset.reorderGroup;
+      if (!targetId || targetId === press.id) return;
+      setOrderedGroupIds(current => {
+        const from = current.indexOf(press.id);
+        const to = current.indexOf(targetId);
+        if (from < 0 || to < 0 || from === to) return current;
+        const next = current.slice();
+        next.splice(from, 1);
+        next.splice(to, 0, press.id);
+        groupOrderRef.current = next;
+        return next;
+      });
+    }
+    function end() {
+      window.clearTimeout(longPressTimer.current);
+      const press = groupPress.current;
+      groupPress.current = null;
+      if (!press?.active) return;
+      try {
+        reorderCustomGroups(groupOrderRef.current);
+        refreshCollection();
+        setNotice('그룹 순서를 바꿨어요.');
+      } catch (reorderError) {
+        setNotice(reorderError.message || '그룹 순서를 저장하지 못했어요.');
+      }
+      setReorderingGroupId(null);
+      window.setTimeout(() => { suppressGroupClick.current = false; }, 60);
+    }
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    return () => {
+      window.clearTimeout(longPressTimer.current);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+    };
+  }, []);
   useEffect(() => {
     const syncSection = () => setSection(sectionFromHash());
     window.addEventListener('hashchange', syncSection);
@@ -139,6 +208,7 @@ function QuizLibrary() {
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html', location.href)); return; }
       setCustomBankUser(session.user.id);
       setCollection(getCustomBankCollection(session.user.id));
+      setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
       document.documentElement.removeAttribute('data-auth-pending');
     };
@@ -169,6 +239,10 @@ function QuizLibrary() {
       } else if (editor.type === 'bank-delete') {
         clearCustomBank(undefined, editor.bankId);
         setNotice('문제지를 삭제했어요.');
+      } else if (editor.type === 'sample-delete') {
+        localStorage.setItem(sampleVisibilityKey(user.id), 'true');
+        setSampleVisible(false);
+        setNotice('샘플 문제지를 삭제했어요.');
       } else if (editor.type === 'group-create') {
         const group = createCustomGroup(editor.name);
         setActiveGroup(group.id);
@@ -188,8 +262,34 @@ function QuizLibrary() {
       setEditor(current => ({ ...current, error: submitError.message || '저장하지 못했습니다.' }));
     }
   }
+  function beginGroupLongPress(event, groupId) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    window.clearTimeout(longPressTimer.current);
+    groupPress.current = { id: groupId, x: event.clientX, y: event.clientY, active: false };
+    longPressTimer.current = window.setTimeout(() => {
+      if (!groupPress.current || groupPress.current.id !== groupId) return;
+      groupPress.current.active = true;
+      suppressGroupClick.current = true;
+      setReorderingGroupId(groupId);
+      navigator.vibrate?.(18);
+    }, 460);
+  }
+  function moveBankToGroup(bankId, groupId) {
+    if (!bankId || groupId === 'all') return;
+    const bank = collection.banks.find(item => item.id === bankId);
+    if (!bank || bank.groupId === groupId) return;
+    try {
+      updateCustomBankMeta(bank.title, bank.description, undefined, bank.id, groupId);
+      setFolderPulse(groupId);
+      setNotice(groupId === DEFAULT_GROUP_ID ? '문제지를 미분류로 옮겼어요.' : '문제지를 그룹으로 옮겼어요.');
+      refreshCollection();
+      window.setTimeout(() => setFolderPulse(current => current === groupId ? null : current), 560);
+    } catch (moveError) {
+      setNotice(moveError.message || '문제지를 옮기지 못했어요.');
+    }
+  }
   if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
-  const customPapers = collection.banks.map(bank => ({
+  const customPapers = collection.banks.slice().sort((a, b) => new Date(b.updatedAt || b.savedAt || 0) - new Date(a.updatedAt || a.savedAt || 0)).map(bank => ({
     id: `custom:${bank.id}`,
     customBankId: bank.id,
     groupId: bank.groupId,
@@ -201,7 +301,8 @@ function QuizLibrary() {
     kind: 'custom',
     samples: bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) })),
   }));
-  const allPapers = [...papers, ...customPapers];
+  const visibleSamples = sampleVisible ? papers : [];
+  const allPapers = [...customPapers, ...visibleSamples];
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
@@ -210,9 +311,9 @@ function QuizLibrary() {
   });
   const activeCustom = collection.banks.find(bank => bank.id === collection.activeBankId) || collection.banks[0] || null;
   const groupTabs = [
-    { id: 'all', name: '전체', count: papers.length + collection.banks.length },
+    { id: 'all', name: '전체', count: visibleSamples.length + collection.banks.length },
     { id: DEFAULT_GROUP_ID, name: '미분류', count: collection.banks.filter(bank => bank.groupId === DEFAULT_GROUP_ID).length },
-    ...collection.groups.map(group => ({ ...group, count: collection.banks.filter(bank => bank.groupId === group.id).length })),
+    ...orderedGroupIds.map(id => collection.groups.find(group => group.id === id)).filter(Boolean).map(group => ({ ...group, count: collection.banks.filter(bank => bank.groupId === group.id).length })),
   ];
   return <div className="quiz-page" onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
@@ -222,11 +323,26 @@ function QuizLibrary() {
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1><p>오늘은 어떤 개념을 익혀볼까요?</p></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="paper-group-bar">
           <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
-            {groupTabs.map(group => <span className={`paper-group-tab${activeGroup === group.id ? ' is-active' : ''}`} key={group.id}>
-              <button type="button" role="tab" aria-selected={activeGroup === group.id} onClick={event => { event.stopPropagation(); setActiveGroup(group.id); setOpenMenu(null); }}>{group.name}<small>{group.count}</small></button>
-              {group.id !== 'all' && group.id !== DEFAULT_GROUP_ID && <button className="paper-group-more" type="button" aria-label={`${group.name} 그룹 더보기`} aria-haspopup="menu" aria-expanded={openMenu === `group:${group.id}`} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === `group:${group.id}` ? null : `group:${group.id}`); }}><MoreHorizontal size={16} /></button>}
-              {openMenu === `group:${group.id}` && <span className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}><button type="button" role="menuitem" onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name })}><Pencil size={15} />이름 바꾸기</button><button className="is-danger" type="button" role="menuitem" onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} />삭제하기</button></span>}
+            {groupTabs.map(group => <span
+              className={`paper-group-tab${activeGroup === group.id ? ' is-active' : ''}${dropGroupId === group.id ? ' is-drop-target' : ''}${folderPulse === group.id ? ' is-receiving' : ''}${reorderingGroupId === group.id ? ' is-reordering' : ''}`}
+              data-group-id={group.id}
+              data-reorder-group={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? group.id : undefined}
+              key={group.id}
+              onPointerDown={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? event => beginGroupLongPress(event, group.id) : undefined}
+              onDragEnter={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); setDropGroupId(group.id); } } : undefined}
+              onDragOver={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } } : undefined}
+              onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropGroupId(current => current === group.id ? null : current); }}
+              onDrop={group.id !== 'all' ? event => { event.preventDefault(); const bankId = event.dataTransfer.getData('application/x-moonble-bank') || draggedBankId; setDropGroupId(null); setDraggedBankId(null); moveBankToGroup(bankId, group.id); } : undefined}
+            >
+              <button type="button" role="tab" aria-selected={activeGroup === group.id} onClick={event => { event.stopPropagation(); if (suppressGroupClick.current) return; setActiveGroup(group.id); setOpenMenu(null); }}>{group.name}<small>{group.count}</small></button>
             </span>)}
+            {!!collection.groups.length && <span className="paper-group-manage" role="presentation">
+              <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
+              {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
+                <strong>그룹 편집</strong>
+                {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 이름 바꾸기`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+              </span>}
+            </span>}
           </div>
           <button className="paper-group-add" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '' }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
@@ -241,14 +357,21 @@ function QuizLibrary() {
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
-            return <article className="paper-card" key={paper.id}>
+            const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
+            return <article
+              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}`}
+              draggable={Boolean(paper.customBankId)}
+              onDragStart={paper.customBankId ? event => { setDraggedBankId(paper.customBankId); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-moonble-bank', paper.customBankId); } : undefined}
+              onDragEnd={() => { setDraggedBankId(null); setDropGroupId(null); }}
+              key={paper.id}
+            >
               <a className="paper-card-link" href={href} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`} onClick={() => { if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} />
                 <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><h2 className="mb-card-title">{paper.label}</h2><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
               </a>
-              {paper.customBankId && <div className="paper-card-actions">
-                <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === `bank:${paper.customBankId}`} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === `bank:${paper.customBankId}` ? null : `bank:${paper.customBankId}`); }}><MoreHorizontal size={18} /></button>
-                {openMenu === `bank:${paper.customBankId}` && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}><button type="button" role="menuitem" onClick={() => setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId })}><Pencil size={15} />편집</button><button className="is-danger" type="button" role="menuitem" onClick={() => setEditor({ type: 'bank-delete', bankId: paper.customBankId, title: paper.label })}><Trash2 size={15} />삭제</button></div>}
+              {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
+                <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
+                {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && <button type="button" role="menuitem" onClick={() => setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId })}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
               </div>}
             </article>;
           })}
