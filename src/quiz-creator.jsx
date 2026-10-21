@@ -27,8 +27,9 @@ ${format}`;
   if (provider === 'gemini') {
     return `${common}
 
-결과는 다운로드 파일만 만들지 말고 Google Sheets를 직접 생성해주세요.
-- 시트에 위 형식의 메타데이터와 20문항을 넣기
+결과는 UTF-8 CSV 파일과 Google Sheets 두 형태로 만들어주세요.
+- 다운로드 가능한 moonble_questions.csv 파일 생성
+- Google Drive에 새 Google Sheets를 만들고 위 형식의 메타데이터와 20문항을 넣기
 - 공유 권한을 ‘링크가 있는 모든 사용자 · 뷰어’로 설정
 - 답변 마지막에 생성한 Google Sheets 공유 링크를 복사해 붙여넣기 쉬운 독립된 한 줄로 제공`;
   }
@@ -149,7 +150,7 @@ export function QuizCreator({ custom, onChange }) {
     if (!value) { shakePrompt(); return; }
     setError('');
     const prompt = encodeURIComponent(generationPrompt(value, provider));
-    const url = provider === 'gemini' ? `https://gemini.google.com/app?q=${prompt}` : `https://chatgpt.com/?q=${prompt}`;
+    const url = provider === 'gemini' ? `https://www.google.com/search?q=${prompt}&udm=50` : `https://chatgpt.com/?q=${prompt}`;
     openPopup(url);
     setQuery('');
     if (promptInputRef.current) {
@@ -245,10 +246,10 @@ export function QuizCreator({ custom, onChange }) {
           <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> 바로 시험을 볼 수 있는 상급</span></p>
           <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
           <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`}>
-            <q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>
+            <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}</span>
             {!exampleRevealed
               ? <button className="creator-example-reveal" type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>
-              : <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}
+              : null}
           </div>
         </div>
       </details>
