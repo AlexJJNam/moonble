@@ -517,25 +517,10 @@ export function QuizAchievement({ userId }) {
   return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
       <div><span className="achievement-eyebrow">학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
-      <div className="achievement-export-actions" aria-label="학습 리포트 내보내기">
-        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={17} aria-hidden="true" />CSV</button>
-        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportPdf}><FileDown size={17} aria-hidden="true" />PDF</button>
-      </div>
     </div>
 
     {history.length ? <>
       <section className="achievement-filters" aria-label="성취도 조회 조건">
-        <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
-          <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
-          {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
-        </div>
-        {selectedGroups.length > 0 && paperFilters.length > 0 && <div className="achievement-paper-depth">
-          <span>문제지</span>
-          <div className="achievement-paper-filters" role="group" aria-label="선택한 그룹의 문제지 복수 선택">
-            <button className={!selectedPapers.length ? 'is-active' : ''} type="button" aria-pressed={!selectedPapers.length} onClick={() => setSelectedPapers([])}>전체 <small>{paperFilters.reduce((sum, paper) => sum + paper.count, 0)}</small></button>
-            {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}>{paper.name} <small>{paper.count}</small></button>)}
-          </div>
-        </div>}
         <div className="achievement-period-filter" ref={periodFilterRef}>
           <span className="achievement-period-icon"><CalendarDays size={17} aria-hidden="true" /></span>
           <div className="achievement-period-tabs" role="group" aria-label="조회 기간">
@@ -587,6 +572,25 @@ export function QuizAchievement({ userId }) {
       <p>문제지를 풀고 제출하면 점수와 오답 기록이 여기에 쌓여요.</p>
       <a href="#paper-library">첫 문제지 풀기</a>
     </section>}
+    <section className="achievement-bottom-tools" aria-label="성취도 필터 및 내보내기">
+      {history.length > 0 && <>
+        <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
+          <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
+          {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
+        </div>
+        {selectedGroups.length > 0 && paperFilters.length > 0 && <div className="achievement-paper-depth">
+          <span>문제지</span>
+          <div className="achievement-paper-filters" role="group" aria-label="선택한 그룹의 문제지 복수 선택">
+            <button className={!selectedPapers.length ? 'is-active' : ''} type="button" aria-pressed={!selectedPapers.length} onClick={() => setSelectedPapers([])}>전체 <small>{paperFilters.reduce((sum, paper) => sum + paper.count, 0)}</small></button>
+            {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}>{paper.name} <small>{paper.count}</small></button>)}
+          </div>
+        </div>}
+      </>}
+      <div className="achievement-export-actions" aria-label="학습 리포트 내보내기">
+        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={17} aria-hidden="true" />CSV</button>
+        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportPdf}><FileDown size={17} aria-hidden="true" />PDF</button>
+      </div>
+    </section>
     {periodSheetOpen && <div ref={periodOverlayRef} className={`achievement-period-overlay${periodSheetClosing ? ' is-closing' : ''}`} role="presentation" onPointerDown={event => { if (event.target === event.currentTarget) closePeriodSheet(); }}>
       <section ref={periodSheetRef} className={`achievement-period-sheet${periodDraft === 'custom' ? ' show-custom' : ''}`} role="dialog" aria-modal="true" aria-labelledby="achievement-period-title">
         <span className="achievement-period-grab" aria-hidden="true" />

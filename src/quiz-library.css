@@ -306,6 +306,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-title h1 { margin-top: 8px; }
 .achievement-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--mb-primary-strong); font-size: 13px; line-height: 20px; font-weight: 600; }
 .achievement-export-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.achievement-bottom-tools { display: grid; gap: 14px; margin-top: 24px; }
+.achievement-bottom-tools .achievement-export-actions { justify-content: flex-end; }
 .achievement-export { min-width: 82px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: var(--mb-surface-muted); color: var(--mb-text-secondary); font-size: var(--mb-font-13); font-weight: 600; white-space: nowrap; transition: background-color var(--mb-duration), color var(--mb-duration); }
 .achievement-export:disabled { cursor: default; opacity: .48; }
 .achievement-export:hover:not(:disabled), .achievement-reset:hover, .achievement-actions button:hover { background: var(--mb-border); color: var(--mb-text-primary); }
@@ -600,7 +602,7 @@ button:disabled { cursor: wait; opacity: .6; }
   @page { size: A4 portrait; margin: 12mm; }
   html, body { background: #fff !important; }
   body.mb-has-app-sidebar { padding-left: 0 !important; }
-  .mb-app-header, .site-footer, .achievement-export-actions, .achievement-filters, .achievement-reset, .achievement-confirm, .achievement-actions, .achievement-period-overlay { display: none !important; }
+  .mb-app-header, .site-footer, .achievement-bottom-tools, .achievement-export-actions, .achievement-filters, .achievement-reset, .achievement-confirm, .achievement-actions, .achievement-period-overlay { display: none !important; }
   .quiz-main.achievement-main { max-width: none !important; padding: 0 !important; }
   .achievement-title { margin-bottom: 20px !important; }
   .achievement-performance, .achievement-chart, .achievement-history { break-inside: avoid; border: 1px solid #e7ebf0 !important; }
