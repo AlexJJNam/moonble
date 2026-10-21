@@ -473,7 +473,7 @@ function QuizLibrary() {
             </article>;
           })}
         </section>
-        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { setQuery(''); setDifficulty('전체 난이도'); setActiveGroup('all'); }}>전체 문제지 보기</button></div>}
+        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>}
       </main>}<SiteFooter />
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />

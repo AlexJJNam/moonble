@@ -191,71 +191,112 @@
   .animate-shimmer::after { animation: none; }
 }
 
+/* PRD workspace surface guide: keep the existing layout and share Moonble's visual hierarchy. */
+.prd-list-page {
+  color: var(--mb-text-primary);
+  background: var(--mb-bg);
+}
+
+.prd-list-heading h1 {
+  color: var(--mb-text-primary);
+  font-size: var(--mb-font-28);
+  line-height: 36px;
+  letter-spacing: -.025em;
+}
+
+.prd-list-heading p {
+  color: var(--mb-text-tertiary) !important;
+  font-size: var(--mb-font-14);
+  line-height: 22px;
+}
+
+.prd-list-toolbar button {
+  min-height: var(--mb-target-size);
+  border-radius: 12px;
+  box-shadow: none !important;
+  font-family: var(--mb-font-sans);
+  font-size: var(--mb-font-14);
+}
+
+.prd-list-toolbar button:not(.mb-flow-action) {
+  border-color: var(--mb-border);
+  color: var(--mb-text-secondary);
+  background: var(--mb-surface);
+}
+
+.prd-list-summary {
+  border-color: transparent !important;
+  border-radius: 16px;
+  color: var(--mb-text-secondary) !important;
+  background: var(--mb-primary-soft) !important;
+  box-shadow: none;
+  font-size: var(--mb-font-14);
+  line-height: 22px;
+}
+
+.prd-list-summary > svg { color: var(--mb-primary-strong); }
+
+.prd-document-card,
+.prd-empty-card {
+  border: 1px solid var(--mb-border) !important;
+  border-radius: 16px !important;
+  color: var(--mb-text-primary);
+  background: var(--mb-surface);
+  box-shadow: none !important;
+}
+
+.prd-document-title {
+  color: var(--mb-text-primary);
+  font-size: var(--mb-font-18) !important;
+  line-height: 26px;
+  letter-spacing: -.015em;
+}
+
+.prd-document-title > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--mb-primary-strong);
+}
+
+.prd-document-mission {
+  color: var(--mb-text-secondary) !important;
+  font-size: var(--mb-font-14) !important;
+  line-height: 22px;
+}
+
+.prd-document-meta,
+.prd-version-date {
+  color: var(--mb-text-tertiary) !important;
+  font-size: var(--mb-font-12) !important;
+  line-height: 18px;
+}
+
+.prd-version-list { border-color: var(--mb-border) !important; }
+.prd-version-link { border-radius: 8px; }
+.prd-version-link:hover { background: var(--mb-surface-muted); }
+.prd-empty-card p { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
+
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
 @media (max-width: 767px) {
-  .prd-list-page {
-    color: var(--mb-text-primary);
-    background: var(--mb-bg);
-  }
-
   .prd-list-heading h1 {
-    color: var(--mb-text-primary);
     font-size: var(--mb-font-24);
     line-height: 32px;
     letter-spacing: -.02em;
   }
 
   .prd-list-heading p {
-    color: var(--mb-text-tertiary) !important;
-    font-size: var(--mb-font-14);
     line-height: 20px;
   }
-
-  .prd-list-toolbar button {
-    min-height: var(--mb-target-size);
-    border-radius: 12px;
-    box-shadow: none !important;
-    font-family: var(--mb-font-sans);
-    font-size: var(--mb-font-14);
-  }
-
-  .prd-list-toolbar button:not(.mb-flow-action) {
-    border-color: var(--mb-border);
-    color: var(--mb-text-secondary);
-    background: var(--mb-surface);
-  }
-
-  .prd-list-summary {
-    border-color: transparent !important;
-    border-radius: 16px;
-    color: var(--mb-text-secondary) !important;
-    background: var(--mb-primary-soft) !important;
-    box-shadow: none;
-    font-size: var(--mb-font-14);
-    line-height: 22px;
-  }
-
-  .prd-list-summary > svg { color: var(--mb-primary-strong); }
 
   .prd-document-card,
   .prd-empty-card {
     border: 0 !important;
     border-radius: 16px !important;
-    background: var(--mb-surface);
-    box-shadow: none !important;
   }
 
   .prd-document-title {
-    color: var(--mb-text-primary);
     font-size: var(--mb-font-16) !important;
     line-height: 24px;
-    letter-spacing: -.015em;
-  }
-
-  .prd-document-title > svg {
-    width: 18px;
-    height: 18px;
-    color: var(--mb-primary-strong);
   }
 
   .prd-document-mission {
@@ -263,17 +304,6 @@
     font-size: var(--mb-font-13) !important;
     line-height: 20px;
   }
-
-  .prd-document-meta,
-  .prd-version-date {
-    color: var(--mb-text-tertiary) !important;
-    font-size: var(--mb-font-12) !important;
-    line-height: 18px;
-  }
-
-  .prd-version-list { border-color: var(--mb-border) !important; }
-  .prd-version-link { border-radius: 8px; }
-  .prd-empty-card p { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
 }
 
 @media print {

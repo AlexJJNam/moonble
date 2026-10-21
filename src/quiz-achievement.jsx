@@ -55,6 +55,20 @@ function formatShortDate(value) {
   }).format(date);
 }
 
+function historyPaperKey(item) {
+  if (item?.bankId) return `bank:${item.bankId}`;
+  if (item?.paperId) return `paper:${item.paperId}`;
+  return `title:${item?.paperTitle || '문제지'}`;
+}
+
+function fallbackPaperTitle(item) {
+  if (item?.paperTitle) return item.paperTitle;
+  if (item?.paperId === 'basics') return 'GA4 핵심 개념';
+  if (item?.paperId === 'advanced') return 'GA4 실무 응용';
+  if (item?.paperId === 'random') return '전체 랜덤 문제지';
+  return '문제지';
+}
+
 function ScoreChart({ history }) {
   const chronological = useMemo(() => history.slice(0, 10).reverse(), [history]);
   const trendData = useMemo(() => {
@@ -92,13 +106,18 @@ function ScoreChart({ history }) {
     }
 
     function draw() {
-      const width = Math.max(680, container.clientWidth || 680);
+      const compact = window.matchMedia?.('(max-width: 540px)').matches;
+      const measuredWidth = container.clientWidth || (compact ? 320 : 680);
+      const width = compact ? Math.max(300, measuredWidth) : Math.max(680, measuredWidth);
       if (container.querySelector('svg') && Math.abs(width - lastWidth) < 1) return;
       lastWidth = width;
-      const height = Math.max(260, Math.min(320, Math.round(width * .38)));
-      const margin = { top: 24, right: 24, bottom: 44, left: 44 };
+      const height = compact ? Math.max(224, Math.min(248, Math.round(width * .72))) : Math.max(260, Math.min(320, Math.round(width * .38)));
+      const margin = compact
+        ? { top: 22, right: 10, bottom: 38, left: 30 }
+        : { top: 24, right: 24, bottom: 44, left: 44 };
       const svg = d3.select(container).selectAll('svg').data([null]).join('svg')
         .attr('viewBox', `0 0 ${width} ${height}`)
+        .classed('is-compact', compact)
         .attr('role', 'img')
         .attr('aria-label', `최근 점수와 실력 추이: ${trendData.map(item => `${item.score}점`).join(', ')}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
@@ -108,7 +127,7 @@ function ScoreChart({ history }) {
       const x = d3.scaleBand()
         .domain(d3.range(trendData.length))
         .range([margin.left, width - margin.right])
-        .paddingInner(.62)
+        .paddingInner(compact ? .5 : .62)
         .paddingOuter(.32);
       const y = d3.scaleLinear().domain([0, 100]).range([height - margin.bottom, margin.top]);
       const ticks = [0, 25, 50, 75, 100];
@@ -134,7 +153,7 @@ function ScoreChart({ history }) {
         .attr('width', x.bandwidth())
         .attr('y', y(0))
         .attr('height', 0)
-        .attr('rx', 5)
+        .attr('rx', compact ? 4 : 5)
         .attr('tabindex', 0)
         .attr('role', 'img')
         .attr('aria-label', item => `${formatDate(item.date)}, ${item.score}점, ${item.correct}/${item.total}개 정답`)
@@ -242,6 +261,7 @@ export function QuizAchievement({ userId }) {
   const [confirming, setConfirming] = useState(null);
   const [collection, setCollection] = useState(() => getCustomBankCollection(userId));
   const [selectedGroups, setSelectedGroups] = useState([]);
+  const [selectedPapers, setSelectedPapers] = useState([]);
   const [period, setPeriod] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -293,6 +313,39 @@ export function QuizAchievement({ userId }) {
     count: history.filter(item => (item.groupId || DEFAULT_GROUP_ID) === group.id).length,
   })), [collection.groups, history]);
 
+  const paperFilters = useMemo(() => {
+    const bankTitles = new Map(collection.banks.map(bank => [bank.id, bank.title]));
+    const filters = new Map();
+    history.forEach(item => {
+      const groupId = item.groupId || DEFAULT_GROUP_ID;
+      if (selectedGroups.length && !selectedGroups.includes(groupId)) return;
+      const id = historyPaperKey(item);
+      const current = filters.get(id);
+      if (current) {
+        current.count += 1;
+        return;
+      }
+      filters.set(id, {
+        id,
+        name: item.bankId ? (bankTitles.get(item.bankId) || fallbackPaperTitle(item)) : fallbackPaperTitle(item),
+        count: 1,
+      });
+    });
+    return [...filters.values()];
+  }, [collection.banks, history, selectedGroups]);
+
+  useEffect(() => {
+    if (!selectedGroups.length) {
+      setSelectedPapers(current => current.length ? [] : current);
+      return;
+    }
+    const available = new Set(paperFilters.map(paper => paper.id));
+    setSelectedPapers(current => {
+      const next = current.filter(id => available.has(id));
+      return next.length === current.length ? current : next;
+    });
+  }, [paperFilters, selectedGroups.length]);
+
   const filteredHistory = useMemo(() => {
     const now = new Date();
     const start = new Date(now);
@@ -301,8 +354,9 @@ export function QuizAchievement({ userId }) {
     if (period === '6m') start.setMonth(start.getMonth() - 6);
     return history.filter(item => {
       const groupMatch = !selectedGroups.length || selectedGroups.includes(item.groupId || DEFAULT_GROUP_ID);
+      const paperMatch = !selectedPapers.length || selectedPapers.includes(historyPaperKey(item));
       const itemDate = new Date(item.date);
-      if (!groupMatch || Number.isNaN(itemDate.getTime())) return false;
+      if (!groupMatch || !paperMatch || Number.isNaN(itemDate.getTime())) return false;
       if (period === 'custom') {
         const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
         const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
@@ -310,7 +364,7 @@ export function QuizAchievement({ userId }) {
       }
       return period === 'all' || itemDate >= start;
     });
-  }, [dateFrom, dateTo, history, period, selectedGroups]);
+  }, [dateFrom, dateTo, history, period, selectedGroups, selectedPapers]);
 
   const stats = useMemo(() => {
     if (!filteredHistory.length) return { latest: 0, average: 0, best: 0, latestDate: '-' };
@@ -421,6 +475,13 @@ export function QuizAchievement({ userId }) {
           <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
           {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
         </div>
+        {selectedGroups.length > 0 && paperFilters.length > 0 && <div className="achievement-paper-depth">
+          <span>문제지</span>
+          <div className="achievement-paper-filters" role="group" aria-label="선택한 그룹의 문제지 복수 선택">
+            <button className={!selectedPapers.length ? 'is-active' : ''} type="button" aria-pressed={!selectedPapers.length} onClick={() => setSelectedPapers([])}>전체 <small>{paperFilters.reduce((sum, paper) => sum + paper.count, 0)}</small></button>
+            {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}>{paper.name} <small>{paper.count}</small></button>)}
+          </div>
+        </div>}
         <div className="achievement-period-filter" ref={periodFilterRef}>
           <span className="achievement-period-icon"><CalendarDays size={17} aria-hidden="true" /></span>
           <div className="achievement-period-tabs" role="group" aria-label="조회 기간">
@@ -439,7 +500,7 @@ export function QuizAchievement({ userId }) {
       </section>
       {filteredHistory.length ? <>
       <section className="achievement-performance" aria-labelledby="achievement-performance-title">
-        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>선택한 그룹과 기간의 기록을 함께 비교해요.</p></div></div>
+        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>선택한 그룹·문제지와 기간의 기록을 함께 비교해요.</p></div></div>
         <div className="achievement-summary" aria-label="성취도 요약">
           <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{filteredHistory.length}회 완료</small></article>
           <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
@@ -465,7 +526,7 @@ export function QuizAchievement({ userId }) {
           </li>)}
         </ol>
       </section>
-      </> : <section className="achievement-filter-empty"><Search size={26} aria-hidden="true" /><h2>선택한 조건의 기록이 없어요</h2><p>그룹이나 기간을 바꾸면 다른 풀이 기록을 확인할 수 있어요.</p><button type="button" onClick={() => { setSelectedGroups([]); setPeriod('all'); setDateFrom(''); setDateTo(''); }}>전체 기록 보기</button></section>}
+      </> : <section className="achievement-filter-empty"><Search size={26} aria-hidden="true" /><h2>선택한 조건의 기록이 없어요</h2><p>그룹·문제지나 기간을 바꾸면 다른 풀이 기록을 확인할 수 있어요.</p><button type="button" onClick={() => { setSelectedGroups([]); setSelectedPapers([]); setPeriod('all'); setDateFrom(''); setDateTo(''); }}>전체 기록 보기</button></section>}
     </> : <section className="achievement-empty">
       <span><Trophy size={30} aria-hidden="true" /></span>
       <h2 className="mb-card-title">아직 성취도 기록이 없어요</h2>
