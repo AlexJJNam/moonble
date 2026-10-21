@@ -105,6 +105,7 @@ export function QuizCreator({ custom, onChange }) {
   const [exampleRevealed, setExampleRevealed] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [uploadRevealed, setUploadRevealed] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [metaReveal, setMetaReveal] = useState(false);
   const [screen, setScreen] = useState('create');
@@ -385,8 +386,8 @@ export function QuizCreator({ custom, onChange }) {
     <section className="creator-step" aria-labelledby="creator-upload-title">
       <header><span>2</span><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
-        className={`creator-drop${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
-        onDragEnter={event => { event.preventDefault(); setDragging(true); }}
+        className={`creator-drop${uploadRevealed ? ' is-revealed' : ' is-concealed'}${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
+        onDragEnter={event => { event.preventDefault(); setUploadRevealed(true); setDragging(true); }}
         onDragOver={event => event.preventDefault()}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
         onDrop={event => { event.preventDefault(); upload(event.dataTransfer.files[0]); }}
@@ -396,6 +397,7 @@ export function QuizCreator({ custom, onChange }) {
         <strong>{pending ? '문제를 확인하고 있어요' : 'CSV 파일을 여기에 놓으세요'}</strong>
         <p>또는</p>
         <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
+        {!uploadRevealed && <button className="creator-drop-reveal" type="button" aria-label="CSV 업로드 영역 보기" onClick={() => setUploadRevealed(true)}>업로드 영역 보기</button>}
         {uploadSuccess && <div className="creator-upload-complete" role="status"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13.5 24.8l7 7L35 17.5" /></svg></span><strong>문제지 등록 완료</strong></div>}
       </div>
       <div className="creator-source-divider"><span>또는</span></div>
