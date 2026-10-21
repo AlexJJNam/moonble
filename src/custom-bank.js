@@ -39,15 +39,20 @@
     };
   }
   function emptyCollection() {
-    return { version: 3, activeBankId: null, groups: [], banks: [] };
+    return { version: 3, bankOrderVersion: 1, activeBankId: null, groups: [], banks: [] };
   }
   function normalizeCollection(value) {
     var parsed = value && typeof value === 'object' ? value : emptyCollection();
     var groups = Array.isArray(parsed.groups) ? parsed.groups.filter(group => group && typeof group.id === 'string' && typeof group.name === 'string' && group.name.trim()).map(group => ({ ...group, name: group.name.trim() })) : [];
     var groupIds = new Set(groups.map(group => group.id));
     var banks = (Array.isArray(parsed.banks) ? parsed.banks : []).map(normalizeBank).filter(Boolean).map(bank => groupIds.has(bank.groupId) ? bank : { ...bank, groupId: DEFAULT_GROUP_ID });
+    if (parsed.bankOrderVersion !== 1) {
+      banks.sort(function (a, b) {
+        return new Date(b.updatedAt || b.savedAt || 0).getTime() - new Date(a.updatedAt || a.savedAt || 0).getTime();
+      });
+    }
     var activeBankId = banks.some(bank => bank.id === parsed.activeBankId) ? parsed.activeBankId : (banks[0]?.id || null);
-    return { version: 3, activeBankId: activeBankId, groups: groups, banks: banks };
+    return { version: 3, bankOrderVersion: 1, activeBankId: activeBankId, groups: groups, banks: banks };
   }
   function writeCollection(collection, userId) {
     var key = storageKey(userId);
@@ -129,7 +134,7 @@
         updatedAt: now
       });
       if (!bank) throw new Error('문제지 형식이 올바르지 않습니다.');
-      collection.banks = existing ? collection.banks.map(item => item.id === bank.id ? bank : item) : [...collection.banks, bank];
+      collection.banks = existing ? collection.banks.map(item => item.id === bank.id ? bank : item) : [bank, ...collection.banks];
       collection.activeBankId = bank.id;
       writeCollection(collection, userId);
       return bank;
@@ -208,6 +213,21 @@
       writeCollection(collection, userId);
       return collection.groups;
     } catch (e) { throw new Error('그룹 순서를 저장하지 못했습니다.'); }
+  }
+  export function reorderCustomBanks(bankIds, userId) {
+    try {
+      var collection = readCollection(userId);
+      var order = Array.isArray(bankIds) ? bankIds : [];
+      var rank = new Map(order.map(function (id, index) { return [id, index]; }));
+      var originalRank = new Map(collection.banks.map(function (bank, index) { return [bank.id, index]; }));
+      collection.banks = collection.banks.slice().sort(function (a, b) {
+        var aRank = rank.has(a.id) ? rank.get(a.id) : order.length + originalRank.get(a.id);
+        var bRank = rank.has(b.id) ? rank.get(b.id) : order.length + originalRank.get(b.id);
+        return aRank - bRank;
+      });
+      writeCollection(collection, userId);
+      return collection.banks;
+    } catch (e) { throw new Error('문제지 순서를 저장하지 못했습니다.'); }
   }
   export { DEFAULT_GROUP_ID };
   // ---- CSV 파싱 (따옴표로 감싼 콤마를 처리하는 간단한 RFC4180 스타일 파서) ----

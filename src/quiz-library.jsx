@@ -10,6 +10,7 @@ import {
   createCustomGroup,
   deleteCustomGroup,
   getCustomBankCollection,
+  reorderCustomBanks,
   reorderCustomGroups,
   setActiveCustomBank,
   setCustomBankUser,
@@ -111,6 +112,7 @@ function QuizLibrary() {
   const [dropGroupId, setDropGroupId] = useState(null);
   const [folderPulse, setFolderPulse] = useState(null);
   const [pressedBankId, setPressedBankId] = useState(null);
+  const [dropBankTarget, setDropBankTarget] = useState(null);
   const [reorderingGroupId, setReorderingGroupId] = useState(null);
   const [orderedGroupIds, setOrderedGroupIds] = useState(() => collection.groups.map(group => group.id));
   const longPressTimer = useRef(0);
@@ -317,7 +319,7 @@ function QuizLibrary() {
     preview.querySelector('.paper-card-actions')?.remove();
     preview.classList.remove('is-dragging', 'is-pressing');
     preview.classList.add('paper-drag-preview');
-    preview.style.width = `${Math.max(148, Math.min(220, bounds.width * .7))}px`;
+    preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
     document.body.appendChild(preview);
     dragPreviewNode.current = preview;
     event.dataTransfer.setDragImage(preview, preview.offsetWidth / 2, Math.min(34, preview.offsetHeight / 2));
@@ -326,6 +328,27 @@ function QuizLibrary() {
     setPressedBankId(null);
     setDraggedBankId(bankId);
   }
+  function bankDropPosition(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (view === 'list') return event.clientY >= bounds.top + bounds.height / 2 ? 'after' : 'before';
+    return event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before';
+  }
+  function reorderBankNear(bankId, targetBankId, position) {
+    if (!bankId || !targetBankId || bankId === targetBankId) return;
+    const nextOrder = collection.banks.map(bank => bank.id);
+    const from = nextOrder.indexOf(bankId);
+    if (from < 0 || !nextOrder.includes(targetBankId)) return;
+    nextOrder.splice(from, 1);
+    const target = nextOrder.indexOf(targetBankId);
+    nextOrder.splice(target + (position === 'after' ? 1 : 0), 0, bankId);
+    try {
+      reorderCustomBanks(nextOrder);
+      refreshCollection();
+      setNotice('문제지 순서를 바꿨어요.');
+    } catch (reorderError) {
+      setNotice(reorderError.message || '문제지 순서를 저장하지 못했어요.');
+    }
+  }
   function finishPaperDrag() {
     window.clearTimeout(paperPressTimer.current);
     dragPreviewNode.current?.remove();
@@ -333,9 +356,10 @@ function QuizLibrary() {
     setPressedBankId(null);
     setDraggedBankId(null);
     setDropGroupId(null);
+    setDropBankTarget(null);
   }
   if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
-  const customPapers = collection.banks.slice().sort((a, b) => new Date(b.updatedAt || b.savedAt || 0) - new Date(a.updatedAt || a.savedAt || 0)).map(bank => ({
+  const customPapers = collection.banks.map(bank => ({
     id: `custom:${bank.id}`,
     customBankId: bank.id,
     groupId: bank.groupId,
@@ -375,7 +399,7 @@ function QuizLibrary() {
               data-reorder-group={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? group.id : undefined}
               key={group.id}
               onPointerDown={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? event => beginGroupLongPress(event, group.id) : undefined}
-              onDragEnter={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); setDropGroupId(group.id); } } : undefined}
+              onDragEnter={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); setDropBankTarget(null); setDropGroupId(group.id); } } : undefined}
               onDragOver={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } } : undefined}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropGroupId(current => current === group.id ? null : current); }}
               onDrop={group.id !== 'all' ? event => { event.preventDefault(); const bankId = event.dataTransfer.getData('application/x-moonble-bank') || draggedBankId; setDropGroupId(null); setDraggedBankId(null); moveBankToGroup(bankId, group.id); } : undefined}
@@ -405,13 +429,37 @@ function QuizLibrary() {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             return <article
-              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
+              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget?.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
               draggable={Boolean(paper.customBankId)}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? endPaperPress : undefined}
               onPointerCancel={paper.customBankId ? endPaperPress : undefined}
               onDragStart={paper.customBankId ? event => createPaperDragPreview(event, paper.customBankId) : undefined}
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
+              onDragEnter={paper.customBankId ? event => {
+                if (!draggedBankId || draggedBankId === paper.customBankId) return;
+                event.preventDefault();
+                setDropGroupId(null);
+                setDropBankTarget({ id: paper.customBankId, position: bankDropPosition(event) });
+              } : undefined}
+              onDragOver={paper.customBankId ? event => {
+                if (!draggedBankId || draggedBankId === paper.customBankId) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                const position = bankDropPosition(event);
+                setDropBankTarget(current => current?.id === paper.customBankId && current.position === position ? current : { id: paper.customBankId, position });
+              } : undefined}
+              onDragLeave={paper.customBankId ? event => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setDropBankTarget(current => current?.id === paper.customBankId ? null : current);
+              } : undefined}
+              onDrop={paper.customBankId ? event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const bankId = event.dataTransfer.getData('application/x-moonble-bank') || draggedBankId;
+                const position = dropBankTarget?.id === paper.customBankId ? dropBankTarget.position : bankDropPosition(event);
+                reorderBankNear(bankId, paper.customBankId, position);
+                finishPaperDrag();
+              } : undefined}
               key={paper.id}
             >
               <a className="paper-card-link" href={href} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`} onClick={() => { if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>

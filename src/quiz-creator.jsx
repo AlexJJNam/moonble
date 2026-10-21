@@ -382,7 +382,7 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-sheet-link">
         <Link2 size={18} aria-hidden="true" />
         <input type="url" value={sheetLink} onChange={event => setSheetLink(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); importSheet(); } }} placeholder="Google Sheets 공유 링크 붙여넣기" aria-label="Google Sheets 공유 링크" />
-        <button type="button" disabled={sheetPending || pending} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
+        <button type="button" disabled={sheetPending || pending || !sheetLink.trim()} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
       </div>
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
       {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
