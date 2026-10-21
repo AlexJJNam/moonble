@@ -79,7 +79,6 @@ function Workspace() {
           if (initial) window.location.replace(new URL('./quiz.html', window.location.href).href);
         }} />
       : <WorkspaceBoundary key={user.id}>
-          <p className="storage-note no-print">PRD 문서는 현재 브라우저에 저장됩니다.</p>
           {path.startsWith('/edit/')
             ? <PrdStudio key={route} prdId={path === '/edit/new' ? undefined : path.slice('/edit/'.length)} />
             : <PrdList key={`${user.id}:${profile.name}:${profile.companyName}`} />}

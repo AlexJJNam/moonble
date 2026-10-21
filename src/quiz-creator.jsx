@@ -175,6 +175,26 @@ export function QuizCreator({ custom, onChange }) {
     promptInputRef.current?.focus();
   }
 
+  function dockPrompt() {
+    if (promptFocused) return;
+    const bar = promptBarRef.current;
+    const before = bar?.getBoundingClientRect();
+    setPromptFocused(true);
+    if (!bar || !before || !window.matchMedia?.('(max-width: 540px)').matches) return;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      const after = bar.getBoundingClientRect();
+      const deltaX = before.left - after.left;
+      const deltaY = before.top - after.top;
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return;
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (reducedMotion) return;
+      bar.animate?.([
+        { transform: `translate3d(${deltaX}px, ${deltaY}px, 0)`, opacity: .88 },
+        { transform: 'translate3d(0, 0, 0)', opacity: 1 },
+      ], { duration: 340, easing: 'cubic-bezier(.2,.82,.24,1)' });
+    }));
+  }
+
   function openPopup(url) {
     const screenWidth = window.screen.availWidth || window.screen.width;
     const screenHeight = window.screen.availHeight || window.screen.height;
@@ -350,7 +370,7 @@ export function QuizCreator({ custom, onChange }) {
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
           <span className="creator-ai-prompt-field">
             <PromptSample hidden={Boolean(query)} />
-            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={() => setPromptFocused(true)} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
+            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={dockPrompt} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
           <div className="creator-ai-actions">
             <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>

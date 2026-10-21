@@ -2,24 +2,38 @@
 body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
-.account-main { max-width: 1080px; margin: 0 auto; padding: 40px 24px 64px; }
-.account-heading { max-width: 480px; margin: 0 auto 24px; }
-.account-heading h1 { margin: 0; }
-.account-heading p { margin: 8px 0 0; color: var(--mb-text-tertiary); }
+.account-main { max-width: 720px; margin: 0 auto; padding: 40px 24px 72px; }
+.account-heading { max-width: 480px; margin: 0 auto 20px; }
+.account-heading h1 { margin: 0; letter-spacing: -.025em; }
+.account-heading p { margin: 6px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
+.account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: var(--mb-surface); }
+.account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
+.account-profile-summary div { min-width: 0; }
+.account-profile-summary strong, .account-profile-summary p, .account-profile-summary small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-profile-summary strong { font-size: var(--mb-font-18); line-height: 26px; }
+.account-profile-summary p { margin: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; }
+.account-profile-summary small { margin-top: 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .account-main .profile-wrap { padding: 0; }
-.account-main .profile-card { margin: 24px auto; }
-.account-main .profile-card h2 { margin: 0 0 12px; }
+.account-main .profile-card { margin: 16px auto; border: 0; border-radius: 20px; }
+.account-main .profile-card h2 { margin: 0 0 8px; font-size: var(--mb-font-18); line-height: 26px; }
+.account-main .profile-card>p { margin: 6px 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.account-main .profile-form-card h1 { font-size: var(--mb-font-22); line-height: 30px; }
+.account-main .profile-form-card>p { margin-top: 6px; font-size: var(--mb-font-14); line-height: 22px; }
+.account-main .profile-card fieldset { margin-top: 24px; }
+.account-main .profile-card input, .account-main .privacy-request select { border-color: var(--mb-border); background: #fbfcfd; }
+.account-main .profile-card input:focus, .account-main .privacy-request select:focus { border-color: var(--mb-primary); outline: 3px solid rgb(49 130 246 / 12%); outline-offset: 0; background: var(--mb-surface); }
+.account-main .shell-primary { width: 100%; min-height: 50px; border: 0; }
 .account-mobile-session { display: none; }
 .account-mobile-session>div>p { margin: 0; color: var(--mb-text-secondary); }
-.account-logout-action { min-height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; margin-top: 18px; padding: 12px 14px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-weight: 600; }
+.account-logout-action { min-height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; margin-top: 16px; padding: 12px 14px; border: 0; border-radius: 12px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-weight: 600; }
 .account-logout-action:hover:not(:disabled) { color: var(--mb-text-primary); background: #e9edf2; }
 .account-logout-action:disabled { cursor: default; opacity: .6; }
 .account-session-error { margin: 14px 0 0 !important; padding: 10px 12px; border-radius: 8px; color: var(--mb-danger) !important; background: var(--mb-danger-soft); font-size: var(--mb-font-13, 13px); line-height: 20px; }
-.local-data-count { padding: 12px 16px; border-radius: 8px; background: var(--mb-surface-muted); }
-.account-danger { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-weight: 600; }
-.account-danger { border: 1px solid #ffd4d0; color: var(--mb-danger); background: var(--mb-surface); }
+.local-data-count { padding: 11px 13px; border-radius: 10px; background: var(--mb-surface-muted); }
+.account-danger { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 10px 14px; border-radius: 10px; font-size: var(--mb-font-13); font-weight: 600; }
+.account-danger { border: 0; color: var(--mb-danger); background: var(--mb-danger-soft); }
 .account-danger-note { color: var(--mb-danger) !important; }
-.account-delete-card { border-color: #ffd4d0 !important; }
+.account-delete-card { border-color: transparent !important; }
 .account-delete-overlay { position: fixed; inset: 0; z-index: 100; background: rgb(25 31 40 / 48%); animation: account-overlay-in 180ms ease-out; }
 .account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: 28px 24px 22px; border: 0; border-radius: 24px; background: var(--mb-surface); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }
 .account-delete-dialog h2 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; }
@@ -44,10 +58,31 @@ button { font: inherit; cursor: pointer; }
   .account-mobile-session { display: block; }
 }
 @media (max-width: 640px) {
-  .account-main { padding: 24px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
-  .account-main .profile-card { margin: 16px auto; padding: 20px; }
-  .account-delete-dialog { padding: 24px 20px 20px; border-radius: 20px; }
+  body { background: #f5f6f8; }
+  .account-main { padding: 18px max(16px, env(safe-area-inset-right)) calc(92px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .account-heading { margin-bottom: 14px; }
+  .account-heading h1 { font-size: var(--mb-font-24); line-height: 32px; }
+  .account-heading p { margin-top: 3px; font-size: var(--mb-font-13); line-height: 20px; }
+  .account-profile-summary { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; padding: 16px; border-radius: 18px; }
+  .account-profile-avatar { width: 50px; height: 50px; font-size: var(--mb-font-18); }
+  .account-profile-summary strong { font-size: var(--mb-font-16); line-height: 24px; }
+  .account-main .profile-card { margin: 12px auto; padding: 20px 18px; border-radius: 18px; }
+  .account-main .profile-form-card h1 { margin-bottom: 0; font-size: var(--mb-font-20); line-height: 28px; }
+  .account-main .profile-form-card>p { margin-top: 4px; font-size: var(--mb-font-13); line-height: 20px; }
+  .account-main .profile-card fieldset { gap: 6px; margin-top: 22px; }
+  .account-main .profile-card label { font-size: var(--mb-font-13); line-height: 20px; }
+  .account-main .profile-card input { min-height: 50px; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px; font-size: 16px; }
+  .account-main .profile-card #company-hint { margin: -5px 0 14px; font-size: var(--mb-font-12); line-height: 18px; }
+  .account-main .shell-primary { min-height: 50px; border-radius: 12px; font-size: var(--mb-font-14); }
+  .account-main .profile-card h2 { font-size: var(--mb-font-17, 17px); line-height: 25px; }
+  .account-main .profile-card>p { font-size: var(--mb-font-13); line-height: 20px; }
+  .account-logout-action, .account-danger { width: 100%; justify-content: flex-start; min-height: 48px; border-radius: 12px; }
+  .privacy-request select { margin-bottom: 12px; border-radius: 12px; }
+  .privacy-request .privacy-confirm { align-items: flex-start; margin-bottom: 14px; font-size: var(--mb-font-13); line-height: 20px; }
+  .account-delete-dialog { top: auto; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; width: auto; padding: 12px 20px 20px; border-radius: 24px; transform: none; animation: account-sheet-in 240ms cubic-bezier(.2,.8,.25,1); }
+  .account-delete-dialog::before { content: ''; width: 36px; height: 4px; display: block; margin: 0 auto 16px; border-radius: 2px; background: var(--mb-border); }
 }
+@keyframes account-sheet-in { from { transform: translateY(calc(100% + 16px)); } }
 @media (prefers-reduced-motion: reduce) {
   .account-delete-overlay, .account-delete-dialog { animation: none; }
 }

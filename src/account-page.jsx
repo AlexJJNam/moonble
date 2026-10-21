@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Check, LogOut, Trash2 } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
-import { hasProfile } from './profile.js';
+import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { PrivacyRequest } from './prd/privacy-request.jsx';
 import { SiteFooter } from './site-footer.jsx';
@@ -143,10 +143,16 @@ function AccountPage() {
   }
 
   if (!user) return <div className="workspace-check" role="status" aria-label="계정 정보 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
+  const profile = profileOf(user);
+  const profileInitial = [...(profile.name || 'M')][0];
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main">
-      <div className="account-heading"><h1 className="mb-page-title">내 계정</h1><p>프로필과 이 기기에 저장된 데이터를 관리할 수 있어요.</p></div>
+      <div className="account-heading"><h1 className="mb-page-title">내 정보</h1><p>프로필과 계정 설정을 관리하세요.</p></div>
+      <section className="account-profile-summary" aria-label="현재 프로필">
+        <span className="account-profile-avatar" aria-hidden="true">{profileInitial}</span>
+        <div><strong>{profile.name}</strong><p>{profile.companyName}</p><small>{user.email}</small></div>
+      </section>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
       <section className="profile-card account-mobile-session">
         <div><h2 className="mb-section-title">로그인 관리</h2><p>현재 기기에서 Moonble 계정 사용을 마칠 수 있어요.</p></div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { CalendarDays, Check, ChevronDown, Download, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 
 const HISTORY_KEY_PREFIX = 'moonble:user:';
@@ -241,16 +241,18 @@ function ScoreChart({ history }) {
       <div className="achievement-legend" aria-label="그래프 범례"><span><i className="score" />회차 점수</span><span><i className="recent" />최근 3회</span><span><i className="long-term" />최근 10회</span></div>
     </div>
     <div className="achievement-chart-scroll" tabIndex={0} aria-label="점수 추이 그래프와 표, 가로로 이동 가능">
-      <div className="achievement-chart-canvas" ref={chartRef} />
-      <table className="achievement-chart-table">
-        <caption className="mb-sr-only">최근 문제풀이 점수와 3회·10회 이동평균</caption>
-        <thead><tr><th scope="col">기록</th>{trendData.map((item, index) => <th scope="col" key={`${item.date}-date-${index}`}>{formatShortDate(item.date)}</th>)}</tr></thead>
-        <tbody>
-          <tr><th scope="row"><i className="score" />점수</th>{trendData.map((item, index) => <td key={`${item.date}-score-${index}`}>{item.score}점</td>)}</tr>
-          <tr><th scope="row"><i className="recent" />최근 3회</th>{trendData.map((item, index) => <td key={`${item.date}-recent3-${index}`}>{item.recent3}점</td>)}</tr>
-          <tr><th scope="row"><i className="long-term" />최근 10회</th>{trendData.map((item, index) => <td key={`${item.date}-recent10-${index}`}>{item.recent10}점</td>)}</tr>
-        </tbody>
-      </table>
+      <div className="achievement-chart-track" style={{ '--achievement-point-count': trendData.length }}>
+        <div className="achievement-chart-canvas" ref={chartRef} />
+        <table className="achievement-chart-table">
+          <caption className="mb-sr-only">최근 문제풀이 점수와 3회·10회 이동평균</caption>
+          <thead><tr><th scope="col">기록</th>{trendData.map((item, index) => <th scope="col" key={`${item.date}-date-${index}`}>{formatShortDate(item.date)}</th>)}</tr></thead>
+          <tbody>
+            <tr><th scope="row"><i className="score" />점수</th>{trendData.map((item, index) => <td key={`${item.date}-score-${index}`}>{item.score}점</td>)}</tr>
+            <tr><th scope="row"><i className="recent" />최근 3회</th>{trendData.map((item, index) => <td key={`${item.date}-recent3-${index}`}>{item.recent3}점</td>)}</tr>
+            <tr><th scope="row"><i className="long-term" />최근 10회</th>{trendData.map((item, index) => <td key={`${item.date}-recent10-${index}`}>{item.recent10}점</td>)}</tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <div className="achievement-chart-tooltip" ref={tooltipRef} data-visible="false" role="status" />
   </section>;
@@ -266,12 +268,17 @@ export function QuizAchievement({ userId }) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [periodSheetOpen, setPeriodSheetOpen] = useState(false);
+  const [periodSheetClosing, setPeriodSheetClosing] = useState(false);
   const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
   const [periodDraft, setPeriodDraft] = useState('all');
   const [draftFrom, setDraftFrom] = useState('');
   const [draftTo, setDraftTo] = useState('');
   const [periodError, setPeriodError] = useState('');
   const periodFilterRef = useRef(null);
+  const periodTriggerRef = useRef(null);
+  const periodOverlayRef = useRef(null);
+  const periodSheetRef = useRef(null);
+  const periodCloseTimerRef = useRef(0);
 
   useEffect(() => {
     const refresh = () => {
@@ -295,7 +302,7 @@ export function QuizAchievement({ userId }) {
     function handleKeyDown(event) {
       if (event.key !== 'Escape') return;
       setCustomPopoverOpen(false);
-      setPeriodSheetOpen(false);
+      closePeriodSheet();
     }
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -304,6 +311,29 @@ export function QuizAchievement({ userId }) {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [customPopoverOpen, periodSheetOpen]);
+
+  useEffect(() => {
+    if (!periodSheetOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const viewport = window.visualViewport;
+    const placeSheet = () => {
+      const keyboardOffset = viewport
+        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+        : 0;
+      periodOverlayRef.current?.style.setProperty('--achievement-keyboard-offset', `${keyboardOffset}px`);
+    };
+    placeSheet();
+    viewport?.addEventListener('resize', placeSheet);
+    viewport?.addEventListener('scroll', placeSheet);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      viewport?.removeEventListener('resize', placeSheet);
+      viewport?.removeEventListener('scroll', placeSheet);
+    };
+  }, [periodSheetOpen]);
+
+  useEffect(() => () => window.clearTimeout(periodCloseTimerRef.current), []);
 
   const groupFilters = useMemo(() => [
     { id: DEFAULT_GROUP_ID, name: '미분류' },
@@ -401,20 +431,35 @@ export function QuizAchievement({ userId }) {
   }
 
   function openPeriodSheet() {
+    window.clearTimeout(periodCloseTimerRef.current);
     setPeriodDraft(period);
     prepareCustomRange();
+    setPeriodSheetClosing(false);
     setPeriodSheetOpen(true);
+  }
+
+  function closePeriodSheet() {
+    if (!periodSheetOpen || periodSheetClosing) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setPeriodSheetClosing(true);
+    window.clearTimeout(periodCloseTimerRef.current);
+    periodCloseTimerRef.current = window.setTimeout(() => {
+      setPeriodSheetOpen(false);
+      setPeriodSheetClosing(false);
+      periodTriggerRef.current?.focus({ preventScroll: true });
+    }, reducedMotion ? 0 : 190);
   }
 
   function chooseMobilePeriod(value) {
     if (value === 'custom') {
       setPeriodDraft('custom');
       setPeriodError('');
+      window.requestAnimationFrame(() => periodSheetRef.current?.querySelector('input[type="date"]')?.focus({ preventScroll: true }));
       return;
     }
     setPeriod(value);
     setPeriodDraft(value);
-    setPeriodSheetOpen(false);
+    closePeriodSheet();
   }
 
   function applyCustomPeriod() {
@@ -431,7 +476,7 @@ export function QuizAchievement({ userId }) {
     setPeriod('custom');
     setPeriodDraft('custom');
     setPeriodError('');
-    setPeriodSheetOpen(false);
+    if (periodSheetOpen) closePeriodSheet();
     setCustomPopoverOpen(false);
   }
 
@@ -463,10 +508,19 @@ export function QuizAchievement({ userId }) {
     URL.revokeObjectURL(url);
   }
 
+  function exportPdf() {
+    window.print();
+  }
+
+  const todayValue = dateInputValue(new Date());
+
   return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
       <div><span className="achievement-eyebrow">학습 리포트</span><h1 className="mb-page-title">나의 성취도</h1><p>풀이 기록을 비교하고 다음 학습을 계획해보세요.</p></div>
-      <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={18} aria-hidden="true" />CSV 내보내기</button>
+      <div className="achievement-export-actions" aria-label="학습 리포트 내보내기">
+        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={17} aria-hidden="true" />CSV</button>
+        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportPdf}><FileDown size={17} aria-hidden="true" />PDF</button>
+      </div>
     </div>
 
     {history.length ? <>
@@ -490,12 +544,12 @@ export function QuizAchievement({ userId }) {
           <div className="achievement-custom-anchor">
             <button className={period === 'custom' || customPopoverOpen ? 'is-active' : ''} type="button" aria-pressed={period === 'custom'} aria-haspopup="dialog" aria-expanded={customPopoverOpen} onClick={() => chooseDesktopPeriod('custom')}>직접 선택</button>
             {customPopoverOpen && <div className="achievement-custom-popover" role="dialog" aria-label="직접 조회 기간 선택">
-              <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || undefined} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
+              <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || todayValue} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} max={todayValue} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
               {periodError && <p role="alert">{periodError}</p>}
               <button type="button" onClick={applyCustomPeriod}>이 기간으로 보기</button>
             </div>}
           </div>
-          <button className="achievement-period-mobile-trigger" type="button" aria-haspopup="dialog" aria-expanded={periodSheetOpen} onClick={openPeriodSheet}>{selectedPeriodLabel}<ChevronDown size={15} aria-hidden="true" /></button>
+          <button className="achievement-period-mobile-trigger" ref={periodTriggerRef} type="button" aria-haspopup="dialog" aria-expanded={periodSheetOpen} onClick={openPeriodSheet}>{selectedPeriodLabel}<ChevronDown size={15} aria-hidden="true" /></button>
         </div>
       </section>
       {filteredHistory.length ? <>
@@ -533,18 +587,18 @@ export function QuizAchievement({ userId }) {
       <p>문제지를 풀고 제출하면 점수와 오답 기록이 여기에 쌓여요.</p>
       <a href="#paper-library">첫 문제지 풀기</a>
     </section>}
-    {periodSheetOpen && <div className="achievement-period-overlay" role="presentation" onPointerDown={event => { if (event.target === event.currentTarget) setPeriodSheetOpen(false); }}>
-      <section className={`achievement-period-sheet${periodDraft === 'custom' ? ' show-custom' : ''}`} role="dialog" aria-modal="true" aria-labelledby="achievement-period-title">
+    {periodSheetOpen && <div ref={periodOverlayRef} className={`achievement-period-overlay${periodSheetClosing ? ' is-closing' : ''}`} role="presentation" onPointerDown={event => { if (event.target === event.currentTarget) closePeriodSheet(); }}>
+      <section ref={periodSheetRef} className={`achievement-period-sheet${periodDraft === 'custom' ? ' show-custom' : ''}`} role="dialog" aria-modal="true" aria-labelledby="achievement-period-title">
         <span className="achievement-period-grab" aria-hidden="true" />
         <h2 id="achievement-period-title">조회 기간</h2>
         <div className="achievement-period-options" role="radiogroup" aria-label="조회 기간">
           {PERIOD_OPTIONS.map(([value, label]) => <button className={periodDraft === value ? 'is-active' : ''} type="button" role="radio" aria-checked={periodDraft === value} onClick={() => chooseMobilePeriod(value)} key={value}><span>{label}</span><i aria-hidden="true"><Check size={14} /></i></button>)}
         </div>
-        {periodDraft === 'custom' && <div className="achievement-period-custom">
-          <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || undefined} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
+        <div className="achievement-period-custom" aria-hidden={periodDraft !== 'custom'}>
+          <div className="achievement-date-range"><label><span>시작일</span><input type="date" value={draftFrom} max={draftTo || todayValue} onChange={event => { setDraftFrom(event.target.value); setPeriodError(''); }} /></label><i aria-hidden="true">~</i><label><span>종료일</span><input type="date" value={draftTo} min={draftFrom || undefined} max={todayValue} onChange={event => { setDraftTo(event.target.value); setPeriodError(''); }} /></label></div>
           <p className={periodError ? 'is-error' : ''} role={periodError ? 'alert' : undefined}>{periodError || '원하는 시작일과 종료일을 선택하세요.'}</p>
           <button type="button" onClick={applyCustomPeriod}>이 기간으로 보기</button>
-        </div>}
+        </div>
       </section>
     </div>}
   </main>;
