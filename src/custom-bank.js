@@ -1,86 +1,201 @@
 // Shared CSV format and storage for the library and existing solver.
   var LEGACY_CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
   var CUSTOM_BANK_KEY_PREFIX = 'moonble:user:';
+  var DEFAULT_GROUP_ID = 'ungrouped';
   var activeUserId = null;
   var MIN_QUESTIONS = 20;
   var CUSTOM_ID_BASE = 100000;
 
   // ---- storage ----
-  function storageKey(userId) {
+  function legacyStorageKey(userId) {
     var id = userId || activeUserId;
     return id ? CUSTOM_BANK_KEY_PREFIX + id + ':custom-bank-v2' : null;
+  }
+  function storageKey(userId) {
+    var id = userId || activeUserId;
+    return id ? CUSTOM_BANK_KEY_PREFIX + id + ':custom-banks-v3' : null;
+  }
+  function makeId(prefix) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return prefix + '-' + crypto.randomUUID();
+    return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
   }
   function defaultTitle(sourceLabel) {
     return (typeof sourceLabel === 'string' && sourceLabel ? sourceLabel : '내 문제지').replace(/\.csv$/i, '');
   }
+  function validQuestions(questions) {
+    return Array.isArray(questions) && questions.length >= MIN_QUESTIONS && questions.every(q => q && Number.isInteger(q.id) && typeof q.q === 'string' && Array.isArray(q.options) && q.options.length >= 2 && q.options.every(o => typeof o === 'string') && Array.isArray(q.correct) && q.correct.length && q.correct.every(i => Number.isInteger(i) && i >= 0 && i < q.options.length));
+  }
+  function normalizeBank(bank) {
+    if (!bank || !validQuestions(bank.questions)) return null;
+    var source = typeof bank.source === 'string' ? bank.source : '커스텀 문제';
+    return {
+      ...bank,
+      id: typeof bank.id === 'string' && bank.id ? bank.id : makeId('bank'),
+      groupId: typeof bank.groupId === 'string' && bank.groupId ? bank.groupId : DEFAULT_GROUP_ID,
+      source: source,
+      title: typeof bank.title === 'string' && bank.title.trim() ? bank.title.trim() : defaultTitle(source),
+      description: typeof bank.description === 'string' && bank.description.trim() ? bank.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
+      savedAt: typeof bank.savedAt === 'string' ? bank.savedAt : new Date().toISOString()
+    };
+  }
+  function emptyCollection() {
+    return { version: 3, activeBankId: null, groups: [], banks: [] };
+  }
+  function normalizeCollection(value) {
+    var parsed = value && typeof value === 'object' ? value : emptyCollection();
+    var groups = Array.isArray(parsed.groups) ? parsed.groups.filter(group => group && typeof group.id === 'string' && typeof group.name === 'string' && group.name.trim()).map(group => ({ ...group, name: group.name.trim() })) : [];
+    var groupIds = new Set(groups.map(group => group.id));
+    var banks = (Array.isArray(parsed.banks) ? parsed.banks : []).map(normalizeBank).filter(Boolean).map(bank => groupIds.has(bank.groupId) ? bank : { ...bank, groupId: DEFAULT_GROUP_ID });
+    var activeBankId = banks.some(bank => bank.id === parsed.activeBankId) ? parsed.activeBankId : (banks[0]?.id || null);
+    return { version: 3, activeBankId: activeBankId, groups: groups, banks: banks };
+  }
+  function writeCollection(collection, userId) {
+    var key = storageKey(userId);
+    if (!key) throw new Error('로그인 상태를 확인해주세요.');
+    localStorage.setItem(key, JSON.stringify(normalizeCollection(collection)));
+  }
+  function readCollection(userId) {
+    var key = storageKey(userId);
+    if (!key) return emptyCollection();
+    var raw = localStorage.getItem(key);
+    if (raw) return normalizeCollection(JSON.parse(raw));
+    var legacyKey = legacyStorageKey(userId);
+    var legacyRaw = legacyKey ? localStorage.getItem(legacyKey) : null;
+    if (!legacyRaw) return emptyCollection();
+    var legacyBank = normalizeBank(JSON.parse(legacyRaw));
+    var migrated = legacyBank ? { version: 3, activeBankId: legacyBank.id, groups: [], banks: [legacyBank] } : emptyCollection();
+    writeCollection(migrated, userId);
+    localStorage.removeItem(legacyKey);
+    return normalizeCollection(migrated);
+  }
   export function setCustomBankUser(userId) {
     activeUserId = typeof userId === 'string' && userId ? userId : null;
-    var key = storageKey();
-    if (!key) return;
+    var legacyKey = legacyStorageKey();
+    if (!legacyKey) return;
     try {
-      if (!localStorage.getItem(key)) {
+      if (!localStorage.getItem(storageKey()) && !localStorage.getItem(legacyKey)) {
         var legacy = localStorage.getItem(LEGACY_CUSTOM_BANK_KEY);
-        if (legacy) localStorage.setItem(key, legacy);
+        if (legacy) localStorage.setItem(legacyKey, legacy);
       }
       localStorage.removeItem(LEGACY_CUSTOM_BANK_KEY);
+      readCollection();
     } catch (e) { /* 저장소 제한 시 읽기 함수가 안전하게 null을 반환한다. */ }
   }
-  export function getCustomBankMeta(userId) {
+  export function getCustomBankCollection(userId) {
     try {
-      var key = storageKey(userId);
-      if (!key) return null;
-      var raw = localStorage.getItem(key);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length < MIN_QUESTIONS) return null;
-      if (!parsed.questions.every(q => q && Number.isInteger(q.id) && typeof q.q === 'string' && Array.isArray(q.options) && q.options.length >= 2 && q.options.every(o => typeof o === 'string') && Array.isArray(q.correct) && q.correct.length && q.correct.every(i => Number.isInteger(i) && i >= 0 && i < q.options.length))) return null;
-      var source = typeof parsed.source === 'string' ? parsed.source : '커스텀 문제';
-      return {
-        ...parsed,
-        source: source,
-        title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : defaultTitle(source),
-        description: typeof parsed.description === 'string' && parsed.description.trim() ? parsed.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.'
-      };
-    } catch (e) { return null; }
+      return readCollection(userId);
+    } catch (e) { return emptyCollection(); }
   }
-  export function getCustomBank(userId) {
-    var meta = getCustomBankMeta(userId);
+  export function getCustomBanks(userId) {
+    return getCustomBankCollection(userId).banks;
+  }
+  export function getCustomGroups(userId) {
+    return getCustomBankCollection(userId).groups;
+  }
+  export function getCustomBankMeta(userId, bankId) {
+    var collection = getCustomBankCollection(userId);
+    var id = bankId || collection.activeBankId;
+    return collection.banks.find(bank => bank.id === id) || null;
+  }
+  export function getCustomBank(userId, bankId) {
+    var meta = getCustomBankMeta(userId, bankId);
     return meta ? meta.questions : null;
+  }
+  export function setActiveCustomBank(bankId, userId) {
+    try {
+      var collection = readCollection(userId);
+      if (!collection.banks.some(bank => bank.id === bankId)) return null;
+      collection.activeBankId = bankId;
+      writeCollection(collection, userId);
+      return collection.banks.find(bank => bank.id === bankId) || null;
+    } catch (e) { throw new Error('문제지를 열지 못했습니다.'); }
   }
   export function setCustomBank(questions, sourceLabel, userId, details) {
     try {
-      var key = storageKey(userId);
-      if (!key) throw new Error('로그인 상태를 확인해주세요.');
       var meta = details || {};
-      localStorage.setItem(key, JSON.stringify({
+      var collection = readCollection(userId);
+      var bankId = typeof meta.bankId === 'string' ? meta.bankId : (!meta.create ? collection.activeBankId : null);
+      var existing = collection.banks.find(bank => bank.id === bankId);
+      var now = new Date().toISOString();
+      var bank = normalizeBank({
+        ...existing,
+        id: existing?.id || makeId('bank'),
+        groupId: typeof meta.groupId === 'string' ? meta.groupId : (existing?.groupId || DEFAULT_GROUP_ID),
         questions: questions,
         source: sourceLabel,
         title: typeof meta.title === 'string' && meta.title.trim() ? meta.title.trim() : defaultTitle(sourceLabel),
         description: typeof meta.description === 'string' && meta.description.trim() ? meta.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
-        savedAt: new Date().toISOString()
-      }));
+        savedAt: existing?.savedAt || now,
+        updatedAt: now
+      });
+      if (!bank) throw new Error('문제지 형식이 올바르지 않습니다.');
+      collection.banks = existing ? collection.banks.map(item => item.id === bank.id ? bank : item) : [...collection.banks, bank];
+      collection.activeBankId = bank.id;
+      writeCollection(collection, userId);
+      return bank;
     } catch (e) { throw new Error('브라우저 저장 공간에 문제지를 저장하지 못했습니다.'); }
   }
-  export function updateCustomBankMeta(title, description, userId) {
+  export function updateCustomBankMeta(title, description, userId, bankId, groupId) {
     try {
-      var key = storageKey(userId);
-      if (!key) throw new Error('로그인 상태를 확인해주세요.');
-      var raw = localStorage.getItem(key);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
-      parsed.title = typeof title === 'string' && title.trim() ? title.trim() : defaultTitle(parsed.source);
-      parsed.description = typeof description === 'string' && description.trim() ? description.trim() : '직접 등록한 문제로 학습을 시작해보세요.';
-      localStorage.setItem(key, JSON.stringify(parsed));
-      return getCustomBankMeta(userId);
+      var collection = readCollection(userId);
+      var id = bankId || collection.activeBankId;
+      var bank = collection.banks.find(item => item.id === id);
+      if (!bank) return null;
+      var validGroup = groupId === DEFAULT_GROUP_ID || collection.groups.some(group => group.id === groupId);
+      var next = {
+        ...bank,
+        title: typeof title === 'string' && title.trim() ? title.trim() : defaultTitle(bank.source),
+        description: typeof description === 'string' && description.trim() ? description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
+        groupId: validGroup ? groupId : bank.groupId,
+        updatedAt: new Date().toISOString()
+      };
+      collection.banks = collection.banks.map(item => item.id === id ? next : item);
+      writeCollection(collection, userId);
+      return next;
     } catch (e) { throw new Error('문제지 정보를 저장하지 못했습니다.'); }
   }
-  export function clearCustomBank(userId) {
+  export function clearCustomBank(userId, bankId) {
     try {
-      var key = storageKey(userId);
-      if (!key) throw new Error('로그인 상태를 확인해주세요.');
-      localStorage.removeItem(key);
+      var collection = readCollection(userId);
+      var id = bankId || collection.activeBankId;
+      collection.banks = collection.banks.filter(bank => bank.id !== id);
+      if (collection.activeBankId === id) collection.activeBankId = collection.banks[0]?.id || null;
+      writeCollection(collection, userId);
     } catch (e) { throw new Error(e.message === '로그인 상태를 확인해주세요.' ? e.message : '문제지를 삭제하지 못했습니다.'); }
   }
+  export function createCustomGroup(name, userId) {
+    try {
+      var collection = readCollection(userId);
+      var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
+      if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
+      if (collection.groups.some(group => group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
+      var group = { id: makeId('group'), name: cleanName, createdAt: new Date().toISOString() };
+      collection.groups.push(group);
+      writeCollection(collection, userId);
+      return group;
+    } catch (e) { throw new Error(e.message || '그룹을 만들지 못했습니다.'); }
+  }
+  export function updateCustomGroup(groupId, name, userId) {
+    try {
+      var collection = readCollection(userId);
+      var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
+      if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
+      if (collection.groups.some(group => group.id !== groupId && group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
+      if (!collection.groups.some(group => group.id === groupId)) throw new Error('그룹을 찾지 못했습니다.');
+      collection.groups = collection.groups.map(group => group.id === groupId ? { ...group, name: cleanName, updatedAt: new Date().toISOString() } : group);
+      writeCollection(collection, userId);
+      return collection.groups.find(group => group.id === groupId);
+    } catch (e) { throw new Error(e.message || '그룹 이름을 바꾸지 못했습니다.'); }
+  }
+  export function deleteCustomGroup(groupId, userId) {
+    try {
+      var collection = readCollection(userId);
+      collection.groups = collection.groups.filter(group => group.id !== groupId);
+      collection.banks = collection.banks.map(bank => bank.groupId === groupId ? { ...bank, groupId: DEFAULT_GROUP_ID, updatedAt: new Date().toISOString() } : bank);
+      writeCollection(collection, userId);
+    } catch (e) { throw new Error('그룹을 삭제하지 못했습니다.'); }
+  }
+  export { DEFAULT_GROUP_ID };
   // ---- CSV 파싱 (따옴표로 감싼 콤마를 처리하는 간단한 RFC4180 스타일 파서) ----
   function parseCSVText(text) {
     var rows = [];

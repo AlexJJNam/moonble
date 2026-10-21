@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Check, CircleHelp, Download, FileSpreadsheet, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
-import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 
 function generationPrompt(query, provider) {
@@ -46,7 +46,18 @@ const promptSamples = [
   'GA4 전자상거래 이벤트 문제를 만들어줘',
   '신입 기획자를 위한 데이터 분석 문제를 만들어줘',
 ];
-const examplePrompt = '정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.';
+const examplePrompts = [
+  '정보처리기사 필기를 준비하고 있어. 데이터베이스와 SQL 중심으로 상급 문제를 만들어줘.',
+  'GA4 전자상거래 이벤트를 실무 사례 중심의 중급 문제로 만들어줘.',
+  '신입 서비스 기획자가 알아야 할 데이터 분석 지표를 기본 난이도로 출제해줘.',
+  'SQL 조인과 서브쿼리를 확실히 구분할 수 있는 상급 문제를 만들어줘.',
+  'UX 리서치 방법론을 실제 프로젝트 상황에 적용하는 문제를 만들어줘.',
+  '컴퓨터활용능력 시험 대비 엑셀 함수 문제를 중급 난이도로 준비해줘.',
+  '네트워크 보안의 핵심 개념을 사례형 객관식 문제로 만들어줘.',
+  '프로덕트 매니저 면접에 자주 나오는 지표와 실험 설계 문제를 출제해줘.',
+  '데이터베이스 정규화와 트랜잭션을 비교하는 고난도 문제를 만들어줘.',
+  '웹 접근성 지침을 실제 화면 검수 상황에 적용하는 문제를 만들어줘.',
+];
 const providerSegments = [
   { value: 'chatgpt', label: 'ChatGPT' },
   { value: 'gemini', label: 'Gemini' },
@@ -92,18 +103,40 @@ export function QuizCreator({ custom, onChange }) {
   const [dragging, setDragging] = useState(false);
   const [promptFocused, setPromptFocused] = useState(false);
   const [exampleRevealed, setExampleRevealed] = useState(false);
+  const [exampleIndex, setExampleIndex] = useState(0);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [metaReveal, setMetaReveal] = useState(false);
   const [bankTitle, setBankTitle] = useState(custom?.title || '');
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
   const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
+  const uploadSuccessTimer = useRef(0);
+  const metaRevealTimer = useRef(0);
   const preview = useMemo(() => custom?.questions?.slice(0, 8) || [], [custom]);
+  const examplePrompt = examplePrompts[exampleIndex];
 
   useEffect(() => {
     setBankTitle(custom?.title || '');
     setBankDescription(custom?.description || '');
   }, [custom?.title, custom?.description, custom?.savedAt]);
+
+  useEffect(() => () => {
+    window.clearTimeout(uploadSuccessTimer.current);
+    window.clearTimeout(metaRevealTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (!guideOpen) return undefined;
+    setExampleIndex(Math.floor(Math.random() * examplePrompts.length));
+    const timer = window.setInterval(() => {
+      setExampleIndex(index => (index + 1) % examplePrompts.length);
+      setExampleRevealed(false);
+    }, 4800);
+    return () => window.clearInterval(timer);
+  }, [guideOpen]);
 
   useEffect(() => {
     if (!promptFocused) return undefined;
@@ -178,15 +211,26 @@ export function QuizCreator({ custom, onChange }) {
   function saveQuestions(text, source) {
     const result = csvToQuestions(text);
     if (result.error) throw new Error(result.error);
-    setCustomBank(result.questions, source, undefined, { title: result.title, description: result.description });
-    const next = getCustomBankMeta();
+    const next = setCustomBank(result.questions, source, undefined, { title: result.title, description: result.description, create: true });
     onChange(next);
+    setUploadSuccess(false);
+    window.clearTimeout(uploadSuccessTimer.current);
+    requestAnimationFrame(() => {
+      setUploadSuccess(true);
+      uploadSuccessTimer.current = window.setTimeout(() => setUploadSuccess(false), 1750);
+    });
+    setMetaReveal(false);
+    window.clearTimeout(metaRevealTimer.current);
+    requestAnimationFrame(() => {
+      setMetaReveal(true);
+      metaRevealTimer.current = window.setTimeout(() => setMetaReveal(false), 1100);
+    });
     setMessage('문제지 등록이 완료됐어요. 바로 풀어볼까요?');
   }
 
   function persistBankMeta() {
     try {
-      const next = updateCustomBankMeta(bankTitle, bankDescription);
+      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, custom?.id);
       if (next) onChange(next);
     } catch (metaError) {
       setError(metaError.message || '문제지 정보를 저장하지 못했어요.');
@@ -201,7 +245,13 @@ export function QuizCreator({ custom, onChange }) {
     if (!/\.csv$/i.test(file.name)) { setError('CSV 파일만 등록할 수 있어요.'); return; }
     if (file.size > 5 * 1024 * 1024) { setError('5MB 이하의 CSV 파일을 선택해주세요.'); return; }
     setPending(true);
-    try { saveQuestions(await file.text(), file.name); }
+    const startedAt = performance.now();
+    try {
+      const text = await file.text();
+      const remaining = Math.max(0, 620 - (performance.now() - startedAt));
+      if (remaining) await new Promise(resolve => window.setTimeout(resolve, remaining));
+      saveQuestions(text, file.name);
+    }
     catch (uploadError) { setError(uploadError.message || '파일을 읽지 못했습니다.'); }
     finally { setPending(false); }
   }
@@ -238,7 +288,7 @@ export function QuizCreator({ custom, onChange }) {
     <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
-      <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { if (!event.currentTarget.open) setExampleRevealed(false); }}>
+      <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
         <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
         <div className="creator-prompt-guide-panel">
           <strong>이렇게 적어보세요</strong>
@@ -274,7 +324,7 @@ export function QuizCreator({ custom, onChange }) {
     <section className="creator-step" aria-labelledby="creator-upload-title">
       <header><span>2</span><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
-        className={`creator-drop${dragging ? ' is-dragging' : ''}`}
+        className={`creator-drop${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => event.preventDefault()}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
@@ -285,6 +335,7 @@ export function QuizCreator({ custom, onChange }) {
         <strong>{pending ? '문제를 확인하고 있어요' : 'CSV 파일을 여기에 놓으세요'}</strong>
         <p>또는</p>
         <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
+        {uploadSuccess && <div className="creator-upload-complete" role="status"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13.5 24.8l7 7L35 17.5" /></svg></span><strong>문제지 등록 완료</strong></div>}
       </div>
       <div className="creator-source-divider"><span>또는</span></div>
       <div className="creator-sheet-link">
@@ -297,12 +348,12 @@ export function QuizCreator({ custom, onChange }) {
 
     <section className="creator-step" aria-labelledby="creator-list-title">
       <header><span>3</span><div><h2 id="creator-list-title">등록된 문제를 확인하세요</h2><p>문제와 보기가 제대로 들어왔는지 확인한 뒤 풀이를 시작하세요.</p></div></header>
-      {custom ? <>
-        <div className="creator-bank-meta">
+      {pending || sheetPending ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">문제지 목록을 만들고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : custom ? <>
+        <div className={`creator-bank-meta${metaReveal ? ' is-revealing' : ''}`}>
           <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
           <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
         </div>
-        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{custom.source} · {custom.questions.length}문항</p></div><a href="./solve.html?paper=custom#quiz">문제 풀이하기</a></div>
+        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{custom.source} · {custom.questions.length}문항</p></div><a href={`./solve.html?paper=custom&bank=${encodeURIComponent(custom.id)}#quiz`}>문제 풀이하기</a></div>
         <div className="creator-question-list">{preview.map((question, index) => <article key={question.id}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{question.q}</strong><p>{question.options.join(' · ')}</p></div></article>)}</div>
         {custom.questions.length > preview.length && <p className="creator-more">외 {custom.questions.length - preview.length}문항이 등록되어 있어요.</p>}
       </> : <div className="creator-empty"><FileSpreadsheet size={30} aria-hidden="true" /><strong>아직 등록된 문제가 없어요</strong><p>위에서 만든 CSV를 등록하면 문제 목록이 여기에 나타납니다.</p></div>}

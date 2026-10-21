@@ -3432,7 +3432,10 @@
       if (paper === 'basics') return BANK.filter(q => q.id <= 30);
       if (paper === 'advanced') return BANK.filter(q => q.id > 30);
       if (paper === 'random') return BANK;
-      if (paper === 'custom' && typeof window.getCustomBank === 'function') return window.getCustomBank() || BANK;
+      if (paper === 'custom' && typeof window.getCustomBank === 'function') {
+        const bankId = new URLSearchParams(window.location.search).get('bank');
+        return window.getCustomBank(bankId) || BANK;
+      }
       if (paper === 'retry') {
         let ids = [];
         try { ids = JSON.parse(sessionStorage.getItem('moonble:retry-question-ids') || '[]'); } catch { ids = []; }
@@ -5164,13 +5167,14 @@ if (supabase) {
       localStorage.removeItem(oldKey);
     } catch (error) { /* 저장소가 제한된 환경에서는 기록 없이 계속 진행한다. */ }
 
-    window.getCustomBank = () => getCustomBank(user.id);
+    window.getCustomBank = bankId => getCustomBank(user.id, bankId);
     window.getActiveBank = function () {
       const selected = getSelectedPaperBank();
       return selected || getCustomBank(user.id) || BANK;
     };
 
-    if (new URLSearchParams(location.search).get('paper') === 'custom' && !getCustomBank(user.id)) {
+    const solveParams = new URLSearchParams(location.search);
+    if (solveParams.get('paper') === 'custom' && !getCustomBank(user.id, solveParams.get('bank'))) {
       location.replace('./quiz.html');
     } else {
       renderQuiz();
