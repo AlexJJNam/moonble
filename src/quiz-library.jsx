@@ -587,7 +587,6 @@ function QuizLibrary() {
             <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
-        <div className="quiz-results"><p role="status">문제지 <strong>{visiblePapers.length}</strong></p></div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editMode ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
