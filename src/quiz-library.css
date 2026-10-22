@@ -130,6 +130,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-copy>p span, .paper-copy>p i { flex: 0 0 auto; }
 .paper-copy>p i { color: var(--mb-text-disabled); font-style: normal; }
 .paper-copy>p .paper-description { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.paper-added-at { display: block; margin-top: 3px; color: var(--mb-text-tertiary); font-size: 11px; font-weight: 400; line-height: 16px; text-align: right; font-variant-numeric: tabular-nums; }
 .paper-list { grid-template-columns: 1fr; }
 .paper-list { gap: 10px; }
 .paper-list .paper-card-link { display: flex; }

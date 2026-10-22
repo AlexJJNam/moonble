@@ -39,6 +39,17 @@ const sampleIsVisible = userId => {
   try { return !userId || localStorage.getItem(sampleVisibilityKey(userId)) !== 'true'; }
   catch { return true; }
 };
+function formatPaperAddedAt(value, now = Date.now()) {
+  const addedAt = new Date(value).getTime();
+  if (!Number.isFinite(addedAt)) return '';
+  const elapsedMinutes = Math.max(0, Math.floor((now - addedAt) / 60000));
+  if (elapsedMinutes < 5) return '방금 전';
+  if (elapsedMinutes < 60) return `${elapsedMinutes}분 전`;
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return `${elapsedHours}시간 전`;
+  const date = new Date(addedAt);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
 if (initialUser) {
   setCustomBankUser(initialUser.id);
   document.documentElement.removeAttribute('data-auth-pending');
@@ -519,6 +530,7 @@ function QuizLibrary() {
     level: '내 문제지',
     count: bank.questions.length,
     description: bank.description,
+    savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
     samples: bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) })),
@@ -619,7 +631,7 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} />
-                <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
+                <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p>{paper.savedAt && <time className="paper-added-at" dateTime={paper.savedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.savedAt))}>{formatPaperAddedAt(paper.savedAt)}</time>}</div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><Check size={15} strokeWidth={2.5} aria-hidden="true" /></button> : <>
