@@ -56,7 +56,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-search input { min-width: 0; width: 100%; height: 34px; border: 0; outline: 0; background: transparent; color: var(--mb-text-primary); font-size: var(--mb-font-14); }
 .quiz-search input::placeholder { color: var(--mb-text-tertiary); }
 .quiz-view-toggle { flex: 0 0 auto; }
-.paper-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.paper-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
 .paper-card { position: relative; display: block; min-width: 0; overflow: visible; border: 1px solid var(--mb-border); border-radius: 16px; background: var(--mb-surface); transition: border-color var(--mb-duration), background-color var(--mb-duration), opacity 140ms ease, transform 180ms cubic-bezier(.2,.82,.24,1); }
 .paper-card[draggable='true'] { cursor: grab; }
 .paper-card.is-pressing { transform: scale(.92); }
