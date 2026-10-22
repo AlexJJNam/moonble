@@ -20,7 +20,7 @@
   --mb-line-body: 1.5;
   --mb-line-reading: 1.75;
 
-  --mb-bg: #f7f8fa;
+  --mb-bg: #fff;
   --mb-surface: #fff;
   --mb-surface-muted: #f2f4f6;
   --mb-text-primary: #191f28;
@@ -57,6 +57,13 @@
   --mb-duration: 160ms;
   --mb-control-height: 48px;
   --mb-target-size: 44px;
+  --mb-page-pad-top: 28px;
+  --mb-page-pad-bottom: 56px;
+  --mb-page-pad-inline: 32px;
+  --mb-mobile-dock-item-height: 52px;
+  --mb-mobile-dock-height: 61px;
+  --mb-mobile-dock-icon-size: 18px;
+  --mb-mobile-dock-label-size: 12px;
 }
 
 html {
@@ -83,6 +90,13 @@ body {
   font-size: var(--mb-font-16);
   line-height: var(--mb-line-body);
   -webkit-font-smoothing: antialiased;
+}
+
+.mb-page-gutter {
+  padding: var(--mb-page-pad-top)
+    max(var(--mb-page-pad-inline), env(safe-area-inset-right))
+    var(--mb-page-pad-bottom)
+    max(var(--mb-page-pad-inline), env(safe-area-inset-left));
 }
 
 .mb-brand-wordmark { display: block; width: auto; height: auto; object-fit: contain; }
@@ -168,7 +182,7 @@ button, input, textarea, select {
   border-radius: var(--mb-radius-12);
   color: #fff;
   background-color: #2563eb;
-  background-image: linear-gradient(125deg, #2563eb, #7c3aed, #2563eb) !important;
+  background-image: linear-gradient(125deg, #2e70e6, #735fe4, #2e70e6) !important;
   background-size: 400% 400%;
   animation: mb-flow-gradient 8s ease infinite;
   box-shadow: none !important;
@@ -207,8 +221,20 @@ button, input, textarea, select {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --mb-page-pad-top: 20px;
+    --mb-page-pad-bottom: 36px;
+    --mb-page-pad-inline: 16px;
+  }
   .mb-display { font-size: var(--mb-font-28); line-height: 1.285714; }
   .mb-page-title { font-size: var(--mb-font-24); line-height: 1.333333; }
+}
+
+@media (min-width: 641px) and (max-width: 1199px) {
+  :root {
+    --mb-page-pad-bottom: 48px;
+    --mb-page-pad-inline: 24px;
+  }
 }
 
 @media (max-width: 767px) {

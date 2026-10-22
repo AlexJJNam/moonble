@@ -354,7 +354,7 @@ export function QuizCreator({ custom, onChange }) {
     }
   }
 
-  if (screen === 'result') return <main className="quiz-main quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
+  if (screen === 'result') return <main className="quiz-main mb-page-gutter quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
     <button className="creator-result-back" type="button" onClick={() => { setScreen('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
     <div className="quiz-title creator-result-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
     <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
@@ -373,7 +373,7 @@ export function QuizCreator({ custom, onChange }) {
     {error && <p className="creator-error" role="alert">{error}</p>}
   </main>;
 
-  return <main className="quiz-main quiz-creator" id="quiz-creator" tabIndex={-1}>
+  return <main className="quiz-main mb-page-gutter quiz-creator" id="quiz-creator" tabIndex={-1}>
     <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">

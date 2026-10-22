@@ -147,8 +147,8 @@ function AccountPage() {
   const profileInitial = [...(profile.name || 'M')][0];
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
-    <main className="account-main">
-      <div className="account-heading"><h1 className="mb-page-title">내 정보</h1><p>프로필과 계정 설정을 관리하세요.</p></div>
+    <main className="account-main mb-page-gutter">
+      <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>
       <section className="account-profile-summary" aria-label="현재 프로필">
         <span className="account-profile-avatar" aria-hidden="true">{profileInitial}</span>
         <div><strong>{profile.name}</strong><p>{profile.companyName}</p><small>{user.email}</small></div>

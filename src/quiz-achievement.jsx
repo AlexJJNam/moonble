@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
+import { BUILT_IN_PAPER_PREVIEWS, PaperPreview } from './paper-preview.jsx';
 
 const HISTORY_KEY_PREFIX = 'moonble:user:';
 const PERIOD_OPTIONS = [['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['all', '전체'], ['custom', '직접 선택']];
@@ -105,12 +106,13 @@ function ScoreChart({ history }) {
       tooltip.dataset.visible = 'true';
     }
 
-    function draw() {
+    function draw({ animate = false, force = false } = {}) {
       const compact = window.matchMedia?.('(max-width: 540px)').matches;
       const measuredWidth = container.clientWidth || (compact ? 320 : 680);
       const width = compact ? Math.max(300, measuredWidth) : Math.max(680, measuredWidth);
-      if (container.querySelector('svg') && Math.abs(width - lastWidth) < 1) return;
+      if (container.querySelector('svg') && Math.abs(width - lastWidth) < 1 && !force) return;
       lastWidth = width;
+      const shouldAnimate = animate && !reduceMotion;
       const height = compact ? Math.max(224, Math.min(248, Math.round(width * .72))) : Math.max(260, Math.min(320, Math.round(width * .38)));
       const margin = compact
         ? { top: 22, right: 10, bottom: 38, left: 30 }
@@ -151,8 +153,8 @@ function ScoreChart({ history }) {
         .attr('class', 'achievement-chart-bar')
         .attr('x', (_, index) => x(index))
         .attr('width', x.bandwidth())
-        .attr('y', y(0))
-        .attr('height', 0)
+        .attr('y', item => shouldAnimate ? y(0) : y(item.score))
+        .attr('height', item => shouldAnimate ? 0 : Math.max(0, y(0) - y(item.score)))
         .attr('rx', compact ? 4 : 5)
         .attr('tabindex', 0)
         .attr('role', 'img')
@@ -166,9 +168,11 @@ function ScoreChart({ history }) {
           d3.select(this).classed('is-active', false);
           hideTooltip();
         });
-      bars.transition().duration(reduceMotion ? 0 : 520).ease(d3.easeCubicOut)
-        .attr('y', item => y(item.score))
-        .attr('height', item => Math.max(0, y(0) - y(item.score)));
+      if (shouldAnimate) {
+        bars.transition().delay((_, index) => index * 36).duration(460).ease(d3.easeCubicOut)
+          .attr('y', item => y(item.score))
+          .attr('height', item => Math.max(0, y(0) - y(item.score)));
+      }
 
       const movingAverageLine = key => d3.line()
         .x((_, index) => x(index) + x.bandwidth() / 2).y(item => y(item[key]))
@@ -178,11 +182,11 @@ function ScoreChart({ history }) {
         .attr('class', 'achievement-chart-line achievement-chart-line-long').attr('d', movingAverageLine('recent10'));
       const shortLinePath = svg.append('path').datum(trendData)
         .attr('class', 'achievement-chart-line achievement-chart-line-short').attr('d', movingAverageLine('recent3'));
-      if (!reduceMotion) {
+      if (shouldAnimate) {
         [longLinePath, shortLinePath].forEach((path, index) => {
           const length = path.node()?.getTotalLength() || 0;
           path.attr('stroke-dasharray', `${length} ${length}`).attr('stroke-dashoffset', length)
-            .transition().delay(index * 80).duration(700).ease(d3.easeCubicOut)
+            .transition().delay(180 + index * 100).duration(700).ease(d3.easeCubicOut)
             .attr('stroke-dashoffset', 0)
             .on('end', () => {
               if (index === 0) path.attr('stroke-dasharray', '6 6');
@@ -193,7 +197,7 @@ function ScoreChart({ history }) {
       const dots = svg.selectAll('.achievement-chart-dot').data(trendData).enter().append('circle')
         .attr('class', 'achievement-chart-dot')
         .attr('cx', (_, index) => x(index) + x.bandwidth() / 2).attr('cy', item => y(item.recent3))
-        .attr('r', reduceMotion ? 4 : 0).attr('tabindex', 0).attr('role', 'img')
+        .attr('r', shouldAnimate ? 0 : 4).attr('tabindex', 0).attr('role', 'img')
         .attr('aria-label', item => `${formatDate(item.date)}, 최근 3회 평균 ${item.recent3}점, 장기 추세 ${item.recent10}점`)
         .on('pointerenter focus', function (event, item) {
           d3.select(this).interrupt().transition().duration(140).attr('r', 6);
@@ -204,13 +208,25 @@ function ScoreChart({ history }) {
           d3.select(this).interrupt().transition().duration(140).attr('r', 4);
           hideTooltip();
         });
-      if (!reduceMotion) dots.transition().delay((_, index) => 350 + index * 45).duration(220).attr('r', 4);
+      if (shouldAnimate) dots.transition().delay((_, index) => 520 + index * 42).duration(220).ease(d3.easeBackOut.overshoot(1.3)).attr('r', 4);
     }
 
-    draw();
-    const observer = new ResizeObserver(draw);
-    observer.observe(container);
-    return () => { observer.disconnect(); d3.select(container).selectAll('*').interrupt(); };
+    draw({ force: true });
+    const resizeObserver = new ResizeObserver(() => draw());
+    resizeObserver.observe(container);
+    let revealObserver;
+    if ('IntersectionObserver' in window) {
+      revealObserver = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          draw({ animate: true, force: true });
+          revealObserver.disconnect();
+        }
+      }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+      revealObserver.observe(container);
+    } else {
+      draw({ animate: true, force: true });
+    }
+    return () => { resizeObserver.disconnect(); revealObserver?.disconnect(); d3.select(container).selectAll('*').interrupt(); };
   }, [trendData]);
 
   if (!trendData.length) return null;
@@ -364,6 +380,20 @@ export function QuizAchievement({ userId }) {
     return [...filters.values()];
   }, [collection.banks, history, selectedGroups]);
 
+  const previewForHistory = item => {
+    const bank = item.bankId ? collection.banks.find(candidate => candidate.id === item.bankId) : null;
+    const builtIn = BUILT_IN_PAPER_PREVIEWS.find(candidate => candidate.id === item.paperId);
+    const source = bank || builtIn;
+    return {
+      kind: bank ? 'custom' : (source?.kind || 'custom'),
+      label: bank?.title || fallbackPaperTitle(item),
+      count: bank?.questions.length || source?.count || Number(item.total) || item.questionIds?.length || 20,
+      samples: bank
+        ? bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) }))
+        : (source?.samples || []),
+    };
+  };
+
   useEffect(() => {
     if (!selectedGroups.length) {
       setSelectedPapers(current => current.length ? [] : current);
@@ -514,25 +544,29 @@ export function QuizAchievement({ userId }) {
 
   const todayValue = dateInputValue(new Date());
 
-  return <main className="quiz-main achievement-main" id="achievement" tabIndex={-1}>
+  return <main className="quiz-main mb-page-gutter achievement-main" id="achievement" tabIndex={-1}>
     <div className="quiz-title achievement-title">
       <div><h1 className="mb-page-title">나의 성취도</h1></div>
     </div>
 
     {history.length ? <>
       <section className="achievement-filters" aria-label="성취도 조회 조건">
-        <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
-          <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
-          {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
+        <div className="achievement-group-depth">
+          <span className="achievement-filter-label">그룹</span>
+          <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
+            <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
+            {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} disabled={!group.count} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
+          </div>
         </div>
         {selectedGroups.length > 0 && paperFilters.length > 0 && <div className="achievement-paper-depth">
-          <span>문제지</span>
+          <span className="achievement-filter-label">문제지</span>
           <div className="achievement-paper-filters" role="group" aria-label="선택한 그룹의 문제지 복수 선택">
             <button className={!selectedPapers.length ? 'is-active' : ''} type="button" aria-pressed={!selectedPapers.length} onClick={() => setSelectedPapers([])}>전체 <small>{paperFilters.reduce((sum, paper) => sum + paper.count, 0)}</small></button>
             {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}>{paper.name} <small>{paper.count}</small></button>)}
           </div>
         </div>}
         <div className="achievement-period-filter" ref={periodFilterRef}>
+          <span className="achievement-period-label">기간</span>
           <span className="achievement-period-icon"><CalendarDays size={17} aria-hidden="true" /></span>
           <div className="achievement-period-tabs" role="group" aria-label="조회 기간">
             {PERIOD_OPTIONS.filter(([value]) => value !== 'custom').map(([value, label]) => <button className={period === value ? 'is-active' : ''} type="button" aria-pressed={period === value} onClick={() => chooseDesktopPeriod(value)} key={value}>{label}</button>)}
@@ -550,7 +584,7 @@ export function QuizAchievement({ userId }) {
       </section>
       {filteredHistory.length ? <>
       <section className="achievement-performance" aria-labelledby="achievement-performance-title">
-        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2><p>선택한 그룹·문제지와 기간의 기록을 함께 비교해요.</p></div></div>
+        <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2></div></div>
         <div className="achievement-summary" aria-label="성취도 요약">
           <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{filteredHistory.length}회 완료</small></article>
           <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
@@ -567,6 +601,7 @@ export function QuizAchievement({ userId }) {
         <ol className="achievement-list">
           {filteredHistory.map((item, index) => <li key={`${item.date}-${index}`}>
             <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
+            <div className="achievement-paper-thumb" role="img" aria-label={`${fallbackPaperTitle(item)} 문제지 미리보기`}><PaperPreview paper={previewForHistory(item)} compact /></div>
             <div className="achievement-attempt"><strong>{item.score}점 <small>({item.correct}/{item.total})</small></strong><time dateTime={item.date}>{formatDate(item.date)}</time></div>
             <div className="achievement-actions">
               <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>

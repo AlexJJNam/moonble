@@ -2,10 +2,9 @@
 body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
-.account-main { max-width: 720px; margin: 0 auto; padding: 40px 24px 72px; }
+.account-main { max-width: 720px; margin: 0 auto; }
 .account-heading { max-width: 480px; margin: 0 auto 20px; }
 .account-heading h1 { margin: 0; letter-spacing: -.025em; }
-.account-heading p { margin: 6px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
 .account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: var(--mb-surface); }
 .account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
 .account-profile-summary div { min-width: 0; }
@@ -58,11 +57,9 @@ button { font: inherit; cursor: pointer; }
   .account-mobile-session { display: block; }
 }
 @media (max-width: 640px) {
-  body { background: #f5f6f8; }
-  .account-main { padding: 18px max(16px, env(safe-area-inset-right)) calc(92px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  body { background: var(--mb-bg); }
   .account-heading { margin-bottom: 14px; }
   .account-heading h1 { font-size: var(--mb-font-24); line-height: 32px; }
-  .account-heading p { margin-top: 3px; font-size: var(--mb-font-13); line-height: 20px; }
   .account-profile-summary { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; padding: 16px; border-radius: 18px; }
   .account-profile-avatar { width: 50px; height: 50px; font-size: var(--mb-font-18); }
   .account-profile-summary strong { font-size: var(--mb-font-16); line-height: 24px; }

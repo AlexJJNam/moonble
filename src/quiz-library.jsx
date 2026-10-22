@@ -21,17 +21,11 @@ import { QuizAchievement } from './quiz-achievement.jsx';
 import { QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
-import { BrandLogo } from './brand-logo.jsx';
+import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
-const papers = [
-  { id: 'basics', kind: 'basics', label: 'GA4 핵심 개념', description: '이벤트부터 보고서까지, 분석의 기본기를 다져보세요.', count: 20, level: '기본', topics: '데이터 모델 · 이벤트 · 보고서', samples: [
-    { title: 'GA4의 데이터 모델은 무엇인가요?', options: ['세션 기반', '페이지뷰 기반', '이벤트 기반'] },
-    { title: 'DebugView를 활성화하는 방법은?', options: ['debug_mode 매개변수 설정', 'Google Analytics Debugger 사용'] },
-  ] },
-];
 const difficulties = ['전체 난이도', '기본', '심화'];
 const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
 const viewSegments = [
@@ -48,21 +42,6 @@ const sampleIsVisible = userId => {
 if (initialUser) {
   setCustomBankUser(initialUser.id);
   document.documentElement.removeAttribute('data-auth-pending');
-}
-
-function PaperPreview({ paper }) {
-  return <div className={`paper-preview preview-${paper.kind}`} aria-hidden="true">
-    <div className="preview-sheet">
-      <div className="preview-sheet-brand"><BrandLogo decorative /></div>
-      <div className="preview-sheet-title">{paper.label}</div>
-      <div className="preview-sheet-subtitle">개념을 확인하는 작은 시작</div>
-      {paper.samples.map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
-        <div><b>{String(index + 1).padStart(2, '0')}</b><strong>{sample.title}</strong></div>
-        {sample.options.map((option, optionIndex) => <span className="preview-option" key={`${option}-${optionIndex}`}><i />{option}</span>)}
-      </div>)}
-    </div>
-    <span className="preview-count">{paper.count}문항</span>
-  </div>;
 }
 
 function sectionFromHash() {
@@ -562,8 +541,8 @@ function QuizLibrary() {
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main quiz-library-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div>{editMode ? <button className="paper-edit-done" type="button" onClick={leaveEditMode}><Check size={17} aria-hidden="true" />완료</button> : <FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="paper-group-bar">
           <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
             {groupTabs.map(group => <span
@@ -643,8 +622,10 @@ function QuizLibrary() {
                 <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
-                <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && !editMode && <button type="button" role="menuitem" onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
+                {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><Check size={13} aria-hidden="true" />완료</button> : <>
+                  <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
+                  {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && !editMode && <button type="button" role="menuitem" onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
+                </>}
               </div>}
             </article>;
           })}

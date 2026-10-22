@@ -33,39 +33,6 @@ import { PrdPreview } from '@/components/prd-preview';
 import { FlowActionButton } from '../../../flow-action-button.jsx';
 
 
-const motivationalPhrases = [
-    "오늘도 화이팅 해보아요!",
-    "멋진 프로덕트를 만들어봐요!",
-    "당신의 아이디어가 세상을 바꿀 거예요!",
-    "오늘도 한 걸음 더 나아가봐요!",
-    "최고의 PRD를 작성해볼까요?",
-    "당신의 열정을 응원합니다!",
-    "프로덕트의 성공이 눈 앞에 있어요!",
-    "정말 대단해요! 계속 나아가세요!",
-    "하나의 PRD가 세상을 바꿉니다.",
-    "오늘도 멋진 기능이 탄생하겠네요!",
-    "세상을 놀라게 할 프로덕트, 바로 당신 손에서 시작돼요.",
-    "작은 아이디어가 위대한 혁신으로 이어집니다.",
-    "오늘의 노력이 내일의 성공을 만들어요.",
-    "포기하지 마세요, 멋진 결과가 기다리고 있어요!",
-    "당신의 열정이 담긴 PRD, 정말 기대돼요!",
-    "한 단계, 한 단계 나아가다 보면 어느새 정상이 보일 거예요.",
-    "최고의 팀은 최고의 PRD에서 시작됩니다.",
-    "사용자를 생각하는 마음이 최고의 기능을 만듭니다.",
-    "문서 하나하나에 당신의 비전이 담겨있어요.",
-    "지금 바로 그 아이디어를 실행에 옮겨보세요!",
-    "문제 정의가 명확하면, 해결책은 자연스럽게 따라와요.",
-    "당신은 이미 최고의 프로덕트 매니저입니다!",
-    "이 PRD가 가져올 긍정적인 변화를 상상해보세요.",
-    "동료들이 당신의 PRD를 기다리고 있어요!",
-    "명확한 문서는 오해를 줄이고 속도를 높입니다.",
-    "꾸준함이 비범함을 만듭니다. 오늘도 한결같이!",
-    "당신의 통찰력이 프로덕트를 완성시킬 거예요.",
-    "어려운 문제일수록, 해결했을 때 더 큰 보람이 있죠!",
-    "완벽한 계획보다 빠른 실행과 학습이 중요해요.",
-    "사용자의 '아하!'하는 순간을 만들어봐요!"
-];
-
 const MAX_VERSIONS_VISIBLE = 10;
 const ITEMS_PER_PAGE = 10;
 
@@ -222,7 +189,6 @@ export default function PrdListPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DeletedItemInfo | null>(null);
-  const [motivationalPhrase, setMotivationalPhrase] = useState('');
   
   const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [justRestored, setJustRestored] = useState<Set<string>>(new Set());
@@ -319,7 +285,6 @@ export default function PrdListPage() {
 
     setGroupedPrds(grouped);
     
-    setMotivationalPhrase(motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)]);
   }, [router]);
   
   const createNewPrd = useCallback((projectName: string) => {
@@ -842,10 +807,10 @@ export default function PrdListPage() {
   
   return (
     <>
-    <main className="prd-list-page min-h-screen bg-gray-50 no-print">
+    <main className="prd-list-page min-h-screen bg-white no-print">
 
 
-      <div className="prd-list-shell max-w-4xl mx-auto p-4 sm:p-8">
+      <div className="prd-list-shell mb-page-gutter">
         <div className="prd-list-heading mb-8">
           <h1 className="mb-page-title">PRD</h1>
         </div>
@@ -898,14 +863,7 @@ export default function PrdListPage() {
         {stats.totalDocs > 0 && !isAdmin && (
             <div className="prd-list-summary mb-4 p-4 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg flex items-start sm:items-center gap-3">
                 <Info className="h-5 w-5 shrink-0 mt-1 sm:mt-0"/>
-                <div>
-                  {isMobile ? (
-                    <>총 <strong>{stats.totalDocs}개</strong>의 PRD를 만들었어요! </>
-                  ) : (
-                    <>총 <strong>{stats.totalDocs}개</strong>의 PRD를 만들었고, 평균적으로 <strong>{stats.avgVersions}개</strong>의 버전을 만들고 있어요! </>
-                  )}
-                  <span className="font-bold text-animated-gradient block sm:inline">{motivationalPhrase}</span>
-                </div>
+                <div>작성한 PRD <strong>{stats.totalDocs}개</strong>{!isMobile && <> · 평균 <strong>{stats.avgVersions}개</strong> 버전</>}</div>
             </div>
         )}
 
@@ -1079,12 +1037,7 @@ export default function PrdListPage() {
                 )
             })
             ) : (
-            <Card className="prd-empty-card">
-                <CardContent className="text-center p-8 text-gray-500">
-                    <p>아직 작성된 PRD가 없습니다.</p>
-                    <p>새로운 PRD를 작성해보세요!</p>
-                </CardContent>
-            </Card>
+            <div className="prd-empty-state">작성된 PRD가 없습니다.</div>
             )}
         </div>
         

@@ -5,8 +5,17 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
   :root {
-    --background: 220 23% 97%;
+    --background: 0 0% 100%;
     --foreground: 216 23% 13%;
     --card: 0 0% 100%;
     --card-foreground: 216 23% 13%;
@@ -197,24 +206,11 @@
   background: var(--mb-bg);
 }
 
-@media (min-width: 1200px) {
-  .prd-list-shell {
-    width: 100%;
-    max-width: 1320px;
-    margin-right: auto;
-    margin-left: auto;
-    padding: 24px 32px 56px;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1199px) {
-  .prd-list-shell {
-    width: 100%;
-    max-width: 1320px;
-    margin-right: auto;
-    margin-left: auto;
-    padding: 28px 24px 48px;
-  }
+.prd-list-shell {
+  width: 100%;
+  max-width: 1320px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .prd-list-heading h1 {
@@ -245,10 +241,14 @@
 }
 
 .prd-list-summary {
-  border-color: transparent !important;
-  border-radius: 16px;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  border: 1px solid transparent !important;
+  border-top-color: var(--mb-border) !important;
+  border-bottom-color: var(--mb-border) !important;
+  border-radius: 0;
   color: var(--mb-text-secondary) !important;
-  background: var(--mb-primary-soft) !important;
+  background: transparent !important;
   box-shadow: none;
   font-size: var(--mb-font-14);
   line-height: 22px;
@@ -256,8 +256,7 @@
 
 .prd-list-summary > svg { color: var(--mb-primary-strong); }
 
-.prd-document-card,
-.prd-empty-card {
+.prd-document-card {
   border: 1px solid var(--mb-border) !important;
   border-radius: 16px !important;
   color: var(--mb-text-primary);
@@ -294,7 +293,7 @@
 .prd-version-list { border-color: var(--mb-border) !important; }
 .prd-version-link { border-radius: 8px; }
 .prd-version-link:hover { background: var(--mb-surface-muted); }
-.prd-empty-card p { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
+.prd-empty-state { padding: 32px 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
 
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
 @media (max-width: 767px) {
@@ -308,8 +307,7 @@
     line-height: 20px;
   }
 
-  .prd-document-card,
-  .prd-empty-card {
+  .prd-document-card {
     border: 0 !important;
     border-radius: 16px !important;
   }
