@@ -602,7 +602,7 @@ export function QuizAchievement({ userId }) {
           {filteredHistory.map((item, index) => <li key={`${item.date}-${index}`}>
             <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
             <div className="achievement-paper-thumb" role="img" aria-label={`${fallbackPaperTitle(item)} 문제지 미리보기`}><PaperPreview paper={previewForHistory(item)} compact /></div>
-            <div className="achievement-attempt"><strong>{item.score}점 <small>({item.correct}/{item.total})</small></strong><time dateTime={item.date}>{formatDate(item.date)}</time></div>
+            <div className="achievement-attempt"><strong><span className="achievement-score-badge">{item.score}점</span><small>({item.correct}/{item.total})</small></strong><time dateTime={item.date}>{formatDate(item.date)}</time></div>
             <div className="achievement-actions">
               <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
               {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
