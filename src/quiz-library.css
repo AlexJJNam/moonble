@@ -167,7 +167,7 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes quiz-notice-in { from { opacity: 0; transform: translateY(8px); } }
 .quiz-creator { max-width: 1320px; }
 .creator-step { position: relative; margin-top: 20px; padding: 30px; border-radius: 20px; background: var(--mb-surface); }
-.creator-intake-card { margin-top: 20px; padding: 34px 30px; border: 1px solid var(--mb-border); border-radius: 20px; background: var(--mb-surface); }
+.creator-intake-card { margin-top: 20px; padding: 34px 0; border: 0; border-radius: 0; background: transparent; }
 .creator-intake-card>.creator-step { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .creator-intake-card>.creator-prompt { padding-bottom: 10px; }
 .creator-flow-chevron { height: 28px; display: grid; place-items: center; color: #73aaf4; animation: creator-flow-float 2.2s ease-in-out infinite; }
