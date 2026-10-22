@@ -207,6 +207,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     let direction = 0;
     let distance = 0;
     let frame = 0;
+    let touchStartY = null;
 
     function updateHeader() {
       frame = 0;
@@ -230,7 +231,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
           distance = 0;
         }
         distance += Math.abs(delta);
-        if (distance >= 18) {
+        if (distance >= (solver ? 8 : 18)) {
           setMobileHeaderHidden(nextDirection > 0);
           distance = 0;
         }
@@ -243,14 +244,56 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
       frame = requestAnimationFrame(updateHeader);
     }
 
+    function revealOnUpwardTouch(event) {
+      if (!solver || !window.matchMedia('(max-width: 767px)').matches) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      if (touchStartY === null) touchStartY = touch.clientY;
+      if (touch.clientY - touchStartY < 8) return;
+      setMobileHeaderHidden(false);
+      direction = -1;
+      distance = 0;
+      previousY = Math.max(0, window.scrollY);
+    }
+
+    function startTouch(event) {
+      touchStartY = event.touches[0]?.clientY ?? null;
+    }
+
+    function endTouch() {
+      touchStartY = null;
+    }
+
+    function revealOnUpwardWheel(event) {
+      if (!solver || event.deltaY >= 0 || !window.matchMedia('(max-width: 767px)').matches) return;
+      setMobileHeaderHidden(false);
+      direction = -1;
+      distance = 0;
+      previousY = Math.max(0, window.scrollY);
+    }
+
     window.addEventListener('scroll', scheduleHeader, { passive: true });
     window.addEventListener('resize', scheduleHeader);
+    if (solver) {
+      window.addEventListener('touchstart', startTouch, { passive: true });
+      window.addEventListener('touchmove', revealOnUpwardTouch, { passive: true });
+      window.addEventListener('touchend', endTouch, { passive: true });
+      window.addEventListener('touchcancel', endTouch, { passive: true });
+      window.addEventListener('wheel', revealOnUpwardWheel, { passive: true });
+    }
     return () => {
       window.removeEventListener('scroll', scheduleHeader);
       window.removeEventListener('resize', scheduleHeader);
+      if (solver) {
+        window.removeEventListener('touchstart', startTouch);
+        window.removeEventListener('touchmove', revealOnUpwardTouch);
+        window.removeEventListener('touchend', endTouch);
+        window.removeEventListener('touchcancel', endTouch);
+        window.removeEventListener('wheel', revealOnUpwardWheel);
+      }
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [solver]);
 
   return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
