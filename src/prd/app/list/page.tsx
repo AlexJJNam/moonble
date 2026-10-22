@@ -1037,7 +1037,7 @@ export default function PrdListPage() {
                 )
             })
             ) : (
-            <div className="prd-empty-state">작성된 PRD가 없습니다.</div>
+            <p className="prd-empty-state">작성된 PRD가 없습니다.</p>
             )}
         </div>
         

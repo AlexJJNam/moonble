@@ -293,7 +293,7 @@
 .prd-version-list { border-color: var(--mb-border) !important; }
 .prd-version-link { border-radius: 8px; }
 .prd-version-link:hover { background: var(--mb-surface-muted); }
-.prd-empty-state { padding: 32px 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
+.prd-empty-state { display: flex; align-items: center; justify-content: center; min-height: 220px; margin: 8px 0 0; padding: 32px 0; box-sizing: border-box; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; text-align: center; }
 
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
 @media (max-width: 767px) {
