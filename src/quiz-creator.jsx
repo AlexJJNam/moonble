@@ -162,6 +162,8 @@ export function QuizCreator({ custom, onChange }) {
   useEffect(() => {
     if (!promptFocused) return undefined;
     const viewport = window.visualViewport;
+    const hideMobileDock = window.matchMedia('(max-width: 767px)').matches;
+    if (hideMobileDock) document.body.classList.add('mb-creator-prompt-focused');
     const updateKeyboardOffset = () => {
       const bar = promptBarRef.current;
       if (!bar || !viewport) return;
@@ -174,6 +176,7 @@ export function QuizCreator({ custom, onChange }) {
     return () => {
       viewport?.removeEventListener('resize', updateKeyboardOffset);
       viewport?.removeEventListener('scroll', updateKeyboardOffset);
+      document.body.classList.remove('mb-creator-prompt-focused');
       promptBarRef.current?.style.removeProperty('--creator-keyboard-offset');
     };
   }, [promptFocused]);
