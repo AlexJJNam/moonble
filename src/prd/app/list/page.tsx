@@ -51,7 +51,7 @@ const FirstProjectDialogContent = React.memo(({ open, onOpenChange, value, onCha
   onSubmit: () => void;
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+    <DialogContent className="prd-action-dialog" overlayClassName="prd-action-overlay" onOpenAutoFocus={(e) => e.preventDefault()}>
       <DialogHeader>
         <DialogTitle>첫 프로젝트 생성</DialogTitle>
         <DialogDescription>
@@ -218,6 +218,39 @@ export default function PrdListPage() {
   const [justFavorited, setJustFavorited] = useState<Set<string>>(new Set());
 
   const [prdToPrint, setPrdToPrint] = useState<PrdDocument | null>(null);
+
+  useEffect(() => {
+    if (!isMobile || !(isProjectManagementOpen || isNewPrdDialogOpen || isFirstProjectDialogOpen)) return undefined;
+    const viewport = window.visualViewport;
+    let frame = 0;
+    const placeAboveKeyboard = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const keyboardOffset = viewport
+          ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+          : 0;
+        document.querySelectorAll<HTMLElement>('.prd-action-dialog').forEach(dialog => {
+          dialog.style.setProperty('--prd-keyboard-offset', `${keyboardOffset}px`);
+          const focusedField = dialog.querySelector<HTMLElement>('input:focus, textarea:focus, select:focus');
+          if (focusedField) {
+            const rect = focusedField.getBoundingClientRect();
+            const visibleBottom = (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight) - 12;
+            if (rect.bottom > visibleBottom) focusedField.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        });
+      });
+    };
+    placeAboveKeyboard();
+    viewport?.addEventListener('resize', placeAboveKeyboard);
+    viewport?.addEventListener('scroll', placeAboveKeyboard);
+    document.addEventListener('focusin', placeAboveKeyboard);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      viewport?.removeEventListener('resize', placeAboveKeyboard);
+      viewport?.removeEventListener('scroll', placeAboveKeyboard);
+      document.removeEventListener('focusin', placeAboveKeyboard);
+    };
+  }, [isMobile, isProjectManagementOpen, isNewPrdDialogOpen, isFirstProjectDialogOpen]);
 
   useEffect(() => {
     if (prdToPrint) {
@@ -845,7 +878,7 @@ export default function PrdListPage() {
         </div>
         
         <Dialog open={isNewPrdDialogOpen} onOpenChange={setIsNewPrdDialogOpen}>
-            <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+            <DialogContent className="prd-action-dialog" overlayClassName="prd-action-overlay" onOpenAutoFocus={(e) => e.preventDefault()}>
                 <NewPrdDialogContent />
             </DialogContent>
         </Dialog>
@@ -1186,47 +1219,25 @@ export default function PrdListPage() {
       )}
 
 
-      {isMobile ? (
-        <Sheet open={isProjectManagementOpen} onOpenChange={handleProjectManagementOpenChange}>
-          <SheetContent side="bottom">
-            <ProjectManagementDialogContent
-              projects={projects}
-              hiddenProjects={hiddenProjects}
-              justRestoredProjects={justRestoredProjects}
-              editingProjectId={editingProjectId}
-              editingProjectName={editingProjectName}
-              setEditingProjectName={setEditingProjectName}
-              onUpdateProjectName={handleUpdateProjectName}
-              onEditProject={handleEditProject}
-              onCancelEdit={handleCancelEdit}
-              onSetProjectToDelete={setProjectToDelete}
-              newProjectName={newProjectName}
-              onNewProjectNameChange={(e) => setNewProjectName(e.target.value)}
-              onAddNewProject={handleAddNewProject}
-            />
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={isProjectManagementOpen} onOpenChange={handleProjectManagementOpenChange}>
-          <DialogContent className="max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
-            <ProjectManagementDialogContent
-                projects={projects}
-                hiddenProjects={hiddenProjects}
-                justRestoredProjects={justRestoredProjects}
-                editingProjectId={editingProjectId}
-                editingProjectName={editingProjectName}
-                setEditingProjectName={setEditingProjectName}
-                onUpdateProjectName={handleUpdateProjectName}
-                onEditProject={handleEditProject}
-                onCancelEdit={handleCancelEdit}
-                onSetProjectToDelete={setProjectToDelete}
-                newProjectName={newProjectName}
-                onNewProjectNameChange={(e) => setNewProjectName(e.target.value)}
-                onAddNewProject={handleAddNewProject}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={isProjectManagementOpen} onOpenChange={handleProjectManagementOpenChange}>
+        <DialogContent className="prd-action-dialog max-w-md" overlayClassName="prd-action-overlay" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <ProjectManagementDialogContent
+            projects={projects}
+            hiddenProjects={hiddenProjects}
+            justRestoredProjects={justRestoredProjects}
+            editingProjectId={editingProjectId}
+            editingProjectName={editingProjectName}
+            setEditingProjectName={setEditingProjectName}
+            onUpdateProjectName={handleUpdateProjectName}
+            onEditProject={handleEditProject}
+            onCancelEdit={handleCancelEdit}
+            onSetProjectToDelete={setProjectToDelete}
+            newProjectName={newProjectName}
+            onNewProjectNameChange={(e) => setNewProjectName(e.target.value)}
+            onAddNewProject={handleAddNewProject}
+          />
+        </DialogContent>
+      </Dialog>
     </main>
     <div className="print-only">
         {prdToPrint && <PrdPreview prdData={prdToPrint} />}

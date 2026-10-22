@@ -437,7 +437,7 @@ export function QuizCreator({ custom, onChange }) {
         <strong>{pending ? '문제를 확인하고 있어요' : 'CSV 파일을 여기에 놓으세요'}</strong>
         <p>또는</p>
         <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
-        {!uploadRevealed && <button className="creator-drop-reveal" type="button" aria-label="파일 생성했어요!" onClick={() => setUploadRevealed(true)}>파일 생성했어요!</button>}
+        {!uploadRevealed && <button className="creator-drop-reveal" type="button" aria-label="파일 생성했다면?" onClick={() => setUploadRevealed(true)}>파일 생성했다면?</button>}
         {uploadSuccess && <div className="creator-upload-complete" role="status"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13.5 24.8l7 7L35 17.5" /></svg></span><strong>문제지 등록 완료</strong></div>}
       </div>
       <div className="creator-source-divider"><span>또는</span></div>

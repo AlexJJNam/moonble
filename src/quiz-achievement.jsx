@@ -640,12 +640,12 @@ export function QuizAchievement({ userId }) {
       <p>문제지를 풀고 제출하면 점수와 오답 기록이 여기에 쌓여요.</p>
       <a href="#paper-library">첫 문제지 풀기</a>
     </section>}
-    <section className="achievement-bottom-tools" aria-label="성취도 내보내기">
+    {filteredHistory.length > 0 && <section className="achievement-bottom-tools" aria-label="성취도 내보내기">
       <div className="achievement-export-actions" aria-label="학습 리포트 내보내기">
-        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportHistory}><Download size={17} aria-hidden="true" />CSV</button>
-        <button className="achievement-export" type="button" disabled={!filteredHistory.length} onClick={exportPdf}><FileDown size={17} aria-hidden="true" />PDF</button>
+        <button className="achievement-export" type="button" onClick={exportHistory}><Download size={17} aria-hidden="true" />CSV</button>
+        <button className="achievement-export" type="button" onClick={exportPdf}><FileDown size={17} aria-hidden="true" />PDF</button>
       </div>
-    </section>
+    </section>}
     {periodSheetOpen && <div ref={periodOverlayRef} className={`achievement-period-overlay${periodSheetClosing ? ' is-closing' : ''}`} role="presentation" onPointerDown={event => { if (event.target === event.currentTarget) closePeriodSheet(); }}>
       <section ref={periodSheetRef} className={`achievement-period-sheet${periodDraft === 'custom' ? ' show-custom' : ''}`} role="dialog" aria-modal="true" aria-labelledby="achievement-period-title">
         <span className="achievement-period-grab" aria-hidden="true" />
