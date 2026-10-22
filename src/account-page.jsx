@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Check, LogOut, Trash2 } from 'lucide-react';
+import { Check, LogOut } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
-import { PrivacyRequest } from './prd/privacy-request.jsx';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
 import './design-system.css';
@@ -25,26 +24,6 @@ function localDataKeys(userId) {
 function clearLocalUserData(userId) {
   localDataKeys(userId).forEach(key => localStorage.removeItem(key));
   sessionStorage.removeItem('moonble:retry-question-ids');
-}
-
-function LocalData({ user }) {
-  const [count, setCount] = useState(() => localDataKeys(user.id).length);
-  const [confirming, setConfirming] = useState(false);
-
-  function clearData() {
-    if (!confirming) { setConfirming(true); return; }
-    clearLocalUserData(user.id);
-    setCount(0);
-    setConfirming(false);
-  }
-
-  return <section className="profile-card local-data-card">
-    <h2 className="mb-section-title">이 기기의 저장 데이터</h2>
-    <p>PRD, 직접 만든 문제지와 풀이 기록은 계정별로 이 브라우저에 저장됩니다. 다른 기기와 자동으로 동기화되지 않습니다.</p>
-    <p className="local-data-count">저장 항목 <strong>{count}</strong>개</p>
-    <button className="account-danger" type="button" onClick={clearData}><Trash2 size={17} />{confirming ? '정말 모두 삭제하기' : '이 기기의 내 데이터 삭제'}</button>
-    {confirming && <p className="account-danger-note" role="alert">삭제한 로컬 데이터는 복구할 수 없습니다. 계정과 프로필은 삭제되지 않습니다.</p>}
-  </section>;
 }
 
 function AccountDeletion({ user }) {
@@ -80,11 +59,8 @@ function AccountDeletion({ user }) {
     }
   }
 
-  return <section className="profile-card account-delete-card">
-    <h2 className="mb-section-title">회원 탈퇴</h2>
-    <p>계정과 프로필을 영구 삭제합니다. 탈퇴한 계정은 복구할 수 없습니다.</p>
-    <AlertDialog.Root open={open} onOpenChange={changeOpen}>
-      <AlertDialog.Trigger asChild><button className="account-danger" type="button"><Trash2 size={17} aria-hidden="true" />회원 탈퇴</button></AlertDialog.Trigger>
+  return <AlertDialog.Root open={open} onOpenChange={changeOpen}>
+      <AlertDialog.Trigger asChild><button className="account-delete-caption" type="button">회원 탈퇴</button></AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="account-delete-overlay" />
         <AlertDialog.Content className="account-delete-dialog">
@@ -106,8 +82,7 @@ function AccountDeletion({ user }) {
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>
-    </AlertDialog.Root>
-  </section>;
+    </AlertDialog.Root>;
 }
 
 function AccountPage() {
@@ -155,16 +130,14 @@ function AccountPage() {
       </section>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
       <section className="profile-card account-mobile-session">
-        <div><h2 className="mb-section-title">로그인 관리</h2><p>현재 기기에서 Moonble 계정 사용을 마칠 수 있어요.</p></div>
+        <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}
         <button className="account-logout-action" type="button" disabled={pending} onClick={logout}>
           {pending ? <span className="moonble-spinner" aria-hidden="true" /> : <LogOut size={18} aria-hidden="true" />}
           <span>{pending ? '로그아웃 중' : '로그아웃'}</span>
         </button>
+        <AccountDeletion user={user} />
       </section>
-      <LocalData user={user} />
-      <PrivacyRequest user={user} />
-      <AccountDeletion user={user} />
     </main>
     <SiteFooter />
   </>;
