@@ -20,8 +20,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-main .quiz-title p { margin-top: 3px; font-size: var(--mb-font-13); line-height: 20px; }
 .quiz-library-main .quiz-create-button { min-height: 40px; padding: 9px 14px; border-radius: 10px; font-size: var(--mb-font-13); }
 .quiz-library-main .quiz-create-button svg { width: 16px; height: 16px; }
-.paper-edit-done { min-width: 52px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 9px; border: 0; border-radius: 999px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 16px; font-weight: 700; white-space: nowrap; }
-.paper-edit-done:hover { background: var(--mb-primary-hover); }
+.paper-edit-done { width: 32px; height: 32px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); transition: color var(--mb-duration), background-color var(--mb-duration), transform var(--mb-duration); }
+.paper-edit-done:hover { color: #fff; background: var(--mb-primary-strong); transform: scale(1.04); }
 .paper-group-bar { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
 .paper-group-tabs { min-width: 0; display: flex; flex: 1 1 auto; align-items: center; gap: 4px; overflow-x: auto; padding: 2px; scrollbar-width: none; }
 .paper-group-tabs::-webkit-scrollbar { display: none; }
@@ -137,7 +137,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-list .paper-info { min-width: 0; min-height: 96px; flex: 1; padding-right: 50px; }
 .paper-card-actions { position: absolute; z-index: 4; top: 7px; right: 7px; bottom: auto; }
 .paper-card-actions>button { width: 34px; height: 34px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 0; color: var(--mb-text-tertiary); background: transparent; backdrop-filter: none; }
-.paper-card-actions>.paper-edit-done { width: auto; height: 28px; min-height: 28px; display: inline-flex; }
+.paper-card-actions>.paper-edit-done { width: 32px; height: 32px; min-height: 32px; }
 .paper-action-menu { position: absolute; z-index: 20; top: calc(100% + 5px); right: 0; min-width: 142px; display: grid; gap: 2px; padding: 6px; border: 1px solid var(--mb-border); border-radius: 12px; color: var(--mb-text-secondary); background: rgb(255 255 255 / 97%); box-shadow: 0 12px 32px rgb(15 23 42 / 14%); backdrop-filter: blur(16px); animation: paper-menu-in 140ms ease-out both; }
 .paper-action-menu button { min-height: 38px; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 0; border-radius: 8px; color: inherit; background: transparent; font-size: var(--mb-font-13, 13px); font-weight: 550; white-space: nowrap; }
 .paper-action-menu button:hover { background: var(--mb-surface-muted); }
