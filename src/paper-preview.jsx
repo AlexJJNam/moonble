@@ -8,12 +8,12 @@ export const BUILT_IN_PAPER_PREVIEWS = [
   ] },
 ];
 
-export function PaperPreview({ paper, compact = false }) {
+export function PaperPreview({ paper, compact = false, style }) {
   const samples = Array.isArray(paper?.samples) ? paper.samples : [];
   const label = paper?.label || '문제지';
   const count = Number(paper?.count) || 0;
 
-  return <div className={`paper-preview preview-${paper?.kind || 'custom'}${compact ? ' paper-preview--compact' : ''}`} aria-hidden="true">
+  return <div className={`paper-preview preview-${paper?.kind || 'custom'}${compact ? ' paper-preview--compact' : ''}`} style={style} aria-hidden="true">
     <div className="preview-sheet">
       <div className="preview-sheet-brand"><BrandLogo decorative /></div>
       <div className="preview-sheet-title">{label}</div>

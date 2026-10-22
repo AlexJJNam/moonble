@@ -50,6 +50,28 @@ function formatPaperAddedAt(value, now = Date.now()) {
   const date = new Date(addedAt);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
+function buildGroupColorMap(groups) {
+  const usedHues = new Set();
+  const colors = new Map();
+  [...groups].sort((a, b) => a.id.localeCompare(b.id)).forEach(group => {
+    let hash = 2166136261;
+    for (const character of group.id) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+    let hue = (hash >>> 0) % 360;
+    while (usedHues.has(hue)) hue = (hue + 37) % 360;
+    usedHues.add(hue);
+    colors.set(group.id, {
+      '--paper-group-tint': `hsl(${hue} 72% 95%)`,
+      '--paper-group-color': `hsl(${hue} 48% 36%)`,
+      '--paper-group-border': `hsl(${hue} 45% 86%)`,
+    });
+  });
+  return colors;
+}
+function groupColorStyle(groupId, colors) {
+  if (groupId === 'all') return { '--paper-group-tint': '#e8f3ff', '--paper-group-color': '#1b64da', '--paper-group-border': '#d5e8ff' };
+  if (groupId === DEFAULT_GROUP_ID) return { '--paper-group-tint': '#f2f4f6', '--paper-group-color': '#667085', '--paper-group-border': '#e3e7eb' };
+  return colors.get(groupId) || groupColorStyle(DEFAULT_GROUP_ID, colors);
+}
 if (initialUser) {
   setCustomBankUser(initialUser.id);
   document.documentElement.removeAttribute('data-auth-pending');
@@ -549,6 +571,7 @@ function QuizLibrary() {
     { id: DEFAULT_GROUP_ID, name: '미분류', count: collection.banks.filter(bank => bank.groupId === DEFAULT_GROUP_ID).length },
     ...orderedGroupIds.map(id => collection.groups.find(group => group.id === id)).filter(Boolean).map(group => ({ ...group, count: collection.banks.filter(bank => bank.groupId === group.id).length })),
   ];
+  const groupColors = buildGroupColorMap(collection.groups);
   return <div className="quiz-page" onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
@@ -559,6 +582,7 @@ function QuizLibrary() {
           <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
             {groupTabs.map(group => <span
               className={`paper-group-tab${activeGroup === group.id ? ' is-active' : ''}${dropGroupId === group.id ? ' is-drop-target' : ''}${folderPulse === group.id ? ' is-receiving' : ''}${reorderingGroupId === group.id ? ' is-reordering' : ''}`}
+              style={groupColorStyle(group.id, groupColors)}
               data-group-id={group.id}
               data-reorder-group={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? group.id : undefined}
               key={group.id}
@@ -594,6 +618,7 @@ function QuizLibrary() {
             const groupName = paper.customBankId
               ? (paper.groupId === DEFAULT_GROUP_ID ? '미분류' : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류')
               : null;
+            const paperGroupStyle = paper.customBankId ? groupColorStyle(paper.groupId, groupColors) : undefined;
             const CardSurface = editMode ? 'div' : 'a';
             return <article
               className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
@@ -632,8 +657,8 @@ function QuizLibrary() {
               key={paper.id}
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
-                {groupName && <span className="paper-group-flag" aria-hidden="true">{groupName}</span>}
-                <PaperPreview paper={paper} />
+                {groupName && <span className="paper-group-flag" style={paperGroupStyle} aria-hidden="true">{groupName}</span>}
+                <PaperPreview paper={paper} style={paperGroupStyle} />
                 <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.savedAt && <time className="paper-added-at" dateTime={paper.savedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.savedAt))}>{formatPaperAddedAt(paper.savedAt)}</time>}</div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
