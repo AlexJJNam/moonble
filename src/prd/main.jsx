@@ -33,6 +33,7 @@ function Workspace() {
   const route = useRoute();
   const router = useRouter();
   const path = route.split('?')[0];
+  const showFooter = path !== '/register-name' && !path.startsWith('/edit/');
   useEffect(() => {
     if (!supabase) { window.location.replace(loginUrl()); return; }
     let alive = true;
@@ -83,7 +84,7 @@ function Workspace() {
             ? <PrdStudio key={route} prdId={path === '/edit/new' ? undefined : path.slice('/edit/'.length)} />
             : <PrdList key={`${user.id}:${profile.name}:${profile.companyName}`} />}
         </WorkspaceBoundary>}
-    <SiteFooter />
+    {showFooter && <SiteFooter />}
     <Toaster />
   </>;
 }

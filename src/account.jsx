@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
-import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
 
 let leavingHome = false;
@@ -72,4 +71,3 @@ function Account() {
 }
 
 createRoot(document.getElementById('moonble-app-header')).render(<Account />);
-createRoot(document.getElementById('moonble-footer')).render(<SiteFooter />);
