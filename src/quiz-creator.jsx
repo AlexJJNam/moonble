@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -420,6 +420,8 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </div>
     </section>
+
+    <div className="creator-flow-chevron" aria-hidden="true"><ChevronDown size={22} strokeWidth={2.4} /></div>
 
     <section className="creator-step" aria-labelledby="creator-upload-title">
       <header><CreatorStepMarker step="upload" label="2단계" /><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
