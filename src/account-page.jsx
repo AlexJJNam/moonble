@@ -133,8 +133,10 @@ function AccountPage() {
         <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}
         <button className="account-logout-action" type="button" disabled={pending} onClick={logout}>
-          {pending ? <span className="moonble-spinner" aria-hidden="true" /> : <LogOut size={18} aria-hidden="true" />}
-          <span>{pending ? '로그아웃 중' : '로그아웃'}</span>
+          <span className="account-logout-icon" aria-hidden="true">
+            {pending ? <span className="moonble-spinner" /> : <LogOut size={18} />}
+          </span>
+          <span className="account-logout-label">{pending ? '로그아웃 중' : '로그아웃'}</span>
         </button>
         <AccountDeletion user={user} />
       </section>
