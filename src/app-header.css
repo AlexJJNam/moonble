@@ -111,7 +111,6 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { display: block; padding: 4px max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); }
   .mb-app-header.mb-solver-sidebar .mb-app-brand-row, .mb-app-header.mb-solver-sidebar .mb-app-profile { display: none; }
   .mb-app-header.mb-solver-sidebar .mb-app-nav.mb-solver-nav { grid-row: 1; padding: 0; }
-  .mb-app-header.mb-solver-sidebar .mb-solver-heading { display: none; }
   .mb-solver-questions { min-width: 0; display: flex; flex: 1; gap: 6px; padding: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; }
   .mb-solver-questions::-webkit-scrollbar { display: none; }
   .mb-solver-question { flex: 0 0 44px; min-height: 44px; display: grid !important; grid-template-columns: 1fr; padding: 0 !important; scroll-snap-align: center; }

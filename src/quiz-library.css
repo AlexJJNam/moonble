@@ -173,6 +173,10 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes quiz-notice-in { from { opacity: 0; transform: translateY(8px); } }
 .quiz-creator { max-width: 1320px; }
 .creator-step { position: relative; margin-top: 20px; padding: 30px; border-radius: 20px; background: var(--mb-surface); }
+.creator-intake-card { margin-top: 20px; padding: 30px; border: 1px solid var(--mb-border); border-radius: 20px; background: var(--mb-surface); }
+.creator-intake-card>.creator-step { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.creator-intake-card>.creator-prompt { padding-bottom: 28px; }
+.creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { padding-top: 28px; border-top: 1px solid #ece7df; }
 .creator-step>header { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 14px; margin-bottom: 22px; }
 .creator-step>header>span { width: 30px; height: 30px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-12); line-height: 1; font-weight: 700; }
 .creator-step h2 { margin: 0; font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; }
@@ -459,6 +463,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-actions { grid-column: 2 / -1; justify-content: flex-start; flex-wrap: wrap; }
   .paper-list .paper-preview { width: 160px; }
   .creator-step { padding: 22px; }
+  .creator-intake-card { padding: 22px; }
 }
 @media (max-width: 540px) {
   .quiz-title { align-items: flex-start; gap: 12px; }
@@ -589,6 +594,9 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-chart-table th:first-child { width: 100px; }
   .achievement-chart-tooltip { max-width: min(280px, calc(100vw - 32px)); white-space: normal; }
   .creator-step { padding: 20px 16px; border-radius: 16px; }
+  .creator-intake-card { margin-top: 16px; padding: 20px 16px; border-radius: 16px; }
+  .creator-intake-card>.creator-prompt { padding-bottom: 22px; }
+  .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { padding-top: 22px; }
   .creator-step>header { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
   .creator-step h2 { font-size: var(--mb-font-18); line-height: 26px; }
   .creator-prompt>header { padding-right: 38px; }

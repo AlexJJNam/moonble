@@ -376,6 +376,7 @@ export function QuizCreator({ custom, onChange }) {
   return <main className="quiz-main mb-page-gutter quiz-creator" id="quiz-creator" tabIndex={-1}>
     <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
 
+    <div className="creator-intake-card">
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
       <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
         <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
@@ -436,6 +437,7 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
       {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
+    </div>
 
     {message && <p className="creator-message" role="status">{message}</p>}
     {error && <p className="creator-error" role="alert">{error}</p>}
