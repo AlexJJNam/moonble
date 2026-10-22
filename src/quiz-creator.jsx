@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, ChevronLeft, CircleHelp, Download, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -63,6 +63,16 @@ const providerSegments = [
   { value: 'chatgpt', label: 'ChatGPT' },
   { value: 'gemini', label: 'Gemini' },
 ];
+
+const creatorStepIcons = {
+  prompt: MessageSquareText,
+  upload: FileUp,
+};
+
+function CreatorStepMarker({ step, label }) {
+  const Icon = creatorStepIcons[step];
+  return <span className="creator-step-marker" role="img" aria-label={label}><Icon size={16} strokeWidth={2} aria-hidden="true" /></span>;
+}
 
 function PromptSample({ hidden }) {
   const [sampleIndex, setSampleIndex] = useState(0);
@@ -393,7 +403,7 @@ export function QuizCreator({ custom, onChange }) {
           </div>
         </div>
       </details>
-      <header><span>1</span><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
+      <header><CreatorStepMarker step="prompt" label="1단계" /><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
       <div className="creator-ai-prompt">
         <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
@@ -412,7 +422,7 @@ export function QuizCreator({ custom, onChange }) {
     </section>
 
     <section className="creator-step" aria-labelledby="creator-upload-title">
-      <header><span>2</span><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
+      <header><CreatorStepMarker step="upload" label="2단계" /><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
         className={`creator-drop${uploadRevealed ? ' is-revealed' : ' is-concealed'}${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
         onDragEnter={event => { event.preventDefault(); setUploadRevealed(true); setDragging(true); }}

@@ -179,7 +179,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-intake-card>.creator-prompt { padding-bottom: 24px; }
 .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { padding-top: 24px; }
 .creator-step>header { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 14px; margin-bottom: 22px; }
-.creator-step>header>span { width: 30px; height: 30px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-12); line-height: 1; font-weight: 700; }
+.creator-step>header>.creator-step-marker { width: 30px; height: 30px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .creator-step h2 { margin: 0; font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; }
 .creator-step header p { margin: 5px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
 .creator-ai-prompt { display: flex; align-items: center; justify-content: center; }
