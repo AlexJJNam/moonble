@@ -279,9 +279,9 @@
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
 @media (max-width: 767px) {
   .prd-list-heading h1 {
-    font-size: var(--mb-font-24);
-    line-height: 32px;
-    letter-spacing: -.02em;
+    font-size: var(--mb-font-22);
+    line-height: 30px;
+    letter-spacing: -.025em;
   }
 
   .prd-list-heading p {

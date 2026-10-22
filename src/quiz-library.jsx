@@ -72,12 +72,46 @@ function sectionFromHash() {
 }
 
 function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    if (!editor || !window.matchMedia('(max-width: 540px)').matches) return undefined;
+    const overlay = overlayRef.current;
+    const viewport = window.visualViewport;
+    if (!overlay || !viewport) return undefined;
+
+    const placeAboveKeyboard = () => {
+      const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      overlay.style.setProperty('--quiz-keyboard-offset', `${keyboardHeight}px`);
+
+      const focusedField = overlay.querySelector('input:focus, textarea:focus, select:focus');
+      if (focusedField) {
+        window.requestAnimationFrame(() => {
+          const fieldRect = focusedField.getBoundingClientRect();
+          const visibleTop = viewport.offsetTop + 12;
+          const visibleBottom = viewport.offsetTop + viewport.height - 12;
+          if (fieldRect.top < visibleTop || fieldRect.bottom > visibleBottom) {
+            focusedField.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        });
+      }
+    };
+
+    placeAboveKeyboard();
+    viewport.addEventListener('resize', placeAboveKeyboard);
+    viewport.addEventListener('scroll', placeAboveKeyboard);
+    return () => {
+      viewport.removeEventListener('resize', placeAboveKeyboard);
+      viewport.removeEventListener('scroll', placeAboveKeyboard);
+    };
+  }, [editor?.type]);
+
   if (!editor) return null;
   const isBank = editor.type.startsWith('bank-');
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 이름 바꾸기' : '그룹을 삭제할까요?';
-  return <div className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+  return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className="quiz-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
       <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
       {isDelete ? <>
@@ -419,7 +453,7 @@ function QuizLibrary() {
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
           <div className="quiz-display-tools">
-            <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="문제지 검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
             <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
