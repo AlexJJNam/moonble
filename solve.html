@@ -3605,20 +3605,23 @@
       let bankId = solveParams.get('bank') || null;
       let groupId = 'ungrouped';
       let paperTitle = paperId === 'basics' ? 'GA4 핵심 개념' : paperId === 'advanced' ? 'GA4 실무 응용' : paperId === 'random' ? '전체 랜덤 문제지' : '문제지';
+      let paperDescription = '';
       if (paperId === 'custom' && typeof window.getCustomBankMeta === 'function') {
         const bankMeta = window.getCustomBankMeta(bankId);
-        if (bankMeta) { groupId = bankMeta.groupId || 'ungrouped'; paperTitle = bankMeta.title || paperTitle; }
+        if (bankMeta) { groupId = bankMeta.groupId || 'ungrouped'; paperTitle = bankMeta.title || paperTitle; paperDescription = bankMeta.description || ''; }
       } else if (paperId === 'retry') {
         try {
           const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
           bankId = retryMeta.bankId || null;
           groupId = retryMeta.groupId || 'ungrouped';
-          paperTitle = retryMeta.paperTitle || paperTitle;
+          const bankMeta = bankId && typeof window.getCustomBankMeta === 'function' ? window.getCustomBankMeta(bankId) : null;
+          paperTitle = retryMeta.paperTitle && retryMeta.paperTitle !== '문제지' ? retryMeta.paperTitle : (bankMeta?.title || paperTitle);
+          paperDescription = retryMeta.paperDescription || bankMeta?.description || '';
         } catch { /* 재풀이 메타데이터가 없어도 결과는 저장한다. */ }
       }
       pushHistory({
         score, correct: correctCount, total, date: new Date().toISOString(),
-        paperId, bankId, groupId, paperTitle,
+        paperId, bankId, groupId, paperTitle, paperDescription,
         questionIds: picked.map(q => q.id),
         wrongIds: wrongPicked.map(q => q.id)
       });

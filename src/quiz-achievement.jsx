@@ -63,11 +63,13 @@ function historyPaperKey(item) {
 }
 
 function fallbackPaperTitle(item) {
-  if (item?.paperTitle) return item.paperTitle;
+  const savedTitle = item?.paperTitle?.trim();
+  if (savedTitle && savedTitle !== '문제지') return savedTitle;
   if (item?.paperId === 'basics') return 'GA4 핵심 개념';
   if (item?.paperId === 'advanced') return 'GA4 실무 응용';
   if (item?.paperId === 'random') return '전체 랜덤 문제지';
-  return '문제지';
+  if (item?.paperId === 'custom') return '내 문제지';
+  return '전체 랜덤 문제지';
 }
 
 function ScoreChart({ history }) {
@@ -380,13 +382,24 @@ export function QuizAchievement({ userId }) {
     return [...filters.values()];
   }, [collection.banks, history, selectedGroups]);
 
-  const previewForHistory = item => {
+  const historyPaperDetails = item => {
     const bank = item.bankId ? collection.banks.find(candidate => candidate.id === item.bankId) : null;
     const builtIn = BUILT_IN_PAPER_PREVIEWS.find(candidate => candidate.id === item.paperId);
+    const savedTitle = item.paperTitle?.trim();
+    return {
+      title: savedTitle && savedTitle !== '문제지' ? savedTitle : (bank?.title || fallbackPaperTitle(item)),
+      description: item.paperDescription?.trim() || bank?.description || builtIn?.description || '',
+      bank,
+      builtIn,
+    };
+  };
+
+  const previewForHistory = item => {
+    const { title, bank, builtIn } = historyPaperDetails(item);
     const source = bank || builtIn;
     return {
       kind: bank ? 'custom' : (source?.kind || 'custom'),
-      label: bank?.title || fallbackPaperTitle(item),
+      label: title,
       count: bank?.questions.length || source?.count || Number(item.total) || item.questionIds?.length || 20,
       samples: bank
         ? bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) }))
@@ -518,7 +531,8 @@ export function QuizAchievement({ userId }) {
     if (!Array.isArray(ids) || !ids.length) return;
     try {
       sessionStorage.setItem('moonble:retry-question-ids', JSON.stringify(ids));
-      sessionStorage.setItem('moonble:retry-meta', JSON.stringify({ paperId: item.paperId, bankId: item.bankId, groupId: item.groupId, paperTitle: item.paperTitle }));
+      const paper = historyPaperDetails(item);
+      sessionStorage.setItem('moonble:retry-meta', JSON.stringify({ paperId: item.paperId, bankId: item.bankId, groupId: item.groupId, paperTitle: paper.title, paperDescription: paper.description }));
     } catch { /* URL 이동은 계속한다. */ }
     window.location.href = './solve.html?paper=retry#quiz';
   }
@@ -599,16 +613,24 @@ export function QuizAchievement({ userId }) {
           {confirming === 'all' ? <div className="achievement-confirm"><span>모두 지울까요?</span><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update([])}>초기화</button></div> : <button className="achievement-reset" type="button" onClick={() => setConfirming('all')}>전체 초기화</button>}
         </div>
         <ol className="achievement-list">
-          {filteredHistory.map((item, index) => <li key={`${item.date}-${index}`}>
-            <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
-            <div className="achievement-paper-thumb" role="img" aria-label={`${fallbackPaperTitle(item)} 문제지 미리보기`}><PaperPreview paper={previewForHistory(item)} compact /></div>
-            <div className="achievement-attempt"><strong><span className="achievement-score-badge">{item.score}점</span><small>({item.correct}/{item.total})</small><span className="achievement-paper-title" title={fallbackPaperTitle(item)}>{fallbackPaperTitle(item)}</span></strong><time dateTime={item.date}>{formatDate(item.date)}</time></div>
-            <div className="achievement-actions">
-              <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
-              {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
-              {confirming === item.date ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter(record => record !== item))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(item.date)}><Trash2 size={17} aria-hidden="true" /></button>}
-            </div>
-          </li>)}
+          {filteredHistory.map((item, index) => {
+            const paper = historyPaperDetails(item);
+            return <li key={`${item.date}-${index}`}>
+              <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
+              <div className="achievement-paper-thumb" role="img" aria-label={`${paper.title} 문제지 미리보기`}><PaperPreview paper={previewForHistory(item)} compact /></div>
+              <div className="achievement-attempt">
+                <div className="achievement-attempt-score"><span className="achievement-score-badge">{item.score}점</span><small>({item.correct}/{item.total})</small></div>
+                <strong className="achievement-paper-title" title={paper.title}>{paper.title}</strong>
+                {paper.description && <p className="achievement-paper-description" title={paper.description}>{paper.description}</p>}
+                <time dateTime={item.date}>{formatDate(item.date)}</time>
+              </div>
+              <div className="achievement-actions">
+                <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
+                {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
+                {confirming === item.date ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter(record => record !== item))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(item.date)}><Trash2 size={17} aria-hidden="true" /></button>}
+              </div>
+            </li>;
+          })}
         </ol>
       </section>
       </> : <section className="achievement-filter-empty"><Search size={26} aria-hidden="true" /><h2>선택한 조건의 기록이 없어요</h2><p>그룹·문제지나 기간을 바꾸면 다른 풀이 기록을 확인할 수 있어요.</p><button type="button" onClick={() => { setSelectedGroups([]); setSelectedPapers([]); setPeriod('all'); setDateFrom(''); setDateTo(''); }}>전체 기록 보기</button></section>}
