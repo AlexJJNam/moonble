@@ -80,6 +80,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 }
 
 @media (max-width: 767px) {
+  /* Let the solver's sticky header use the document as its scroll container; the mount only wraps the header itself. */
+  #moonble-app-header { display: contents; }
   body.mb-has-app-sidebar { padding-left: 0; }
   body.mb-has-app-sidebar.mb-sidebar-collapsed { padding-left: 0; }
   body.mb-has-app-dock { padding-bottom: calc(var(--mb-mobile-dock-height) + env(safe-area-inset-bottom)); }
