@@ -375,7 +375,7 @@ function MoonbleWorkspaceDemo({ stage = 'flow', showGlowCursor = false }) {
       </div>
 
       <div className="story-screen story-library-screen">
-        <header><div><strong>문제지</strong><small>오늘은 어떤 개념을 익혀볼까요?</small></div><span className="story-demo-action"><Plus size={13} />새 문제지 만들기</span></header>
+        <header><div><strong>문제지</strong></div><span className="story-demo-action"><Plus size={13} />새 문제지 만들기</span></header>
         <div className="story-filter-row"><b>전체</b><span>기본 제공</span><span>내 문제지</span><i /> <span>전체 난이도</span><span>기본</span><span>심화</span></div>
         <div className="story-paper-grid">
           <article className="story-paper-picked">

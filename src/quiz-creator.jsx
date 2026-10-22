@@ -329,7 +329,7 @@ export function QuizCreator({ custom, onChange }) {
 
   if (screen === 'result') return <main className="quiz-main quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
     <button className="creator-result-back" type="button" onClick={() => { setScreen('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
-    <div className="quiz-title creator-result-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">등록된 문제를 확인하세요</h1><p>문제와 보기가 제대로 들어왔는지 확인한 뒤 풀이를 시작하세요.</p></div></div>
+    <div className="quiz-title creator-result-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
     <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
       <header><span>3</span><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
       {!resultReady ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">생성한 문제지 목록을 정리하고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : displayBank ? <div className="creator-result-reveal">
@@ -347,7 +347,7 @@ export function QuizCreator({ custom, onChange }) {
   </main>;
 
   return <main className="quiz-main quiz-creator" id="quiz-creator" tabIndex={-1}>
-    <div className="quiz-title"><div><span className="creator-eyebrow">문제 생성하기</span><h1 className="mb-page-title">필요한 문제를 바로 준비하세요</h1><p>원하는 내용을 설명하고, 생성된 CSV를 등록하면 곧바로 문제를 풀 수 있어요.</p></div></div>
+    <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
 
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
       <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
