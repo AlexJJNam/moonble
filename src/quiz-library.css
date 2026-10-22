@@ -380,7 +380,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-filter-empty h2 { margin: 16px 0 7px; color: var(--mb-text-primary); font-size: var(--mb-font-20); }
 .achievement-filter-empty p { margin: 0 0 20px; font-size: var(--mb-font-14); }
 .achievement-filter-empty button { min-height: 40px; padding: 8px 14px; border: 0; border-radius: 10px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-13); font-weight: 650; }
-.achievement-chart, .achievement-history { margin-top: 0; border-top: 1px solid #ece7df; }
+.achievement-chart, .achievement-history { margin-top: 10px; border-top: 0; }
 .achievement-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 16px; }
 .achievement-section-heading h2 { margin: 0; font-size: 20px; line-height: 28px; }
 .achievement-section-heading p { margin: 5px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; }
