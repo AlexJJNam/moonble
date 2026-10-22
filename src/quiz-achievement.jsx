@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { BUILT_IN_PAPER_PREVIEWS, PaperPreview } from './paper-preview.jsx';
+import { formatRelativeDate } from './date-format.js';
 
 const HISTORY_KEY_PREFIX = 'moonble:user:';
 const PERIOD_OPTIONS = [['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['all', '전체'], ['custom', '직접 선택']];
@@ -446,7 +447,7 @@ export function QuizAchievement({ userId }) {
       latest: scores[0],
       average: Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length),
       best: Math.max(...scores),
-      latestDate: formatShortDate(filteredHistory[0].date),
+      latestDate: formatRelativeDate(filteredHistory[0].date),
     };
   }, [filteredHistory]);
 

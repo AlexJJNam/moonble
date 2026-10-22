@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Check, LogOut } from 'lucide-react';
+import { Check, LogOut, UserRoundX } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
@@ -60,7 +60,7 @@ function AccountDeletion({ user }) {
   }
 
   return <AlertDialog.Root open={open} onOpenChange={changeOpen}>
-      <AlertDialog.Trigger asChild><button className="account-delete-caption" type="button">회원 탈퇴</button></AlertDialog.Trigger>
+      <AlertDialog.Trigger asChild><button className="account-delete-action" type="button"><span className="account-delete-icon" aria-hidden="true"><UserRoundX size={18} /></span><span>회원 탈퇴</span></button></AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="account-delete-overlay" />
         <AlertDialog.Content className="account-delete-dialog">

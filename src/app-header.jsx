@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BarChart3, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
@@ -170,16 +170,52 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
       return Number.isInteger(previous) && previous >= 0 && previous < 5 ? previous : activeDockIndex;
     } catch { return activeDockIndex; }
   });
+  const mobileDockRef = useRef(null);
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
   const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
   const solver = variant === 'solver';
-  const mobileDockPosition = ['10%', '30%', '50%', '70%', '90%'][mobileDockIndex];
   const questions = useSolverQuestions(solver);
 
-  useEffect(() => {
-    setMobileDockIndex(activeDockIndex);
+  useLayoutEffect(() => {
+    const nav = mobileDockRef.current;
+    if (!nav) return undefined;
+    const setPosition = index => {
+      const link = nav.querySelectorAll('a')[index];
+      if (!link) return;
+      const navRect = nav.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      nav.style.setProperty('--mb-dock-x', `${linkRect.left + linkRect.width / 2 - navRect.left}px`);
+    };
+    setPosition(mobileDockIndex);
+    const shouldAnimate = mobileDockIndex !== activeDockIndex;
+    let transitionPending = shouldAnimate;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    if (shouldAnimate) {
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          setPosition(activeDockIndex);
+          setMobileDockIndex(activeDockIndex);
+          transitionPending = false;
+        });
+      });
+    } else {
+      setMobileDockIndex(activeDockIndex);
+    }
     try { sessionStorage.setItem('moonble:mobile-dock-index', String(activeDockIndex)); } catch { /* 메뉴 이동 효과 없이도 탐색은 계속 동작한다. */ }
+    const updateForViewport = () => setPosition(activeDockIndex);
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (!transitionPending) updateForViewport(); }) : null;
+    observer?.observe(nav);
+    window.addEventListener('resize', updateForViewport);
+    window.visualViewport?.addEventListener('resize', updateForViewport);
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      observer?.disconnect();
+      window.removeEventListener('resize', updateForViewport);
+      window.visualViewport?.removeEventListener('resize', updateForViewport);
+    };
   }, [activeDockIndex]);
 
   useEffect(() => {
@@ -335,7 +371,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
             onClick={event => questions.goToQuestion(event, index)}
           ><span className="mb-solver-number">{index + 1}</span><span className="mb-solver-label">{item.label}</span><span className="mb-solver-status" aria-hidden="true">{item.status === 'correct' ? 'O' : item.status === 'wrong' ? 'X' : ''}</span></a>)}
         </div>
-      </nav> : <nav className="mb-app-nav" aria-label="주 메뉴" style={{ '--mb-dock-position': mobileDockPosition }}>
+      </nav> : <nav className="mb-app-nav" aria-label="주 메뉴" ref={mobileDockRef}>
           <a href="./quiz.html#paper-library" aria-current={active === 'papers' ? 'page' : undefined}><BookOpen size={18} aria-hidden="true" /><span>문제지</span></a>
           <a href="./quiz.html#create" aria-current={active === 'create' ? 'page' : undefined}><Sparkles size={18} aria-hidden="true" /><span>문제 생성하기</span></a>
           <a href="./quiz.html#achievement" aria-current={active === 'achievement' ? 'page' : undefined}><BarChart3 size={18} aria-hidden="true" /><span>나의 성취도</span></a>
