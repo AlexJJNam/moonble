@@ -463,10 +463,9 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-actions { grid-column: 2 / -1; justify-content: flex-start; flex-wrap: wrap; }
   .paper-list .paper-preview { width: 160px; }
   .creator-step { padding: 22px; }
-  .creator-intake-card { margin: 16px calc(-1 * max(16px, env(safe-area-inset-right))) 0 calc(-1 * max(16px, env(safe-area-inset-left))); padding: 0; border: 0; border-radius: 0; background: transparent; }
-  .creator-intake-card>.creator-prompt { padding: 22px max(16px, env(safe-area-inset-right)) 26px max(16px, env(safe-area-inset-left)); }
-  .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { position: relative; padding: 38px max(16px, env(safe-area-inset-right)) 20px max(16px, env(safe-area-inset-left)); }
-  .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title']::before { content: ''; position: absolute; top: 0; left: 50%; width: 100vw; height: 10px; background: var(--mb-surface-muted); transform: translateX(-50%); }
+  .creator-intake-card { margin-top: 16px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .creator-intake-card>.creator-prompt { padding: 22px 0 28px; }
+  .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { padding: 28px 0 20px; }
 }
 @media (max-width: 540px) {
   .quiz-title { align-items: flex-start; gap: 12px; }
