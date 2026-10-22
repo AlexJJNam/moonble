@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Check, ChevronLeft, CircleHelp, Download, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
+import { takeSharedFile } from './share-target.js';
 
 function generationPrompt(query, provider) {
   const format = `시트와 CSV의 맨 위에 다음 문제지 정보 2개 행을 반드시 먼저 넣어주세요.
@@ -298,6 +299,32 @@ export function QuizCreator({ custom, onChange }) {
     catch (uploadError) { setError(uploadError.message || '파일을 읽지 못했습니다.'); }
     finally { setPending(false); }
   }
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareError = params.get('shareError');
+    const wasShared = params.get('shared') === '1';
+    if (!wasShared && !shareError) return undefined;
+
+    const cleanLocation = new URL(window.location.href);
+    cleanLocation.searchParams.delete('shared');
+    cleanLocation.searchParams.delete('shareError');
+    window.history.replaceState(window.history.state, '', `${cleanLocation.pathname}${cleanLocation.search}${cleanLocation.hash}`);
+    setUploadRevealed(true);
+
+    if (shareError) {
+      setError(shareError === 'missing-file' ? '공유할 CSV 파일을 찾지 못했어요.' : '공유한 파일을 가져오지 못했어요. 다시 공유해주세요.');
+      return undefined;
+    }
+
+    let cancelled = false;
+    takeSharedFile().then(file => {
+      if (cancelled) return;
+      if (file) upload(file);
+      else setError('공유한 파일을 찾지 못했어요. 파일을 다시 공유해주세요.');
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   async function importSheet() {
     if (sheetPending || pending) return;

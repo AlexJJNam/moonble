@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BookOpen, FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, Check, FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -142,6 +142,7 @@ function QuizLibrary() {
   const [notice, setNotice] = useState('');
   const [section, setSection] = useState(sectionFromHash);
   const [sampleVisible, setSampleVisible] = useState(() => sampleIsVisible(initialUser?.id));
+  const [editMode, setEditMode] = useState(false);
   const [draggedBankId, setDraggedBankId] = useState(null);
   const [dropGroupId, setDropGroupId] = useState(null);
   const [folderPulse, setFolderPulse] = useState(null);
@@ -151,6 +152,7 @@ function QuizLibrary() {
   const [orderedGroupIds, setOrderedGroupIds] = useState(() => collection.groups.map(group => group.id));
   const longPressTimer = useRef(0);
   const paperPressTimer = useRef(0);
+  const paperTouchDrag = useRef(null);
   const dragPreviewNode = useRef(null);
   const groupPress = useRef(null);
   const groupOrderRef = useRef(orderedGroupIds);
@@ -218,10 +220,16 @@ function QuizLibrary() {
   }, []);
   useEffect(() => () => {
     window.clearTimeout(paperPressTimer.current);
+    paperTouchDrag.current = null;
     dragPreviewNode.current?.remove();
   }, []);
   useEffect(() => {
-    const syncSection = () => setSection(sectionFromHash());
+    const syncSection = () => {
+      setSection(sectionFromHash());
+      setEditMode(false);
+      paperTouchDrag.current = null;
+      finishPaperDrag();
+    };
     window.addEventListener('hashchange', syncSection);
     return () => window.removeEventListener('hashchange', syncSection);
   }, []);
@@ -232,11 +240,16 @@ function QuizLibrary() {
     return () => { window.removeEventListener('storage', refresh); window.removeEventListener('pageshow', refresh); };
   }, []);
   useEffect(() => {
-    if (!editor && !openMenu) return undefined;
-    const closeOnEscape = event => { if (event.key === 'Escape') { setEditor(null); setOpenMenu(null); } };
+    if (!editor && !openMenu && !editMode) return undefined;
+    const closeOnEscape = event => {
+      if (event.key !== 'Escape') return;
+      if (editor) setEditor(null);
+      else if (openMenu) setOpenMenu(null);
+      else leaveEditMode();
+    };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [editor, openMenu]);
+  }, [editor, openMenu, editMode]);
   useEffect(() => {
     if (!notice) return undefined;
     const timer = window.setTimeout(() => setNotice(''), 2400);
@@ -332,8 +345,47 @@ function QuizLibrary() {
     }
   }
   function beginPaperPress(event, bankId) {
+    if (event.target.closest('button, [role="button"], .paper-card-actions')) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     window.clearTimeout(paperPressTimer.current);
+    if (event.pointerType !== 'mouse') {
+      if (!editMode) return;
+      const source = event.currentTarget;
+      paperTouchDrag.current = {
+        bankId,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: event.clientX,
+        y: event.clientY,
+        source,
+        active: false,
+        targetGroupId: null,
+        targetBankId: null,
+        position: null,
+      };
+      paperPressTimer.current = window.setTimeout(() => {
+        const drag = paperTouchDrag.current;
+        if (!drag || drag.bankId !== bankId || drag.pointerId !== event.pointerId) return;
+        const bounds = source.getBoundingClientRect();
+        const preview = source.cloneNode(true);
+        preview.removeAttribute('draggable');
+        preview.querySelector('.paper-card-actions')?.remove();
+        preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
+        preview.classList.add('paper-drag-preview', 'is-touch-preview');
+        preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
+        document.body.appendChild(preview);
+        preview.style.left = `${drag.x - preview.offsetWidth / 2}px`;
+        preview.style.top = `${drag.y - Math.min(34, preview.offsetHeight / 2)}px`;
+        dragPreviewNode.current = preview;
+        drag.preview = preview;
+        drag.active = true;
+        setPressedBankId(null);
+        setDraggedBankId(bankId);
+        navigator.vibrate?.(18);
+      }, 170);
+      return;
+    }
     paperPressTimer.current = window.setTimeout(() => {
       setPressedBankId(bankId);
       navigator.vibrate?.(12);
@@ -351,7 +403,7 @@ function QuizLibrary() {
     const preview = source.cloneNode(true);
     preview.removeAttribute('draggable');
     preview.querySelector('.paper-card-actions')?.remove();
-    preview.classList.remove('is-dragging', 'is-pressing');
+    preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
     preview.classList.add('paper-drag-preview');
     preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
     document.body.appendChild(preview);
@@ -392,6 +444,93 @@ function QuizLibrary() {
     setDropGroupId(null);
     setDropBankTarget(null);
   }
+  useEffect(() => {
+    function moveTouchPaper(event) {
+      const drag = paperTouchDrag.current;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+      if (!drag.active) {
+        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 10) {
+          window.clearTimeout(paperPressTimer.current);
+          paperTouchDrag.current = null;
+        }
+        return;
+      }
+
+      event.preventDefault();
+      const preview = drag.preview;
+      if (preview) {
+        preview.style.left = `${event.clientX - preview.offsetWidth / 2}px`;
+        preview.style.top = `${event.clientY - Math.min(34, preview.offsetHeight / 2)}px`;
+      }
+
+      const pointed = document.elementFromPoint(event.clientX, event.clientY);
+      const group = pointed?.closest?.('[data-group-id]');
+      const groupId = group?.dataset.groupId;
+      if (groupId && groupId !== 'all') {
+        drag.targetGroupId = groupId;
+        drag.targetBankId = null;
+        drag.position = null;
+        setDropBankTarget(null);
+        setDropGroupId(groupId);
+        return;
+      }
+
+      const card = pointed?.closest?.('[data-bank-id]');
+      const targetBankId = card?.dataset.bankId;
+      if (targetBankId && targetBankId !== drag.bankId) {
+        const bounds = card.getBoundingClientRect();
+        const position = view === 'list'
+          ? (event.clientY >= bounds.top + bounds.height / 2 ? 'after' : 'before')
+          : (event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before');
+        drag.targetGroupId = null;
+        drag.targetBankId = targetBankId;
+        drag.position = position;
+        setDropGroupId(null);
+        setDropBankTarget(current => current?.id === targetBankId && current.position === position ? current : { id: targetBankId, position });
+        return;
+      }
+
+      drag.targetGroupId = null;
+      drag.targetBankId = null;
+      drag.position = null;
+      setDropGroupId(null);
+      setDropBankTarget(null);
+    }
+
+    function endTouchPaper(event) {
+      const drag = paperTouchDrag.current;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      window.clearTimeout(paperPressTimer.current);
+      paperTouchDrag.current = null;
+      if (!drag.active) return;
+      if (event.type === 'pointercancel') {
+        finishPaperDrag();
+        return;
+      }
+      event.preventDefault();
+      if (drag.targetGroupId) moveBankToGroup(drag.bankId, drag.targetGroupId);
+      else if (drag.targetBankId) reorderBankNear(drag.bankId, drag.targetBankId, drag.position || 'before');
+      finishPaperDrag();
+    }
+
+    window.addEventListener('pointermove', moveTouchPaper, { passive: false });
+    window.addEventListener('pointerup', endTouchPaper, { passive: false });
+    window.addEventListener('pointercancel', endTouchPaper, { passive: false });
+    return () => {
+      window.removeEventListener('pointermove', moveTouchPaper);
+      window.removeEventListener('pointerup', endTouchPaper);
+      window.removeEventListener('pointercancel', endTouchPaper);
+    };
+  }, [view, collection]);
+
+  function leaveEditMode() {
+    paperTouchDrag.current = null;
+    finishPaperDrag();
+    setEditMode(false);
+    setOpenMenu(null);
+  }
   if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const customPapers = collection.banks.map(bank => ({
     id: `custom:${bank.id}`,
@@ -424,7 +563,7 @@ function QuizLibrary() {
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main quiz-library-main" id="paper-library" tabIndex={-1}>
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div>{editMode ? <button className="paper-edit-done" type="button" onClick={leaveEditMode}><Check size={17} aria-hidden="true" />완료</button> : <FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
         <div className="paper-group-bar">
           <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
             {groupTabs.map(group => <span
@@ -458,17 +597,20 @@ function QuizLibrary() {
           </div>
         </div>
         <div className="quiz-results"><p role="status">문제지 <strong>{visiblePapers.length}</strong></p></div>
-        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="문제지 목록">
+        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editMode ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
+            const CardSurface = editMode ? 'div' : 'a';
             return <article
-              className={`paper-card${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
+              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
+              data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(paper.customBankId)}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
-              onPointerUp={paper.customBankId ? endPaperPress : undefined}
-              onPointerCancel={paper.customBankId ? endPaperPress : undefined}
-              onDragStart={paper.customBankId ? event => createPaperDragPreview(event, paper.customBankId) : undefined}
+              onPointerUp={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
+              onPointerCancel={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
+              onContextMenu={editMode ? event => event.preventDefault() : undefined}
+              onDragStart={paper.customBankId ? event => { if (paperTouchDrag.current) { event.preventDefault(); return; } createPaperDragPreview(event, paper.customBankId); } : undefined}
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
               onDragEnter={paper.customBankId ? event => {
                 if (!draggedBankId || draggedBankId === paper.customBankId) return;
@@ -496,13 +638,13 @@ function QuizLibrary() {
               } : undefined}
               key={paper.id}
             >
-              <a className="paper-card-link" href={href} aria-label={`${paper.label} · ${paper.count}문항 문제 풀기`} onClick={() => { if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} />
-                <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><h2 className="mb-card-title">{paper.label}</h2><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
-              </a>
+                <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p></div></div>
+              </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && <button type="button" role="menuitem" onClick={() => setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId })}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
+                {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && !editMode && <button type="button" role="menuitem" onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
               </div>}
             </article>;
           })}
