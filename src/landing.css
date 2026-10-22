@@ -547,8 +547,8 @@ body { margin: 0; color: #1f1f1f; background: #fff; word-break: keep-all; overfl
   .landing-header nav { display: none; }
   .landing-logo { min-height: 44px; display: inline-flex; align-items: center; }
   .landing-login { min-width: 72px; min-height: 44px; padding: 8px 15px; }
-  .landing-hero { width: 100%; min-height: 0; margin: 0; padding: 48px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); }
-  .landing-hero-copy { text-align: left; }
+  .landing-hero { width: 100%; min-height: 0; margin: 0; padding: 60px max(16px, env(safe-area-inset-right)) 64px max(16px, env(safe-area-inset-left)); }
+  .landing-hero-copy { text-align: center; }
   .landing-eyebrow { font-size: 13px; line-height: 19px; }
   .landing-hero h1 { margin: 17px 0 16px; font-size: clamp(36px, 9.8vw, 42px); line-height: 1.2; letter-spacing: -.035em; }
   .landing-hero-copy>p { font-size: 16px; line-height: 26px; }
