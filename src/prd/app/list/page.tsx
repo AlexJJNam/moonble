@@ -844,7 +844,7 @@ export default function PrdListPage() {
 
 
       <div className="prd-list-shell mb-page-gutter">
-        <div className="prd-list-heading mb-8">
+        <div className="prd-list-heading mb-4">
           <h1 className="mb-page-title">PRD</h1>
         </div>
         <div className="prd-list-toolbar flex justify-between items-center mb-4">
