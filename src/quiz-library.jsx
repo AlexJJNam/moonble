@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BookOpen, Check, FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -592,6 +592,9 @@ function QuizLibrary() {
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
+            const groupName = paper.customBankId
+              ? (paper.groupId === DEFAULT_GROUP_ID ? '미분류' : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류')
+              : null;
             const CardSurface = editMode ? 'div' : 'a';
             return <article
               className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
@@ -630,11 +633,12 @@ function QuizLibrary() {
               key={paper.id}
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+                {groupName && <span className="paper-group-flag" aria-hidden="true">{groupName}</span>}
                 <PaperPreview paper={paper} />
-                <div className="paper-info"><span className={`paper-file-icon icon-${paper.kind}`} aria-hidden="true"><BookOpen size={15} /></span><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p><span>{paper.level}</span><i aria-hidden="true">·</i><span className="paper-description">{paper.description}</span></p>{paper.savedAt && <time className="paper-added-at" dateTime={paper.savedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.savedAt))}>{formatPaperAddedAt(paper.savedAt)}</time>}</div></div>
+                <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.savedAt && <time className="paper-added-at" dateTime={paper.savedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.savedAt))}>{formatPaperAddedAt(paper.savedAt)}</time>}</div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
-                {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><Check size={15} strokeWidth={2.5} aria-hidden="true" /></button> : <>
+                {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
                   {openMenu === menuKey && <div className="paper-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.customBankId && !editMode && <button type="button" role="menuitem" onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })}><Trash2 size={15} />삭제</button></div>}
                 </>}

@@ -161,7 +161,7 @@
       width: 100%;
       max-width: 1120px;
       margin: 0 auto;
-      padding: var(--mb-page-pad-top) var(--sp-6) var(--sp-6);
+      padding: var(--mb-page-pad-top, 28px) var(--sp-6) var(--sp-6);
     }
 
     /* Header */
@@ -675,6 +675,11 @@
       align-items: baseline;
       justify-content: space-between;
       gap: var(--sp-3);
+    }
+
+    #quiz > .section-head,
+    #quiz > .section-head h2 {
+      margin-top: 0;
     }
 
     .section-head .eyebrow {
@@ -2780,24 +2785,6 @@
       color: var(--muted);
     }
 
-    /* === 재출제하기 링크 (1열/2열 토글 좌측) === */
-    .quiz-reissue {
-      display: block;
-      background: none;
-      border: none;
-      padding: 0;
-      font-family: inherit;
-      font-size: var(--text-sm);
-      font-weight: 400;
-      color: var(--muted);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .quiz-reissue:hover {
-      color: var(--text);
-    }
-
     @media (min-width: 560px) {
     }
 
@@ -3161,7 +3148,6 @@
     <section id="quiz">
       <input type="checkbox" id="quizColToggle" class="col-toggle-input" checked />
       <div class="quiz-top-controls">
-        <button id="quizReissueLink" class="quiz-reissue" type="button">새 문제로 다시 풀기</button>
         <label for="quizColToggle" class="col-toggle" aria-label="문제 목록 1열/2열 보기 전환">
           <span class="col-toggle-thumb" aria-hidden="true"></span>
           <span class="col-toggle-opt" data-opt="1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 12h18"></path></svg></span>
@@ -4973,14 +4959,8 @@
 </script>
 <script>
 (() => {
-  var reissueLink = document.getElementById('quizReissueLink');
-  var retryBtn = document.getElementById('retryBtn');
   var quizContainer = document.getElementById('quizContainer');
-  if (!reissueLink || !retryBtn || !quizContainer) return;
-
-  function hasAnySelected() {
-    return !!quizContainer.querySelector('.option-card.selected');
-  }
+  if (!quizContainer) return;
 
   var SKELETON_DELAY = 450;
 
@@ -4991,28 +4971,6 @@
       cards.forEach(function (card) { card.classList.remove('skeleton-loading'); });
     }, SKELETON_DELAY);
   }
-
-  // "재출제하기"(상단)는 하단 "다시하기" 버튼과 별개로, 항상 완전히 새로운 랜덤 문제 세트를 뽑는다.
-  // 예전엔 retryBtn.click()으로 프록시했지만, 이제 하단 버튼은 "같은 문제 다시풀기" 용도로 의미가
-  // 바뀌었기 때문에 여기서 직접 renderQuiz()를 호출해 완전히 분리한다.
-  function doReissue() {
-    if (typeof renderQuiz === 'function') renderQuiz();
-    applySkeleton();
-  }
-
-  reissueLink.addEventListener('click', function () {
-    var isLocked = quizContainer.classList.contains('quiz-locked');
-    if (!isLocked && hasAnySelected() && window.moonbleOpenConfirm) {
-      window.moonbleOpenConfirm({
-        message: '선택한 답이 초기화됩니다.<br>새 문제로 다시 풀까요?',
-        cancelLabel: '계속 풀기',
-        confirmLabel: '새 문제로 시작',
-        onConfirm: doReissue
-      });
-    } else {
-      doReissue();
-    }
-  });
 
   applySkeleton();
 })();
@@ -5124,7 +5082,7 @@
   var h2 = quizSectionEl ? quizSectionEl.querySelector('.section-head h2') : null;
   if (!quizSectionEl || !controls || !h2) return;
 
-  // "재출제하기/열보기" 줄을 모바일에서 "문제풀이" 제목과 세로로 맞추는 로직.
+  // 보기 전환을 모바일에서 "문제풀이" 제목과 세로로 맞춘다.
   // 예전엔 top 값을 특정 화면폭 하나에 맞춰 고정 px로 박아뒀는데, 실제 기기마다
   // eyebrow 뱃지/부제목 줄바꿈이 달라서 h2 위치가 조금씩 달라지고, 그때마다 어긋나 보였다.
   // 매번 h2의 실제 렌더링 위치를 재서 거기에 맞추면 화면폭과 무관하게 항상 맞는다.
@@ -5233,7 +5191,6 @@ if (supabase) {
 <script>
 (() => {
   // 하단 "다시하기" 버튼의 의미 정리:
-  // - 상단 "재출제하기"는 완전히 새로운 랜덤 문제 세트(재출제).
   // - 하단 "다시하기"는 방금 푼 문제를 처음부터 "동일하게" 다시 풀어보는 재시험 개념이라
   //   보호된 스크립트의 기본 클릭 리스너(renderQuiz() 새 랜덤 재출제)와 의미가 어긋난다.
   // 그래서 제출 전에는 숨기고(할 일이 없으니), 제출 후(quiz-locked)엔 클릭을 캡처 단계에서
