@@ -197,6 +197,26 @@
   background: var(--mb-bg);
 }
 
+@media (min-width: 1200px) {
+  .prd-list-shell {
+    width: 100%;
+    max-width: 1320px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 24px 32px 56px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .prd-list-shell {
+    width: 100%;
+    max-width: 1320px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 28px 24px 48px;
+  }
+}
+
 .prd-list-heading h1 {
   color: var(--mb-text-primary);
   font-size: var(--mb-font-28);
