@@ -5,7 +5,7 @@ import { useRouter } from '@/navigation';
 import { userStorage } from '@/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, LogOut, GitBranchPlus, User as UserIcon, ShieldAlert, Trash2, Info, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FolderPlus, FolderKanban, Pencil, Check, X, MoreVertical, FileText, Star, FileDown } from 'lucide-react';
+import { Plus, LogOut, GitBranchPlus, User as UserIcon, ShieldAlert, Trash2, Info, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FolderPlus, FolderKanban, Pencil, Check, X, MoreVertical, FileText, Search, Star, FileDown } from 'lucide-react';
 import type { PrdDocument, User, Project } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -1037,7 +1037,12 @@ export default function PrdListPage() {
                 )
             })
             ) : (
-            <p className="prd-empty-state">작성된 PRD가 없습니다.</p>
+            <div className="prd-empty-state">
+              <Search size={28} aria-hidden="true" />
+              <h2 className="mb-card-title">작성된 PRD가 없습니다.</h2>
+              <p>새 PRD를 작성하거나 다른 프로젝트를 선택해보세요.</p>
+              <button type="button" onClick={handleOpenNewPrdDialog}>PRD 작성하기</button>
+            </div>
             )}
         </div>
         
