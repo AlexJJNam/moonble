@@ -5,7 +5,7 @@ button { font: inherit; cursor: pointer; }
 .account-main { max-width: 720px; margin: 0 auto; }
 .account-heading { max-width: 480px; margin: 0 auto 20px; }
 .account-heading h1 { margin: 0; letter-spacing: -.025em; }
-.account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: var(--mb-surface-muted); }
+.account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: #fafafa; }
 .account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
 .account-profile-summary div { min-width: 0; }
 .account-profile-summary strong, .account-profile-summary p, .account-profile-summary small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

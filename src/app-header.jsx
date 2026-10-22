@@ -153,6 +153,7 @@ function useSolverQuestions(enabled) {
 }
 
 export function AppHeader({ active, error, onLogout, pending = false, user, variant = 'default' }) {
+  const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
     catch { return false; }
@@ -162,11 +163,24 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     catch { return false; }
   });
   const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
+  const [mobileDockIndex, setMobileDockIndex] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('moonble:mobile-dock-index');
+      const previous = saved == null ? null : Number(saved);
+      return Number.isInteger(previous) && previous >= 0 && previous < 5 ? previous : activeDockIndex;
+    } catch { return activeDockIndex; }
+  });
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
   const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
   const solver = variant === 'solver';
+  const mobileDockPosition = ['10%', '30%', '50%', '70%', '90%'][mobileDockIndex];
   const questions = useSolverQuestions(solver);
+
+  useEffect(() => {
+    setMobileDockIndex(activeDockIndex);
+    try { sessionStorage.setItem('moonble:mobile-dock-index', String(activeDockIndex)); } catch { /* 메뉴 이동 효과 없이도 탐색은 계속 동작한다. */ }
+  }, [activeDockIndex]);
 
   useEffect(() => {
     document.body.classList.add('mb-has-app-sidebar');
@@ -321,7 +335,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
             onClick={event => questions.goToQuestion(event, index)}
           ><span className="mb-solver-number">{index + 1}</span><span className="mb-solver-label">{item.label}</span><span className="mb-solver-status" aria-hidden="true">{item.status === 'correct' ? 'O' : item.status === 'wrong' ? 'X' : ''}</span></a>)}
         </div>
-      </nav> : <nav className="mb-app-nav" aria-label="주 메뉴">
+      </nav> : <nav className="mb-app-nav" aria-label="주 메뉴" style={{ '--mb-dock-position': mobileDockPosition }}>
           <a href="./quiz.html#paper-library" aria-current={active === 'papers' ? 'page' : undefined}><BookOpen size={18} aria-hidden="true" /><span>문제지</span></a>
           <a href="./quiz.html#create" aria-current={active === 'create' ? 'page' : undefined}><Sparkles size={18} aria-hidden="true" /><span>문제 생성하기</span></a>
           <a href="./quiz.html#achievement" aria-current={active === 'achievement' ? 'page' : undefined}><BarChart3 size={18} aria-hidden="true" /><span>나의 성취도</span></a>
