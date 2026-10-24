@@ -7,7 +7,6 @@ import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
-import { SegmentedControl } from './segmented-control.jsx';
 import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
@@ -80,13 +79,16 @@ function AiQuestionPreference({ user, onUserUpdated }) {
 
   return <section className="account-ai-preference" aria-labelledby="account-ai-preference-title">
     <h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2>
-    <SegmentedControl
-      ariaLabel="AI에게 물어보기 기본 서비스"
-      className="account-ai-provider"
-      items={aiProviderOptions}
-      value={provider}
-      onChange={saveProvider}
-    />
+    <div className="account-ai-provider" role="group" aria-label="AI에게 물어보기 기본 서비스">
+      {aiProviderOptions.map(option => <button
+        key={option.value}
+        type="button"
+        className={provider === option.value ? 'is-selected' : ''}
+        aria-pressed={provider === option.value}
+        disabled={pending}
+        onClick={() => saveProvider(option.value)}
+      >{option.label}</button>)}
+    </div>
     {pending && <p role="status">저장 중…</p>}
     {message && <p role="status">{message}</p>}
     {error && <p role="alert">{error}</p>}

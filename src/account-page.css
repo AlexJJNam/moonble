@@ -19,7 +19,12 @@ button { font: inherit; cursor: pointer; }
 .account-main .profile-card h2 { margin: 0 0 8px; font-size: var(--mb-font-18); line-height: 26px; }
 .account-ai-preference { max-width: 480px; margin: 20px auto; }
 .account-ai-preference h2 { margin: 0 0 10px; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
-.account-ai-provider { width: min(100%, 320px); }
+.account-ai-provider { width: min(100%, 320px); display: flex; gap: 8px; }
+.account-ai-provider button { min-width: 0; min-height: 40px; flex: 1; padding: 9px 14px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
+.account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); }
+.account-ai-provider button.is-selected { color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-weight: var(--mb-weight-semibold); }
+.account-ai-provider button:focus-visible { outline: 3px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
+.account-ai-provider button:disabled { cursor: wait; opacity: .7; }
 .account-ai-preference>p { margin: 8px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
 .account-ai-preference>p[role='alert'] { color: var(--mb-danger); }
 .account-ai-preference>p[role='status'] { color: var(--mb-primary-strong); }
