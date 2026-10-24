@@ -23,6 +23,7 @@ button { font: inherit; cursor: pointer; }
 .account-ai-provider button { min-width: 0; min-height: 40px; flex: 1; padding: 9px 14px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
 .account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); }
 .account-ai-provider button.is-selected { color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-weight: var(--mb-weight-semibold); }
+.account-ai-provider-check { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 2.5; animation: account-ai-check-in 220ms cubic-bezier(.2,.8,.25,1) both; }
 .account-ai-provider button:focus-visible { outline: 3px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
 .account-ai-provider button:disabled { cursor: wait; opacity: .7; }
 .account-ai-preference>p { margin: 8px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
@@ -65,6 +66,7 @@ button { font: inherit; cursor: pointer; }
 .account-delete-submit:disabled { cursor: default; opacity: .4; }
 @keyframes account-overlay-in { from { opacity: 0; } }
 @keyframes account-dialog-in { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } }
+@keyframes account-ai-check-in { from { opacity: 0; transform: scale(.65) translateX(-3px); } to { opacity: 1; transform: scale(1) translateX(0); } }
 @media (max-width: 767px) {
   .account-heading h1 { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); font-weight: 700; }
   .account-main .profile-form-card h1, .account-main .profile-card h2 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); font-weight: 700; }
@@ -96,5 +98,5 @@ button { font: inherit; cursor: pointer; }
 }
 @keyframes account-sheet-in { from { transform: translateY(calc(100% + 16px)); } }
 @media (prefers-reduced-motion: reduce) {
-  .account-delete-overlay, .account-delete-dialog { animation: none; }
+  .account-delete-overlay, .account-delete-dialog, .account-ai-provider-check { animation: none; }
 }

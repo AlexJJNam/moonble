@@ -87,7 +87,7 @@ function AiQuestionPreference({ user, onUserUpdated }) {
         aria-pressed={provider === option.value}
         disabled={pending}
         onClick={() => saveProvider(option.value)}
-      >{option.label}</button>)}
+      >{provider === option.value && <Check aria-hidden="true" className="account-ai-provider-check" />}{option.label}</button>)}
     </div>
     {pending && <p role="status">저장 중…</p>}
     {message && <p role="status">{message}</p>}
