@@ -86,4 +86,10 @@ function Account() {
   return <AppHeader active="papers" variant={solverPage ? 'solver' : 'default'} user={user} pending={pending} error={error} onLogout={logout} />;
 }
 
-createRoot(document.getElementById('moonble-app-header')).render(<Account />);
+const isSharedSolve = Boolean(window.__moonbleSharedQuizToken || new URLSearchParams(window.location.search).get('paper') === 'shared');
+const headerRoot = createRoot(document.getElementById('moonble-app-header'));
+if (isSharedSolve) {
+  headerRoot.render(<AppHeader active="papers" hideSolverBack user={null} variant="solver" />);
+} else {
+  headerRoot.render(<Account />);
+}

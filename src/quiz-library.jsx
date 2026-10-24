@@ -411,7 +411,11 @@ function QuizLibrary() {
         catch { clearCachedQuizShareToken(user?.id, bank.id); token = null; }
       }
       if (!token) token = await createQuizShare(user.id, bank);
-      setShareDialog({ bankId: bank.id, title: bank.title, token, url: quizShareUrl(token) });
+      const groupName = paper.groupId === DEFAULT_GROUP_ID
+        ? '미분류'
+        : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류';
+      const tint = groupColorStyle(paper.groupId, groupColors)['--paper-group-tint'] || '#e8f3ff';
+      setShareDialog({ bankId: bank.id, title: bank.title, token, url: quizShareUrl(token, tint, groupName) });
     } catch (shareFailure) {
       setShareError(shareFailure.message || '공유 링크를 만들지 못했어요.');
     } finally {

@@ -1,10 +1,45 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BarChart3, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
 import { getNextQuizShareNotification } from './quiz-share.js';
 import { supabase } from './supabase.js';
 import './app-header.css';
+
+const SHARE_NOTIFICATION_LIMIT = 40;
+
+function shareNotificationStorageKey(userId) {
+  return userId ? `moonble:user:${userId}:quiz-share-notifications-v1` : null;
+}
+
+function readShareNotifications(userId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(shareNotificationStorageKey(userId)) || '[]');
+    return Array.isArray(saved) ? saved.filter(item => item && typeof item.id === 'string').slice(0, SHARE_NOTIFICATION_LIMIT) : [];
+  } catch { return []; }
+}
+
+function rememberShareNotification(userId, notification) {
+  const previous = readShareNotifications(userId);
+  if (previous.some(item => item.id === notification.id)) return previous;
+  const next = [{ ...notification, seen: false }, ...previous].slice(0, SHARE_NOTIFICATION_LIMIT);
+  try { localStorage.setItem(shareNotificationStorageKey(userId), JSON.stringify(next)); }
+  catch { /* 기록을 저장하지 못해도 새 알림은 현재 화면에 표시한다. */ }
+  return next;
+}
+
+function markShareNotificationsSeen(userId, notifications) {
+  const next = notifications.map(notification => ({ ...notification, seen: true }));
+  try { localStorage.setItem(shareNotificationStorageKey(userId), JSON.stringify(next)); }
+  catch { /* 알림 목록은 현재 화면에서 계속 볼 수 있다. */ }
+  return next;
+}
+
+function formatShareNotificationDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit', day: '2-digit' }).format(date);
+}
 
 function useSolverQuestions(enabled) {
   const [items, setItems] = useState([]);
@@ -154,7 +189,7 @@ function useSolverQuestions(enabled) {
   return { activeIndex, goToQuestion, items, navRef };
 }
 
-export function AppHeader({ active, error, onLogout, pending = false, user, variant = 'default' }) {
+export function AppHeader({ active, error, hideSolverBack = false, onLogout, pending = false, user, variant = 'default' }) {
   const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
@@ -166,6 +201,8 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
   });
   const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
   const [shareNotification, setShareNotification] = useState(null);
+  const [shareNotifications, setShareNotifications] = useState([]);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [mobileDockIndex, setMobileDockIndex] = useState(() => {
     try {
       const saved = sessionStorage.getItem('moonble:mobile-dock-index');
@@ -174,13 +211,19 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     } catch { return activeDockIndex; }
   });
   const mobileDockRef = useRef(null);
+  const notificationRootRef = useRef(null);
   const shareNotificationTimer = useRef(0);
   const shareNotificationVisible = useRef(false);
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
-  const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
   const solver = variant === 'solver';
+  const sharedSolver = solver && hideSolverBack;
   const questions = useSolverQuestions(solver);
+
+  useEffect(() => {
+    setShareNotifications(readShareNotifications(user?.id));
+    setNotificationOpen(false);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id || !supabase) return undefined;
@@ -194,6 +237,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
       try {
         const notification = await getNextQuizShareNotification();
         if (!alive || !notification?.id) return;
+        setShareNotifications(rememberShareNotification(user.id, notification));
         shareNotificationVisible.current = true;
         setShareNotification(notification);
         window.clearTimeout(shareNotificationTimer.current);
@@ -223,6 +267,22 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
       shareNotificationVisible.current = false;
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!notificationOpen) return undefined;
+    function closeOutside(event) {
+      if (!notificationRootRef.current?.contains(event.target)) setNotificationOpen(false);
+    }
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setNotificationOpen(false);
+    }
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [notificationOpen]);
 
   useLayoutEffect(() => {
     const nav = mobileDockRef.current;
@@ -393,7 +453,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
   }, [solver]);
 
   return <>
-  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
@@ -402,13 +462,35 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
           <span role="tooltip"><kbd>Shift</kbd>와 <kbd>\</kbd>를 함께 누르면 사이드바가 사라지고, 다시 누르면 나타나요.</span>
         </span>
       </div>
-      <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
-        <span className="mb-app-avatar" aria-hidden="true">{initial}</span>
-        <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>
-        <Settings2 size={16} aria-hidden="true" />
-      </a>
+      {user && <div className="mb-app-profile-row" ref={notificationRootRef}>
+        {user && <button className="mb-notification-toggle" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-panel" onClick={() => {
+          if (!notificationOpen) setShareNotifications(current => markShareNotificationsSeen(user.id, current));
+          setNotificationOpen(value => !value);
+        }}>
+          <Bell size={19} aria-hidden="true" />
+          {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
+        </button>}
+        <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
+          <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>
+          <Settings2 size={16} aria-hidden="true" />
+        </a>
+        {notificationOpen && <section className="mb-notification-panel" id="mb-notification-panel" role="region" aria-label="알림">
+          <div className="mb-notification-panel-heading"><h2>알림</h2></div>
+          {shareNotifications.length ? <div className="mb-notification-list">
+            {shareNotifications.map(item => <button className="mb-notification-item" type="button" key={item.id} onClick={() => setShareNotifications(current => markShareNotificationsSeen(user.id, current))}>
+              <span className="mb-notification-meta">{item.title} · {formatShareNotificationDate(item.created_at)}</span>
+              <span className="mb-notification-title">공유한 문제를 누군가 풀었어요.{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
+              <span className="mb-notification-copy">{item.score}점 ({item.correct}/{item.total})</span>
+            </button>)}
+          </div> : <div className="mb-notification-empty">
+            <Bell size={30} aria-hidden="true" />
+            <strong>아직 받은 알림이 없어요</strong>
+            <p>문제지를 공유하면 풀이 결과를 여기서 확인할 수 있어요.</p>
+          </div>}
+        </section>}
+      </div>}
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
-        <div className="mb-solver-heading"><a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a><strong>문제 목록</strong></div>
+        <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}<strong>문제 목록</strong></div>
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => <a
             className={`mb-solver-question is-${item.status}`}

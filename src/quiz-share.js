@@ -51,12 +51,13 @@ export function clearCachedQuizShareToken(userId, bankId) {
   } catch { /* 서버 공유 중지는 저장 공간 제한과 무관하게 처리한다. */ }
 }
 
-export function quizShareUrl(token) {
+export function quizShareUrl(token, tint = '#e8f3ff', groupName = '미분류') {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{40,50}$/.test(token)) {
     throw new Error('공유 링크가 올바르지 않거나 만료됐어요.');
   }
-  // Kakao caches Open Graph cards by URL; version this preview so existing links refresh once.
-  return `https://share.moonble.com/${encodeURIComponent(token)}?preview=2`;
+  // Kakao caches Open Graph cards by URL; version this preview so each thumbnail refreshes.
+  const query = new URLSearchParams({ preview: '3', tint, group: groupName.slice(0, 80) });
+  return `https://share.moonble.com/${encodeURIComponent(token)}?${query.toString()}`;
 }
 
 function requireSupabase() {

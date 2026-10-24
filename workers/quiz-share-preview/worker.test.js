@@ -54,8 +54,10 @@ test('social crawlers receive escaped, problem-specific Open Graph metadata', as
     assert.match(html, /<title>\[문블\] &lt;SQL &amp; 데이터베이스&gt; · Moonble<\/title>/);
     assert.match(html, /<meta property="og:title" content="\[문블\] &lt;SQL &amp; 데이터베이스&gt;">/);
     assert.match(html, /<meta property="og:description" content="&quot;상급&quot; 문제 &lt;20문항&gt;">/);
-    assert.match(html, /<meta property="og:image" content="https:\/\/share\.moonble\.com\/[A-Za-z0-9_-]+\/thumbnail\.svg\?preview=2">/);
+    assert.match(html, /<meta property="og:image" content="https:\/\/share\.moonble\.com\/[A-Za-z0-9_-]+\/thumbnail\.svg\?preview=3&amp;tint=%23e8f3ff&amp;group=%EB%AF%B8%EB%B6%84%EB%A5%98">/);
     assert.match(html, /<meta property="og:image:type" content="image\/svg\+xml">/);
+    assert.match(html, /<meta property="og:image:width" content="1200">/);
+    assert.match(html, /<meta property="og:image:height" content="675">/);
     assert.match(html, new RegExp(`<meta property="og:url" content="https://share\\.moonble\\.com/${token}">`));
   } finally {
     globalThis.fetch = originalFetch;
@@ -68,13 +70,18 @@ test('shared quiz thumbnail renders the saved paper preview as an accessible ima
     headers: { 'content-type': 'application/json' },
   });
   try {
-    const response = await worker.fetch(new Request(`https://share.moonble.com/${token}/thumbnail.svg?preview=2`, {
+    const response = await worker.fetch(new Request(`https://share.moonble.com/${token}/thumbnail.svg?preview=3&tint=%23e8f3ff&group=%EB%AF%B8%EB%B6%84%EB%A5%98`, {
       headers: { 'user-agent': 'kakaotalk-scrap/1.0' },
     }), env);
     const svg = await response.text();
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /image\/svg\+xml/);
     assert.match(svg, /\[문블\] &lt;SQL &amp; 데이터베이스&gt; 문제지 미리보기/);
+    assert.match(svg, /width="1200" height="675" viewBox="0 0 300 168\.75"/);
+    assert.match(svg, /fill="#e8f3ff"/);
+    assert.match(svg, /class="group-label" x="15" y="23">미분류<\/text>/);
+    assert.match(svg, /data:image\/png;base64,/);
+    assert.match(svg, /rotate\(-2 /);
     assert.match(svg, /정규화의 목적은 무엇인가요\?/);
     assert.match(svg, /중복을 줄입니다/);
     assert.doesNotMatch(svg, /<script/i);

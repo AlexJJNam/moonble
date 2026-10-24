@@ -1,6 +1,8 @@
 const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,50}$/;
 const CRAWLER_PATTERN = /(?:bot|crawler|spider|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|kakao[^\s]*scrap|naverbot|google-inspectiontool)/i;
 const META_IMAGE_FALLBACK = 'https://moonble.com/assets/moonble-open-graph.png';
+const PREVIEW_TINT_FALLBACK = '#e8f3ff';
+const PREVIEW_WORDMARK = 'data:image/png;base64,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';
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -14,54 +16,118 @@ function escapeXml(value) {
   })[char]);
 }
 
-function splitText(value, maxLength, maxLines = 2) {
-  const words = Array.from(String(value || '').trim());
+function textWidth(character, fontSize) {
+  if (/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/u.test(character)) return fontSize;
+  if (/\s/u.test(character)) return fontSize * 0.28;
+  if (/[ilI1.,:;'!|]/u.test(character)) return fontSize * 0.3;
+  if (/[MW@#%&]/u.test(character)) return fontSize * 0.78;
+  if (/[A-Z0-9]/u.test(character)) return fontSize * 0.58;
+  return fontSize * 0.52;
+}
+
+function wrapText(value, maxWidth, fontSize, maxLines = 2, letterSpacing = 0) {
+  const characters = Array.from(String(value || '').trim());
   const lines = [];
-  while (words.length && lines.length < maxLines) lines.push(words.splice(0, maxLength).join(''));
-  if (words.length && lines.length) lines[lines.length - 1] = `${Array.from(lines.at(-1)).slice(0, maxLength - 1).join('')}…`;
+  let line = '';
+  let lineWidth = 0;
+  while (characters.length) {
+    const character = characters.shift();
+    const width = textWidth(character, fontSize) + letterSpacing;
+    if (line && lineWidth + width > maxWidth) {
+      lines.push(line);
+      line = '';
+      lineWidth = 0;
+      if (lines.length === maxLines) break;
+    }
+    line += character;
+    lineWidth += width;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  if (characters.length && lines.length) {
+    let finalLine = Array.from(lines.at(-1));
+    while (finalLine.length > 1 && finalLine.reduce((sum, character) => sum + textWidth(character, fontSize) + letterSpacing, 0) + textWidth('…', fontSize) > maxWidth) finalLine.pop();
+    lines[lines.length - 1] = `${finalLine.join('')}…`;
+  }
   return lines.length ? lines : [''];
 }
 
-function svgLines(lines, x, y, lineHeight, className) {
-  return `<text class="${className}" x="${x}" y="${y}">${lines.map((line, index) => `<tspan x="${x}" dy="${index ? lineHeight : 0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
+function svgLines(lines, x, y, lineHeight) {
+  return lines.map((line, index) => `<tspan x="${x}" y="${y + index * lineHeight}">${escapeXml(line)}</tspan>`).join('');
 }
 
-function previewImage(paper) {
-  const question = paper.questions?.[0];
-  const titleLines = splitText(paper.title, 25, 2);
-  const questionLines = splitText(question?.q || '', 42, 2);
-  const optionLines = (question?.options || []).slice(0, 3).map(option => splitText(option, 43, 1)[0]);
-  const titleSvg = svgLines(titleLines, 282, 194, 38, 'paper-title');
-  const questionSvg = question
-    ? svgLines(questionLines, 333, 321, 27, 'question-title')
-    : '<text class="question-title" x="333" y="321">공유된 문제지를 풀고 결과를 확인해보세요.</text>';
-  const optionStartY = 321 + questionLines.length * 27 + 24;
-  const optionsSvg = optionLines.map((option, index) => `<g transform="translate(0 ${optionStartY + index * 32})"><circle cx="340" cy="-5" r="5" fill="none" stroke="#aeb8c5" stroke-width="2"/><text class="option" x="356" y="0">${escapeXml(option)}</text></g>`).join('');
-  const count = Math.max(0, paper.questions?.length || 0);
+function previewTint(value) {
+  if (typeof value !== 'string') return PREVIEW_TINT_FALLBACK;
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+  const hueTint = value.match(/^hsl\((\d{1,3}) 72% 95%\)$/);
+  if (hueTint && Number(hueTint[1]) <= 359) return value;
+  return PREVIEW_TINT_FALLBACK;
+}
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeXml(`[문블] ${paper.title} 문제지 미리보기`)}">
-  <defs><clipPath id="frame"><rect width="1200" height="630" rx="26"/></clipPath></defs>
+function previewImage(paper, tint = PREVIEW_TINT_FALLBACK, groupName = '미분류') {
+  const width = 300;
+  const height = 168.75;
+  const padding = 14;
+  const sheetWidth = 260 * 0.72;
+  const sheetHeight = (height - 16 - 1) * 1.62;
+  const sheetX = 20 + (260 - sheetWidth) / 2;
+  const sheetY = 18;
+  const contentX = sheetX + padding;
+  const contentWidth = sheetWidth - padding * 2 - 2;
+  const sheetCenterX = sheetX + sheetWidth / 2;
+  const sheetCenterY = sheetY + sheetHeight / 2;
+  const titleLines = wrapText(paper.title, contentWidth, 11, 2, -0.275);
+  const titleY = sheetY + padding + 12.67 + 10 + 12;
+  const subtitleY = titleY + titleLines.length * 16 + 3 + 9;
+  let questionCursor = subtitleY + 13;
+  const groupLabel = wrapText(groupName, 230, 11, 1)[0];
+  const groupWidth = Math.min(230, Array.from(groupLabel).reduce((sum, character) => sum + textWidth(character, 11), 0) + 16);
+  const questions = (paper.questions || []).slice(0, 2);
+  const questionMarkup = questions.map((question, index) => {
+    const firstTop = questionCursor;
+    const questionLines = wrapText(question.q || '', contentWidth - 12, 8, 3);
+    const titleBaseline = firstTop + 1 + 9 + 9;
+    const qTitle = svgLines(questionLines, contentX + 12, titleBaseline, 12);
+    const options = (question.options || []).slice(0, 3);
+    const optionsStart = titleBaseline + (questionLines.length - 1) * 12 + 22;
+    const optionMarkup = options.map((option, optionIndex) => {
+      const textLines = wrapText(option, contentWidth - 24, 7, 2);
+      const y = optionsStart + optionIndex * 14;
+      return `<g><circle cx="${contentX + 16.5}" cy="${y - 2.5}" r="2.5" fill="none" stroke="#b0b8c1" stroke-width="0.75"/><text class="option">${svgLines(textLines, contentX + 24, y, 10)}</text></g>`;
+    }).join('');
+    questionCursor = options.length
+      ? optionsStart + (options.length - 1) * 14 + 12
+      : titleBaseline + (questionLines.length - 1) * 12 + 15;
+    return `<g><line x1="${contentX}" x2="${contentX + contentWidth}" y1="${firstTop}" y2="${firstTop}" stroke="#e5e8eb" stroke-width="0.75"/><text class="question-number" x="${contentX}" y="${titleBaseline}">${String(index + 1).padStart(2, '0')}</text><text class="question-title">${qTitle}</text>${optionMarkup}</g>`;
+  }).join('');
+  const count = Math.max(0, paper.questions?.length || 0);
+  const label = `${count}문항`;
+  const badgeTextWidth = Array.from(label).reduce((sum, character) => sum + textWidth(character, 10), 0);
+  const badgeWidth = badgeTextWidth + 14;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeXml(`[문블] ${paper.title} 문제지 미리보기`)}">
+  <defs><clipPath id="frame"><rect width="${width}" height="${height}" rx="16"/></clipPath></defs>
   <g clip-path="url(#frame)">
-    <rect width="1200" height="630" fill="#e8f3ff"/>
-    <rect x="224" y="25" width="752" height="850" rx="11" fill="#fff" stroke="#e1e6ec" stroke-width="2" transform="rotate(-1.4 600 300)"/>
-    <g transform="rotate(-1.4 600 300)">
-      <text x="282" y="117" fill="#2678ee" font-family="Arial, sans-serif" font-size="27" font-style="italic" font-weight="700">moonble</text>
-      <text x="918" y="117" text-anchor="end" fill="#64748b" font-family="Arial, sans-serif" font-size="17">문제지</text>
-      ${titleSvg}
-      <text class="subtitle" x="282" y="270">개념을 확인하는 작은 시작</text>
-      <line x1="282" x2="918" y1="291" y2="291" stroke="#e1e6ec" stroke-width="2"/>
-      <text class="number" x="282" y="329">01</text>
-      ${questionSvg}
-      ${optionsSvg}
+    <rect width="${width}" height="${height}" fill="${escapeXml(previewTint(tint))}"/>
+    <g><rect x="7" y="7" width="${groupWidth}" height="24" rx="5" fill="#1a1f27" fill-opacity=".88"/><text class="group-label" x="15" y="23">${escapeXml(groupLabel)}</text></g>
+    <g transform="translate(0 2) rotate(-2 ${sheetCenterX} ${sheetCenterY})">
+      <rect x="${sheetX}" y="${sheetY}" width="${sheetWidth}" height="${sheetHeight}" rx="9" fill="#fff" stroke="#e5e8eb" stroke-width="1"/>
+      <image x="${sheetX + padding}" y="${sheetY + padding}" width="38" height="12.67" href="${PREVIEW_WORDMARK}" preserveAspectRatio="xMinYMid meet"/>
+      <text class="paper-title">${svgLines(titleLines, sheetX + padding, titleY, 16)}</text>
+      <text class="subtitle" x="${sheetX + padding}" y="${subtitleY}">개념을 확인하는 작은 시작</text>
+      ${questionMarkup}
     </g>
-    <g transform="translate(1042 554)"><rect width="112" height="42" rx="11" fill="#555d66"/><text x="56" y="27" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="18" font-weight="700">${count}문항</text></g>
+    <g transform="translate(${width - 10} ${height - 9})"><rect x="-${badgeWidth}" y="-21" width="${badgeWidth}" height="21" rx="5" fill="#191f28" fill-opacity=".72"/><text class="count" x="-${badgeWidth / 2}" y="-6" text-anchor="middle">${escapeXml(label)}</text></g>
+    <line x1="0" x2="${width}" y1="${height - 0.5}" y2="${height - 0.5}" stroke="#e5e8eb" stroke-width="1"/>
   </g>
   <style>
-    .paper-title { fill:#191f28; font-family:Arial,sans-serif; font-size:32px; font-weight:700; letter-spacing:-.6px }
-    .subtitle { fill:#6b7684; font-family:Arial,sans-serif; font-size:19px }
-    .number { fill:#2678ee; font-family:Arial,sans-serif; font-size:19px; font-weight:700 }
-    .question-title { fill:#191f28; font-family:Arial,sans-serif; font-size:21px; font-weight:700 }
-    .option { fill:#6b7684; font-family:Arial,sans-serif; font-size:17px }
+    text { font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+    .paper-title { fill:#191f28; font-size:11px; font-weight:700; letter-spacing:-.275px }
+    .group-label { fill:#fff; font-size:11px; font-weight:700; }
+    .subtitle { fill:#6b7684; font-size:8px; }
+    .question-number { fill:#1b64da; font-size:8px; font-weight:700; }
+    .question-title { fill:#191f28; font-size:8px; font-weight:600; }
+    .option { fill:#4e5968; font-size:7px; }
+    .count { fill:#fff; font-size:10px; font-weight:600; }
   </style>
 </svg>`;
 }
@@ -111,8 +177,11 @@ function previewHtml(token, paper, requestUrl, env) {
   const title = `[문블] ${paper.title}`;
   const description = paper.description || '공유된 문제지를 풀고 결과를 확인해보세요.';
   const canonicalUrl = new URL(requestUrl).href;
+  const requestParams = new URL(requestUrl).searchParams;
+  const tint = previewTint(requestParams.get('tint'));
+  const group = (requestParams.get('group') || '미분류').slice(0, 80);
   const imageUrl = paper.questions.length
-    ? new URL(`/${encodeURIComponent(token)}/thumbnail.svg?preview=2`, requestUrl).href
+    ? new URL(`/${encodeURIComponent(token)}/thumbnail.svg?preview=3&tint=${encodeURIComponent(tint)}&group=${encodeURIComponent(group)}`, requestUrl).href
     : (env.OG_IMAGE || META_IMAGE_FALLBACK);
   const solveUrl = appQuizUrl(token, env);
   const safeTitle = escapeHtml(title);
@@ -139,7 +208,7 @@ function previewHtml(token, paper, requestUrl, env) {
   <meta property="og:image:secure_url" content="${safeImageUrl}">
   <meta property="og:image:type" content="${paper.questions.length ? 'image/svg+xml' : 'image/png'}">
   <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image:height" content="675">
   <meta property="og:image:alt" content="${escapeHtml(`${title} 문제지 미리보기`)}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">
@@ -190,7 +259,7 @@ export default {
         if (!paper) return htmlResponse('공유 링크가 만료됐거나 중지됐어요.', 404);
         if (!paper.questions.length) return htmlResponse('문제지 미리보기가 없습니다.', 404);
         if (request.method === 'HEAD') return new Response(null, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } });
-        return svgResponse(previewImage(paper));
+        return svgResponse(previewImage(paper, previewTint(url.searchParams.get('tint')), (url.searchParams.get('group') || '미분류').slice(0, 80)));
       } catch {
         return htmlResponse('문제지 미리보기를 불러오지 못했어요.', 503);
       }
