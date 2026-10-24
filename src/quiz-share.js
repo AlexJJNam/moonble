@@ -51,12 +51,11 @@ export function clearCachedQuizShareToken(userId, bankId) {
   } catch { /* 서버 공유 중지는 저장 공간 제한과 무관하게 처리한다. */ }
 }
 
-export function quizShareUrl(token, baseUrl = window.location.href) {
-  const url = new URL('./solve.html', baseUrl);
-  // Fragment는 서버 요청·Referer·Analytics page_path에 포함되지 않는다.
-  url.search = '';
-  url.hash = `share=${token}`;
-  return url.href;
+export function quizShareUrl(token) {
+  if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{40,50}$/.test(token)) {
+    throw new Error('공유 링크가 올바르지 않거나 만료됐어요.');
+  }
+  return `https://share.moonble.com/${encodeURIComponent(token)}`;
 }
 
 function requireSupabase() {
@@ -100,6 +99,32 @@ export async function getQuizShare(token) {
     description: typeof data.description === 'string' ? data.description.slice(0, 300) : '',
     questions: questions.map(question => ({ ...question, explain: typeof question.explain === 'string' ? question.explain : '' })),
   };
+}
+
+export async function submitQuizShareAttempt(token, answers) {
+  if (!Array.isArray(answers) || !answers.length || answers.length > 20) {
+    throw new Error('풀이 결과를 저장하지 못했어요.');
+  }
+  const tokenHash = await hashQuizShareToken(token);
+  const submissionId = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+      const random = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+      return (char === 'x' ? random : (random & 3) | 8).toString(16);
+    });
+  const { data, error } = await requireSupabase().rpc('moonble_submit_shared_quiz', {
+    p_token_hash: tokenHash,
+    p_submission_id: submissionId,
+    p_answers: answers,
+  });
+  if (error || !data?.saved) throw new Error('공유한 사람에게 풀이 결과를 알리지 못했어요.');
+  return data;
+}
+
+export async function getNextQuizShareNotification() {
+  const { data, error } = await requireSupabase().rpc('moonble_take_next_quiz_share_notification');
+  if (error) throw error;
+  return data && typeof data === 'object' ? data : null;
 }
 
 export async function revokeQuizShare(bankId) {

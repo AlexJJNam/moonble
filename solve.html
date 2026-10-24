@@ -1378,6 +1378,91 @@
       animation: quiz-grade-check-draw .32s ease-out .2s forwards;
     }
 
+    .shared-guest-complete {
+      width: min(340px, calc(100% - 32px));
+      max-width: none;
+      max-height: calc(100dvh - 32px);
+      margin: auto;
+      padding: 28px 22px 20px;
+      overflow-y: auto;
+      border: 0;
+      border-radius: 24px;
+      color: var(--text);
+      background: var(--surface, #fff);
+      animation: shared-guest-dialog-in .2s cubic-bezier(.2,.8,.3,1) both;
+    }
+
+    .shared-guest-complete::backdrop {
+      background: rgb(0 0 0 / 45%);
+    }
+
+    .shared-guest-complete h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 26px;
+      letter-spacing: -.02em;
+    }
+
+    .shared-guest-complete p {
+      margin: 10px 0 0;
+      color: #6b7684;
+      font-size: 15px;
+      line-height: 24px;
+    }
+
+    .shared-guest-complete .shared-guest-delivery-error {
+      margin-top: 8px;
+      color: var(--bad, #c84040);
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .shared-guest-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .shared-guest-actions button,
+    .shared-guest-actions a {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 16px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 24px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .shared-guest-actions .is-close {
+      color: #4e5968;
+      background: #f2f4f6;
+    }
+
+    .shared-guest-actions .is-create {
+      color: #fff;
+      background: #3182f6;
+    }
+
+    .shared-guest-actions button:focus-visible,
+    .shared-guest-actions a:focus-visible {
+      outline: 3px solid rgb(49 130 246 / 35%);
+      outline-offset: 2px;
+    }
+
+    @keyframes shared-guest-dialog-in {
+      from { opacity: 0; transform: scale(.96); }
+      to { opacity: 1; transform: none; }
+    }
+
     #resultBox.is-grade-reveal {
       animation: quiz-grade-result-in .48s cubic-bezier(.2,.8,.3,1) 1.18s both;
     }
@@ -1402,6 +1487,7 @@
     @media (prefers-reduced-motion: reduce) {
       .quiz-grade-fx { display: none; }
       #resultBox.is-grade-reveal { animation: none; }
+      .shared-guest-complete { animation: none; }
     }
 
     .muted {
@@ -3196,6 +3282,16 @@
       <span>결과를 확인해보세요.</span>
     </div>
 
+    <dialog id="sharedGuestComplete" class="shared-guest-complete" aria-labelledby="sharedGuestCompleteTitle" aria-describedby="sharedGuestCompleteCopy">
+      <h2 id="sharedGuestCompleteTitle">축하해요! 공유된 문제를 풀었어요.</h2>
+      <p id="sharedGuestCompleteCopy">가입하고 문제를 만들어 공유해 보세요!</p>
+      <p id="sharedGuestDeliveryError" class="shared-guest-delivery-error" hidden>풀이 결과를 공유한 사람에게 알리지 못했어요. 연결 상태를 확인해주세요.</p>
+      <div class="shared-guest-actions">
+        <button id="sharedGuestClose" class="is-close" type="button">닫기</button>
+        <a class="is-create" href="./signup.html">문제 만들기</a>
+      </div>
+    </dialog>
+
     <span id="year" hidden></span>
   </main>
 
@@ -3363,6 +3459,9 @@
     const modePill = byId('modePill');
     const historyBox = byId('historyBox');
     const gradeFxEl = byId('quizGradeFx');
+    const sharedGuestDialog = byId('sharedGuestComplete');
+    const sharedGuestClose = byId('sharedGuestClose');
+    const sharedGuestDeliveryError = byId('sharedGuestDeliveryError');
 
     const QUESTION_COUNT = 20; // 매회 20문항
     const CSV_THRESHOLD = 80;  // 80점 이상일 때 CSV 버튼 활성화
@@ -3383,6 +3482,25 @@
     let isLocked = false;
     let gradeFxTimer = 0;
     let gradeScrollTimer = 0;
+    let sharedGuestPopupTimer = 0;
+
+    sharedGuestClose?.addEventListener('click', () => sharedGuestDialog?.close());
+
+    function readSharedAnswers() {
+      return picked.map(question => {
+        const card = $$('.q-card', quizEl).find(item => item.dataset.qid === String(question.id));
+        return {
+          question_id: Number(question.id),
+          selected: card ? $$('.option-card', card).map((option, index) => option.classList.contains('selected') ? index : null).filter(index => index !== null) : [],
+        };
+      });
+    }
+
+    function showSharedGuestCompletion(deliveryFailed) {
+      if (!sharedGuestDialog || !sharedGuestDialog.isConnected) return;
+      if (sharedGuestDeliveryError) sharedGuestDeliveryError.hidden = !deliveryFailed;
+      if (!sharedGuestDialog.open) sharedGuestDialog.showModal();
+    }
 
     function resetGradeCompleteEffect() {
       window.clearTimeout(gradeFxTimer);
@@ -3452,6 +3570,7 @@
     // ===== Render quiz =====
     function renderQuiz(sourceArray) {
       resetGradeCompleteEffect();
+      window.clearTimeout(sharedGuestPopupTimer);
       quizEl.innerHTML = '';
       resultEl.textContent = '';
       unlockQuiz();
@@ -3634,6 +3753,18 @@
       renderHistory();
 
       csvBtn.disabled = !(score >= CSV_THRESHOLD);
+
+      if (paperId === 'shared' && !window.moonbleUserId) {
+        let deliveryFailed = typeof window.moonbleSubmitSharedQuiz !== 'function';
+        if (!deliveryFailed) {
+          window.moonbleSubmitSharedQuiz(readSharedAnswers()).catch(() => {
+            deliveryFailed = true;
+            if (sharedGuestDialog?.open) showSharedGuestCompletion(true);
+          });
+        }
+        window.clearTimeout(sharedGuestPopupTimer);
+        sharedGuestPopupTimer = window.setTimeout(() => showSharedGuestCompletion(deliveryFailed), 1600);
+      }
 
       if (typeof updateActiveByVisibility === 'function') updateActiveByVisibility();
     }
@@ -5144,7 +5275,7 @@
 <script type="module">
 import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
 import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
-import { getQuizShare } from '/src/quiz-share.js';
+import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 
 function prepareSharedQuizPage(sharedQuiz) {
   window.moonbleSharedQuiz = sharedQuiz;
@@ -5211,6 +5342,7 @@ const requestedPaper = new URLSearchParams(location.search).get('paper');
 if (shareToken || requestedPaper === 'shared') {
   try {
     if (!shareToken) throw new Error('Shared token missing');
+    window.moonbleSubmitSharedQuiz = answers => submitQuizShareAttempt(shareToken, answers);
     prepareSharedQuizPage(await getQuizShare(shareToken));
   } catch (error) {
     showSharedQuizUnavailable(error?.message);
@@ -5363,6 +5495,57 @@ if (shareToken || requestedPaper === 'shared') {
 </script>
 <script type="module" src="/src/account.jsx"></script>
   <script type="module" src="/src/pwa-register.js"></script>
+  <div id="quizScrollProgress" class="quiz-scroll-progress" role="progressbar" aria-label="문제풀이 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+    <span></span>
+    <i class="quiz-scroll-progress-tick" aria-hidden="true"><b class="tick-ring"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b></i>
+  </div>
+  <script>
+    (() => {
+      const track = document.getElementById('quizScrollProgress');
+      const quiz = document.getElementById('quizContainer');
+      if (!track || !quiz) return;
+
+      const fill = track.querySelector(':scope > span');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let frame = 0;
+      let reachedEnd = false;
+      let tickTimer;
+
+      function updateProgress() {
+        frame = 0;
+        const hasQuestions = quiz.querySelector('.q-card');
+        track.hidden = !hasQuestions;
+        if (!hasQuestions) return;
+
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = max <= 0 ? 0 : Math.min(1, Math.max(0, window.scrollY / max));
+        const percent = Math.round(ratio * 100);
+        fill.style.transform = `scaleX(${ratio})`;
+        track.setAttribute('aria-valuenow', String(percent));
+        track.classList.toggle('is-complete', ratio >= 0.999);
+
+        if (!reducedMotion && ratio >= 0.999 && !reachedEnd) {
+          reachedEnd = true;
+          clearTimeout(tickTimer);
+          track.classList.remove('is-tick');
+          void track.offsetWidth;
+          track.classList.add('is-tick');
+          tickTimer = setTimeout(() => track.classList.remove('is-tick'), 600);
+        } else if (ratio < 0.95) {
+          reachedEnd = false;
+        }
+      }
+
+      function scheduleProgress() {
+        if (!frame) frame = requestAnimationFrame(updateProgress);
+      }
+
+      window.addEventListener('scroll', scheduleProgress, { passive: true });
+      window.addEventListener('resize', scheduleProgress, { passive: true });
+      new MutationObserver(scheduleProgress).observe(quiz, { childList: true, subtree: true });
+      scheduleProgress();
+    })();
+  </script>
 </body>
 
 </html>

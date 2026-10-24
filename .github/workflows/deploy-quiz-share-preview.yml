@@ -1,0 +1,38 @@
+name: Deploy quiz share preview Worker
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/quiz-share-preview/**'
+      - '.github/workflows/deploy-quiz-share-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: moonble-quiz-share-preview
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify deployment settings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Add CLOUDFLARE_API_TOKEN to GitHub Actions secrets."; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Add CLOUDFLARE_ACCOUNT_ID to GitHub Actions secrets."; exit 1; }
+          test -n "$SUPABASE_URL" || { echo "::error::Set the existing VITE_SUPABASE_URL repository variable."; exit 1; }
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "::error::Set the existing VITE_SUPABASE_PUBLISHABLE_KEY repository variable."; exit 1; }
+      - name: Deploy Worker and share.moonble.com custom domain
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          workingDirectory: workers/quiz-share-preview
+          command: deploy --var "SUPABASE_URL:${{ vars.VITE_SUPABASE_URL }}" --var "SUPABASE_PUBLISHABLE_KEY:${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}"

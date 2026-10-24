@@ -2,6 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BarChart3, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
+import { getNextQuizShareNotification } from './quiz-share.js';
+import { supabase } from './supabase.js';
 import './app-header.css';
 
 function useSolverQuestions(enabled) {
@@ -163,6 +165,7 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     catch { return false; }
   });
   const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
+  const [shareNotification, setShareNotification] = useState(null);
   const [mobileDockIndex, setMobileDockIndex] = useState(() => {
     try {
       const saved = sessionStorage.getItem('moonble:mobile-dock-index');
@@ -171,11 +174,55 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     } catch { return activeDockIndex; }
   });
   const mobileDockRef = useRef(null);
+  const shareNotificationTimer = useRef(0);
+  const shareNotificationVisible = useRef(false);
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
   const initial = name.trim().slice(0, 1).toUpperCase() || 'M';
   const solver = variant === 'solver';
   const questions = useSolverQuestions(solver);
+
+  useEffect(() => {
+    if (!user?.id || !supabase) return undefined;
+    let alive = true;
+    let checking = false;
+    let interval = 0;
+
+    async function checkSharedQuizNotifications() {
+      if (!alive || checking || shareNotificationVisible.current || document.visibilityState === 'hidden') return;
+      checking = true;
+      try {
+        const notification = await getNextQuizShareNotification();
+        if (!alive || !notification?.id) return;
+        shareNotificationVisible.current = true;
+        setShareNotification(notification);
+        window.clearTimeout(shareNotificationTimer.current);
+        shareNotificationTimer.current = window.setTimeout(() => {
+          shareNotificationVisible.current = false;
+          setShareNotification(null);
+          checkSharedQuizNotifications();
+        }, 3200);
+      } catch {
+        // DB 마이그레이션 전이거나 네트워크가 끊겨도 나머지 화면 사용은 계속한다.
+      } finally {
+        checking = false;
+      }
+    }
+
+    const resume = () => { if (document.visibilityState === 'visible') checkSharedQuizNotifications(); };
+    checkSharedQuizNotifications();
+    interval = window.setInterval(checkSharedQuizNotifications, 18000);
+    window.addEventListener('focus', resume);
+    document.addEventListener('visibilitychange', resume);
+    return () => {
+      alive = false;
+      window.clearInterval(interval);
+      window.clearTimeout(shareNotificationTimer.current);
+      window.removeEventListener('focus', resume);
+      document.removeEventListener('visibilitychange', resume);
+      shareNotificationVisible.current = false;
+    };
+  }, [user?.id]);
 
   useLayoutEffect(() => {
     const nav = mobileDockRef.current;
@@ -345,7 +392,8 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     };
   }, [solver]);
 
-  return <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  return <>
+  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
@@ -388,5 +436,10 @@ export function AppHeader({ active, error, onLogout, pending = false, user, vari
     <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
       {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
     </button>
-  </aside>;
+  </aside>
+  {shareNotification && <div className={`mb-share-notification-toast${solver ? ' is-solver' : ''}`} role="status" aria-live="polite" aria-atomic="true">
+    <strong>공유한 문제를 누군가 풀었어요.</strong>
+    <span>{shareNotification.title} · {shareNotification.score}점 ({shareNotification.correct}/{shareNotification.total})</span>
+  </div>}
+  </>;
 }

@@ -43,6 +43,24 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .btn { min-height: 44px; font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
 .quiz-actions .btn { min-height: 48px; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; border-radius: 12px; }
 html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
+/* Expert intro modal's scroll progress line, reused in Moonble blue on the solver page. */
+.quiz-scroll-progress { position: fixed; z-index: 75; right: 0; bottom: env(safe-area-inset-bottom, 0px); left: 0; height: 2px; pointer-events: none; }
+.quiz-scroll-progress[hidden] { display: none; }
+.quiz-scroll-progress > span { display: block; width: 100%; height: 100%; background: #3182f6; transform: scaleX(0); transform-origin: left center; }
+.quiz-scroll-progress::after { position: absolute; top: -.5px; right: 0; bottom: -.5px; width: 28px; border-radius: 2px; background: linear-gradient(90deg, rgb(169 206 255 / 0%), #a9ceff); box-shadow: 2px 0 4px rgb(49 130 246 / 60%); content: ''; opacity: 0; }
+.quiz-scroll-progress-tick { position: absolute; top: 50%; right: 0; width: 0; height: 0; }
+.quiz-scroll-progress-tick .tick-ring { position: absolute; top: -6px; left: -6px; width: 12px; height: 12px; border: 1px solid #8bbcff; border-radius: 50%; opacity: 0; transform: scale(.2); }
+.quiz-scroll-progress-tick .tick-spark { position: absolute; top: -.5px; left: 0; width: 4px; height: 1px; border-radius: 1px; background: #a9ceff; box-shadow: 0 0 2px rgb(49 130 246 / 67%); opacity: 0; transform-origin: 0 50%; }
+.quiz-scroll-progress-tick .tick-spark:nth-child(2) { --tick-angle: -165deg; }
+.quiz-scroll-progress-tick .tick-spark:nth-child(3) { --tick-angle: -128deg; }
+.quiz-scroll-progress-tick .tick-spark:nth-child(4) { --tick-angle: -92deg; }
+.quiz-scroll-progress-tick .tick-spark:nth-child(5) { --tick-angle: -56deg; }
+.quiz-scroll-progress.is-tick::after { animation: quiz-progress-head .5s ease-out; }
+.quiz-scroll-progress.is-tick .tick-ring { animation: quiz-progress-ring .5s cubic-bezier(.2, .7, .3, 1); }
+.quiz-scroll-progress.is-tick .tick-spark { animation: quiz-progress-spark .45s cubic-bezier(.2, .7, .3, 1) .04s both; }
+@keyframes quiz-progress-head { 0% { opacity: 0; } 25% { opacity: .7; } 100% { opacity: 0; } }
+@keyframes quiz-progress-ring { 0% { opacity: .6; transform: scale(.2); } 100% { opacity: 0; transform: scale(1); } }
+@keyframes quiz-progress-spark { 0% { opacity: 0; transform: rotate(var(--tick-angle)) translateX(2px) scaleX(.3); } 20% { opacity: .85; } 100% { opacity: 0; transform: rotate(var(--tick-angle)) translateX(8px) scaleX(.7); } }
 @media (max-width: 767px) {
   .section-head h2 { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); }
 }
@@ -56,4 +74,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 @media (prefers-reduced-motion: reduce) {
   .q-title .q-number.is-anchor-flash::after { animation: none; }
   .q-card.is-anchor-trace::before { background: var(--mb-primary); animation: none; opacity: 1; }
+  .quiz-scroll-progress.is-tick::after,
+  .quiz-scroll-progress.is-tick .tick-ring,
+  .quiz-scroll-progress.is-tick .tick-spark { animation: none; }
 }

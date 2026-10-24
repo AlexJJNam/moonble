@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "test:share-worker": "node --test workers/quiz-share-preview/worker.test.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.6",
