@@ -144,6 +144,15 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-empty p { margin: 0 0 24px; font-size: var(--mb-font-14); }
 .quiz-empty button { min-height: 44px; border: 0; border-radius: 8px; padding: 10px 16px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-14); font-weight: 600; }
 .quiz-manage-overlay { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(15 23 42 / 42%); backdrop-filter: blur(5px); animation: quiz-overlay-in 180ms ease both; }
+.quiz-share-dialog>p { margin: 0 0 16px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
+.quiz-share-loading { display: flex; align-items: center; gap: 10px; min-height: 68px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); }
+.quiz-share-spinner { width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: quiz-share-spin .7s linear infinite; }
+@keyframes quiz-share-spin { to { transform: rotate(360deg); } }
+.quiz-share-link { display: grid; gap: 7px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); }
+.quiz-share-link input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--mb-border); border-radius: 10px; background: var(--mb-surface-muted); color: var(--mb-text-primary); font-size: var(--mb-font-13); }
+.quiz-share-note { margin-top: 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.quiz-share-dialog>footer .quiz-share-revoke { margin-right: auto; color: var(--mb-danger); background: transparent; }
+.quiz-share-dialog>footer .is-primary { display: inline-flex; align-items: center; gap: 7px; }
 .quiz-manage-dialog { width: min(420px, 100%); margin: 0; padding: 22px; border: 1px solid rgb(255 255 255 / 78%); border-radius: 20px; background: rgb(255 255 255 / 97%); box-shadow: 0 24px 72px rgb(15 23 42 / 22%); animation: quiz-dialog-in 220ms cubic-bezier(.2,.82,.24,1) both; }
 .quiz-manage-dialog>header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .quiz-manage-dialog h2 { margin: 0; font-size: var(--mb-font-20, 20px); line-height: 28px; }

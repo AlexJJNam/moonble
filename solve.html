@@ -2,6 +2,22 @@
 <html lang="ko" data-theme="light" data-auth-pending>
 
 <head>
+  <script>
+    // 공유 비밀키는 URL fragment로 전달해 서버 요청과 분석 경로에 싣지 않는다.
+    (() => {
+      const match = location.hash.match(/^#share=([A-Za-z0-9_-]{40,50})$/);
+      const params = new URLSearchParams(location.search);
+      let token = match?.[1] || '';
+      try {
+        if (token) sessionStorage.setItem('moonble:pending-shared-quiz', token);
+        else if (params.get('paper') === 'shared') token = sessionStorage.getItem('moonble:pending-shared-quiz') || '';
+      } catch { /* 브라우저 저장이 막히면 현재 진입 토큰만 사용한다. */ }
+      if (token) {
+        window.__moonbleSharedQuizToken = token;
+        if (match) history.replaceState(null, '', `${location.pathname}?paper=shared#quiz`);
+      }
+    })();
+  </script>
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-EGCXGZ4PXK"></script>
 <script>
@@ -3412,6 +3428,7 @@
     // Resolve the selected paper before the initial render and later retries.
     function getSelectedPaperBank() {
       const paper = new URLSearchParams(window.location.search).get('paper');
+      if (paper === 'shared' && window.moonbleSharedQuiz) return window.moonbleSharedQuiz.questions;
       if (paper === 'basics') return BANK.filter(q => q.id <= 30);
       if (paper === 'advanced') return BANK.filter(q => q.id > 30);
       if (paper === 'random') return BANK;
@@ -3592,7 +3609,10 @@
       let groupId = 'ungrouped';
       let paperTitle = paperId === 'basics' ? 'GA4 핵심 개념' : paperId === 'advanced' ? 'GA4 실무 응용' : paperId === 'random' ? '전체 랜덤 문제지' : '문제지';
       let paperDescription = '';
-      if (paperId === 'custom' && typeof window.getCustomBankMeta === 'function') {
+      if (paperId === 'shared' && window.moonbleSharedQuiz) {
+        paperTitle = window.moonbleSharedQuiz.title;
+        paperDescription = window.moonbleSharedQuiz.description || '';
+      } else if (paperId === 'custom' && typeof window.getCustomBankMeta === 'function') {
         const bankMeta = window.getCustomBankMeta(bankId);
         if (bankMeta) { groupId = bankMeta.groupId || 'ungrouped'; paperTitle = bankMeta.title || paperTitle; paperDescription = bankMeta.description || ''; }
       } else if (paperId === 'retry') {
@@ -5123,14 +5143,87 @@
 </script>
 <script type="module">
 import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
-import { getCustomBank, getCustomBankMeta, setCustomBankUser } from '/src/custom-bank.js';
+import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
+import { getQuizShare } from '/src/quiz-share.js';
 
-if (supabase) {
+function prepareSharedQuizPage(sharedQuiz) {
+  window.moonbleSharedQuiz = sharedQuiz;
+  window.moonbleUserId = null;
+  window.getCustomBank = () => sharedQuiz.questions;
+  window.getCustomBankMeta = () => ({ title: sharedQuiz.title, description: sharedQuiz.description, questions: sharedQuiz.questions });
+  window.getActiveBank = () => sharedQuiz.questions;
+  document.querySelector('#moonble-app-header')?.remove();
+  document.querySelector('.hero')?.remove();
+  document.querySelector('.section-tabs')?.remove();
+  document.querySelector('.fab')?.remove();
+  document.getElementById('aiPickOverlay')?.remove();
+  document.getElementById('aiAskBar')?.remove();
+  ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
+  document.querySelectorAll('.solver-history-storage').forEach(element => element.hidden = true);
+  const section = document.getElementById('quiz');
+  const heading = section?.querySelector('.section-head h2');
+  if (heading) heading.textContent = sharedQuiz.title;
+  const headerCopy = section?.querySelector('.section-head > div');
+  if (sharedQuiz.description && headerCopy) {
+    const description = document.createElement('p');
+    description.className = 'shared-quiz-description';
+    description.textContent = sharedQuiz.description;
+    headerCopy.appendChild(description);
+  }
+  document.title = `${sharedQuiz.title} · Moonble`;
+  renderQuiz();
+  renderHistory();
+  document.documentElement.removeAttribute('data-auth-pending');
+}
+
+function showSharedQuizUnavailable(message) {
+  document.querySelector('#moonble-app-header')?.remove();
+  document.querySelector('.hero')?.remove();
+  document.querySelector('.section-tabs')?.remove();
+  document.querySelector('.fab')?.remove();
+  document.getElementById('aiPickOverlay')?.remove();
+  document.getElementById('aiAskBar')?.remove();
+  ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
+  const section = document.getElementById('quiz');
+  if (section) {
+    section.querySelector('.quiz-top-controls')?.remove();
+    section.querySelector('.section-head h2').textContent = '공유 문제지';
+    section.querySelector('#quizContainer')?.remove();
+    section.querySelector('.quiz-actions')?.remove();
+    const notice = document.createElement('div');
+    notice.className = 'shared-quiz-error';
+    notice.setAttribute('role', 'alert');
+    const title = document.createElement('strong');
+    title.textContent = '공유 문제를 열지 못했어요.';
+    const detail = document.createElement('span');
+    detail.textContent = message || '링크가 만료됐거나 만든 사람이 공유를 중지했어요.';
+    notice.append(title, detail);
+    section.appendChild(notice);
+  }
+  document.documentElement.removeAttribute('data-auth-pending');
+}
+
+const shareToken = window.__moonbleSharedQuizToken || (() => {
+  try { return sessionStorage.getItem('moonble:pending-shared-quiz') || ''; }
+  catch { return ''; }
+})();
+const requestedPaper = new URLSearchParams(location.search).get('paper');
+if (shareToken || requestedPaper === 'shared') {
+  try {
+    if (!shareToken) throw new Error('Shared token missing');
+    prepareSharedQuizPage(await getQuizShare(shareToken));
+  } catch (error) {
+    showSharedQuizUnavailable(error?.message);
+  }
+} else if (supabase) {
+
   const session = cachedAuthSession() || (await getSessionSafely()).session;
   const user = session?.user;
   if (user) {
     window.moonbleUserId = user.id;
     setCustomBankUser(user.id);
+    try { await syncCustomBankCollection(user.id); }
+    catch { /* 서버 연결이 안 될 때는 이 기기에 남은 문제지로 계속 푼다. */ }
 
     try {
       const oldKey = 'moonble-history-v2';

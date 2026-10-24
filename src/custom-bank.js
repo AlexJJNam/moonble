@@ -1,8 +1,11 @@
 // Shared CSV format and storage for the library and existing solver.
+import { supabase } from './supabase.js';
+
   var LEGACY_CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
   var CUSTOM_BANK_KEY_PREFIX = 'moonble:user:';
   var DEFAULT_GROUP_ID = 'ungrouped';
   var activeUserId = null;
+  var remoteWriteQueues = new Map();
   var MIN_QUESTIONS = 20;
   var CUSTOM_ID_BASE = 100000;
 
@@ -54,10 +57,147 @@
     var activeBankId = banks.some(bank => bank.id === parsed.activeBankId) ? parsed.activeBankId : (banks[0]?.id || null);
     return { version: 3, bankOrderVersion: 1, activeBankId: activeBankId, groups: groups, banks: banks };
   }
-  function writeCollection(collection, userId) {
+  function writeCollection(collection, userId, options) {
     var key = storageKey(userId);
     if (!key) throw new Error('로그인 상태를 확인해주세요.');
-    localStorage.setItem(key, JSON.stringify(normalizeCollection(collection)));
+    var before = options && options.sync === false ? null : readCollection(userId);
+    var next = normalizeCollection(collection);
+    localStorage.setItem(key, JSON.stringify(next));
+    if (!options || options.sync !== false) queueRemoteCollectionWrite(before || emptyCollection(), next, userId || activeUserId);
+  }
+  function remoteGroupRow(group, sortOrder) {
+    return {
+      id: group.id,
+      name: group.name,
+      sort_order: sortOrder,
+      created_at: group.createdAt || new Date().toISOString(),
+      updated_at: group.updatedAt || group.createdAt || new Date().toISOString()
+    };
+  }
+  function remoteBankRow(bank, sortOrder) {
+    return {
+      id: bank.id,
+      group_id: bank.groupId === DEFAULT_GROUP_ID ? null : bank.groupId,
+      title: bank.title,
+      description: bank.description || '',
+      source: bank.source || '커스텀 문제',
+      questions: bank.questions,
+      sort_order: sortOrder,
+      saved_at: bank.savedAt || new Date().toISOString(),
+      updated_at: bank.updatedAt || bank.savedAt || new Date().toISOString()
+    };
+  }
+  async function saveRemoteCollection(collection, userId, deletedGroupIds, deletedBankIds) {
+    if (!supabase || !userId) return;
+    var groups = collection.groups.map(function (group, index) { return remoteGroupRow(group, index); });
+    var banks = collection.banks.map(function (bank, index) { return remoteBankRow(bank, index); });
+    var result = await supabase.rpc('moonble_save_custom_bank_collection', {
+      p_groups: groups,
+      p_banks: banks,
+      p_deleted_group_ids: deletedGroupIds || [],
+      p_deleted_bank_ids: deletedBankIds || []
+    });
+    if (result.error) throw result.error;
+  }
+  function queueRemoteCollectionWrite(before, next, userId) {
+    if (!supabase || !userId) return;
+    var previous = remoteWriteQueues.get(userId) || Promise.resolve();
+    var previousGroupIds = new Set(before.groups.map(function (group) { return group.id; }));
+    var nextGroupIds = new Set(next.groups.map(function (group) { return group.id; }));
+    var previousBankIds = new Set(before.banks.map(function (bank) { return bank.id; }));
+    var nextBankIds = new Set(next.banks.map(function (bank) { return bank.id; }));
+    var deletedGroupIds = Array.from(previousGroupIds).filter(function (id) { return !nextGroupIds.has(id); });
+    var deletedBankIds = Array.from(previousBankIds).filter(function (id) { return !nextBankIds.has(id); });
+    var task = previous.catch(function () {}).then(function () {
+      return saveRemoteCollection(next, userId, deletedGroupIds, deletedBankIds);
+    });
+    remoteWriteQueues.set(userId, task);
+    task.catch(function () {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('moonble:custom-bank-sync-error', {
+          detail: { message: '문제지는 이 기기에 저장됐어요. 서버에 동기화하지 못해 다음 접속이나 네트워크 복귀 때 다시 시도합니다.' }
+        }));
+      }
+    });
+  }
+  function mergeRemoteCollection(remoteGroupRows, remoteBankRows, userId) {
+    var local = readCollection(userId);
+    var remoteGroupRecords = remoteGroupRows || [];
+    var remoteBankRecords = remoteBankRows || [];
+    var deletedGroupIds = new Set(remoteGroupRecords.filter(function (row) { return row.deleted_at; }).map(function (row) { return row.id; }));
+    var deletedBankIds = new Set(remoteBankRecords.filter(function (row) { return row.deleted_at; }).map(function (row) { return row.id; }));
+    var localGroups = new Map(local.groups.map(function (group) { return [group.id, group]; }));
+    var localBanks = new Map(local.banks.map(function (bank) { return [bank.id, bank]; }));
+    var mergedGroups = [];
+    var seenGroupIds = new Set();
+    remoteGroupRecords.filter(function (row) { return !row.deleted_at; }).forEach(function (row) {
+      var remote = { id: row.id, name: row.name, createdAt: row.created_at, updatedAt: row.updated_at };
+      var localGroup = localGroups.get(row.id);
+      var chosen = localGroup && new Date(localGroup.updatedAt || localGroup.createdAt || 0) > new Date(row.updated_at || row.created_at || 0) ? localGroup : remote;
+      mergedGroups.push(chosen);
+      seenGroupIds.add(row.id);
+    });
+    local.groups.forEach(function (group) {
+      if (!seenGroupIds.has(group.id) && !deletedGroupIds.has(group.id)) mergedGroups.push(group);
+    });
+
+    var mergedBanks = [];
+    var seenBankIds = new Set();
+    remoteBankRecords.filter(function (row) { return !row.deleted_at; }).forEach(function (row) {
+      var remote = normalizeBank({
+        id: row.id,
+        groupId: row.group_id || DEFAULT_GROUP_ID,
+        title: row.title,
+        description: row.description,
+        source: row.source,
+        questions: row.questions,
+        savedAt: row.saved_at,
+        updatedAt: row.updated_at
+      });
+      if (!remote) return;
+      var localBank = localBanks.get(row.id);
+      var chosen = localBank && new Date(localBank.updatedAt || localBank.savedAt || 0) > new Date(row.updated_at || row.saved_at || 0) ? localBank : remote;
+      mergedBanks.push(chosen);
+      seenBankIds.add(row.id);
+    });
+    local.banks.forEach(function (bank) {
+      if (!seenBankIds.has(bank.id) && !deletedBankIds.has(bank.id)) mergedBanks.push(bank);
+    });
+
+    var normalized = normalizeCollection({
+      version: 3,
+      bankOrderVersion: 1,
+      activeBankId: local.activeBankId,
+      groups: mergedGroups,
+      banks: mergedBanks
+    });
+    var localOnlyCount = local.banks.filter(function (bank) {
+      return !remoteBankRecords.some(function (row) { return row.id === bank.id; }) && !deletedBankIds.has(bank.id);
+    }).length;
+    return { collection: normalized, localOnlyCount: localOnlyCount };
+  }
+  export async function syncCustomBankCollection(userId) {
+    var id = userId || activeUserId;
+    var local = readCollection(id);
+    if (!id || !supabase) return { collection: local, synced: false, migrated: 0 };
+    var pendingWrite = remoteWriteQueues.get(id);
+    if (pendingWrite) await pendingWrite.catch(function () {});
+    var results = await Promise.all([
+      supabase.from('quiz_groups').select('id,owner_id,name,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
+      supabase.from('quiz_banks').select('id,owner_id,group_id,title,description,source,questions,sort_order,saved_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true })
+    ]);
+    if (results[0].error) throw results[0].error;
+    if (results[1].error) throw results[1].error;
+    var merged = mergeRemoteCollection(results[0].data, results[1].data, id);
+    // mergeRemoteCollection은 현재 localStorage를 다시 읽어, 서버 응답을 기다리는 동안의 변경도 포함한다.
+    writeCollection(merged.collection, id, { sync: false });
+    await saveRemoteCollection(merged.collection, id, [], []);
+    return { collection: merged.collection, synced: true, migrated: merged.localOnlyCount };
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', function () {
+      if (activeUserId) syncCustomBankCollection(activeUserId).catch(function () {});
+    });
   }
   function readCollection(userId) {
     var key = storageKey(userId);
@@ -69,7 +209,7 @@
     if (!legacyRaw) return emptyCollection();
     var legacyBank = normalizeBank(JSON.parse(legacyRaw));
     var migrated = legacyBank ? { version: 3, activeBankId: legacyBank.id, groups: [], banks: [legacyBank] } : emptyCollection();
-    writeCollection(migrated, userId);
+    writeCollection(migrated, userId, { sync: false });
     localStorage.removeItem(legacyKey);
     return normalizeCollection(migrated);
   }
@@ -111,7 +251,7 @@
       var collection = readCollection(userId);
       if (!collection.banks.some(bank => bank.id === bankId)) return null;
       collection.activeBankId = bankId;
-      writeCollection(collection, userId);
+      writeCollection(collection, userId, { sync: false });
       return collection.banks.find(bank => bank.id === bankId) || null;
     } catch (e) { throw new Error('문제지를 열지 못했습니다.'); }
   }
@@ -210,6 +350,8 @@
         var bRank = rank.has(b.id) ? rank.get(b.id) : Number.MAX_SAFE_INTEGER;
         return aRank - bRank;
       });
+      var now = new Date().toISOString();
+      collection.groups = collection.groups.map(function (group, index) { return { ...group, sortOrder: index, updatedAt: now }; });
       writeCollection(collection, userId);
       return collection.groups;
     } catch (e) { throw new Error('그룹 순서를 저장하지 못했습니다.'); }
@@ -225,6 +367,8 @@
         var bRank = rank.has(b.id) ? rank.get(b.id) : order.length + originalRank.get(b.id);
         return aRank - bRank;
       });
+      var now = new Date().toISOString();
+      collection.banks = collection.banks.map(function (bank, index) { return { ...bank, sortOrder: index, updatedAt: now }; });
       writeCollection(collection, userId);
       return collection.banks;
     } catch (e) { throw new Error('문제지 순서를 저장하지 못했습니다.'); }

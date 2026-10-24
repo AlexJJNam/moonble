@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { FolderPlus, LayoutGrid, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -14,6 +14,7 @@ import {
   reorderCustomGroups,
   setActiveCustomBank,
   setCustomBankUser,
+  syncCustomBankCollection,
   updateCustomBankMeta,
   updateCustomGroup,
 } from './custom-bank.js';
@@ -24,6 +25,7 @@ import { FlowActionButton } from './flow-action-button.jsx';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDate } from './date-format.js';
+import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -142,6 +144,10 @@ function QuizLibrary() {
   const [openMenu, setOpenMenu] = useState(null);
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
+  const [shareDialog, setShareDialog] = useState(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [shareCopied, setShareCopied] = useState(false);
   const [section, setSection] = useState(sectionFromHash);
   const [sampleVisible, setSampleVisible] = useState(() => sampleIsVisible(initialUser?.id));
   const [editMode, setEditMode] = useState(false);
@@ -158,6 +164,7 @@ function QuizLibrary() {
   const dragPreviewNode = useRef(null);
   const groupPress = useRef(null);
   const groupOrderRef = useRef(orderedGroupIds);
+  const bankSyncUserRef = useRef(null);
   const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
   useEffect(() => {
@@ -258,6 +265,11 @@ function QuizLibrary() {
     return () => window.clearTimeout(timer);
   }, [notice]);
   useEffect(() => {
+    const onSyncError = event => setNotice(event.detail?.message || '문제지를 서버에 동기화하지 못했어요.');
+    window.addEventListener('moonble:custom-bank-sync-error', onSyncError);
+    return () => window.removeEventListener('moonble:custom-bank-sync-error', onSyncError);
+  }, []);
+  useEffect(() => {
     if (!supabase) { window.location.replace(loginUrl()); return; }
     let alive = true;
     const accept = session => {
@@ -269,6 +281,16 @@ function QuizLibrary() {
       setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
       document.documentElement.removeAttribute('data-auth-pending');
+      if (bankSyncUserRef.current !== session.user.id) {
+        bankSyncUserRef.current = session.user.id;
+        syncCustomBankCollection(session.user.id).then(result => {
+          if (!alive) return;
+          setCollection(result.collection);
+          if (result.migrated > 0) setNotice(`${result.migrated}개 문제지를 계정에 저장했어요.`);
+        }).catch(() => {
+          if (alive) setNotice('문제지는 이 기기에 남아 있어요. 서버 연결을 확인하면 다시 동기화합니다.');
+        });
+      }
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) accept(session);
@@ -344,6 +366,59 @@ function QuizLibrary() {
       window.setTimeout(() => setFolderPulse(current => current === groupId ? null : current), 560);
     } catch (moveError) {
       setNotice(moveError.message || '문제지를 옮기지 못했어요.');
+    }
+  }
+  async function openShareDialog(paper) {
+    const bank = collection.banks.find(item => item.id === paper.customBankId);
+    if (!bank) return;
+    setOpenMenu(null);
+    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '' });
+    setShareBusy(true);
+    setShareError('');
+    setShareCopied(false);
+    try {
+      let token = getCachedQuizShareToken(user?.id, bank.id);
+      if (token) {
+        try { await getQuizShare(token); }
+        catch { clearCachedQuizShareToken(user?.id, bank.id); token = null; }
+      }
+      if (!token) token = await createQuizShare(user.id, bank);
+      setShareDialog({ bankId: bank.id, title: bank.title, token, url: quizShareUrl(token) });
+    } catch (shareFailure) {
+      setShareError(shareFailure.message || '공유 링크를 만들지 못했어요.');
+    } finally {
+      setShareBusy(false);
+    }
+  }
+  async function copyShareLink() {
+    if (!shareDialog?.url) return;
+    try {
+      await navigator.clipboard.writeText(shareDialog.url);
+    } catch {
+      const input = document.createElement('textarea');
+      input.value = shareDialog.url;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed'; input.style.opacity = '0';
+      document.body.appendChild(input); input.select();
+      const copied = document.execCommand('copy'); input.remove();
+      if (!copied) { setShareError('링크를 복사하지 못했어요. 주소를 길게 눌러 복사해주세요.'); return; }
+    }
+    setShareCopied(true);
+    window.setTimeout(() => setShareCopied(false), 1800);
+  }
+  async function stopShareLink() {
+    if (!shareDialog?.bankId) return;
+    setShareBusy(true);
+    setShareError('');
+    try {
+      await revokeQuizShare(shareDialog.bankId);
+      clearCachedQuizShareToken(user?.id, shareDialog.bankId);
+      setShareDialog(null);
+      setNotice('공유 링크를 중지했어요.');
+    } catch (shareFailure) {
+      setShareError(shareFailure.message || '공유 링크를 중지하지 못했어요.');
+    } finally {
+      setShareBusy(false);
     }
   }
   function beginPaperPress(event, bankId) {
@@ -654,7 +729,7 @@ function QuizLibrary() {
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label }); }}><Trash2 size={15} />삭제</button></div>}
+                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label }); }}><Trash2 size={15} />삭제</button></div>}
                 </>}
               </div>}
             </article>;
@@ -664,6 +739,7 @@ function QuizLibrary() {
       </main>}<SiteFooter />
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />
+    {shareDialog && <div className="quiz-manage-overlay quiz-share-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !shareBusy) setShareDialog(null); }}><section className="quiz-manage-dialog quiz-share-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-share-title"><header><h2 id="quiz-share-title">문제지 공유</h2><button type="button" aria-label="닫기" onClick={() => !shareBusy && setShareDialog(null)}><X size={19} /></button></header><p><strong>{shareDialog.title}</strong> 링크를 받은 사람은 로그인 없이 문제를 풀 수 있어요.</p>{shareBusy ? <div className="quiz-share-loading" role="status"><span className="quiz-share-spinner" aria-hidden="true" />공유 링크를 준비하고 있어요.</div> : shareDialog.url ? <><label className="quiz-share-link"><span>공유 링크</span><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요. 언제든 이 문제지의 공유 링크를 모두 중지할 수 있어요.</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}<footer>{shareDialog.url && <button className="quiz-share-revoke" type="button" disabled={shareBusy} onClick={stopShareLink}>공유 중지</button>}<button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url} onClick={copyShareLink}>{shareCopied ? <><Check size={16} />복사했어요</> : <><Copy size={16} />링크 복사</>}</button></footer></section></div>}
     {notice && <p className="quiz-library-notice" role="status">{notice}</p>}
   </div>;
 }
