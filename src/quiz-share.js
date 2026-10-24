@@ -55,7 +55,8 @@ export function quizShareUrl(token) {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{40,50}$/.test(token)) {
     throw new Error('공유 링크가 올바르지 않거나 만료됐어요.');
   }
-  return `https://share.moonble.com/${encodeURIComponent(token)}`;
+  // Kakao caches Open Graph cards by URL; version this preview so existing links refresh once.
+  return `https://share.moonble.com/${encodeURIComponent(token)}?preview=2`;
 }
 
 function requireSupabase() {

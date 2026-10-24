@@ -11,6 +11,15 @@ const env = {
   OG_IMAGE: 'https://moonble.com/assets/moonble-open-graph.png',
 };
 
+const paperSnapshot = {
+  title: '<SQL & 데이터베이스>',
+  description: '"상급" 문제 <20문항>',
+  questions: [{
+    q: '정규화의 목적은 무엇인가요?',
+    options: ['중복을 줄입니다', '처리를 늦춥니다', '인덱스를 삭제합니다'],
+  }],
+};
+
 test('human visitors are redirected to the app with the share token in the hash', async () => {
   const response = await worker.fetch(new Request(`https://share.moonble.com/${token}`, {
     headers: { 'user-agent': 'Mozilla/5.0' },
@@ -29,11 +38,7 @@ test('social crawlers receive escaped, problem-specific Open Graph metadata', as
     rpcUrl = String(input);
     rpcHeaders = new Headers(init.headers);
     rpcBody = JSON.parse(init.body);
-    return new Response(JSON.stringify({
-      title: '<SQL & 데이터베이스>',
-      description: '"상급" 문제 <20문항>',
-      questions: [],
-    }), { headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify(paperSnapshot), { headers: { 'content-type': 'application/json' } });
   };
 
   try {
@@ -46,11 +51,33 @@ test('social crawlers receive escaped, problem-specific Open Graph metadata', as
     assert.match(rpcUrl, /\/rest\/v1\/rpc\/moonble_get_quiz_share$/);
     assert.equal(rpcHeaders.get('apikey'), env.SUPABASE_PUBLISHABLE_KEY);
     assert.equal(rpcBody.p_token_hash, createHash('sha256').update(token).digest('hex'));
-    assert.match(html, /<title>&lt;SQL &amp; 데이터베이스&gt; · Moonble<\/title>/);
-    assert.match(html, /<meta property="og:title" content="&lt;SQL &amp; 데이터베이스&gt;">/);
+    assert.match(html, /<title>\[문블\] &lt;SQL &amp; 데이터베이스&gt; · Moonble<\/title>/);
+    assert.match(html, /<meta property="og:title" content="\[문블\] &lt;SQL &amp; 데이터베이스&gt;">/);
     assert.match(html, /<meta property="og:description" content="&quot;상급&quot; 문제 &lt;20문항&gt;">/);
-    assert.match(html, /<meta property="og:image" content="https:\/\/moonble\.com\/assets\/moonble-open-graph\.png">/);
+    assert.match(html, /<meta property="og:image" content="https:\/\/share\.moonble\.com\/[A-Za-z0-9_-]+\/thumbnail\.svg\?preview=2">/);
+    assert.match(html, /<meta property="og:image:type" content="image\/svg\+xml">/);
     assert.match(html, new RegExp(`<meta property="og:url" content="https://share\\.moonble\\.com/${token}">`));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('shared quiz thumbnail renders the saved paper preview as an accessible image', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify(paperSnapshot), {
+    headers: { 'content-type': 'application/json' },
+  });
+  try {
+    const response = await worker.fetch(new Request(`https://share.moonble.com/${token}/thumbnail.svg?preview=2`, {
+      headers: { 'user-agent': 'kakaotalk-scrap/1.0' },
+    }), env);
+    const svg = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /image\/svg\+xml/);
+    assert.match(svg, /\[문블\] &lt;SQL &amp; 데이터베이스&gt; 문제지 미리보기/);
+    assert.match(svg, /정규화의 목적은 무엇인가요\?/);
+    assert.match(svg, /중복을 줄입니다/);
+    assert.doesNotMatch(svg, /<script/i);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -77,7 +104,7 @@ test('invalid and revoked links are not exposed to the app or crawler', async ()
 
 test('HEAD crawler requests return metadata headers without an HTML body', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(JSON.stringify({ title: '테스트 문제지', description: '' }), {
+  globalThis.fetch = async () => new Response(JSON.stringify({ title: '테스트 문제지', description: '', questions: [] }), {
     headers: { 'content-type': 'application/json' },
   });
   try {
