@@ -4205,7 +4205,26 @@
   var scrollBounds = null;
   var scrollLockActive = false;
 
-  function openPopup(url) {
+  function getAiProvider() {
+    if (window.moonbleAiQuestionProvider === 'gemini' || window.moonbleAiQuestionProvider === 'chatgpt') {
+      return window.moonbleAiQuestionProvider;
+    }
+    try {
+      if (window.moonbleUserId) {
+        return localStorage.getItem('moonble:user:' + window.moonbleUserId + ':ai-question-provider') === 'gemini' ? 'gemini' : 'chatgpt';
+      }
+    } catch { /* 저장 설정이 없어도 기본 ChatGPT로 이어간다. */ }
+    return 'chatgpt';
+  }
+
+  function getAiUrl(prompt, provider) {
+    var query = encodeURIComponent(prompt);
+    return provider === 'gemini'
+      ? 'https://www.google.com/search?q=' + query + '&udm=50'
+      : 'https://chatgpt.com/?q=' + query;
+  }
+
+  function openPopup(url, provider) {
     var screenWidth = window.screen.availWidth || window.screen.width;
     var screenHeight = window.screen.availHeight || window.screen.height;
     var w = Math.min(480, Math.max(320, screenWidth - 32));
@@ -4214,7 +4233,7 @@
     var top = Math.max(0, Math.round((screenHeight - h) / 2));
     var popup = window.open(
       url,
-      'moonbleChatGPT',
+      provider === 'gemini' ? 'moonbleGemini' : 'moonbleChatGPT',
       'popup=yes,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',resizable=yes,scrollbars=yes'
     );
     if (!popup) {
@@ -4324,9 +4343,10 @@
       return;
     }
     var prompt = 'GA4/Firebase 학습 중 궁금한 점이 있습니다.\n\n질문: ' + query + '\n\n명확하고 간결하게 답변해주세요.';
-    var url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
+    var provider = getAiProvider();
+    var url = getAiUrl(prompt, provider);
     exitPickMode();
-    openPopup(url);
+    openPopup(url, provider);
     // 팝업을 연 뒤에 직접 blur시켜서 독킹 해제(원위치 복귀)를 여기서 확실히 트리거한다.
     // (아래 mousedown/touchstart에서 버튼 탭으로 인한 blur를 막아뒀기 때문에 필요)
     if (heroPromptInput) heroPromptInput.blur();
@@ -4596,32 +4616,39 @@
       .map(function (t, i) { return (i + 1) + '. ' + t; })
       .join('\n');
     var hintOnly = hintOnlyCheck.checked;
+    var provider = getAiProvider();
     var CANVAS_RULES = '필수 조건)\n'
       + '1. 답변을 시작하기 전에 반드시 캔버스(글쓰기) 도구부터 열어주세요.\n'
       + '2. 캔버스에 아래 문제와 선택지를 그대로 옮겨 적어주세요.\n'
       + '3. 문항을 캔버스에 다 옮기기 전까지는 채팅창에 어떤 답변도 작성하지 마세요.\n';
-    var prompt = hintOnly
-      ? CANVAS_RULES
-        + '4. 문항을 캔버스에 옮긴 다음, 채팅창에서 이어서 힌트를 답변해주세요.\n\n'
-        + '다음은 GA4/Firebase 관련 객관식 문제입니다. 정답을 바로 알려주지 말고, 제가 스스로 풀 수 있도록 힌트만 주세요.\n\n'
-        + '문제: ' + questionText + '\n'
-        + (isMulti ? '(복수 선택 문제입니다)' : '(단일 선택 문제입니다)') + '\n'
-        + '선택지:\n' + optionsList + '\n\n'
-        + '정답은 공개하지 말고, 생각하는 방향을 잡아줄 수 있는 힌트만 알려주세요.'
-      : CANVAS_RULES
-        + '4. 문항을 캔버스에 옮긴 다음, 채팅창에서 이어서 해설을 답변해주세요.\n\n'
-        + '다음은 GA4/Firebase 관련 객관식 문제입니다. 정답과 그 이유를 명확하고 간결하게 설명해주세요.\n\n'
-        + '문제: ' + questionText + '\n'
-        + (isMulti ? '(복수 선택 문제입니다)' : '(단일 선택 문제입니다)') + '\n'
-        + '선택지:\n' + optionsList + '\n\n'
-        + '명쾌한 모범답변을 알려주세요.';
+    var questionContext = '문제: ' + questionText + '\n'
+      + (isMulti ? '(복수 선택 문제입니다)' : '(단일 선택 문제입니다)') + '\n'
+      + '선택지:\n' + optionsList;
+    var prompt;
+    if (provider === 'gemini') {
+      prompt = hintOnly
+        ? '다음 GA4/Firebase 객관식 문제를 풀 수 있도록 정답을 공개하지 말고, 사고 방향을 잡아주는 힌트만 한국어로 알려주세요.\n\n' + questionContext
+        : '다음 GA4/Firebase 객관식 문제의 정답과 판단 근거를 한국어로 명확하고 간결하게 설명해주세요.\n\n' + questionContext;
+    } else {
+      prompt = hintOnly
+        ? CANVAS_RULES
+          + '4. 문항을 캔버스에 옮긴 다음, 채팅창에서 이어서 힌트를 답변해주세요.\n\n'
+          + '다음은 GA4/Firebase 관련 객관식 문제입니다. 정답을 바로 알려주지 말고, 제가 스스로 풀 수 있도록 힌트만 주세요.\n\n'
+          + questionContext + '\n\n'
+          + '정답은 공개하지 말고, 생각하는 방향을 잡아줄 수 있는 힌트만 알려주세요.'
+        : CANVAS_RULES
+          + '4. 문항을 캔버스에 옮긴 다음, 채팅창에서 이어서 해설을 답변해주세요.\n\n'
+          + '다음은 GA4/Firebase 관련 객관식 문제입니다. 정답과 그 이유를 명확하고 간결하게 설명해주세요.\n\n'
+          + questionContext + '\n\n'
+          + '명쾌한 모범답변을 알려주세요.';
+    }
     var userQuery = askInput.value.trim();
     if (userQuery) {
       prompt += '\n\n사용자 질문: ' + userQuery;
     }
-    var url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
+    var url = getAiUrl(prompt, provider);
     exitPickMode();
-    openPopup(url);
+    openPopup(url, provider);
   });
 })();
 </script>
@@ -5507,12 +5534,47 @@ if (shareToken || requestedPaper === 'shared') {
 
       const fill = track.querySelector(':scope > span');
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const headerMount = document.getElementById('moonble-app-header');
       let frame = 0;
       let reachedEnd = false;
       let tickTimer;
+      let headerFrame = 0;
+      let headerFollowUntil = 0;
+
+      function syncProgressTop() {
+        const header = document.querySelector('.mb-app-header.mb-solver-sidebar');
+        let top = 0;
+        if (window.matchMedia('(max-width: 767px)').matches && header && header.isConnected && !header.hidden) {
+          top = Math.max(0, Math.min(window.innerHeight, header.getBoundingClientRect().bottom));
+        }
+        track.style.setProperty('--quiz-progress-top', `${top}px`);
+      }
+
+      function followHeaderPosition() {
+        headerFollowUntil = performance.now() + 280;
+        if (headerFrame) return;
+        const step = () => {
+          syncProgressTop();
+          if (performance.now() < headerFollowUntil) {
+            headerFrame = requestAnimationFrame(step);
+          } else {
+            headerFrame = 0;
+          }
+        };
+        headerFrame = requestAnimationFrame(step);
+      }
+
+      const headerObserver = new MutationObserver(followHeaderPosition);
+      headerObserver.observe(headerMount || document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'hidden'],
+      });
 
       function updateProgress() {
         frame = 0;
+        syncProgressTop();
         const hasQuestions = quiz.querySelector('.q-card');
         track.hidden = !hasQuestions;
         if (!hasQuestions) return;
@@ -5543,6 +5605,7 @@ if (shareToken || requestedPaper === 'shared') {
       window.addEventListener('scroll', scheduleProgress, { passive: true });
       window.addEventListener('resize', scheduleProgress, { passive: true });
       new MutationObserver(scheduleProgress).observe(quiz, { childList: true, subtree: true });
+      followHeaderPosition();
       scheduleProgress();
     })();
   </script>

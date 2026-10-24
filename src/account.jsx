@@ -7,8 +7,23 @@ import { AppHeader } from './app-header.jsx';
 let leavingHome = false;
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+
+function syncAiQuestionProvider(user) {
+  const saved = user?.user_metadata?.aiQuestionProvider;
+  if (saved === 'chatgpt' || saved === 'gemini') {
+    window.moonbleAiQuestionProvider = saved;
+    return;
+  }
+  try {
+    window.moonbleAiQuestionProvider = localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'gemini' ? 'gemini' : 'chatgpt';
+  } catch {
+    window.moonbleAiQuestionProvider = 'chatgpt';
+  }
+}
+
 if (initialUser) {
   window.moonbleUserId = initialUser.id;
+  syncAiQuestionProvider(initialUser);
   document.documentElement.removeAttribute('data-auth-pending');
 }
 
@@ -37,6 +52,7 @@ function Account() {
         return;
       }
       window.moonbleUserId = session.user.id;
+      syncAiQuestionProvider(session.user);
       setUser(session.user);
       setChecking(false);
       document.documentElement.removeAttribute('data-auth-pending');

@@ -7,6 +7,7 @@ import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
+import { SegmentedControl } from './segmented-control.jsx';
 import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
@@ -24,6 +25,72 @@ function localDataKeys(userId) {
 function clearLocalUserData(userId) {
   localDataKeys(userId).forEach(key => localStorage.removeItem(key));
   sessionStorage.removeItem('moonble:retry-question-ids');
+}
+
+const aiProviderOptions = [
+  { value: 'chatgpt', label: 'ChatGPT' },
+  { value: 'gemini', label: 'Gemini' },
+];
+
+function getAiQuestionProvider(user) {
+  const saved = user?.user_metadata?.aiQuestionProvider;
+  if (saved === 'chatgpt' || saved === 'gemini') return saved;
+  try {
+    return localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'gemini' ? 'gemini' : 'chatgpt';
+  } catch {
+    return 'chatgpt';
+  }
+}
+
+function AiQuestionPreference({ user, onUserUpdated }) {
+  const [provider, setProvider] = useState(() => getAiQuestionProvider(user));
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setProvider(getAiQuestionProvider(user));
+    setMessage('');
+    setError('');
+  }, [user.id, user.user_metadata?.aiQuestionProvider]);
+
+  async function saveProvider(nextProvider) {
+    if (pending || nextProvider === provider) return;
+    const previousProvider = provider;
+    setProvider(nextProvider);
+    setPending(true);
+    setMessage('');
+    setError('');
+    try {
+      const { data, error: updateError } = await supabase.auth.updateUser({
+        data: { ...(user.user_metadata || {}), aiQuestionProvider: nextProvider },
+      });
+      if (updateError) throw updateError;
+      try { localStorage.setItem(`moonble:user:${user.id}:ai-question-provider`, nextProvider); } catch { /* 계정 메타데이터에 저장되어 다른 기기에서도 사용할 수 있다. */ }
+      window.moonbleAiQuestionProvider = nextProvider;
+      onUserUpdated(data.user);
+      setMessage(`${nextProvider === 'gemini' ? 'Gemini' : 'ChatGPT'}를 기본 AI로 저장했어요.`);
+    } catch {
+      setProvider(previousProvider);
+      setError('설정을 저장하지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <section className="account-ai-preference" aria-labelledby="account-ai-preference-title">
+    <h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2>
+    <SegmentedControl
+      ariaLabel="AI에게 물어보기 기본 서비스"
+      className="account-ai-provider"
+      items={aiProviderOptions}
+      value={provider}
+      onChange={saveProvider}
+    />
+    {pending && <p role="status">저장 중…</p>}
+    {message && <p role="status">{message}</p>}
+    {error && <p role="alert">{error}</p>}
+  </section>;
 }
 
 function AccountDeletion({ user }) {
@@ -129,6 +196,7 @@ function AccountPage() {
         <div><strong>{profile.name}</strong><p>{profile.companyName}</p><small>{user.email}</small></div>
       </section>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
+      <AiQuestionPreference user={user} onUserUpdated={setUser} />
       <section className="profile-card account-mobile-session">
         <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}
