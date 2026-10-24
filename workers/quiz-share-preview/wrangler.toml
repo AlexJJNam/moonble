@@ -1,4 +1,4 @@
-name = "moonble-quiz-share-preview"
+name = "moonble-quiz-share-preview-v2"
 main = "worker.js"
 compatibility_date = "2026-10-24"
 workers_dev = false

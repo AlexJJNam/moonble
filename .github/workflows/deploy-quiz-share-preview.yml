@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: moonble-quiz-share-preview
+  group: moonble-quiz-share-preview-v2
   cancel-in-progress: false
 jobs:
   deploy:
