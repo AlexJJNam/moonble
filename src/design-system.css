@@ -7,6 +7,7 @@
   --mb-font-13: .8125rem;
   --mb-font-14: .875rem;
   --mb-font-16: 1rem;
+  --mb-font-17: 1.0625rem;
   --mb-font-18: 1.125rem;
   --mb-font-22: 1.375rem;
   --mb-font-24: 1.5rem;
@@ -57,6 +58,15 @@
   --mb-duration: 160ms;
   --mb-control-height: 48px;
   --mb-target-size: 44px;
+  /* Pocketfolio mobile hierarchy; preserve layout and compact list roles. */
+  --mb-mobile-page-size: var(--mb-font-24);
+  --mb-mobile-page-line: 32px;
+  --mb-mobile-section-size: var(--mb-font-17);
+  --mb-mobile-section-line: 24px;
+  --mb-mobile-dialog-size: var(--mb-font-18);
+  --mb-mobile-dialog-line: 26px;
+  --mb-mobile-action-size: var(--mb-font-16);
+  --mb-mobile-action-line: 24px;
   --mb-page-pad-top: 28px;
   --mb-page-pad-bottom: 56px;
   --mb-page-pad-inline: 32px;
@@ -227,7 +237,6 @@ button, input, textarea, select {
     --mb-page-pad-inline: 16px;
   }
   .mb-display { font-size: var(--mb-font-28); line-height: 1.285714; }
-  .mb-page-title { font-size: var(--mb-font-24); line-height: 1.333333; }
 }
 
 @media (min-width: 641px) and (max-width: 1199px) {
@@ -238,6 +247,9 @@ button, input, textarea, select {
 }
 
 @media (max-width: 767px) {
+  :root { --mb-font-20: 1.25rem; }
+  .mb-page-title { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); }
+  .mb-section-title { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); font-weight: var(--mb-weight-bold); }
   input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
   textarea,
   select { font-size: var(--mb-font-16) !important; }

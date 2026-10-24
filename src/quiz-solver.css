@@ -39,9 +39,11 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .btn { min-height: 44px; font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
 .quiz-actions .btn { min-height: 48px; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; border-radius: 12px; }
 html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
+@media (max-width: 767px) {
+  .section-head h2 { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); }
+}
 @media (max-width: 640px) {
   :root { --text-2xl: var(--mb-font-28); }
-  .section-head h2 { font-size: var(--mb-font-24); line-height: 32px; }
   .quiz-wrap { gap: 16px; margin-top: 24px; }
   .q-card { padding: 16px; scroll-margin-top: 140px; }
   .quiz-actions { gap: 8px; }

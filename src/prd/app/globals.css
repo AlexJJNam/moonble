@@ -329,13 +329,35 @@
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
 @media (max-width: 767px) {
   .prd-list-heading h1 {
-    font-size: var(--mb-font-22);
-    line-height: 30px;
+    font-size: var(--mb-mobile-page-size);
+    line-height: var(--mb-mobile-page-line);
+    font-weight: 700;
     letter-spacing: -.025em;
   }
 
   .prd-list-heading p {
+    font-size: var(--mb-font-13);
     line-height: 20px;
+  }
+
+  .prd-empty-state h2,
+  .prd-action-dialog > div > h2[id] {
+    font-size: var(--mb-mobile-dialog-size);
+    line-height: var(--mb-mobile-dialog-line);
+    font-weight: 700;
+  }
+
+  .prd-empty-state p,
+  .prd-action-dialog > div > p[id] {
+    font-size: var(--mb-font-13);
+    line-height: 20px;
+  }
+
+  .prd-empty-state button,
+  .prd-action-dialog > .flex-col-reverse > button {
+    font-size: var(--mb-mobile-action-size);
+    line-height: var(--mb-mobile-action-line);
+    font-weight: 600;
   }
 
   .prd-document-card {
