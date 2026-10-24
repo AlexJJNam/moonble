@@ -49,6 +49,10 @@ function formatDate(value) {
   }).format(date);
 }
 
+function formatSummaryRelativeDate(value) {
+  return formatRelativeDate(value).replace(/^\d{2}(\d{2}\.\d{2}\.\d{2})$/, '$1');
+}
+
 function formatShortDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
@@ -447,7 +451,7 @@ export function QuizAchievement({ userId }) {
       latest: scores[0],
       average: Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length),
       best: Math.max(...scores),
-      latestDate: formatRelativeDate(filteredHistory[0].date),
+      latestDate: formatSummaryRelativeDate(filteredHistory[0].date),
     };
   }, [filteredHistory]);
 
