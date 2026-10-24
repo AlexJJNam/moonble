@@ -89,7 +89,6 @@ function AiQuestionPreference({ user, onUserUpdated }) {
         onClick={() => saveProvider(option.value)}
       >{provider === option.value && <svg aria-hidden="true" className="account-ai-provider-check" viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" /><path d="M13.5 24.8l7 7L35 17.5" /></svg>}{option.label}</button>)}
     </div>
-    {pending && <p role="status">저장 중…</p>}
     {message && <p role="status">{message}</p>}
     {error && <p role="alert">{error}</p>}
   </section>;
