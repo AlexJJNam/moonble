@@ -69,6 +69,7 @@ import { supabase } from './supabase.js';
     return {
       id: group.id,
       name: group.name,
+      color_key: group.colorKey || null,
       sort_order: sortOrder,
       created_at: group.createdAt || new Date().toISOString(),
       updated_at: group.updatedAt || group.createdAt || new Date().toISOString()
@@ -98,6 +99,14 @@ import { supabase } from './supabase.js';
       p_deleted_bank_ids: deletedBankIds || []
     });
     if (result.error) throw result.error;
+    for (var group of groups) {
+      if (!group.color_key) continue;
+      var colorResult = await supabase.rpc('moonble_set_quiz_group_color', {
+        p_group_id: group.id,
+        p_color_key: group.color_key
+      });
+      if (colorResult.error) throw colorResult.error;
+    }
   }
   function queueRemoteCollectionWrite(before, next, userId) {
     if (!supabase || !userId) return;
@@ -131,7 +140,7 @@ import { supabase } from './supabase.js';
     var mergedGroups = [];
     var seenGroupIds = new Set();
     remoteGroupRecords.filter(function (row) { return !row.deleted_at; }).forEach(function (row) {
-      var remote = { id: row.id, name: row.name, createdAt: row.created_at, updatedAt: row.updated_at };
+      var remote = { id: row.id, name: row.name, colorKey: row.color_key || undefined, createdAt: row.created_at, updatedAt: row.updated_at };
       var localGroup = localGroups.get(row.id);
       var chosen = localGroup && new Date(localGroup.updatedAt || localGroup.createdAt || 0) > new Date(row.updated_at || row.created_at || 0) ? localGroup : remote;
       mergedGroups.push(chosen);
@@ -183,7 +192,7 @@ import { supabase } from './supabase.js';
     var pendingWrite = remoteWriteQueues.get(id);
     if (pendingWrite) await pendingWrite.catch(function () {});
     var results = await Promise.all([
-      supabase.from('quiz_groups').select('id,owner_id,name,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
+      supabase.from('quiz_groups').select('id,owner_id,name,color_key,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
       supabase.from('quiz_banks').select('id,owner_id,group_id,title,description,source,questions,sort_order,saved_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true })
     ]);
     if (results[0].error) throw results[0].error;
@@ -308,26 +317,26 @@ import { supabase } from './supabase.js';
       writeCollection(collection, userId);
     } catch (e) { throw new Error(e.message === '로그인 상태를 확인해주세요.' ? e.message : '문제지를 삭제하지 못했습니다.'); }
   }
-  export function createCustomGroup(name, userId) {
+  export function createCustomGroup(name, userId, colorKey) {
     try {
       var collection = readCollection(userId);
       var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
-      var group = { id: makeId('group'), name: cleanName, createdAt: new Date().toISOString() };
+      var group = { id: makeId('group'), name: cleanName, colorKey: colorKey || 'blue', createdAt: new Date().toISOString() };
       collection.groups.push(group);
       writeCollection(collection, userId);
       return group;
     } catch (e) { throw new Error(e.message || '그룹을 만들지 못했습니다.'); }
   }
-  export function updateCustomGroup(groupId, name, userId) {
+  export function updateCustomGroup(groupId, name, userId, colorKey) {
     try {
       var collection = readCollection(userId);
       var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.id !== groupId && group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
       if (!collection.groups.some(group => group.id === groupId)) throw new Error('그룹을 찾지 못했습니다.');
-      collection.groups = collection.groups.map(group => group.id === groupId ? { ...group, name: cleanName, updatedAt: new Date().toISOString() } : group);
+      collection.groups = collection.groups.map(group => group.id === groupId ? { ...group, name: cleanName, colorKey: colorKey || group.colorKey || 'blue', updatedAt: new Date().toISOString() } : group);
       writeCollection(collection, userId);
       return collection.groups.find(group => group.id === groupId);
     } catch (e) { throw new Error(e.message || '그룹 이름을 바꾸지 못했습니다.'); }

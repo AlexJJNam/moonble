@@ -90,6 +90,7 @@
 - [x] `src/quiz-library.jsx`: 문제지 메뉴에서 공유 링크 발급·복사·중지
 - [x] `solve.html`: 공유 링크를 연 비로그인 사용자가 문제를 풀 수 있는 화면 경로
 - [x] `database/003_quiz_banks_and_shares.sql` Supabase 적용 완료 (2026-10-24, 사용자 확인)
+- [ ] `database/004_quiz_group_colors.sql` 그룹 색상 선택 컬럼·RPC 적용
 - [ ] 계정 2개와 비로그인 브라우저로 권한·CRUD·공유 중지 검증
 - [ ] 검증 완료 후 운영 배포
 

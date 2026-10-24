@@ -42,15 +42,38 @@ const sampleIsVisible = userId => {
   try { return !userId || localStorage.getItem(sampleVisibilityKey(userId)) !== 'true'; }
   catch { return true; }
 };
+const GROUP_COLOR_OPTIONS = [
+  { key: 'blue', label: '파랑', hue: 212, swatch: '#3182f6' },
+  { key: 'cyan', label: '하늘', hue: 190, swatch: '#14a8c7' },
+  { key: 'green', label: '초록', hue: 145, swatch: '#20a36a' },
+  { key: 'lime', label: '연두', hue: 92, swatch: '#76a923' },
+  { key: 'orange', label: '주황', hue: 28, swatch: '#e98a25' },
+  { key: 'pink', label: '분홍', hue: 338, swatch: '#d95782' },
+  { key: 'purple', label: '보라', hue: 267, swatch: '#8055c9' },
+  { key: 'slate', label: '회색', hue: 215, swatch: '#7b8798' },
+];
+function legacyGroupHue(groupId) {
+  let hash = 2166136261;
+  for (const character of groupId) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  return (hash >>> 0) % 360;
+}
+function defaultGroupColorKey(groupId) {
+  const hue = legacyGroupHue(groupId);
+  return GROUP_COLOR_OPTIONS.reduce((closest, option) => {
+    const distance = Math.abs(((hue - option.hue + 540) % 360) - 180);
+    return !closest || distance < closest.distance ? { key: option.key, distance } : closest;
+  }, null)?.key || 'blue';
+}
 function buildGroupColorMap(groups) {
   const usedHues = new Set();
   const colors = new Map();
   [...groups].sort((a, b) => a.id.localeCompare(b.id)).forEach(group => {
-    let hash = 2166136261;
-    for (const character of group.id) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
-    let hue = (hash >>> 0) % 360;
-    while (usedHues.has(hue)) hue = (hue + 37) % 360;
-    usedHues.add(hue);
+    const selected = GROUP_COLOR_OPTIONS.find(option => option.key === group.colorKey);
+    let hue = selected?.hue ?? legacyGroupHue(group.id);
+    if (!selected) {
+      while (usedHues.has(hue)) hue = (hue + 37) % 360;
+      usedHues.add(hue);
+    }
     colors.set(group.id, {
       '--paper-group-tint': `hsl(${hue} 72% 95%)`,
       '--paper-group-color': `hsl(${hue} 48% 36%)`,
@@ -114,7 +137,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isBank = editor.type.startsWith('bank-');
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
-  const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 이름 바꾸기' : '그룹을 삭제할까요?';
+  const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className="quiz-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
       <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
@@ -125,7 +148,12 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
         <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
         <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
         <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
-      </div> : <div className="quiz-manage-fields"><label><span>그룹 이름</span><input autoFocus type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label></div>}
+      </div> : <div className="quiz-manage-fields">
+        <label><span>그룹 이름</span><input autoFocus type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label>
+        <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="radiogroup" aria-label="그룹 색상">
+          {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" role="radio" aria-checked={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch }} onClick={() => onChange({ ...editor, colorKey: option.key })}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
+        </div></fieldset>
+      </div>}
       {editor.error && <p className="quiz-manage-error" role="alert">{editor.error}</p>}
       <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={!isDelete && !(isBank ? editor.title.trim() : editor.name.trim())}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
     </form>
@@ -324,12 +352,12 @@ function QuizLibrary() {
         setSampleVisible(false);
         setNotice('샘플 문제지를 삭제했어요.');
       } else if (editor.type === 'group-create') {
-        const group = createCustomGroup(editor.name);
+        const group = createCustomGroup(editor.name, undefined, editor.colorKey);
         setActiveGroup(group.id);
         setNotice('새 그룹을 만들었어요.');
       } else if (editor.type === 'group-edit') {
-        updateCustomGroup(editor.groupId, editor.name);
-        setNotice('그룹 이름을 바꿨어요.');
+        updateCustomGroup(editor.groupId, editor.name, undefined, editor.colorKey);
+        setNotice('그룹 정보를 저장했어요.');
       } else if (editor.type === 'group-delete') {
         deleteCustomGroup(editor.groupId);
         if (activeGroup === editor.groupId) setActiveGroup(DEFAULT_GROUP_ID);
@@ -664,10 +692,10 @@ function QuizLibrary() {
             <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
             {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
               <strong>그룹 편집</strong>
-              {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 이름 바꾸기`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+              {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
             </span>}
           </span>}
-          <button className="paper-group-add" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '' }); }}><FolderPlus size={16} />그룹 추가</button>
+          <button className="paper-group-add" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: 'blue' }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
