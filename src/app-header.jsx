@@ -519,7 +519,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
         {user && <button className="mb-notification-toggle mb-notification-toggle--desktop" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
-          <Bell size={19} aria-hidden="true" />
+          <Bell size={16} aria-hidden="true" />
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
         </button>}
       </div>
