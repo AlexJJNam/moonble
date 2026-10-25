@@ -1984,14 +1984,6 @@
       color: #818a96;
     }
 
-    .fab.is-pen-disabled .fab-badge {
-      color: #818a96;
-      background: #f1f2f4;
-      border-color: #e1e4e8;
-      box-shadow: none;
-      animation: none;
-    }
-
     .fab-link {
       position: relative;
       z-index: 1;
@@ -2008,52 +2000,7 @@
       color: #fff;
     }
 
-    .fab-badge {
-      position: absolute;
-      left: 50%;
-      top: -10px;
-      transform: translate(-50%, -100%);
-      padding: var(--sp-1-5) var(--sp-3);
-      font-size: var(--text-xs);
-      font-weight: 700;
-      color: var(--text);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      white-space: nowrap;
-      box-shadow: var(--shadow);
-      animation: bob 2.6s ease-in-out infinite;
-    }
-
-    .fab-badge::before,
-    .fab-badge::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-    }
-
-    .fab-badge::before {
-      bottom: -7px;
-      border-top: 7px solid var(--border);
-    }
-
-    .fab-badge::after {
-      bottom: -5px;
-      border-top: 6px solid var(--card);
-    }
-
-    @keyframes bob {
-      0%, 100% { transform: translate(-50%, -100%) translateY(0); }
-      50% { transform: translate(-50%, -100%) translateY(-5px); }
-    }
-
     @media (prefers-reduced-motion: reduce) {
-      .fab-badge { animation: none; }
       .fab { transition: none; }
     }
 
@@ -2065,7 +2012,6 @@
         height: 48px;
       }
       .fab-icon { width: 21px; height: 21px; }
-      .fab-badge { display: none; }
     }
 
     /* === HEADER – responsive nav === */
@@ -4315,7 +4261,6 @@
     title="AI에게 문제 질문하기">
     <span class="fab-link">
       <svg class="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
-      <span class="fab-badge">AI한테 물어보기</span>
     </span>
   </button>
   <div id="aiPickOverlay" class="ai-pick-overlay" aria-hidden="true"></div>
