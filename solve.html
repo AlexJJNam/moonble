@@ -6497,11 +6497,13 @@ if (shareToken || requestedPaper === 'shared') {
 
       function completeActiveStroke() {
         if (!activeStroke) return;
+        const completedStroke = activeStroke;
         rebuildCompletedLayer();
         // The live outline trails the pointer slightly (last:false). Recompute it at the real endpoint.
-        activeStroke.outline = null;
-        drawStroke(completedContext, activeStroke, window.scrollY, false);
+        completedStroke.outline = null;
+        drawStroke(completedContext, completedStroke, window.scrollY, false);
         activeStroke = null;
+        if (recognizePenCheckboxMark(completedStroke)) return;
         syncInkHistoryControls();
       }
 
@@ -6790,6 +6792,66 @@ if (shareToken || requestedPaper === 'shared') {
         if (!(hit instanceof Element)) return null;
         const tick = hit.closest('.option-card .tick');
         return tick?.closest('.option-card') || null;
+      }
+
+      function recognizePenCheckboxMark(stroke) {
+        if (!stroke || stroke.tool !== 'pen' || stroke.points.length < 3 || quiz.classList.contains('quiz-locked')) return false;
+        const points = stroke.points;
+        const first = points[0];
+        const last = points[points.length - 1];
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        let lowPoint = first;
+        let lowIndex = 0;
+        let pathLength = 0;
+        for (let index = 0; index < points.length; index += 1) {
+          const point = points[index];
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+          minY = Math.min(minY, point.y);
+          maxY = Math.max(maxY, point.y);
+          if (point.y > lowPoint.y) {
+            lowPoint = point;
+            lowIndex = index;
+          }
+          if (index > 0) pathLength += Math.hypot(point.x - points[index - 1].x, point.y - points[index - 1].y);
+        }
+
+        // A handwritten check has a short downstroke followed by a longer rising stroke.
+        if (pathLength < 12 || pathLength > 110 || maxX - minX < 9 || maxX - minX > 64
+          || maxY - minY < 3 || maxY - minY > 56 || last.x < first.x + 5
+          || lowIndex <= 0 || lowIndex >= points.length - 1
+          || lowPoint.y - first.y < 2.5 || lowPoint.y - last.y < 2.5) return false;
+
+        let matchedOption = null;
+        for (const tick of quiz.querySelectorAll('.option-card .tick')) {
+          const rect = tick.getBoundingClientRect();
+          const bounds = {
+            left: rect.left - 12,
+            right: rect.right + 12,
+            top: rect.top + window.scrollY - 12,
+            bottom: rect.bottom + window.scrollY + 12,
+          };
+          const insideCount = points.reduce((count, point) => count + (
+            point.x >= bounds.left && point.x <= bounds.right
+            && point.y >= bounds.top && point.y <= bounds.bottom ? 1 : 0
+          ), 0);
+          if (insideCount / points.length >= 0.55) {
+            matchedOption = tick.closest('.option-card');
+            break;
+          }
+        }
+        if (!matchedOption) return false;
+
+        if (!matchedOption.classList.contains('selected')) matchedOption.click();
+        const strokeIndex = strokes.lastIndexOf(stroke);
+        if (strokeIndex >= 0) strokes.splice(strokeIndex, 1);
+        completedLayerDirty = true;
+        syncInkHistoryControls();
+        scheduleRedraw();
+        return true;
       }
 
       function clearInkCheckMark(optionCard) {
