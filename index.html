@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="ko" data-auth-pending>
   <head>
+    <script>
+      try {
+        if (performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+          document.documentElement.setAttribute('data-hard-reload', '');
+        }
+      } catch {}
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/moonble-app-icon-180.png" />
@@ -33,7 +40,9 @@
     <meta name="twitter:description" content="문제지 등록부터 풀이, 채점, 실력 기록, PRD 작성까지 한곳에서 이어가는 개인 학습·기획 워크스페이스입니다." />
     <meta name="twitter:image" content="https://moonble.com/assets/moonble-open-graph.png" />
     <style>
-      html[data-auth-pending] #root { visibility: hidden; }
+      html[data-hard-reload][data-auth-pending] #root { visibility: hidden; }
+      #moonble-entry-skeleton { display: none; }
+      html[data-hard-reload][data-auth-pending] #moonble-entry-skeleton { display: block; }
       html:not([data-auth-pending]) #moonble-entry-skeleton { display: none; }
       #moonble-entry-skeleton, #moonble-entry-skeleton * { box-sizing: border-box; }
       .entry-skeleton-nav i, .entry-skeleton-actions i, .entry-skeleton-header>i, .entry-skeleton-copy>i, .entry-skeleton-paper i { display: block; }

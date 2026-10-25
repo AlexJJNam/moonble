@@ -38,6 +38,10 @@ const viewSegments = [
 ];
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
+const quizPageHardReload = (() => {
+  try { return performance.getEntriesByType('navigation')[0]?.type === 'reload'; }
+  catch { return false; }
+})();
 const sampleVisibilityKey = userId => `moonble:user:${userId}:sample-paper-hidden-v1`;
 const sampleIsVisible = userId => {
   try { return !userId || localStorage.getItem(sampleVisibilityKey(userId)) !== 'true'; }
@@ -183,7 +187,7 @@ function QuizLibrarySkeleton({ view }) {
 
 function QuizLibrary() {
   const [user, setUser] = useState(initialUser);
-  const [collectionReady, setCollectionReady] = useState(Boolean(initialUser));
+  const [collectionReady, setCollectionReady] = useState(Boolean(initialUser) && !quizPageHardReload);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -696,7 +700,7 @@ function QuizLibrary() {
     setEditMode(false);
     setOpenMenu(null);
   }
-  if (!user || !collectionReady) return <QuizLibrarySkeleton view={view} />;
+  if (!user || !collectionReady) return quizPageHardReload ? <QuizLibrarySkeleton view={view} /> : null;
   const customPapers = collection.banks.map(bank => ({
     id: `custom:${bank.id}`,
     customBankId: bank.id,

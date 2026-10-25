@@ -59,6 +59,18 @@ const examplePrompts = [
   '데이터베이스 정규화와 트랜잭션을 비교하는 고난도 문제를 만들어줘.',
   '웹 접근성 지침을 실제 화면 검수 상황에 적용하는 문제를 만들어줘.',
 ];
+const exampleGuideDetails = [
+  { topic: '정보처리기사 필기', level: '상급', scope: '데이터베이스와 SQL 중심' },
+  { topic: 'GA4 전자상거래 이벤트', level: '중급', scope: '실무 사례 중심' },
+  { topic: '신입 서비스 기획자 데이터 분석', level: '기본', scope: '주요 분석 지표' },
+  { topic: 'SQL 조인과 서브쿼리', level: '상급', scope: '두 개념의 차이와 활용' },
+  { topic: 'UX 리서치 방법론', level: '실무 적용', scope: '실제 프로젝트 상황' },
+  { topic: '컴퓨터활용능력 시험', level: '중급', scope: '엑셀 함수' },
+  { topic: '네트워크 보안', level: '사례형', scope: '핵심 보안 개념' },
+  { topic: '프로덕트 매니저 면접', level: '면접 대비', scope: '주요 지표와 실험 설계' },
+  { topic: '데이터베이스 정규화와 트랜잭션', level: '고난도', scope: '두 개념 비교' },
+  { topic: '웹 접근성 지침', level: '실무 적용', scope: '화면 검수 상황' },
+];
 const providerSegments = [
   { value: 'chatgpt', label: 'ChatGPT' },
   { value: 'gemini', label: 'Gemini' },
@@ -135,6 +147,7 @@ export function QuizCreator({ custom, onChange }) {
   const displayBank = resultBank || custom;
   const preview = useMemo(() => displayBank?.questions?.slice(0, 8) || [], [displayBank]);
   const examplePrompt = examplePrompts[exampleIndex];
+  const exampleGuide = exampleGuideDetails[exampleIndex];
 
   useEffect(() => {
     if (resultBank && custom?.id !== resultBank.id) return;
@@ -399,9 +412,9 @@ export function QuizCreator({ custom, onChange }) {
         <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
         <div className="creator-prompt-guide-panel">
           <strong>이렇게 적어보세요</strong>
-          <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> 정보처리기사 필기</span></p>
-          <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> 바로 시험을 볼 수 있는 상급</span></p>
-          <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> 데이터베이스와 SQL 중심</span></p>
+          <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> {exampleGuide.topic}</span></p>
+          <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> {exampleGuide.level}</span></p>
+          <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> {exampleGuide.scope}</span></p>
           <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
             <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}</span>
             {!exampleRevealed

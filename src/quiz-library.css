@@ -256,14 +256,14 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-prompt-guide-panel p b { margin-right: 5px; color: var(--mb-text-primary); font-weight: 650; }
 .creator-prompt-example { position: relative; min-height: 58px; margin-top: 12px; overflow: hidden; border-radius: 10px; background: #e8f3ff; }
 .creator-example-line { display: block; min-height: 58px; padding: 11px 12px; color: var(--mb-text-primary); font-size: var(--mb-font-12); line-height: 18px; }
-.creator-prompt-example q { display: inline; color: var(--mb-text-primary); font-size: inherit; line-height: inherit; quotes: none; filter: blur(4px); opacity: .72; user-select: none; }
+.creator-prompt-example q { display: inline; color: var(--mb-text-primary); font-size: inherit; line-height: inherit; quotes: none; opacity: 0; user-select: none; }
 .creator-prompt-example q span { display: inline-block; }
 .creator-prompt-example>button { border: 0; cursor: pointer; }
-.creator-prompt-example>.creator-example-reveal { position: absolute; inset: 0; width: 100%; border: 0; color: var(--mb-primary-strong); background: rgb(232 243 255 / 12%); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); font-size: var(--mb-font-13); font-weight: 700; cursor: pointer; }
+.creator-prompt-example>.creator-example-reveal { position: absolute; inset: 0; width: 100%; border: 0; color: var(--mb-primary-strong); background: #e8f3ff; font-size: var(--mb-font-13); font-weight: 700; cursor: pointer; }
 .creator-prompt-example>.creator-example-reveal:hover { background: rgb(232 243 255 / 20%); }
 .creator-example-line>.creator-example-use { display: inline; margin-left: 6px; padding: 0; border: 0; color: var(--mb-text-tertiary); background: transparent; font-size: var(--mb-font-11, 11px); line-height: inherit; font-weight: 600; vertical-align: baseline; cursor: pointer; }
 .creator-example-line>.creator-example-use:hover { color: var(--mb-primary-strong); text-decoration: underline; text-underline-offset: 2px; }
-.creator-prompt-example.is-revealed q { color: var(--mb-text-primary); filter: none; opacity: 1; user-select: text; }
+.creator-prompt-example.is-revealed q { color: var(--mb-text-primary); opacity: 1; user-select: text; }
 .creator-prompt-example.is-revealed q span { animation: creator-example-character-in 340ms cubic-bezier(.2,.75,.25,1) both; animation-delay: calc(80ms + var(--example-index) * 15ms); }
 .creator-prompt-example.is-revealed .creator-example-use { animation: creator-example-use-in 220ms ease-out both; animation-delay: calc(120ms + var(--example-total) * 15ms); }
 .creator-drop button, .creator-ready>a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 10px; padding: 10px 15px; font-size: var(--mb-font-14); font-weight: 650; white-space: nowrap; }
@@ -313,7 +313,7 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes creator-prompt-dock-in { 0% { opacity: .74; filter: blur(5px); transform: translateY(30px) scale(.985); } 68% { opacity: 1; filter: blur(.5px); transform: translateY(-3px) scale(1.002); } 100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
 @keyframes creator-prompt-character-in { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes creator-prompt-character-out { to { opacity: 0; filter: blur(4px); transform: translateY(-3px); } }
-@keyframes creator-example-character-in { from { opacity: 0; filter: blur(5px); transform: translateY(4px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+@keyframes creator-example-character-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes creator-example-use-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes creator-ai-halo-shift {
   0%, 100% { box-shadow: 0 -6px 14px rgb(168 107 255 / 11%), 0 -20px 46px rgb(168 107 255 / 4%), 6px 0 14px rgb(91 212 154 / 9%), 20px 0 46px rgb(91 212 154 / 3%), 0 6px 14px rgb(77 141 255 / 11%), 0 20px 46px rgb(77 141 255 / 4%), -6px 0 14px rgb(80 199 255 / 9%), -20px 0 46px rgb(80 199 255 / 3%); }
