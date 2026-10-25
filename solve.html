@@ -6074,7 +6074,7 @@ if (shareToken || requestedPaper === 'shared') {
       <output id="quizInkSizeValue" for="quizInkSize">5</output>
     </label>
   </div>
-  <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>화면을 조금씩 이동하려면 옆의 화살표를 눌러주세요.</div>
+  <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>두 손가락으로 위아래로 밀어 화면을 스크롤할 수 있어요.</div>
   <script>
     (() => {
       const track = document.getElementById('quizScrollProgress');
@@ -6188,6 +6188,9 @@ if (shareToken || requestedPaper === 'shared') {
       const strokes = [];
       let mode = null;
       let activeStroke = null;
+      let activePointerScrollY = null;
+      let penGestureScrollTargetY = null;
+      let penGestureScrollFrame = 0;
       let lastMarginTap = null;
       let penToastTimer = 0;
       let penToastHideTimer = 0;
@@ -6391,6 +6394,14 @@ if (shareToken || requestedPaper === 'shared') {
         activeStroke = null;
       }
 
+      function discardActiveStroke() {
+        if (!activeStroke) return;
+        const activeIndex = strokes.lastIndexOf(activeStroke);
+        if (activeIndex >= 0) strokes.splice(activeIndex, 1);
+        activeStroke = null;
+        completedLayerDirty = true;
+      }
+
       function redraw() {
         if (!context || !canvas.classList.contains('is-active')) return;
         const ratio = Math.max(1, window.devicePixelRatio || 1);
@@ -6417,6 +6428,7 @@ if (shareToken || requestedPaper === 'shared') {
 
       function setPenMode(enabled) {
         if (enabled === canvas.classList.contains('is-active')) return;
+        resetPenGestureScroll();
         strokes.length = 0;
         completedLayerDirty = true;
         activePointers.clear();
@@ -6517,6 +6529,50 @@ if (shareToken || requestedPaper === 'shared') {
         return { x: event.clientX, y: event.clientY, docY: event.clientY + window.scrollY, pressure };
       }
 
+      function pointerCentroidY() {
+        if (!activePointers.size) return null;
+        let total = 0;
+        for (const point of activePointers.values()) total += point.y;
+        return total / activePointers.size;
+      }
+
+      function touchCentroidY(touches) {
+        if (!touches?.length) return null;
+        let total = 0;
+        for (const touch of touches) total += touch.clientY;
+        return total / touches.length;
+      }
+
+      function scrollByPenGesture(deltaY) {
+        if (!Number.isFinite(deltaY) || !deltaY) return;
+        const root = getScrollRoot();
+        const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
+        const baseY = penGestureScrollTargetY === null ? root.scrollTop : penGestureScrollTargetY;
+        penGestureScrollTargetY = Math.min(maxY, Math.max(0, baseY + deltaY));
+        if (penGestureScrollFrame) return;
+        const followGesture = () => {
+          penGestureScrollFrame = 0;
+          if (penGestureScrollTargetY === null) return;
+          const currentY = root.scrollTop;
+          const remaining = penGestureScrollTargetY - currentY;
+          if (Math.abs(remaining) <= 0.5) {
+            root.scrollTop = penGestureScrollTargetY;
+            penGestureScrollTargetY = null;
+            return;
+          }
+          const frameStep = Math.sign(remaining) * Math.min(48, Math.max(1, Math.abs(remaining) * 0.72));
+          root.scrollTop = Math.min(maxY, Math.max(0, currentY + frameStep));
+          penGestureScrollFrame = requestAnimationFrame(followGesture);
+        };
+        penGestureScrollFrame = requestAnimationFrame(followGesture);
+      }
+
+      function resetPenGestureScroll() {
+        if (penGestureScrollFrame) cancelAnimationFrame(penGestureScrollFrame);
+        penGestureScrollFrame = 0;
+        penGestureScrollTargetY = null;
+      }
+
       function appendStrokePoint(stroke, point) {
         const savedPoint = { x: point.x, y: point.y, pressure: point.pressure ?? 0.5 };
         stroke.points.push(savedPoint);
@@ -6570,6 +6626,7 @@ if (shareToken || requestedPaper === 'shared') {
 
       function nudgePage(direction) {
         if (!canvas.classList.contains('is-active')) return;
+        resetPenGestureScroll();
         const root = getScrollRoot();
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
         const step = Math.round(Math.min(620, Math.max(260, window.innerHeight * 0.58)));
@@ -6604,6 +6661,7 @@ if (shareToken || requestedPaper === 'shared') {
       document.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
       document.addEventListener('gestureend', event => event.preventDefault(), { passive: false });
 
+      let lastTouchScrollY = null;
       function drawTouch(touch, start = false) {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
         if (start || !activeStroke) {
@@ -6623,7 +6681,9 @@ if (shareToken || requestedPaper === 'shared') {
         event.preventDefault();
         if (event.touches.length >= 2) {
           mode = 'multitouch';
-          completeActiveStroke();
+          discardActiveStroke();
+          resetPenGestureScroll();
+          lastTouchScrollY = touchCentroidY(event.touches);
           scheduleRedraw();
           return;
         }
@@ -6639,9 +6699,13 @@ if (shareToken || requestedPaper === 'shared') {
         if (event.touches.length >= 2) {
           if (mode !== 'multitouch') {
             mode = 'multitouch';
-            completeActiveStroke();
+            discardActiveStroke();
+            resetPenGestureScroll();
             scheduleRedraw();
           }
+          const currentY = touchCentroidY(event.touches);
+          if (currentY !== null && lastTouchScrollY !== null) scrollByPenGesture(lastTouchScrollY - currentY);
+          lastTouchScrollY = currentY;
           return;
         }
         if (mode !== 'draw' || event.touches.length !== 1 || !activeStroke) return;
@@ -6651,8 +6715,11 @@ if (shareToken || requestedPaper === 'shared') {
       function endTouchGesture(event) {
         if (event.touches.length === 0) {
           mode = null;
+          lastTouchScrollY = null;
           completeActiveStroke();
           flushRedraw();
+        } else if (mode === 'multitouch') {
+          lastTouchScrollY = touchCentroidY(event.touches);
         }
       }
       canvas.addEventListener('touchend', endTouchGesture, { passive: true });
@@ -6665,7 +6732,10 @@ if (shareToken || requestedPaper === 'shared') {
         activePointers.set(event.pointerId, pointerPosition(event));
         if (activePointers.size >= 2) {
           mode = 'multitouch';
-          completeActiveStroke();
+          discardActiveStroke();
+          resetScrollTarget();
+          resetPenGestureScroll();
+          activePointerScrollY = pointerCentroidY();
           scheduleRedraw();
           return;
         }
@@ -6691,7 +6761,12 @@ if (shareToken || requestedPaper === 'shared') {
         if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents) || !activePointers.has(event.pointerId)) return;
         event.preventDefault();
         activePointers.set(event.pointerId, pointerPosition(event));
-        if (mode === 'multitouch') return;
+        if (mode === 'multitouch') {
+          const currentY = pointerCentroidY();
+          if (activePointers.size >= 2 && currentY !== null && activePointerScrollY !== null) scrollByPenGesture(activePointerScrollY - currentY);
+          activePointerScrollY = currentY;
+          return;
+        }
         if (mode !== 'draw' || activePointers.size !== 1 || !activeStroke) return;
         const samples = coalescedPointerEvents(event);
         for (const sample of samples) appendPointerPoint(activeStroke, sample);
@@ -6709,8 +6784,11 @@ if (shareToken || requestedPaper === 'shared') {
           }
         }
         activePointers.delete(event.pointerId);
-        if (activePointers.size === 0) {
+        if (mode === 'multitouch' && activePointers.size > 0) {
+          activePointerScrollY = pointerCentroidY();
+        } else if (activePointers.size === 0) {
           mode = null;
+          activePointerScrollY = null;
           completeActiveStroke();
           flushRedraw();
         }
