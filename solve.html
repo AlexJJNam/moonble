@@ -6354,13 +6354,6 @@ if (shareToken || requestedPaper === 'shared') {
         showAiPenToast();
       }, true);
 
-      aiAskButton?.addEventListener('click', event => {
-        if (!canvas.classList.contains('is-active')) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        showAiPenToast();
-      }, true);
-
       function showPenModeEffect() {
         if (!penModeEffect) return;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
