@@ -516,6 +516,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <span className="mb-app-logo-avatar" aria-hidden="true">{nameInitial}</span>}</a>
+        {user && <a className="mb-app-logo-my" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label="MY 메뉴 열기" title="MY" />}
         {user && <button className="mb-notification-toggle mb-notification-toggle--desktop" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
           <Bell size={16} aria-hidden="true" />
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}

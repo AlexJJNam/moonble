@@ -7,6 +7,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-logo { min-width: 0; min-height: 48px; display: flex; flex: 1; align-items: center; padding: 8px 12px; text-decoration: none; }
 .mb-app-logo .mb-brand-wordmark { width: 112px; }
 .mb-app-logo-avatar { display: none; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-13); line-height: 1; font-weight: 700; }
+.mb-app-logo-my { display: none; }
 .mb-notification-toggle { position: relative; flex: 0 0 36px; width: 36px; height: 36px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; }
 .mb-notification-toggle:hover, .mb-notification-toggle:focus-visible, .mb-notification-toggle[aria-expanded='true'] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .mb-notification-toggle:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
@@ -94,6 +95,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 @media (min-width: 768px) {
   .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { display: none; }
   .mb-app-header.is-collapsed .mb-app-logo-avatar { display: grid; }
+  .mb-app-header.is-collapsed .mb-app-logo-my { position: absolute; top: 8px; left: 50%; z-index: 2; width: 32px; height: 32px; display: block; border-radius: 50%; transform: translateX(-50%); }
+  .mb-app-header.is-collapsed .mb-app-logo-my:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 3px; }
 }
 .mb-app-header.is-collapsed .mb-app-profile-row { justify-content: center; }
 .mb-app-header.is-collapsed .mb-app-profile { display: none; }

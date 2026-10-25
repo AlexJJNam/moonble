@@ -5,16 +5,26 @@ button { font: inherit; cursor: pointer; }
 .account-main { max-width: 720px; margin: 0 auto; }
 .account-heading { max-width: 480px; margin: 0 auto 16px; }
 .account-heading h1 { margin: 0; letter-spacing: -.025em; }
-.account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: #fafafa; }
-.account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
-.account-profile-summary div { min-width: 0; }
-.account-profile-summary strong, .account-profile-summary p, .account-profile-summary small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.account-profile-summary strong { font-size: var(--mb-font-18); line-height: 26px; }
-.account-profile-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
-.account-profile-name strong { min-width: 0; }
 .account-profile-edit { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
 .account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .account-profile-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
+.account-profile-edit:disabled { cursor: wait; opacity: .55; }
+.account-profile-card { max-width: 480px; padding: 0; background: transparent; }
+.account-profile-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.account-profile-heading h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
+.account-profile-view-avatar { position: relative; width: 136px; height: 136px; margin: 24px auto 34px; display: grid; place-items: center; border: 1px solid #e1e3e6; border-radius: 50%; color: #c1c5ca; background: #e9eaec; }
+.account-profile-view-avatar>span { width: 100%; height: 100%; display: grid; place-items: center; }
+.account-profile-view-avatar>span svg { width: 72px; height: 72px; fill: #c1c5ca; stroke: #c1c5ca; }
+.account-profile-view-avatar>i { position: absolute; right: 2px; bottom: 2px; width: 34px; height: 34px; display: grid; place-items: center; border: 3px solid #fff; border-radius: 50%; color: #4b5563; background: #e3e5e8; font-style: normal; }
+.account-profile-details { margin: 0; }
+.account-profile-detail { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.account-profile-detail dt { flex: 0 0 auto; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; }
+.account-profile-detail dd { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 7px; margin: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-16); line-height: 24px; text-align: right; overflow-wrap: anywhere; }
+.account-profile-detail dd.is-empty { color: var(--mb-text-tertiary); }
+.account-profile-detail dd svg { flex: 0 0 19px; color: #9da3aa; }
+.account-profile-card #company-hint { margin: 12px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.account-profile-card form #company-hint { margin: -6px 0 12px; }
+.account-profile-card input:disabled { opacity: .7; }
 .account-profile-update-fx[hidden] { display: none; }
 .account-profile-update-fx { position: fixed; inset: 0; z-index: 1200; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--mb-text-primary); background: rgb(255 255 255 / 97%); pointer-events: none; }
 .account-profile-update-fx.is-playing { animation: account-profile-update-out .42s ease 1.12s both; }
@@ -30,12 +40,12 @@ button { font: inherit; cursor: pointer; }
 @keyframes account-profile-update-check-draw { to { stroke-dashoffset: 0; } }
 @keyframes account-profile-update-badge-grow { to { transform: scale(1.1); } }
 @keyframes account-profile-update-out { to { opacity: 0; } }
-.account-profile-summary p { margin: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; }
-.account-profile-summary small { margin-top: 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .account-main .profile-wrap { padding: 0; }
 .account-main .profile-card { margin: 16px auto; border: 0; border-radius: 20px; }
 .account-main .account-mobile-session { padding-inline: 0; background: transparent; }
 .account-main .profile-form-card { padding-inline: 0; border-radius: 0; background: transparent; }
+.account-main .account-profile-card { padding: 0; background: transparent; }
+.account-main .account-profile-card .account-profile-heading h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
 .account-main .profile-card h2 { margin: 0 0 8px; font-size: var(--mb-font-18); line-height: 26px; }
 .account-ai-preference { max-width: 480px; margin: 20px auto; }
 .account-ai-title { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
@@ -114,6 +124,7 @@ button { font: inherit; cursor: pointer; }
 @media (max-width: 767px) {
   .account-heading h1 { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); font-weight: 700; }
   .account-main .profile-form-card h1, .account-main .profile-card h2 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); font-weight: 700; }
+  .account-main .account-profile-card .account-profile-heading h2 { font-size: var(--mb-font-18); line-height: 26px; }
   .account-main .profile-form-card>p, .account-main .profile-card>p, .account-delete-dialog>p { font-size: var(--mb-font-13); line-height: 20px; }
   .account-delete-dialog h2 { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); font-weight: 700; }
   .account-main .shell-primary, .account-delete-actions button { font-size: var(--mb-mobile-action-size); line-height: var(--mb-mobile-action-line); font-weight: 600; }
@@ -121,20 +132,22 @@ button { font: inherit; cursor: pointer; }
 @media (max-width: 640px) {
   body { background: var(--mb-bg); }
   .account-heading { margin-bottom: 16px; }
-  .account-profile-summary { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; padding: 16px; border-radius: 18px; }
   .account-ai-preference { margin: 18px auto; }
   .account-push-preference { margin: 18px auto; }
-  .account-profile-avatar { width: 50px; height: 50px; font-size: var(--mb-font-18); }
-  .account-profile-summary strong { font-size: var(--mb-font-16); line-height: 24px; }
   .account-main .profile-card { margin: 12px auto; padding: 20px 18px; border-radius: 18px; }
   .account-main .account-mobile-session { padding-inline: 0; background: transparent; }
   .account-main .profile-form-card { padding-inline: 0; border-radius: 0; background: transparent; }
+  .account-main .account-profile-card { padding: 0; border-radius: 0; background: transparent; }
   .account-main .profile-form-card h1 { margin-bottom: 0; }
   .account-main .profile-form-card>p { margin-top: 4px; }
   .account-main .profile-card fieldset { gap: 6px; margin-top: 22px; }
   .account-main .profile-card label { font-size: var(--mb-font-13); line-height: 20px; }
   .account-main .profile-card input { min-height: 50px; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px; font-size: 16px; }
   .account-main .profile-card #company-hint { margin: -5px 0 14px; font-size: var(--mb-font-12); line-height: 18px; }
+  .account-profile-view-avatar { width: 128px; height: 128px; margin: 18px auto 24px; }
+  .account-profile-detail { min-height: 64px; gap: 8px; }
+  .account-profile-detail dt, .account-profile-detail dd { font-size: var(--mb-font-15); line-height: 22px; }
+  .account-profile-card #company-hint { margin-top: 10px; font-size: var(--mb-font-12); line-height: 18px; }
   .account-main .shell-primary { min-height: 50px; border-radius: 12px; }
   .account-logout-action { width: 100%; justify-content: flex-start; min-height: 48px; border-radius: 12px; }
   .account-delete-action { min-height: 48px; }

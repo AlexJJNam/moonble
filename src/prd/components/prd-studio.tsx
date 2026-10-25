@@ -425,7 +425,7 @@ export function PrdStudio({ prdId }: { prdId?: string }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto no-print">
+        <main className="prd-studio-main flex-1 overflow-auto no-print">
           <div className="w-full max-w-screen-2xl mx-auto h-full">
             <div className={cn(
                 "grid h-full",

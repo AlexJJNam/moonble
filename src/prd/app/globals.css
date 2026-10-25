@@ -256,6 +256,18 @@
 
 .prd-list-summary > svg { color: var(--mb-primary-strong); }
 
+.prd-studio-main {
+  padding-bottom: 88px;
+  scroll-padding-bottom: 88px;
+}
+
+@media (max-width: 767px) {
+  .prd-studio-main {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+}
+
 .prd-document-card {
   border: 1px solid var(--mb-border) !important;
   border-radius: 16px !important;

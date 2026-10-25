@@ -28,6 +28,7 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .shared-quiz-error span { font-size: var(--mb-font-14); line-height: 22px; }
 .solver-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 8px; color: var(--info-text); font-size: var(--mb-font-14); line-height: 20px; font-weight: 500; }
 #quiz>.muted { font-size: var(--mb-font-16); line-height: 28px; margin-top: 12px; }
+#quiz { padding-bottom: 96px; }
 .quiz-wrap { gap: 24px; margin-top: 32px; }
 .q-card { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
 .q-card:focus { outline: none; }
@@ -66,6 +67,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 }
 @media (max-width: 640px) {
   :root { --text-2xl: var(--mb-font-28); }
+  #quiz { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
   .quiz-wrap { gap: 16px; margin-top: 24px; }
   .q-card { padding: 16px; scroll-margin-top: 140px; }
   .quiz-actions { gap: 8px; }
