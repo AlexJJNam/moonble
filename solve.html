@@ -44,7 +44,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#ffffff" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>문제풀이 · Moonble</title>
   <meta name="description" content="GA4 문제를 풀고 학습 기록을 확인하세요." />
   <link rel="canonical" href="https://moonble.com/solve.html" />
@@ -65,6 +65,7 @@
   <style>
     html {
       scroll-behavior: smooth;
+      touch-action: pan-x pan-y;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -6141,7 +6142,6 @@ if (shareToken || requestedPaper === 'shared') {
       let penToastTimer = 0;
       let penToastHideTimer = 0;
       let savedScrollBehavior = '';
-      let savedViewportContent = null;
       let scrollTargetY = null;
       let scrollAnimationFrame = 0;
       let lastScrollFrameTime = 0;
@@ -6246,16 +6246,8 @@ if (shareToken || requestedPaper === 'shared') {
         if (enabled) {
           savedScrollBehavior = document.documentElement.style.scrollBehavior;
           document.documentElement.style.scrollBehavior = 'auto';
-          const viewport = document.querySelector('meta[name="viewport"]');
-          if (viewport && savedViewportContent === null) {
-            savedViewportContent = viewport.getAttribute('content') || '';
-            viewport.setAttribute('content', `${savedViewportContent}, maximum-scale=1, user-scalable=no`);
-          }
         } else {
           document.documentElement.style.scrollBehavior = savedScrollBehavior;
-          const viewport = document.querySelector('meta[name="viewport"]');
-          if (viewport && savedViewportContent !== null) viewport.setAttribute('content', savedViewportContent);
-          savedViewportContent = null;
           if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame);
           scrollAnimationFrame = 0;
           scrollTargetY = null;
@@ -6379,15 +6371,28 @@ if (shareToken || requestedPaper === 'shared') {
         if (!scrollAnimationFrame) scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
       }
 
-      function preventPenPinchZoom(event) {
-        if (canvas.classList.contains('is-active')) event.preventDefault();
+      function touchDistance(touches) {
+        if (!touches || touches.length < 2) return 0;
+        const x = touches[0].clientX - touches[1].clientX;
+        const y = touches[0].clientY - touches[1].clientY;
+        return Math.hypot(x, y);
       }
+
+      let initialPinchDistance = 0;
+      document.addEventListener('touchstart', event => {
+        initialPinchDistance = touchDistance(event.touches);
+      }, { capture: true, passive: true });
       document.addEventListener('touchmove', event => {
-        if (canvas.classList.contains('is-active') && event.touches.length > 1) event.preventDefault();
+        if (event.touches.length < 2) return;
+        const currentDistance = touchDistance(event.touches);
+        if (initialPinchDistance && Math.abs(currentDistance - initialPinchDistance) > 2) event.preventDefault();
       }, { capture: true, passive: false });
-      document.addEventListener('gesturestart', preventPenPinchZoom, { passive: false });
-      document.addEventListener('gesturechange', preventPenPinchZoom, { passive: false });
-      document.addEventListener('gestureend', preventPenPinchZoom, { passive: false });
+      document.addEventListener('touchend', event => {
+        if (event.touches.length < 2) initialPinchDistance = 0;
+      }, { capture: true, passive: true });
+      document.addEventListener('gesturestart', event => event.preventDefault(), { passive: false });
+      document.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
+      document.addEventListener('gestureend', event => event.preventDefault(), { passive: false });
 
       function drawTouch(touch, start = false) {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
