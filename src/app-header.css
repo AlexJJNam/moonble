@@ -74,7 +74,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-solver-heading a { width: 100%; min-height: 40px; gap: 8px; padding: 8px; border-radius: 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
 .mb-solver-heading strong { padding: 0 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 600; }
 .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading a { display: none; }
-.mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: flex; align-items: center; padding-bottom: 10px; }
+.mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: grid; justify-items: start; padding-bottom: 10px; }
 .mb-app-header .mb-solver-heading > .mb-solver-shared-logo { display: block; width: 80px; max-width: 80px; height: auto; max-height: 27px; flex: 0 0 80px; object-fit: contain; }
 .mb-solver-questions { min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 40px)); flex: 1 1 auto; align-content: start; gap: 4px; padding: 2px 4px 12px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--mb-border-strong) transparent; }
 .mb-solver-question { position: relative; width: 40px; min-width: 0; min-height: 40px; display: grid !important; grid-template-columns: 1fr; place-content: center; gap: 0 !important; padding: 4px !important; border-radius: 50%; color: var(--mb-text-secondary); }
@@ -97,12 +97,19 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-share-notification-toast strong { font-size: inherit; font-weight: 650; }
 .mb-share-notification-toast span { color: rgb(255 255 255 / 82%); }
 @keyframes mb-share-toast-in { to { opacity: 1; transform: translate(-50%, 0); } }
-.mb-sidebar-toggle { position: absolute; right: 16px; bottom: 76px; z-index: 2; width: 30px; height: 30px; display: grid; place-content: center; padding: 0; border: 0; background: transparent; color: var(--mb-text-tertiary); cursor: pointer; transition: color var(--mb-duration); }
+.mb-sidebar-toggle { position: absolute; right: 16px; bottom: 76px; z-index: 2; box-sizing: border-box; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; gap: 0; overflow: hidden; padding: 0; border: 0; border-radius: 9px; background: transparent; color: var(--mb-text-tertiary); white-space: nowrap; cursor: pointer; transition: width 220ms cubic-bezier(.22, 1, .36, 1), padding 220ms cubic-bezier(.22, 1, .36, 1), color var(--mb-duration), background-color var(--mb-duration); }
 .mb-sidebar-toggle:hover { color: var(--mb-primary-strong); }
-.mb-pen-mode-toggle { position: absolute; right: 52px; bottom: 76px; z-index: 2; width: 30px; height: 30px; display: none; place-content: center; padding: 0; border: 0; border-radius: 9px; color: var(--mb-text-tertiary); background: transparent; cursor: pointer; transition: color var(--mb-duration), background-color var(--mb-duration); }
-.mb-solver-sidebar .mb-pen-mode-toggle { display: grid; }
+.mb-pen-mode-toggle { position: absolute; right: 52px; bottom: 76px; z-index: 2; box-sizing: border-box; width: 30px; height: 30px; display: none; align-items: center; justify-content: center; gap: 0; overflow: hidden; padding: 0; border: 0; border-radius: 9px; color: var(--mb-text-tertiary); background: transparent; white-space: nowrap; cursor: pointer; transition: width 220ms cubic-bezier(.22, 1, .36, 1), padding 220ms cubic-bezier(.22, 1, .36, 1), color var(--mb-duration), background-color var(--mb-duration); }
+.mb-sidebar-toggle > span, .mb-pen-mode-toggle > span { max-width: 0; overflow: hidden; font-size: var(--mb-font-12); line-height: 18px; font-weight: 550; opacity: 0; transition: max-width 180ms ease, opacity 140ms ease; }
+.mb-solver-sidebar .mb-pen-mode-toggle { display: flex; }
 .mb-pen-mode-toggle:hover, .mb-pen-mode-toggle:focus-visible, .mb-pen-mode-toggle.is-active { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .mb-pen-mode-toggle:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+@media (min-width: 768px) {
+  .mb-app-header:not(.is-collapsed) .mb-sidebar-toggle:hover, .mb-app-header:not(.is-collapsed) .mb-sidebar-toggle:focus-visible { width: 72px; justify-content: flex-start; gap: 7px; padding: 0 8px; background: var(--mb-surface-muted); }
+  .mb-app-header:not(.is-collapsed) .mb-sidebar-toggle:hover > span, .mb-app-header:not(.is-collapsed) .mb-sidebar-toggle:focus-visible > span { max-width: 38px; opacity: 1; }
+  .mb-app-header:not(.is-collapsed) .mb-pen-mode-toggle:hover, .mb-app-header:not(.is-collapsed) .mb-pen-mode-toggle:focus-visible { width: 94px; justify-content: flex-start; gap: 7px; padding: 0 9px; }
+  .mb-app-header:not(.is-collapsed) .mb-pen-mode-toggle:hover > span, .mb-app-header:not(.is-collapsed) .mb-pen-mode-toggle:focus-visible > span { max-width: 56px; opacity: 1; }
+}
 .mb-app-header.is-collapsed { width: 68px; }
 .mb-app-header.is-collapsed .mb-app-header-inner { padding-right: 10px; padding-left: 10px; }
 .mb-app-header.is-collapsed .mb-app-brand-row { justify-content: center; }
@@ -140,6 +147,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout>span:not(.moonble-spinner) { display: none; }
 .mb-app-header.is-collapsed .mb-sidebar-toggle { right: 8px; width: 24px; }
 .mb-app-header.is-collapsed .mb-pen-mode-toggle { right: 36px; width: 24px; }
+.mb-app-header.is-collapsed .mb-sidebar-toggle > span, .mb-app-header.is-collapsed .mb-pen-mode-toggle > span { display: none; }
 
 @media (max-width: 1199px) and (min-width: 768px) {
   body.mb-has-app-sidebar { padding-left: 208px; }
@@ -235,6 +243,6 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.mb-has-app-sidebar, .mb-app-header, .mb-sidebar-toggle, .mb-pen-mode-toggle { transition: none; }
+  body.mb-has-app-sidebar, .mb-app-header, .mb-sidebar-toggle, .mb-pen-mode-toggle, .mb-sidebar-toggle > span, .mb-pen-mode-toggle > span { transition: none; }
   .mb-share-notification-toast { animation: none; opacity: 1; transform: translate(-50%, 0); }
 }

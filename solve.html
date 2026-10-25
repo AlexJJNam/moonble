@@ -6038,7 +6038,21 @@ if (shareToken || requestedPaper === 'shared') {
     <i class="quiz-scroll-progress-tick" aria-hidden="true"><b class="tick-ring"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b></i>
   </div>
   <canvas id="quizInkCanvas" class="quiz-ink-canvas" aria-hidden="true"></canvas>
-  <div id="quizPenModeEffect" class="quiz-pen-mode-effect" aria-hidden="true" hidden></div>
+  <div id="quizPenModeEffect" class="quiz-pen-mode-effect" aria-hidden="true" hidden>
+    <svg class="quiz-pen-ink-mark" viewBox="0 0 240 96" fill="none" role="presentation">
+      <defs>
+        <linearGradient id="quizPenInkGradient" x1="12" y1="48" x2="230" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#8EC4FF" stop-opacity=".18" />
+          <stop offset=".38" stop-color="#68AAFF" stop-opacity=".48" />
+          <stop offset=".72" stop-color="#4D96F4" stop-opacity=".36" />
+          <stop offset="1" stop-color="#8EC4FF" stop-opacity=".12" />
+        </linearGradient>
+      </defs>
+      <path class="quiz-pen-ink-wash" pathLength="1" d="M14 66 C28 65 35 30 49 29 C64 28 68 66 82 67 C96 68 103 31 118 30 C133 29 139 67 153 67 C168 67 175 33 190 32 C205 31 213 61 228 56" />
+      <path class="quiz-pen-ink-path" pathLength="1" d="M14 66 C28 65 35 30 49 29 C64 28 68 66 82 67 C96 68 103 31 118 30 C133 29 139 67 153 67 C168 67 175 33 190 32 C205 31 213 61 228 56" />
+      <path class="quiz-pen-ink-highlight" pathLength="1" d="M17 64 C29 62 37 33 49 32 C62 31 70 63 82 64 C95 65 105 34 118 33 C131 32 141 64 153 64 C167 64 177 36 190 35 C203 34 213 59 225 55" />
+    </svg>
+  </div>
   <button id="quizInkExit" class="quiz-ink-exit" type="button" tabindex="-1" aria-label="펜 모드 종료" title="펜 모드 종료">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
   </button>
@@ -6167,8 +6181,7 @@ if (shareToken || requestedPaper === 'shared') {
       let completedLayerDirty = true;
       let savedScrollBehavior = '';
       let scrollTargetY = null;
-      let scrollAnimationFrame = 0;
-      let lastScrollFrameTime = 0;
+      let scrollTargetResetTimer = 0;
 
       function syncTipVisibility() {
         if (!tip) return;
@@ -6201,7 +6214,7 @@ if (shareToken || requestedPaper === 'shared') {
         penModeEffectTimer = window.setTimeout(() => {
           penModeEffect.classList.remove('is-active');
           penModeEffect.hidden = true;
-        }, reduceMotion ? 320 : 760);
+        }, reduceMotion ? 320 : 900);
       }
 
       syncTipVisibility();
@@ -6341,12 +6354,15 @@ if (shareToken || requestedPaper === 'shared') {
         if (enabled) {
           savedScrollBehavior = document.documentElement.style.scrollBehavior;
           document.documentElement.style.scrollBehavior = 'auto';
+          if (!window.matchMedia('(max-width: 767px)').matches) {
+            window.addEventListener('wheel', handlePenWheel, { passive: false });
+          }
+          getScrollRoot().addEventListener('scrollend', resetScrollTarget);
         } else {
+          window.removeEventListener('wheel', handlePenWheel);
+          getScrollRoot().removeEventListener('scrollend', resetScrollTarget);
           document.documentElement.style.scrollBehavior = savedScrollBehavior;
-          if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame);
-          scrollAnimationFrame = 0;
-          scrollTargetY = null;
-          lastScrollFrameTime = 0;
+          resetScrollTarget();
         }
         window.moonbleQuizPenMode = enabled;
         window.dispatchEvent(new CustomEvent('moonble:quiz-pen-mode-change', { detail: { active: enabled } }));
@@ -6444,38 +6460,32 @@ if (shareToken || requestedPaper === 'shared') {
         return root.scrollTop;
       }
 
-      function animatePageScroll(timestamp) {
-        scrollAnimationFrame = 0;
-        if (!canvas.classList.contains('is-active') || scrollTargetY === null) return;
+      function resetScrollTarget() {
+        window.clearTimeout(scrollTargetResetTimer);
+        scrollTargetResetTimer = 0;
+        scrollTargetY = null;
+      }
 
+      function handlePenWheel(event) {
+        if (!canvas.classList.contains('is-active') || window.matchMedia('(max-width: 767px)').matches || event.ctrlKey || !event.deltaY) return;
+        event.preventDefault();
         const root = getScrollRoot();
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
-        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY));
-        const currentY = getPageScrollY();
-        const remaining = scrollTargetY - currentY;
-        if (Math.abs(remaining) < 0.75) {
-          root.scrollTop = scrollTargetY;
-          lastScrollFrameTime = 0;
-          return;
-        }
-
-        const now = Number.isFinite(timestamp) ? timestamp : performance.now();
-        const elapsed = lastScrollFrameTime ? Math.min(50, now - lastScrollFrameTime) : 16.67;
-        lastScrollFrameTime = now;
-        const easing = 1 - Math.exp(-elapsed / 150);
-        root.scrollTop = currentY + remaining * easing;
-        scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
+        const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? window.innerHeight : 1;
+        root.scrollTop = Math.min(maxY, Math.max(0, root.scrollTop + event.deltaY * unit));
       }
 
       function nudgePage(direction) {
         if (!canvas.classList.contains('is-active')) return;
         const root = getScrollRoot();
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
-        const step = Math.round(Math.min(220, Math.max(120, window.innerHeight * 0.22)));
+        const step = Math.round(Math.min(620, Math.max(260, window.innerHeight * 0.58)));
         const currentTarget = scrollTargetY === null ? getPageScrollY() : scrollTargetY;
         scrollTargetY = Math.min(maxY, Math.max(0, currentTarget + step * direction));
-        lastScrollFrameTime = 0;
-        if (!scrollAnimationFrame) scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        root.scrollTo({ top: scrollTargetY, behavior: reducedMotion ? 'auto' : 'smooth' });
+        window.clearTimeout(scrollTargetResetTimer);
+        scrollTargetResetTimer = window.setTimeout(resetScrollTarget, reducedMotion ? 100 : 1200);
       }
 
       function touchDistance(touches) {

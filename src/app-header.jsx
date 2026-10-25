@@ -288,7 +288,11 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
 
   useEffect(() => {
     if (!solver) return undefined;
-    const syncPenMode = event => setQuizPenMode(Boolean(event.detail?.active));
+    const syncPenMode = event => {
+      const active = Boolean(event.detail?.active);
+      setQuizPenMode(active);
+      if (active && window.matchMedia('(max-width: 767px)').matches) setMobileHeaderHidden(false);
+    };
     window.addEventListener('moonble:quiz-pen-mode-change', syncPenMode);
     return () => window.removeEventListener('moonble:quiz-pen-mode-change', syncPenMode);
   }, [solver]);
@@ -514,6 +518,13 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       }
 
       const currentY = Math.max(0, window.scrollY);
+      if (solver && window.moonbleQuizPenMode) {
+        setMobileHeaderHidden(false);
+        direction = 0;
+        distance = 0;
+        previousY = currentY;
+        return;
+      }
       const delta = currentY - previousY;
       const nextDirection = delta > 0 ? 1 : delta < 0 ? -1 : 0;
 
@@ -618,12 +629,16 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           <Settings2 size={16} aria-hidden="true" />
         </a>
       </div>}
-      {solver && solverPaper.title && <div className="mb-solver-paper" title={solverPaper.title}>
-        <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
-        <span className="mb-solver-paper-title">{solverPaper.title}</span>
-      </div>}
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
-        <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}{sharedSolver ? <BrandLogo className="mb-solver-shared-logo" /> : <strong>{solverHeading}</strong>}</div>
+        <div className="mb-solver-heading">
+          {!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}
+          {sharedSolver && <BrandLogo className="mb-solver-shared-logo" />}
+          {solverPaper.title && <div className="mb-solver-paper" title={solverPaper.title}>
+            <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
+            <span className="mb-solver-paper-title">{solverPaper.title}</span>
+          </div>}
+          {!sharedSolver && <strong>{solverHeading}</strong>}
+        </div>
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => <a
             className={`mb-solver-question is-${item.status}`}
@@ -659,9 +674,11 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     </div>
     {solver && <button className={`mb-pen-mode-toggle${quizPenMode ? ' is-active' : ''}`} type="button" aria-pressed={quizPenMode} aria-label={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} title={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} onClick={() => window.dispatchEvent(new CustomEvent('moonble:toggle-quiz-pen-mode'))}>
       <PenLine size={16} aria-hidden="true" />
+      <span aria-hidden="true">펜 모드</span>
     </button>}
     <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
       {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
+      {!collapsed && <span aria-hidden="true">접기</span>}
     </button>
   </aside>
   {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
