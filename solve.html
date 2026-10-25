@@ -1411,6 +1411,75 @@
       line-height: 24px;
     }
 
+    .shared-guest-complete .shared-guest-rank {
+      margin-top: 14px;
+      color: #1d5fc4;
+      font-size: 14px;
+      line-height: 21px;
+      font-weight: 700;
+    }
+
+    .shared-quiz-rank {
+      margin: 12px 0 0;
+      padding: 15px 16px 16px;
+      border-radius: 16px;
+      color: var(--text);
+      background: #f3f5f7;
+    }
+
+    .shared-quiz-rank[hidden], .shared-quiz-rank-grid[hidden], .shared-quiz-rank-status[hidden] { display: none; }
+
+    .shared-quiz-rank h3 {
+      margin: 0 0 11px;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .shared-quiz-rank-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .shared-quiz-rank-grid article {
+      min-width: 0;
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      text-align: center;
+    }
+
+    .shared-quiz-rank-grid span {
+      color: #7b8490;
+      font-size: 11px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .shared-quiz-rank-grid strong {
+      color: #202833;
+      font-size: 21px;
+      line-height: 28px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .shared-quiz-rank-grid article:nth-child(2) strong { color: #246fe5; }
+
+    .shared-quiz-rank-grid small { margin-left: 2px; color: #697586; font-size: 12px; font-weight: 600; }
+
+    .shared-quiz-rank-note, .shared-quiz-rank-status {
+      margin: 9px 0 0;
+      color: #7b8490;
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 500;
+      text-align: left;
+    }
+
     .shared-guest-complete .shared-guest-delivery-error {
       margin-top: 8px;
       color: var(--bad, #c84040);
@@ -3263,6 +3332,16 @@
       </div>
       <div id="modePill" class="pill" style="display:none;">오답 재도전 모드</div>
       <div id="resultBox" class="result" aria-live="polite"></div>
+      <section id="sharedQuizRank" class="shared-quiz-rank" aria-labelledby="sharedQuizRankTitle" aria-live="polite" hidden>
+        <h3 id="sharedQuizRankTitle">공유 문제 순위</h3>
+        <div id="sharedQuizRankGrid" class="shared-quiz-rank-grid" hidden>
+          <article><span>내 최고 점수</span><strong><b id="sharedQuizBestScore">—</b><small>점</small></strong></article>
+          <article><span>내 순위</span><strong><b id="sharedQuizRankValue">—</b><small>위</small></strong></article>
+          <article><span>참여자</span><strong><b id="sharedQuizParticipants">—</b><small>명</small></strong></article>
+        </div>
+        <p id="sharedQuizRankNote" class="shared-quiz-rank-note" hidden>같은 점수는 공동 순위로 표시해요.</p>
+        <p id="sharedQuizRankStatus" class="shared-quiz-rank-status" role="status" hidden></p>
+      </section>
       <div id="quizContainer" class="quiz-wrap"></div>
 
       <div class="quiz-actions">
@@ -3285,6 +3364,7 @@
     <dialog id="sharedGuestComplete" class="shared-guest-complete" aria-labelledby="sharedGuestCompleteTitle" aria-describedby="sharedGuestCompleteCopy">
       <h2 id="sharedGuestCompleteTitle">축하해요! 공유된 문제를 풀었어요.</h2>
       <p id="sharedGuestCompleteCopy">가입하고 문제를 만들어 공유해 보세요!</p>
+      <p id="sharedGuestRank" class="shared-guest-rank" aria-live="polite" hidden></p>
       <p id="sharedGuestDeliveryError" class="shared-guest-delivery-error" hidden>풀이 결과를 공유한 사람에게 알리지 못했어요. 연결 상태를 확인해주세요.</p>
       <div class="shared-guest-actions">
         <button id="sharedGuestClose" class="is-close" type="button">닫기</button>
@@ -3462,6 +3542,11 @@
     const sharedGuestDialog = byId('sharedGuestComplete');
     const sharedGuestClose = byId('sharedGuestClose');
     const sharedGuestDeliveryError = byId('sharedGuestDeliveryError');
+    const sharedGuestRank = byId('sharedGuestRank');
+    const sharedQuizRank = byId('sharedQuizRank');
+    const sharedQuizRankGrid = byId('sharedQuizRankGrid');
+    const sharedQuizRankStatus = byId('sharedQuizRankStatus');
+    const sharedQuizRankNote = byId('sharedQuizRankNote');
 
     const QUESTION_COUNT = 20; // 매회 20문항
     const CSV_THRESHOLD = 80;  // 80점 이상일 때 CSV 버튼 활성화
@@ -3502,12 +3587,45 @@
       if (!sharedGuestDialog.open) sharedGuestDialog.showModal();
     }
 
+    function showSharedQuizRank(result, submissionSaved = true) {
+      if (!sharedQuizRank) return;
+      sharedQuizRank.hidden = false;
+      if (!result?.rankAvailable || !Number.isInteger(result.rank) || !Number.isInteger(result.participants)) {
+        if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = true;
+        if (sharedQuizRankNote) sharedQuizRankNote.hidden = true;
+        if (sharedQuizRankStatus) {
+          sharedQuizRankStatus.textContent = submissionSaved ? '풀이 결과는 저장됐어요. 순위 정보를 불러오지 못했어요.' : '풀이 결과를 저장하지 못해 순위를 확인할 수 없어요.';
+          sharedQuizRankStatus.hidden = false;
+        }
+        return;
+      }
+      byId('sharedQuizBestScore').textContent = String(result.bestScore ?? result.score);
+      byId('sharedQuizRankValue').textContent = String(result.rank);
+      byId('sharedQuizParticipants').textContent = String(result.participants);
+      if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = false;
+      if (sharedQuizRankStatus) sharedQuizRankStatus.hidden = true;
+      if (sharedQuizRankNote) sharedQuizRankNote.hidden = false;
+      if (sharedGuestRank) {
+        sharedGuestRank.textContent = `현재 ${result.participants}명 중 ${result.rank}위예요.`;
+        sharedGuestRank.hidden = false;
+      }
+    }
+
+    function resetSharedQuizRank() {
+      if (sharedQuizRank) sharedQuizRank.hidden = true;
+      if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = true;
+      if (sharedQuizRankStatus) sharedQuizRankStatus.hidden = true;
+      if (sharedQuizRankNote) sharedQuizRankNote.hidden = true;
+      if (sharedGuestRank) sharedGuestRank.hidden = true;
+    }
+
     function resetGradeCompleteEffect() {
       window.clearTimeout(gradeFxTimer);
       window.clearTimeout(gradeScrollTimer);
       gradeFxEl.classList.remove('is-playing');
       gradeFxEl.hidden = true;
       resultEl.classList.remove('is-grade-reveal');
+      resetSharedQuizRank();
     }
 
     function playGradeCompleteEffect() {
@@ -3754,16 +3872,28 @@
 
       csvBtn.disabled = !(score >= CSV_THRESHOLD);
 
-      if (paperId === 'shared' && !window.moonbleUserId) {
+      if (paperId === 'shared') {
         let deliveryFailed = typeof window.moonbleSubmitSharedQuiz !== 'function';
+        if (sharedQuizRank) {
+          sharedQuizRank.hidden = false;
+          if (sharedQuizRankStatus) {
+            sharedQuizRankStatus.textContent = '참여 순위를 확인하고 있어요.';
+            sharedQuizRankStatus.hidden = false;
+          }
+        }
         if (!deliveryFailed) {
-          window.moonbleSubmitSharedQuiz(readSharedAnswers()).catch(() => {
+          Promise.resolve().then(() => window.moonbleSubmitSharedQuiz(readSharedAnswers())).then(showSharedQuizRank).catch(() => {
             deliveryFailed = true;
+            showSharedQuizRank(null, false);
             if (sharedGuestDialog?.open) showSharedGuestCompletion(true);
           });
+        } else {
+          showSharedQuizRank(null, false);
         }
-        window.clearTimeout(sharedGuestPopupTimer);
-        sharedGuestPopupTimer = window.setTimeout(() => showSharedGuestCompletion(deliveryFailed), 1600);
+        if (!window.moonbleUserId) {
+          window.clearTimeout(sharedGuestPopupTimer);
+          sharedGuestPopupTimer = window.setTimeout(() => showSharedGuestCompletion(deliveryFailed), 1600);
+        }
       }
 
       if (typeof updateActiveByVisibility === 'function') updateActiveByVisibility();

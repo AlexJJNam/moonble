@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Check, LogOut, UserRoundX } from 'lucide-react';
+import { Bell, Check, CircleHelp, LogOut, UserRoundX } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
+import { enableBrowserNotifications, getBrowserNotificationSettings, setBrowserNotificationPreference } from './browser-notifications.js';
 import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
@@ -78,7 +79,7 @@ function AiQuestionPreference({ user, onUserUpdated }) {
   }
 
   return <section className="account-ai-preference" aria-labelledby="account-ai-preference-title">
-    <h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2>
+    <div className="account-ai-title"><h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2><button className="account-ai-help" type="button" aria-label="문제풀이 AI 설정 안내" aria-describedby="account-ai-help-copy"><CircleHelp size={16} aria-hidden="true" /><span id="account-ai-help-copy" role="tooltip">문제풀이 중 ‘AI에게 물어보기’를 누르면 답변할 AI를 여기서 선택할 수 있어요.</span></button></div>
     <div className="account-ai-provider" role="group" aria-label="AI에게 물어보기 기본 서비스">
       {aiProviderOptions.map(option => <button
         key={option.value}
@@ -91,6 +92,61 @@ function AiQuestionPreference({ user, onUserUpdated }) {
     </div>
     {message && <p role="status">{message}</p>}
     {error && <p role="alert">{error}</p>}
+  </section>;
+}
+
+function PushNotificationPreference({ userId }) {
+  const [settings, setSettings] = useState(() => getBrowserNotificationSettings(userId));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const refresh = () => setSettings(getBrowserNotificationSettings(userId));
+    const onPreferenceChange = event => {
+      if (!event.detail?.userId || event.detail.userId === userId) refresh();
+    };
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    window.addEventListener('moonble:browser-notifications-changed', onPreferenceChange);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('moonble:browser-notifications-changed', onPreferenceChange);
+    };
+  }, [userId]);
+
+  async function toggleNotifications() {
+    if (busy) return;
+    setMessage('');
+    if (settings.enabled) {
+      setSettings(setBrowserNotificationPreference(userId, false));
+      return;
+    }
+    if (['denied', 'unsupported', 'insecure'].includes(settings.permission)) {
+      setMessage(settings.permission === 'denied' ? '브라우저 사이트 설정에서 알림을 허용해주세요.' : settings.permission === 'insecure' ? '보안 연결에서 접속해 알림을 설정해주세요.' : '현재 브라우저에서는 알림을 사용할 수 없어요.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const next = await enableBrowserNotifications(userId);
+      setSettings(next);
+      if (!next.enabled) setMessage('알림 권한을 허용해주세요.');
+    } catch {
+      setMessage('알림 권한을 요청하지 못했어요. 브라우저 설정을 확인해주세요.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const unavailable = ['denied', 'unsupported', 'insecure'].includes(settings.permission);
+  return <section className="account-push-preference" aria-labelledby="account-push-preference-title">
+    <h2 id="account-push-preference-title" className="mb-section-title">알림</h2>
+    <div className="account-push-option">
+      <span className="account-push-icon" aria-hidden="true"><Bell size={18} /></span>
+      <span className="account-push-copy"><strong>푸시 알림</strong><small>{settings.enabled ? '켜짐' : settings.permission === 'denied' ? '브라우저에서 차단됨' : settings.permission === 'unsupported' ? '이 브라우저에서는 사용할 수 없음' : settings.permission === 'insecure' ? '보안 연결에서 설정할 수 있음' : '공유한 문제의 풀이 결과 알림'}</small></span>
+      <button className={`account-push-switch${settings.enabled ? ' is-on' : ''}`} type="button" role="switch" aria-checked={settings.enabled} aria-label="푸시 알림" aria-describedby={message || unavailable ? 'account-push-help' : undefined} aria-busy={busy} disabled={busy || unavailable} onClick={toggleNotifications}><span /></button>
+    </div>
+    {(message || unavailable) && <p id="account-push-help" className={`account-push-message${message && settings.permission === 'denied' ? ' is-error' : ''}`} role={message ? 'status' : undefined}>{message || (settings.permission === 'denied' ? '브라우저 사이트 설정에서 문블의 알림을 허용해주세요.' : settings.permission === 'insecure' ? 'HTTPS 보안 연결에서 접속하면 알림을 켤 수 있어요.' : '현재 브라우저에서는 알림을 지원하지 않아요.')}</p>}
   </section>;
 }
 
@@ -198,6 +254,7 @@ function AccountPage() {
       </section>
       <ProfileForm user={user} initial={false} onSaved={setUser} />
       <AiQuestionPreference user={user} onUserUpdated={setUser} />
+      <PushNotificationPreference userId={user.id} />
       <section className="profile-card account-mobile-session">
         <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}

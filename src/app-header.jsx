@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
+import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
 import { supabase } from './supabase.js';
 import './app-header.css';
@@ -10,34 +11,6 @@ const SHARE_NOTIFICATION_LIMIT = 40;
 
 function shareNotificationStorageKey(userId) {
   return userId ? `moonble:user:${userId}:quiz-share-notifications-v1` : null;
-}
-
-function browserNotificationPreferenceKey(userId) {
-  return userId ? `moonble:user:${userId}:browser-notifications-enabled-v1` : null;
-}
-
-function getBrowserNotificationSettings(userId) {
-  let permission = 'unsupported';
-  if (typeof window.Notification === 'function') {
-    permission = window.isSecureContext === false ? 'insecure' : window.Notification.permission;
-  }
-  let optedIn = false;
-  try { optedIn = localStorage.getItem(browserNotificationPreferenceKey(userId)) === 'true'; }
-  catch { /* 권한 UI는 저장소 제한 환경에서도 열 수 있다. */ }
-  return { permission, enabled: permission === 'granted' && optedIn };
-}
-
-async function deliverBrowserNotification(title, body) {
-  if (typeof window.Notification !== 'function' || window.Notification.permission !== 'granted') return;
-  const options = { body, icon: '/favicon.svg', tag: `moonble-share-${Date.now()}` };
-  if ('serviceWorker' in navigator) {
-    const registration = await navigator.serviceWorker.ready;
-    if (registration?.showNotification) {
-      await registration.showNotification(title, options);
-      return;
-    }
-  }
-  new window.Notification(title, options);
 }
 
 function showBrowserShareNotification(userId, notification) {
@@ -268,8 +241,18 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
 
   useEffect(() => {
     const refresh = () => setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
+    const onPreferenceChange = event => {
+      if (!event.detail?.userId || event.detail.userId === user?.id) {
+        refresh();
+        setBrowserNotificationError('');
+      }
+    };
     window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
+    window.addEventListener('moonble:browser-notifications-changed', onPreferenceChange);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('moonble:browser-notifications-changed', onPreferenceChange);
+    };
   }, [user?.id]);
 
   useEffect(() => {
@@ -347,35 +330,18 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     setBrowserNotificationBusy(true);
     setBrowserNotificationError('');
     try {
-      let permission = browserNotificationSettings.permission;
-      if (permission === 'default') permission = await window.Notification.requestPermission();
-      if (permission === 'granted') {
-        try { localStorage.setItem(browserNotificationPreferenceKey(user?.id), 'true'); } catch { /* 브라우저 권한 자체는 유지된다. */ }
-      } else if (permission === 'denied') {
+      const settings = await requestBrowserNotifications(user?.id);
+      setBrowserNotificationSettings(settings);
+      if (settings.permission === 'denied') {
         setBrowserNotificationError('알림이 차단돼 있어요. 브라우저 사이트 설정에서 알림을 허용해주세요.');
-      } else if (permission !== 'unsupported' && permission !== 'insecure') {
+      } else if (!settings.enabled && settings.permission !== 'unsupported' && settings.permission !== 'insecure') {
         setBrowserNotificationError('알림 권한을 허용한 뒤 다시 켜주세요.');
       }
-      setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
     } catch {
       setBrowserNotificationError('알림 권한을 요청하지 못했어요. 브라우저 설정을 확인해주세요.');
       setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
     } finally {
       setBrowserNotificationBusy(false);
-    }
-  }
-
-  function disableBrowserNotifications() {
-    try { localStorage.setItem(browserNotificationPreferenceKey(user?.id), 'false'); } catch { /* 권한 요청을 하지 않도록 현재 세션 상태를 갱신한다. */ }
-    setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
-    setBrowserNotificationError('');
-  }
-
-  async function testBrowserNotification() {
-    try {
-      await deliverBrowserNotification('문블 테스트 알림', '알림이 켜졌어요. 공유한 문제의 풀이 결과를 알려드릴게요.');
-    } catch {
-      setBrowserNotificationError('알림을 표시하지 못했어요. 브라우저 알림 설정을 확인해주세요.');
     }
   }
 
@@ -604,10 +570,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     </div>
     <main className="mb-notification-screen-main">
       <header className="mb-notification-screen-heading"><h1 id="mb-notification-title">알림</h1></header>
-      {(() => {
+      {!browserNotificationSettings.enabled && (() => {
         const permission = browserNotificationSettings.permission;
         const disabled = browserNotificationBusy || ['denied', 'unsupported', 'insecure'].includes(permission);
-        const statusLabel = browserNotificationSettings.enabled ? '켜짐' : permission === 'denied' ? '차단됨' : permission === 'unsupported' ? '사용 불가' : '꺼짐';
         const description = permission === 'unsupported'
           ? '현재 환경에서는 푸시 알림을 사용할 수 없어요. 아래 알림 기록에서 공유 문제 풀이 결과를 확인해주세요.'
           : permission === 'insecure'
@@ -616,11 +581,11 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
               ? '브라우저에서 알림이 차단돼 있어요. 사이트 설정에서 알림을 허용해주세요.'
               : '공유한 문제를 누군가 풀면 푸시 알림으로 알려드려요.';
         return <section className="mb-browser-alert-card" aria-label="푸시 알림 설정">
-          <div className="mb-browser-alert-head"><h2>푸시 알림</h2><span className={`mb-browser-alert-status${browserNotificationSettings.enabled ? ' is-enabled' : ''}`}>{statusLabel}</span></div>
+          <div className="mb-browser-alert-head"><h2>푸시 알림</h2><span className="mb-browser-alert-status">꺼짐</span></div>
           <p className="mb-browser-alert-copy">{description}</p>
           {browserNotificationError && <p className="mb-browser-alert-error" role="status">{browserNotificationError}</p>}
           <div className="mb-browser-alert-actions">
-            {browserNotificationSettings.enabled ? <><button type="button" className="is-secondary" onClick={disableBrowserNotifications}>푸시 알림 끄기</button><button type="button" className="is-primary" onClick={testBrowserNotification}>테스트 알림</button></> : <button type="button" className="is-primary" disabled={disabled} onClick={enableBrowserNotifications}>{browserNotificationBusy ? '알림 권한 요청 중' : permission === 'denied' ? '브라우저 설정에서 허용' : permission === 'unsupported' ? '알림 사용 불가' : permission === 'insecure' ? '보안 연결 필요' : '알림 켜기'}</button>}
+            <button type="button" className="is-primary" disabled={disabled} onClick={enableBrowserNotifications}>{browserNotificationBusy ? '알림 권한 요청 중' : permission === 'denied' ? '브라우저 설정에서 허용' : permission === 'unsupported' ? '알림 사용 불가' : permission === 'insecure' ? '보안 연결 필요' : '푸시 알림 켜기'}</button>
           </div>
         </section>;
       })()}

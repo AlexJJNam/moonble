@@ -120,7 +120,38 @@ export async function submitQuizShareAttempt(token, answers) {
     p_answers: answers,
   });
   if (error || !data?.saved) throw new Error('공유한 사람에게 풀이 결과를 알리지 못했어요.');
-  return data;
+
+  let rankData = null;
+  let rankAvailable = false;
+  try {
+    const participantId = getQuizShareParticipantId(tokenHash);
+    const rankResult = await requireSupabase().rpc('moonble_get_quiz_share_rank', {
+      p_token_hash: tokenHash,
+      p_submission_id: submissionId,
+      p_participant_id: participantId,
+    });
+    if (!rankResult.error && rankResult.data && Number.isInteger(rankResult.data.rank) && Number.isInteger(rankResult.data.participants)) {
+      rankData = rankResult.data;
+      rankAvailable = true;
+    }
+  } catch { /* 순위 조회 실패와 풀이 결과 저장은 분리한다. */ }
+  return { ...data, rankAvailable, rank: rankData?.rank ?? null, participants: rankData?.participants ?? null, bestScore: rankData?.best_score ?? null };
+}
+
+function getQuizShareParticipantId(tokenHash) {
+  const key = `moonble:quiz-share-participant:${tokenHash}`;
+  try {
+    const existing = localStorage.getItem(key);
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existing || '')) return existing;
+  } catch { /* 저장소 제한 환경에서는 이번 제출의 참가자로 기록한다. */ }
+  const participantId = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+      const random = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+      return (char === 'x' ? random : (random & 3) | 8).toString(16);
+    });
+  try { localStorage.setItem(key, participantId); } catch { /* 브라우저 저장이 막혀도 결과와 순위는 표시한다. */ }
+  return participantId;
 }
 
 export async function getNextQuizShareNotification() {

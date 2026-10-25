@@ -18,7 +18,13 @@ button { font: inherit; cursor: pointer; }
 .account-main .profile-form-card { padding-inline: 0; border-radius: 0; background: transparent; }
 .account-main .profile-card h2 { margin: 0 0 8px; font-size: var(--mb-font-18); line-height: 26px; }
 .account-ai-preference { max-width: 480px; margin: 20px auto; }
-.account-ai-preference h2 { margin: 0 0 10px; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
+.account-ai-title { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.account-ai-preference h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
+.account-ai-help { position: relative; width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; }
+.account-ai-help:hover, .account-ai-help:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-ai-help:focus-visible { outline: 2px solid rgb(49 130 246 / 28%); outline-offset: 2px; }
+.account-ai-help [role='tooltip'] { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; width: min(270px, calc(100vw - 48px)); padding: 10px 12px; border-radius: 10px; color: #fff; background: rgb(34 40 49 / 94%); font-size: var(--mb-font-12); line-height: 18px; font-weight: 500; text-align: left; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-3px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms; }
+.account-ai-help:hover [role='tooltip'], .account-ai-help:focus-visible [role='tooltip'] { opacity: 1; visibility: visible; transform: translateY(0); }
 .account-ai-provider { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .account-ai-provider button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
 .account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); }
@@ -31,6 +37,21 @@ button { font: inherit; cursor: pointer; }
 .account-ai-preference>p { margin: 8px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
 .account-ai-preference>p[role='alert'] { color: var(--mb-danger); }
 .account-ai-preference>p[role='status'] { color: var(--mb-primary-strong); }
+.account-push-preference { max-width: 480px; margin: 20px auto; }
+.account-push-preference h2 { margin: 0 0 10px; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
+.account-push-option { min-height: 56px; display: flex; align-items: center; gap: 12px; }
+.account-push-icon { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
+.account-push-copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.account-push-copy strong { color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; }
+.account-push-copy small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.account-push-switch { position: relative; width: 48px; height: 30px; flex: 0 0 48px; padding: 3px; border: 0; border-radius: 999px; background: #d8dce1; transition: background-color 180ms ease; }
+.account-push-switch>span { width: 24px; height: 24px; display: block; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(20 26 35 / 14%); transition: transform 180ms cubic-bezier(.2,.8,.3,1); }
+.account-push-switch.is-on { background: var(--mb-primary); }
+.account-push-switch.is-on>span { transform: translateX(18px); }
+.account-push-switch:focus-visible { outline: 3px solid rgb(49 130 246 / 24%); outline-offset: 3px; }
+.account-push-switch:disabled { cursor: default; opacity: .58; }
+.account-push-message { margin: 6px 0 0 50px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.account-push-message.is-error { color: var(--mb-danger); }
 .account-main .profile-card>p { margin: 6px 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
 .account-main .profile-form-card h1 { font-size: var(--mb-font-22); line-height: 30px; }
 .account-main .profile-form-card>p { margin-top: 6px; font-size: var(--mb-font-14); line-height: 22px; }
@@ -82,6 +103,7 @@ button { font: inherit; cursor: pointer; }
   .account-heading { margin-bottom: 16px; }
   .account-profile-summary { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; padding: 16px; border-radius: 18px; }
   .account-ai-preference { margin: 18px auto; }
+  .account-push-preference { margin: 18px auto; }
   .account-profile-avatar { width: 50px; height: 50px; font-size: var(--mb-font-18); }
   .account-profile-summary strong { font-size: var(--mb-font-16); line-height: 24px; }
   .account-main .profile-card { margin: 12px auto; padding: 20px 18px; border-radius: 18px; }
@@ -102,4 +124,5 @@ button { font: inherit; cursor: pointer; }
 @keyframes account-sheet-in { from { transform: translateY(calc(100% + 16px)); } }
 @media (prefers-reduced-motion: reduce) {
   .account-delete-overlay, .account-delete-dialog, .account-ai-provider-check, .account-ai-provider-check path { animation: none; }
+  .account-push-switch, .account-push-switch>span { transition: none; }
 }
