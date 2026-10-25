@@ -194,29 +194,11 @@ function useSolverQuestions(enabled) {
 
     const badge = target.querySelector('.q-number');
     window.setTimeout(() => {
-      target.classList.remove('is-anchor-trace');
-      badge?.classList.remove('is-anchor-flash');
-      void target.offsetWidth;
-      target.classList.add('is-anchor-trace');
-
-      if (reduceMotion) {
-        window.setTimeout(() => target.classList.remove('is-anchor-trace'), 700);
-        return;
-      }
-
-      if (badge) {
-        badge.classList.add('is-anchor-flash');
-        badge.addEventListener('animationend', () => badge.classList.remove('is-anchor-flash'), { once: true });
-      }
-
-      const clearTrace = event => {
-        if (event.animationName !== 'mb-question-card-trace') return;
-        target.classList.remove('is-anchor-trace');
-        target.removeEventListener('animationend', clearTrace);
-        target.removeEventListener('animationcancel', clearTrace);
-      };
-      target.addEventListener('animationend', clearTrace);
-      target.addEventListener('animationcancel', clearTrace);
+      if (reduceMotion || !badge) return;
+      badge.classList.remove('is-anchor-bounce');
+      void badge.offsetWidth;
+      badge.classList.add('is-anchor-bounce');
+      badge.addEventListener('animationend', () => badge.classList.remove('is-anchor-bounce'), { once: true });
     }, reduceMotion ? 0 : 450);
   }
 
