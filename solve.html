@@ -6053,16 +6053,26 @@ if (shareToken || requestedPaper === 'shared') {
       <path class="quiz-pen-ink-highlight" pathLength="1" d="M17 64 C29 62 37 33 49 32 C62 31 70 63 82 64 C95 65 105 34 118 33 C131 32 141 64 153 64 C167 64 177 36 190 35 C203 34 213 59 225 55" />
     </svg>
   </div>
-  <button id="quizInkExit" class="quiz-ink-exit" type="button" tabindex="-1" aria-label="펜 모드 종료" title="펜 모드 종료">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
-  </button>
-  <div class="quiz-ink-scroll-controls" role="group" aria-label="문제 화면 이동">
-    <button id="quizInkScrollUp" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 위로 이동" title="화면 위로">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>
-    </button>
-    <button id="quizInkScrollDown" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 아래로 이동" title="화면 아래로">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
-    </button>
+  <div id="quizInkToolbar" class="quiz-ink-toolbar" aria-label="펜 도구">
+    <div class="quiz-ink-control-row">
+      <button id="quizInkExit" class="quiz-ink-exit" type="button" tabindex="-1" aria-label="펜 모드 종료" title="펜 모드 종료">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
+      </button>
+      <div class="quiz-ink-scroll-controls" role="group" aria-label="문제 화면 이동">
+        <button id="quizInkScrollUp" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 위로 이동" title="화면 위로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>
+        </button>
+        <button id="quizInkScrollDown" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 아래로 이동" title="화면 아래로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div id="quizInkColors" class="quiz-ink-color-options" role="radiogroup" aria-label="필기 색상"></div>
+    <label class="quiz-ink-size-control" for="quizInkSize">
+      <span>두께</span>
+      <input id="quizInkSize" type="range" min="1" max="12" step="0.5" value="5" tabindex="-1" aria-label="필기 두께">
+      <output id="quizInkSizeValue" for="quizInkSize">5</output>
+    </label>
   </div>
   <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>화면을 조금씩 이동하려면 옆의 화살표를 눌러주세요.</div>
   <script>
@@ -6150,20 +6160,25 @@ if (shareToken || requestedPaper === 'shared') {
   </script>
   <script type="module">
     import { getStroke } from 'perfect-freehand';
+    import { GROUP_COLOR_OPTIONS } from './src/paper-group-colors.js';
 
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
+      const toolbar = document.getElementById('quizInkToolbar');
       const exitButton = document.getElementById('quizInkExit');
       const scrollControls = document.querySelector('.quiz-ink-scroll-controls');
       const scrollUpButton = document.getElementById('quizInkScrollUp');
       const scrollDownButton = document.getElementById('quizInkScrollDown');
+      const inkColors = document.getElementById('quizInkColors');
+      const inkSizeInput = document.getElementById('quizInkSize');
+      const inkSizeValue = document.getElementById('quizInkSizeValue');
       const penModeEffect = document.getElementById('quizPenModeEffect');
       const tip = document.getElementById('quizPenTip');
       const tipClose = document.getElementById('quizPenTipClose');
       const penToast = document.getElementById('quizPenToast');
       const quiz = document.getElementById('quizContainer');
       const aiAskButton = document.querySelector('.fab');
-      if (!canvas || !exitButton || !quiz) return;
+      if (!canvas || !toolbar || !exitButton || !quiz) return;
 
       const context = canvas.getContext('2d');
       const completedLayer = document.createElement('canvas');
@@ -6182,6 +6197,65 @@ if (shareToken || requestedPaper === 'shared') {
       let savedScrollBehavior = '';
       let scrollTargetY = null;
       let scrollTargetResetTimer = 0;
+      let currentInkColor = GROUP_COLOR_OPTIONS[0]?.swatch || '#3182f6';
+      let currentInkSize = 5;
+      let inkColorButtons = [];
+      if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
+
+      function selectInkColor(index, focus = false) {
+        const option = GROUP_COLOR_OPTIONS[index];
+        if (!option) return;
+        currentInkColor = option.swatch;
+        inkColorButtons.forEach((button, buttonIndex) => {
+          const selected = buttonIndex === index;
+          button.classList.toggle('is-selected', selected);
+          button.setAttribute('aria-checked', String(selected));
+          button.tabIndex = canvas.classList.contains('is-active') && selected ? 0 : -1;
+        });
+        if (focus) inkColorButtons[index]?.focus();
+      }
+
+      inkColorButtons = GROUP_COLOR_OPTIONS.map((option, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `quiz-ink-color-option${index === 0 ? ' is-selected' : ''}`;
+        button.setAttribute('role', 'radio');
+        button.setAttribute('aria-label', `${option.label} 펜 색상`);
+        button.setAttribute('aria-checked', String(index === 0));
+        button.title = `${option.label} 색상`;
+        button.tabIndex = -1;
+        button.style.setProperty('--group-color-swatch', option.swatch);
+        const swatch = document.createElement('span');
+        swatch.setAttribute('aria-hidden', 'true');
+        button.appendChild(swatch);
+        const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        check.setAttribute('viewBox', '0 0 24 24');
+        check.setAttribute('fill', 'none');
+        check.setAttribute('stroke', 'currentColor');
+        check.setAttribute('stroke-width', '3');
+        check.setAttribute('stroke-linecap', 'round');
+        check.setAttribute('stroke-linejoin', 'round');
+        check.setAttribute('aria-hidden', 'true');
+        const checkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        checkPath.setAttribute('d', 'm5 12 4 4L19 6');
+        check.appendChild(checkPath);
+        button.appendChild(check);
+        button.addEventListener('click', () => selectInkColor(index));
+        button.addEventListener('keydown', event => {
+          const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+          if (!direction) return;
+          event.preventDefault();
+          const nextIndex = (index + direction + GROUP_COLOR_OPTIONS.length) % GROUP_COLOR_OPTIONS.length;
+          selectInkColor(nextIndex, true);
+        });
+        inkColors?.appendChild(button);
+        return button;
+      });
+
+      inkSizeInput?.addEventListener('input', () => {
+        currentInkSize = Number(inkSizeInput.value);
+        if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
+      });
 
       function syncTipVisibility() {
         if (!tip) return;
@@ -6242,8 +6316,8 @@ if (shareToken || requestedPaper === 'shared') {
       function drawStroke(targetContext, stroke, yOffset, isLiveStroke) {
         if (!targetContext || !stroke.points.length) return;
         const first = stroke.points[0];
-        targetContext.fillStyle = '#2374ee';
-        targetContext.strokeStyle = '#2374ee';
+        targetContext.fillStyle = stroke.color || currentInkColor;
+        targetContext.strokeStyle = stroke.color || currentInkColor;
         targetContext.lineCap = 'round';
         targetContext.lineJoin = 'round';
         if (isLiveStroke || !stroke.outline) {
@@ -6349,9 +6423,12 @@ if (shareToken || requestedPaper === 'shared') {
         activeStroke = null;
         mode = null;
         canvas.classList.toggle('is-active', enabled);
+        toolbar.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);
         exitButton.tabIndex = enabled ? 0 : -1;
         scrollControls?.classList.toggle('is-active', enabled);
+        inkColorButtons.forEach((button, index) => { button.tabIndex = enabled && button.classList.contains('is-selected') ? 0 : -1; });
+        if (inkSizeInput) inkSizeInput.tabIndex = enabled ? 0 : -1;
         for (const button of [scrollUpButton, scrollDownButton]) {
           if (!button) continue;
           button.tabIndex = enabled ? 0 : -1;
@@ -6531,7 +6608,7 @@ if (shareToken || requestedPaper === 'shared') {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
         if (start || !activeStroke) {
           mode = 'draw';
-          activeStroke = { width: 5, simulatePressure: true, points: [], inputPoints: [] };
+          activeStroke = { width: currentInkSize, color: currentInkColor, simulatePressure: true, points: [], inputPoints: [] };
           appendStrokePoint(activeStroke, point);
           strokes.push(activeStroke);
         } else {
@@ -6596,7 +6673,8 @@ if (shareToken || requestedPaper === 'shared') {
         mode = 'draw';
         const point = pointerPosition(event);
         activeStroke = {
-          width: 5,
+          width: currentInkSize,
+          color: currentInkColor,
           pointerType: event.pointerType,
           simulatePressure: true,
           pressureMin: Infinity,
