@@ -226,11 +226,9 @@ function useSolverQuestions(enabled) {
 export function AppHeader({ active, error, hideSolverBack = false, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
   const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
-    if (window.matchMedia?.('(min-width: 768px)').matches) return true;
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
     catch { return false; }
   });
-  const [hoverExpanded, setHoverExpanded] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useState(() => {
     try { return sessionStorage.getItem('moonble:sidebar-hidden') === 'true'; }
     catch { return false; }
@@ -262,7 +260,6 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const name = profile?.name || user?.email || '내 계정';
   const solver = variant === 'solver';
   const sharedSolver = solver && hideSolverBack;
-  const isCollapsed = collapsed && !hoverExpanded;
   const [quizPenMode, setQuizPenMode] = useState(() => window.moonbleQuizPenMode === true);
   const questions = useSolverQuestions(solver);
   const solverHeading = '문제 목록';
@@ -481,9 +478,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   }, [solver]);
 
   useEffect(() => {
-    document.body.classList.toggle('mb-sidebar-collapsed', isCollapsed);
+    document.body.classList.toggle('mb-sidebar-collapsed', collapsed);
     return () => document.body.classList.remove('mb-sidebar-collapsed');
-  }, [isCollapsed]);
+  }, [collapsed]);
 
   useEffect(() => {
     try { localStorage.setItem('moonble:sidebar-collapsed', String(collapsed)); } catch { /* 저장할 수 없어도 토글은 동작한다. */ }
@@ -609,11 +606,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   }, [solver]);
 
   return <>
-  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${sharedSolver ? ' is-shared-solver' : ''}${isCollapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}
-    onMouseEnter={() => { if (collapsed && window.matchMedia('(min-width: 768px)').matches) setHoverExpanded(true); }}
-    onMouseLeave={event => { if (window.matchMedia('(min-width: 768px)').matches && !event.currentTarget.contains(document.activeElement)) setHoverExpanded(false); }}
-    onFocusCapture={() => { if (collapsed && window.matchMedia('(min-width: 768px)').matches) setHoverExpanded(true); }}
-    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHoverExpanded(false); }}>
+  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <UserAvatar user={user} className="mb-app-logo-avatar" />}</a>
@@ -687,12 +680,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         <PenLine size={16} aria-hidden="true" />
         <span aria-hidden="true">펜 모드</span>
       </button>}
-      <button className="mb-sidebar-toggle" type="button" aria-expanded={!isCollapsed} aria-label={isCollapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => {
-        if (hoverExpanded) setHoverExpanded(false);
-        else setCollapsed(value => !value);
-      }}>
-        {isCollapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
-        {!isCollapsed && <span aria-hidden="true">접기</span>}
+      <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
+        {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
+        {!collapsed && <span aria-hidden="true">접기</span>}
       </button>
     </div>
   </aside>
