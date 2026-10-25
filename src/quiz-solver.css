@@ -60,6 +60,12 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-scroll-progress-tick .tick-spark:nth-child(3) { --tick-angle: -128deg; }
 .quiz-scroll-progress-tick .tick-spark:nth-child(4) { --tick-angle: -92deg; }
 .quiz-scroll-progress-tick .tick-spark:nth-child(5) { --tick-angle: -56deg; }
+.quiz-ink-canvas { position: fixed; z-index: 1090; inset: 0; width: 100vw; height: 100dvh; display: none; touch-action: none; }
+.quiz-ink-canvas.is-active { display: block; }
+.quiz-ink-exit { position: fixed; z-index: 1092; left: 50%; bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px)); width: 48px; height: 48px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fff; background: #27313f; box-shadow: 0 4px 14px rgb(16 24 40 / 20%); opacity: 0; pointer-events: none; transform: translate(-50%, 8px) scale(.94); transition: opacity 160ms ease, transform 200ms cubic-bezier(.2,.8,.2,1); }
+.quiz-ink-exit.is-active { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }
+.quiz-ink-exit svg { width: 21px; height: 21px; }
+.quiz-ink-exit:focus-visible { outline: 3px solid #9bc7ff; outline-offset: 3px; }
 .quiz-scroll-progress.is-tick::after { animation: quiz-progress-head .5s ease-out; }
 .quiz-scroll-progress.is-tick .tick-ring { animation: quiz-progress-ring .5s cubic-bezier(.2, .7, .3, 1); }
 .quiz-scroll-progress.is-tick .tick-spark { animation: quiz-progress-spark .45s cubic-bezier(.2, .7, .3, 1) .04s both; }
@@ -83,4 +89,5 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
   .quiz-scroll-progress.is-tick::after,
   .quiz-scroll-progress.is-tick .tick-ring,
   .quiz-scroll-progress.is-tick .tick-spark { animation: none; }
+  .quiz-ink-exit { transition: none; }
 }

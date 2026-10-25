@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, PenLine, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
@@ -250,8 +250,16 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const name = profile?.name || user?.email || '내 계정';
   const solver = variant === 'solver';
   const sharedSolver = solver && hideSolverBack;
+  const [quizPenMode, setQuizPenMode] = useState(() => window.moonbleQuizPenMode === true);
   const questions = useSolverQuestions(solver);
   const solverHeading = '문제 목록';
+
+  useEffect(() => {
+    if (!solver) return undefined;
+    const syncPenMode = event => setQuizPenMode(Boolean(event.detail?.active));
+    window.addEventListener('moonble:quiz-pen-mode-change', syncPenMode);
+    return () => window.removeEventListener('moonble:quiz-pen-mode-change', syncPenMode);
+  }, [solver]);
 
   useEffect(() => {
     setShareNotifications(readShareNotifications(user?.id));
@@ -613,6 +621,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         </button>}
       </div>}
     </div>
+    {solver && <button className={`mb-pen-mode-toggle${quizPenMode ? ' is-active' : ''}`} type="button" aria-pressed={quizPenMode} aria-label={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} title={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} onClick={() => window.dispatchEvent(new CustomEvent('moonble:toggle-quiz-pen-mode'))}>
+      <PenLine size={16} aria-hidden="true" />
+    </button>}
     <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
       {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
     </button>
