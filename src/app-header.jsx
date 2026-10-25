@@ -281,9 +281,11 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
 
       nodes.forEach((node, index) => {
         const distance = Math.abs(index - focalIndex);
-        const size = Math.max(6, 32 - Math.max(0, distance - 2.5) * 4.5);
-        const fontSize = size >= 26 ? 12 : size >= 21 ? 10 : 9;
-        const opacity = Math.max(0.72, 1 - distance * 0.04);
+        // Keep every question number readable; only the circle scale and opacity
+        // recede gently toward the edges of the collapsed navigator.
+        const size = Math.max(26, 32 - Math.max(0, distance - 2.5) * 0.9);
+        const fontSize = size >= 30 ? 12 : 10;
+        const opacity = Math.max(0.88, 1 - distance * 0.018);
         const distanceBin = distance >= 8 ? 'far' : String(Math.round(distance));
         node.dataset.distance = distanceBin;
         node.style.setProperty('--mb-solver-number-size', `${size.toFixed(2)}px`);

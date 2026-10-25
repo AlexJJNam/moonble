@@ -4019,6 +4019,8 @@
       modePill.style.display = wrongMode ? 'inline-flex' : 'none';
 
       picked = sourceArray ? sourceArray.slice() : sample(typeof getActiveBank === 'function' ? getActiveBank() : (getSelectedPaperBank() || BANK), QUESTION_COUNT);
+      const questionCountBadge = document.querySelector('#quiz .section-head .solve-paper-count-badge');
+      if (questionCountBadge) questionCountBadge.textContent = `문항 수 ${picked.length}`;
 
       picked.forEach((q, idx) => {
         const card = document.createElement('div');
@@ -5911,7 +5913,6 @@ if (shareToken || requestedPaper === 'shared') {
           }
         } catch { /* 저장된 풀이 정보가 없으면 기본 제목만 표시한다. */ }
       }
-      setSolvePaperHeading(paperTitle, paperDescription, null, { paperId, bankId: solverBankId, groupId: solverGroupId });
       let activityKey = ['basics', 'advanced', 'random'].includes(paperId) ? paperId : null;
       if (paperId === 'custom' && solveParams.get('bank')) activityKey = `custom:${solveParams.get('bank')}`;
       if (paperId === 'retry') {
@@ -5922,6 +5923,8 @@ if (shareToken || requestedPaper === 'shared') {
       }
       if (activityKey) recordPaperAccess(user.id, activityKey);
       renderQuiz();
+      const questionCount = document.querySelectorAll('#quizContainer .q-card').length;
+      setSolvePaperHeading(paperTitle, paperDescription, questionCount, { paperId, bankId: solverBankId, groupId: solverGroupId });
       renderHistory();
     }
   }
