@@ -63,7 +63,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-favorites-list::-webkit-scrollbar { display: none; }
 .mb-favorite-link { min-width: 0; min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 18px; font-weight: 500; text-decoration: none; }
 .mb-favorite-link:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
-.mb-favorite-icon { width: 24px; height: 24px; flex: 0 0 24px; display: grid; place-content: center; border-radius: 6px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.mb-favorite-icon { width: 24px; height: 24px; flex: 0 0 24px; display: grid; place-content: center; border-radius: 6px; color: var(--favorite-group-color, var(--mb-primary-strong)); background: var(--favorite-group-tint, var(--mb-primary-soft)); }
 .mb-favorite-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mb-solver-nav { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .mb-solver-heading { display: grid; gap: 10px; padding: 0 4px 10px; }

@@ -5,6 +5,7 @@ import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
 import { getCustomBankCollection } from './custom-bank.js';
+import { buildGroupColorMap, favoriteGroupIconStyle } from './paper-group-colors.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { recordPaperAccess } from './paper-activity.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
@@ -53,12 +54,14 @@ function getFavoriteSidebarItems(userId) {
   if (!userId) return [];
   const favoriteIds = getFavoritePaperIds(userId);
   if (!favoriteIds.length) return [];
-  const banks = getCustomBankCollection(userId).banks;
+  const collection = getCustomBankCollection(userId);
+  const groupColors = buildGroupColorMap(collection.groups);
+  const banks = collection.banks;
   const builtInPapers = new Map(BUILT_IN_PAPER_PREVIEWS.map(paper => [paper.id, paper]));
   return favoriteIds.map(id => {
     if (id.startsWith('custom:')) {
       const bank = banks.find(item => item.id === id.slice('custom:'.length));
-      return bank ? { id, label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz` } : null;
+      return bank ? { id, label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
     }
     const paper = builtInPapers.get(id);
     return paper ? { id, label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
@@ -598,7 +601,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾는 문제지">
           {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label} onClick={() => recordPaperAccess(user?.id, paper.id)}>
-            <span className="mb-favorite-icon"><BookOpen size={14} aria-hidden="true" /></span>
+            <span className="mb-favorite-icon" style={paper.iconStyle}><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-favorite-title">{paper.label}</span>
           </a>)}
         </nav>
