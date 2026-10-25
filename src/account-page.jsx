@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Bell, Check, CircleHelp, LogOut, UserRoundX } from 'lucide-react';
+import { Bell, Check, CircleHelp, LogOut, Pencil, UserRoundX } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
@@ -217,6 +217,7 @@ function AccountDeletion({ user }) {
 
 function AccountPage() {
   const [user, setUser] = useState(initialUser);
+  const [profileEditing, setProfileEditing] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
 
@@ -256,9 +257,12 @@ function AccountPage() {
       <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>
       <section className="account-profile-summary" aria-label="현재 프로필">
         <span className="account-profile-avatar" aria-hidden="true">{profileInitial}</span>
-        <div><strong>{profile.name}</strong><p>{profile.companyName}</p><small>{user.email}</small></div>
+        <div>
+          <div className="account-profile-name"><strong>{profile.name}</strong><button className="account-profile-edit" type="button" aria-label={profileEditing ? '내 정보 편집 닫기' : '내 정보 편집'} aria-expanded={profileEditing} onClick={() => setProfileEditing(value => !value)}><Pencil size={15} aria-hidden="true" /></button></div>
+          <p>{profile.companyName}</p><small>{user.email}</small>
+        </div>
       </section>
-      <ProfileForm user={user} initial={false} onSaved={setUser} />
+      <ProfileForm user={user} initial={false} editing={profileEditing} onSaved={setUser} />
       <AiQuestionPreference user={user} onUserUpdated={setUser} />
       <PushNotificationPreference userId={user.id} />
       <section className="profile-card account-mobile-session">

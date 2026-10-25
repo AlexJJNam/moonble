@@ -2,30 +2,31 @@ import React, { useState } from 'react';
 import { supabase } from '../supabase.js';
 import { profileOf } from '../profile.js';
 
-export function ProfileForm({ user, initial, onSaved }) {
+export function ProfileForm({ user, initial, editing = initial, onSaved }) {
   const profile = profileOf(user);
   const [name, setName] = useState(profile.name);
   const [company, setCompany] = useState(profile.companyName);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [celebrating, setCelebrating] = useState(false);
   async function save(event) {
     event.preventDefault();
-    setError(''); setMessage('');
+    setError('');
     if (!name.trim() || !company.trim()) { setError('이름과 회사명을 입력해주세요.'); return; }
     setPending(true);
     try {
       const { data, error: saveError } = await supabase.auth.updateUser({ data: { name: name.trim(), companyName: company.trim() } });
       if (saveError) throw saveError;
-      setMessage('내 정보를 저장했습니다.');
       onSaved(data.user);
+      setCelebrating(true);
     } catch { setError('저장하지 못했습니다. 입력한 내용은 유지됩니다. 잠시 후 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
+  if (!initial && !editing) return null;
   return <div className="profile-wrap mb-page-gutter">
     <section className="profile-card profile-form-card">
       <h1>{initial ? 'Moonble에 오신 것을 환영합니다' : '내 정보 수정'}</h1>
-      <p>{initial ? 'Moonble을 시작하기 전에 이름과 회사를 알려주세요.' : 'Moonble에서 사용할 이름과 소속을 관리하세요.'}</p>
+      {initial && <p>Moonble을 시작하기 전에 이름과 회사를 알려주세요.</p>}
       <form onSubmit={save}>
         <fieldset disabled={pending}>
           <label htmlFor="profile-email">이메일</label>
@@ -39,7 +40,12 @@ export function ProfileForm({ user, initial, onSaved }) {
         </fieldset>
       </form>
       {error && <p role="alert">{error}</p>}
-      {message && <p role="status">{message}</p>}
     </section>
+    {celebrating && <div className="account-profile-update-fx is-playing" role="status" aria-live="assertive" onAnimationEnd={event => {
+      if (event.target === event.currentTarget && event.animationName === 'account-profile-update-out') setCelebrating(false);
+    }}>
+      <span className="account-profile-update-badge" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13.5 24.8l7 7L35 17.5" /></svg></span>
+      <strong>내 정보가 업데이트 되었어요!</strong>
+    </div>}
   </div>;
 }
