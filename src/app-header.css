@@ -147,7 +147,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-account { padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout>span:not(.moonble-spinner) { display: none; }
-.mb-app-header.is-collapsed .mb-sidebar-tools { right: 8px; }
+.mb-app-header.is-collapsed .mb-sidebar-tools { right: 8px; flex-direction: column; gap: 6px; }
 .mb-app-header.is-collapsed .mb-sidebar-toggle, .mb-app-header.is-collapsed .mb-pen-mode-toggle { width: 24px; flex-basis: 24px; }
 .mb-app-header.is-collapsed .mb-sidebar-toggle > span, .mb-app-header.is-collapsed .mb-pen-mode-toggle > span { display: none; }
 

@@ -4272,6 +4272,7 @@
       <svg class="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
     </span>
   </button>
+  <div id="quizPenAiToast" class="quiz-pen-ai-toast" role="status" aria-live="polite" aria-atomic="true" hidden>펜 모드에서는 사용할 수 없어요.</div>
   <div id="aiPickOverlay" class="ai-pick-overlay" aria-hidden="true"></div>
   <div id="aiAskBar" class="ai-ask-bar">
     <div class="ai-ask-field">
@@ -6038,6 +6039,7 @@ if (shareToken || requestedPaper === 'shared') {
     <i class="quiz-scroll-progress-tick" aria-hidden="true"><b class="tick-ring"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b></i>
   </div>
   <canvas id="quizInkCanvas" class="quiz-ink-canvas" aria-hidden="true"></canvas>
+  <div id="quizInkEraserCursor" class="quiz-ink-eraser-cursor" aria-hidden="true" hidden></div>
   <div id="quizPenModeEffect" class="quiz-pen-mode-effect" aria-hidden="true" hidden>
     <svg class="quiz-pen-ink-mark" viewBox="0 0 240 96" fill="none" role="presentation">
       <defs>
@@ -6053,6 +6055,14 @@ if (shareToken || requestedPaper === 'shared') {
   </div>
   <div id="quizInkToolbar" class="quiz-ink-toolbar" aria-label="펜 도구">
     <div class="quiz-ink-control-row">
+      <div class="quiz-ink-tool-controls" role="group" aria-label="필기 도구">
+        <button id="quizInkPen" class="quiz-ink-tool-button is-selected" type="button" tabindex="-1" aria-label="펜으로 쓰기" aria-pressed="true" title="펜">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19 7-7 3 3-7 7-3-3Z"/><path d="m18 13 3 3M2 22l7-2-5-5-2 7Z"/><path d="m14 6 4-4 4 4-4 4zM2 22 14 10"/></svg>
+        </button>
+        <button id="quizInkEraser" class="quiz-ink-tool-button" type="button" tabindex="-1" aria-label="지우개" aria-pressed="false" title="지우개">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.2 4a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L12 19H7Z"/><path d="m5 12 7 7M22 21H7"/></svg>
+        </button>
+      </div>
       <button id="quizInkExit" class="quiz-ink-exit" type="button" tabindex="-1" aria-label="펜 모드 종료" title="펜 모드 종료">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
       </button>
@@ -6162,7 +6172,10 @@ if (shareToken || requestedPaper === 'shared') {
 
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
+      const eraserCursor = document.getElementById('quizInkEraserCursor');
       const toolbar = document.getElementById('quizInkToolbar');
+      const penToolButton = document.getElementById('quizInkPen');
+      const eraserToolButton = document.getElementById('quizInkEraser');
       const exitButton = document.getElementById('quizInkExit');
       const scrollControls = document.querySelector('.quiz-ink-scroll-controls');
       const scrollUpButton = document.getElementById('quizInkScrollUp');
@@ -6174,6 +6187,7 @@ if (shareToken || requestedPaper === 'shared') {
       const tip = document.getElementById('quizPenTip');
       const tipClose = document.getElementById('quizPenTipClose');
       const penToast = document.getElementById('quizPenToast');
+      const aiPenToast = document.getElementById('quizPenAiToast');
       const quiz = document.getElementById('quizContainer');
       const aiAskButton = document.querySelector('.fab');
       if (!canvas || !toolbar || !exitButton || !quiz) return;
@@ -6185,6 +6199,7 @@ if (shareToken || requestedPaper === 'shared') {
       const activePointers = new Map();
       const strokes = [];
       let mode = null;
+      let currentInkTool = 'pen';
       let activeStroke = null;
       let activePointerScrollY = null;
       let penGestureScrollTargetY = null;
@@ -6192,6 +6207,8 @@ if (shareToken || requestedPaper === 'shared') {
       let lastMarginTap = null;
       let penToastTimer = 0;
       let penToastHideTimer = 0;
+      let aiPenToastTimer = 0;
+      let aiPenToastHideTimer = 0;
       let penModeEffectTimer = 0;
       let renderFrame = 0;
       let completedLayerDirty = true;
@@ -6201,7 +6218,34 @@ if (shareToken || requestedPaper === 'shared') {
       let currentInkColor = GROUP_COLOR_OPTIONS[0]?.swatch || '#3182f6';
       let currentInkSize = 5;
       let inkColorButtons = [];
+      const inkToolButtons = [penToolButton, eraserToolButton].filter(Boolean);
       if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
+
+      function setEraserCursor(visible, x, y) {
+        if (!eraserCursor) return;
+        eraserCursor.style.setProperty('--eraser-size', `${currentInkSize}px`);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          eraserCursor.style.left = `${x}px`;
+          eraserCursor.style.top = `${y}px`;
+        }
+        eraserCursor.hidden = !(visible && currentInkTool === 'eraser' && canvas.classList.contains('is-active'));
+      }
+
+      function selectInkTool(tool, focus = false) {
+        currentInkTool = tool === 'eraser' ? 'eraser' : 'pen';
+        const selectedButton = currentInkTool === 'eraser' ? eraserToolButton : penToolButton;
+        for (const button of inkToolButtons) {
+          const selected = button === selectedButton;
+          button.classList.toggle('is-selected', selected);
+          button.setAttribute('aria-pressed', String(selected));
+          button.tabIndex = canvas.classList.contains('is-active') ? 0 : -1;
+        }
+        if (currentInkTool !== 'eraser') setEraserCursor(false);
+        if (focus) selectedButton?.focus();
+      }
+
+      penToolButton?.addEventListener('click', () => selectInkTool('pen'));
+      eraserToolButton?.addEventListener('click', () => selectInkTool('eraser'));
 
       function selectInkColor(index, focus = false) {
         const option = GROUP_COLOR_OPTIONS[index];
@@ -6256,6 +6300,7 @@ if (shareToken || requestedPaper === 'shared') {
       inkSizeInput?.addEventListener('input', () => {
         currentInkSize = Number(inkSizeInput.value);
         if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
+        eraserCursor?.style.setProperty('--eraser-size', `${currentInkSize}px`);
       });
 
       function syncTipVisibility() {
@@ -6277,6 +6322,32 @@ if (shareToken || requestedPaper === 'shared') {
           penToastHideTimer = window.setTimeout(() => { penToast.hidden = true; }, 180);
         }, 2500);
       }
+
+      function showAiPenToast() {
+        if (!aiPenToast) return;
+        window.clearTimeout(aiPenToastTimer);
+        window.clearTimeout(aiPenToastHideTimer);
+        aiPenToast.hidden = false;
+        requestAnimationFrame(() => aiPenToast.classList.add('is-visible'));
+        aiPenToastTimer = window.setTimeout(() => {
+          aiPenToast.classList.remove('is-visible');
+          aiPenToastHideTimer = window.setTimeout(() => { aiPenToast.hidden = true; }, 180);
+        }, 1800);
+      }
+
+      aiAskButton?.addEventListener('click', event => {
+        if (!canvas.classList.contains('is-active')) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showAiPenToast();
+      }, true);
+
+      aiAskButton?.addEventListener('click', event => {
+        if (!canvas.classList.contains('is-active')) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showAiPenToast();
+      }, true);
 
       function showPenModeEffect() {
         if (!penModeEffect) return;
@@ -6317,6 +6388,8 @@ if (shareToken || requestedPaper === 'shared') {
       function drawStroke(targetContext, stroke, yOffset, isLiveStroke) {
         if (!targetContext || !stroke.points.length) return;
         const first = stroke.points[0];
+        targetContext.save();
+        targetContext.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
         targetContext.fillStyle = stroke.color || currentInkColor;
         targetContext.strokeStyle = stroke.color || currentInkColor;
         targetContext.lineCap = 'round';
@@ -6353,6 +6426,7 @@ if (shareToken || requestedPaper === 'shared') {
           }
           targetContext.closePath();
           targetContext.fill();
+          targetContext.restore();
           return;
         }
 
@@ -6360,6 +6434,7 @@ if (shareToken || requestedPaper === 'shared') {
           targetContext.beginPath();
           targetContext.arc(first.x, first.y - yOffset, stroke.width / 2, 0, Math.PI * 2);
           targetContext.fill();
+          targetContext.restore();
           return;
         }
 
@@ -6369,6 +6444,7 @@ if (shareToken || requestedPaper === 'shared') {
         const last = stroke.points[stroke.points.length - 1];
         targetContext.lineTo(last.x, last.y - yOffset);
         targetContext.stroke();
+        targetContext.restore();
       }
 
       function rebuildCompletedLayer() {
@@ -6435,8 +6511,11 @@ if (shareToken || requestedPaper === 'shared') {
         canvas.classList.toggle('is-active', enabled);
         toolbar.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);
+        if (enabled) selectInkTool('pen');
+        else setEraserCursor(false);
         exitButton.tabIndex = enabled ? 0 : -1;
         scrollControls?.classList.toggle('is-active', enabled);
+        inkToolButtons.forEach(button => { button.tabIndex = enabled ? 0 : -1; });
         inkColorButtons.forEach((button, index) => { button.tabIndex = enabled && button.classList.contains('is-selected') ? 0 : -1; });
         if (inkSizeInput) inkSizeInput.tabIndex = enabled ? 0 : -1;
         for (const button of [scrollUpButton, scrollDownButton]) {
@@ -6444,7 +6523,7 @@ if (shareToken || requestedPaper === 'shared') {
           button.tabIndex = enabled ? 0 : -1;
         }
         if (aiAskButton) {
-          aiAskButton.disabled = enabled;
+          aiAskButton.disabled = false;
           aiAskButton.classList.toggle('is-pen-disabled', enabled);
           aiAskButton.setAttribute('aria-disabled', String(enabled));
         }
@@ -6472,7 +6551,10 @@ if (shareToken || requestedPaper === 'shared') {
           if (penModeEffect) { penModeEffect.classList.remove('is-active'); penModeEffect.hidden = true; }
           window.clearTimeout(penToastTimer);
           window.clearTimeout(penToastHideTimer);
+          window.clearTimeout(aiPenToastTimer);
+          window.clearTimeout(aiPenToastHideTimer);
           if (penToast) { penToast.classList.remove('is-visible'); penToast.hidden = true; }
+          if (aiPenToast) { aiPenToast.classList.remove('is-visible'); aiPenToast.hidden = true; }
           context.clearRect(0, 0, canvas.width, canvas.height);
           completedContext?.clearRect(0, 0, completedLayer.width, completedLayer.height);
           if (renderFrame) cancelAnimationFrame(renderFrame);
@@ -6662,9 +6744,10 @@ if (shareToken || requestedPaper === 'shared') {
       let lastTouchScrollY = null;
       function drawTouch(touch, start = false) {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
+        setEraserCursor(true, touch.clientX, touch.clientY);
         if (start || !activeStroke) {
           mode = 'draw';
-          activeStroke = { width: currentInkSize, color: currentInkColor, simulatePressure: true, points: [], inputPoints: [] };
+          activeStroke = { width: currentInkSize, color: currentInkColor, tool: currentInkTool, simulatePressure: true, points: [], inputPoints: [] };
           appendStrokePoint(activeStroke, point);
           strokes.push(activeStroke);
         } else {
@@ -6680,6 +6763,7 @@ if (shareToken || requestedPaper === 'shared') {
         if (event.touches.length >= 2) {
           mode = 'multitouch';
           discardActiveStroke();
+          setEraserCursor(false);
           resetPenGestureScroll();
           lastTouchScrollY = touchCentroidY(event.touches);
           scheduleRedraw();
@@ -6698,6 +6782,7 @@ if (shareToken || requestedPaper === 'shared') {
           if (mode !== 'multitouch') {
             mode = 'multitouch';
             discardActiveStroke();
+            setEraserCursor(false);
             resetPenGestureScroll();
             scheduleRedraw();
           }
@@ -6713,6 +6798,7 @@ if (shareToken || requestedPaper === 'shared') {
       function endTouchGesture(event) {
         if (event.touches.length === 0) {
           mode = null;
+          setEraserCursor(false);
           lastTouchScrollY = null;
           completeActiveStroke();
           flushRedraw();
@@ -6728,9 +6814,11 @@ if (shareToken || requestedPaper === 'shared') {
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
         activePointers.set(event.pointerId, pointerPosition(event));
+        setEraserCursor(true, event.clientX, event.clientY);
         if (activePointers.size >= 2) {
           mode = 'multitouch';
           discardActiveStroke();
+          setEraserCursor(false);
           resetScrollTarget();
           resetPenGestureScroll();
           activePointerScrollY = pointerCentroidY();
@@ -6743,6 +6831,7 @@ if (shareToken || requestedPaper === 'shared') {
         activeStroke = {
           width: currentInkSize,
           color: currentInkColor,
+          tool: currentInkTool,
           pointerType: event.pointerType,
           simulatePressure: true,
           pressureMin: Infinity,
@@ -6756,10 +6845,16 @@ if (shareToken || requestedPaper === 'shared') {
       });
 
       canvas.addEventListener('pointermove', event => {
-        if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents) || !activePointers.has(event.pointerId)) return;
+        if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents)) return;
+        if (!activePointers.has(event.pointerId)) {
+          if (event.pointerType !== 'touch') setEraserCursor(true, event.clientX, event.clientY);
+          return;
+        }
         event.preventDefault();
+        setEraserCursor(true, event.clientX, event.clientY);
         activePointers.set(event.pointerId, pointerPosition(event));
         if (mode === 'multitouch') {
+          setEraserCursor(false);
           const currentY = pointerCentroidY();
           if (activePointers.size >= 2 && currentY !== null && activePointerScrollY !== null) scrollByPenGesture(activePointerScrollY - currentY);
           activePointerScrollY = currentY;
@@ -6790,10 +6885,14 @@ if (shareToken || requestedPaper === 'shared') {
           completeActiveStroke();
           flushRedraw();
         }
+        setEraserCursor(event.pointerType !== 'touch', event.clientX, event.clientY);
       }
       canvas.addEventListener('pointerup', finishPointer);
       canvas.addEventListener('pointercancel', finishPointer);
       canvas.addEventListener('lostpointercapture', finishPointer);
+      canvas.addEventListener('pointerleave', event => {
+        if (event.pointerType !== 'touch' && !activePointers.has(event.pointerId)) setEraserCursor(false);
+      });
 
       document.addEventListener('pointerup', event => {
         if (event.isPrimary) handleMarginTap(event.clientX, event.clientY, event.target, event.pointerType);
