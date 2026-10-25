@@ -6045,6 +6045,14 @@ if (shareToken || requestedPaper === 'shared') {
     <span></span>
     <i class="quiz-scroll-progress-tick" aria-hidden="true"><b class="tick-ring"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b></i>
   </div>
+  <div id="quizInkHistoryToolbar" class="quiz-ink-history-toolbar" role="group" aria-label="필기 실행 취소 및 다시 실행">
+    <button id="quizInkUndo" type="button" tabindex="-1" aria-label="실행 취소" title="실행 취소 (Ctrl+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 1 1-7 7"/></svg>
+    </button>
+    <button id="quizInkRedo" type="button" tabindex="-1" aria-label="다시 실행" title="다시 실행 (Ctrl+Shift+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 5 5-5 5"/><path d="M20 9h-9a7 7 0 1 0 7 7"/></svg>
+    </button>
+  </div>
   <canvas id="quizInkCanvas" class="quiz-ink-canvas" aria-hidden="true"></canvas>
   <div id="quizInkEraserCursor" class="quiz-ink-eraser-cursor" aria-hidden="true" hidden></div>
   <div id="quizPenModeEffect" class="quiz-pen-mode-effect" aria-hidden="true" hidden>
@@ -6179,6 +6187,9 @@ if (shareToken || requestedPaper === 'shared') {
       const canvas = document.getElementById('quizInkCanvas');
       const eraserCursor = document.getElementById('quizInkEraserCursor');
       const toolbar = document.getElementById('quizInkToolbar');
+      const historyToolbar = document.getElementById('quizInkHistoryToolbar');
+      const undoButton = document.getElementById('quizInkUndo');
+      const redoButton = document.getElementById('quizInkRedo');
       const penToolButton = document.getElementById('quizInkPen');
       const eraserToolButton = document.getElementById('quizInkEraser');
       const exitButton = document.getElementById('quizInkExit');
@@ -6205,9 +6216,11 @@ if (shareToken || requestedPaper === 'shared') {
       const useTouchPointerEvents = 'PointerEvent' in window;
       const activePointers = new Map();
       const strokes = [];
+      const redoStrokes = [];
       let mode = null;
       let currentInkTool = 'pen';
       let activeStroke = null;
+      let pendingCheckboxPress = null;
       let activePointerScrollY = null;
       let penGestureScrollTargetY = null;
       let penGestureScrollFrame = 0;
@@ -6223,27 +6236,33 @@ if (shareToken || requestedPaper === 'shared') {
       let scrollTargetY = null;
       let scrollTargetResetTimer = 0;
       let currentInkColor = GROUP_COLOR_OPTIONS[0]?.swatch || '#3182f6';
-      let currentInkSize = 5;
+      let penInkSize = 5;
+      let eraserInkSize = 5;
       const eraserSizeMultiplier = 4;
       let inkColorButtons = [];
       const inkToolButtons = [penToolButton, eraserToolButton].filter(Boolean);
 
+      function getCurrentInkSize() {
+        return currentInkTool === 'eraser' ? eraserInkSize : penInkSize;
+      }
+
       function getCurrentInkWidth() {
-        return currentInkTool === 'eraser' ? currentInkSize * eraserSizeMultiplier : currentInkSize;
+        return currentInkTool === 'eraser' ? eraserInkSize * eraserSizeMultiplier : penInkSize;
       }
 
       function syncInkSizeControl() {
         const label = currentInkTool === 'eraser' ? '지우개 크기' : '두께';
         if (inkSizeLabel) inkSizeLabel.textContent = label;
         if (inkSizeInput) inkSizeInput.setAttribute('aria-label', label);
+        if (inkSizeInput) inkSizeInput.value = String(getCurrentInkSize());
         if (inkSizeValue) inkSizeValue.textContent = `${getCurrentInkWidth()}px`;
-        eraserCursor?.style.setProperty('--eraser-size', `${currentInkSize * eraserSizeMultiplier}px`);
+        eraserCursor?.style.setProperty('--eraser-size', `${eraserInkSize * eraserSizeMultiplier}px`);
       }
       syncInkSizeControl();
 
       function setEraserCursor(visible, x, y) {
         if (!eraserCursor) return;
-        eraserCursor.style.setProperty('--eraser-size', `${currentInkSize * eraserSizeMultiplier}px`);
+        eraserCursor.style.setProperty('--eraser-size', `${eraserInkSize * eraserSizeMultiplier}px`);
         if (Number.isFinite(x) && Number.isFinite(y)) {
           eraserCursor.style.left = `${x}px`;
           eraserCursor.style.top = `${y}px`;
@@ -6319,7 +6338,9 @@ if (shareToken || requestedPaper === 'shared') {
       });
 
       inkSizeInput?.addEventListener('input', () => {
-        currentInkSize = Number(inkSizeInput.value);
+        const size = Number(inkSizeInput.value);
+        if (currentInkTool === 'eraser') eraserInkSize = size;
+        else penInkSize = size;
         syncInkSizeControl();
       });
 
@@ -6481,6 +6502,7 @@ if (shareToken || requestedPaper === 'shared') {
         activeStroke.outline = null;
         drawStroke(completedContext, activeStroke, window.scrollY, false);
         activeStroke = null;
+        syncInkHistoryControls();
       }
 
       function discardActiveStroke() {
@@ -6489,6 +6511,7 @@ if (shareToken || requestedPaper === 'shared') {
         if (activeIndex >= 0) strokes.splice(activeIndex, 1);
         activeStroke = null;
         completedLayerDirty = true;
+        syncInkHistoryControls();
       }
 
       function redraw() {
@@ -6515,16 +6538,71 @@ if (shareToken || requestedPaper === 'shared') {
         redraw();
       }
 
+      function syncInkHistoryControls() {
+        const active = canvas.classList.contains('is-active');
+        historyToolbar?.classList.toggle('is-active', active);
+        if (undoButton) {
+          undoButton.disabled = !active || (!activeStroke && strokes.length === 0);
+          undoButton.tabIndex = active ? 0 : -1;
+        }
+        if (redoButton) {
+          redoButton.disabled = !active || redoStrokes.length === 0;
+          redoButton.tabIndex = active ? 0 : -1;
+        }
+      }
+
+      function undoInkStroke() {
+        if (!canvas.classList.contains('is-active')) return false;
+        let stroke;
+        if (activeStroke) {
+          stroke = activeStroke;
+          const activeIndex = strokes.lastIndexOf(activeStroke);
+          if (activeIndex >= 0) strokes.splice(activeIndex, 1);
+          activeStroke = null;
+          const pointerIds = [...activePointers.keys()];
+          activePointers.clear();
+          mode = null;
+          activePointerScrollY = null;
+          for (const pointerId of pointerIds) {
+            if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
+          }
+        } else {
+          stroke = strokes.pop();
+        }
+        if (!stroke) return false;
+        redoStrokes.push(stroke);
+        completedLayerDirty = true;
+        setEraserCursor(false);
+        syncInkHistoryControls();
+        flushRedraw();
+        return true;
+      }
+
+      function redoInkStroke() {
+        if (!canvas.classList.contains('is-active')) return false;
+        const stroke = redoStrokes.pop();
+        if (!stroke) return false;
+        strokes.push(stroke);
+        completedLayerDirty = true;
+        syncInkHistoryControls();
+        flushRedraw();
+        return true;
+      }
+
       function setPenMode(enabled) {
         if (enabled === canvas.classList.contains('is-active')) return;
         resetPenGestureScroll();
+        if (pendingCheckboxPress) window.clearTimeout(pendingCheckboxPress.timer);
+        pendingCheckboxPress = null;
         strokes.length = 0;
+        redoStrokes.length = 0;
         completedLayerDirty = true;
         activePointers.clear();
         activeStroke = null;
         mode = null;
         canvas.classList.toggle('is-active', enabled);
         toolbar.classList.toggle('is-active', enabled);
+        historyToolbar?.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);
         if (enabled) selectInkTool('pen');
         else setEraserCursor(false);
@@ -6533,6 +6611,8 @@ if (shareToken || requestedPaper === 'shared') {
         inkToolButtons.forEach(button => { button.tabIndex = enabled ? 0 : -1; });
         inkColorButtons.forEach((button, index) => { button.tabIndex = enabled && button.classList.contains('is-selected') ? 0 : -1; });
         if (inkSizeInput) inkSizeInput.tabIndex = enabled ? 0 : -1;
+        if (undoButton) undoButton.tabIndex = enabled ? 0 : -1;
+        if (redoButton) redoButton.tabIndex = enabled ? 0 : -1;
         for (const button of [scrollUpButton, scrollDownButton]) {
           if (!button) continue;
           button.tabIndex = enabled ? 0 : -1;
@@ -6575,9 +6655,23 @@ if (shareToken || requestedPaper === 'shared') {
           if (renderFrame) cancelAnimationFrame(renderFrame);
           renderFrame = 0;
         }
+        syncInkHistoryControls();
       }
 
       window.addEventListener('moonble:toggle-quiz-pen-mode', () => setPenMode(!canvas.classList.contains('is-active')));
+      undoButton?.addEventListener('click', undoInkStroke);
+      redoButton?.addEventListener('click', redoInkStroke);
+      document.addEventListener('keydown', event => {
+        if (!canvas.classList.contains('is-active') || event.defaultPrevented || event.isComposing) return;
+        if (!(event.ctrlKey || event.metaKey)) return;
+        const key = event.key.toLowerCase();
+        const target = event.target instanceof Element ? event.target : null;
+        if (target?.closest('textarea, input:not([type="range"]):not([type="button"]), select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return;
+        let handled = false;
+        if (key === 'z') handled = event.shiftKey ? redoInkStroke() : undoInkStroke();
+        else if (key === 'y' && event.ctrlKey) handled = redoInkStroke();
+        if (handled) event.preventDefault();
+      }, true);
       scrollUpButton?.addEventListener('click', event => {
         event.preventDefault();
         nudgePage(-1);
@@ -6684,6 +6778,75 @@ if (shareToken || requestedPaper === 'shared') {
         appendStrokePoint(stroke, { x: point.x, y: point.docY, pressure: point.pressure });
       }
 
+      const checkboxLongPressMs = 560;
+      const checkboxPressMoveTolerance = 12;
+
+      function getOptionCheckboxAtPoint(x, y) {
+        const pointerEvents = canvas.style.pointerEvents;
+        canvas.style.pointerEvents = 'none';
+        let hit = null;
+        try { hit = document.elementFromPoint(x, y); }
+        finally { canvas.style.pointerEvents = pointerEvents; }
+        if (!(hit instanceof Element)) return null;
+        const tick = hit.closest('.option-card .tick');
+        return tick?.closest('.option-card') || null;
+      }
+
+      function clearInkCheckMark(optionCard) {
+        const tick = optionCard?.querySelector('.tick');
+        if (!tick) return;
+        const rect = tick.getBoundingClientRect();
+        const bounds = {
+          left: rect.left - 5,
+          right: rect.right + 5,
+          top: rect.top + window.scrollY - 5,
+          bottom: rect.bottom + window.scrollY + 5,
+        };
+        let removed = false;
+        for (let index = strokes.length - 1; index >= 0; index -= 1) {
+          const stroke = strokes[index];
+          if (stroke.tool !== 'pen' || !stroke.points.length) continue;
+          const insideCount = stroke.points.reduce((count, point) => count + (
+            point.x >= bounds.left && point.x <= bounds.right
+            && point.y >= bounds.top && point.y <= bounds.bottom ? 1 : 0
+          ), 0);
+          if (insideCount / stroke.points.length >= 0.7) {
+            strokes.splice(index, 1);
+            removed = true;
+          }
+        }
+        if (removed) {
+          redoStrokes.length = 0;
+          completedLayerDirty = true;
+          syncInkHistoryControls();
+          scheduleRedraw();
+        }
+      }
+
+      function startPointerStroke(pointerType, point) {
+        mode = 'draw';
+        redoStrokes.length = 0;
+        activeStroke = {
+          width: getCurrentInkWidth(),
+          color: currentInkColor,
+          tool: currentInkTool,
+          pointerType,
+          simulatePressure: currentInkTool !== 'eraser',
+          pressureMin: Infinity,
+          pressureMax: -Infinity,
+          points: [],
+          inputPoints: [],
+        };
+        if (pointerType === 'pen' && Number.isFinite(point.pressure) && point.pressure > 0) {
+          activeStroke.pressureMin = point.pressure;
+          activeStroke.pressureMax = point.pressure;
+        }
+        appendStrokePoint(activeStroke, { x: point.x, y: point.docY, pressure: point.pressure });
+        strokes.push(activeStroke);
+        syncInkHistoryControls();
+        scheduleRedraw();
+      }
+
       function coalescedPointerEvents(event) {
         let samples = [];
         try {
@@ -6762,9 +6925,11 @@ if (shareToken || requestedPaper === 'shared') {
         setEraserCursor(true, touch.clientX, touch.clientY);
         if (start || !activeStroke) {
           mode = 'draw';
+          redoStrokes.length = 0;
           activeStroke = { width: getCurrentInkWidth(), color: currentInkColor, tool: currentInkTool, simulatePressure: currentInkTool !== 'eraser', points: [], inputPoints: [] };
           appendStrokePoint(activeStroke, point);
           strokes.push(activeStroke);
+          syncInkHistoryControls();
         } else {
           appendStrokePoint(activeStroke, point);
         }
@@ -6828,9 +6993,12 @@ if (shareToken || requestedPaper === 'shared') {
         if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents)) return;
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
-        activePointers.set(event.pointerId, pointerPosition(event));
+        const point = pointerPosition(event);
+        activePointers.set(event.pointerId, point);
         setEraserCursor(true, event.clientX, event.clientY);
         if (activePointers.size >= 2) {
+          if (pendingCheckboxPress) window.clearTimeout(pendingCheckboxPress.timer);
+          pendingCheckboxPress = null;
           mode = 'multitouch';
           discardActiveStroke();
           setEraserCursor(false);
@@ -6841,22 +7009,30 @@ if (shareToken || requestedPaper === 'shared') {
           return;
         }
         if (mode === 'multitouch') return;
-        mode = 'draw';
-        const point = pointerPosition(event);
-        activeStroke = {
-          width: getCurrentInkWidth(),
-          color: currentInkColor,
-          tool: currentInkTool,
-          pointerType: event.pointerType,
-          simulatePressure: currentInkTool !== 'eraser',
-          pressureMin: Infinity,
-          pressureMax: -Infinity,
-          points: [],
-          inputPoints: [],
-        };
-        appendPointerPoint(activeStroke, event);
-        strokes.push(activeStroke);
-        scheduleRedraw();
+        const optionCard = currentInkTool === 'pen' ? getOptionCheckboxAtPoint(event.clientX, event.clientY) : null;
+        if (optionCard) {
+          mode = 'checkbox-press';
+          const press = {
+            pointerId: event.pointerId,
+            optionCard,
+            pointerType: event.pointerType,
+            point,
+            startX: event.clientX,
+            startY: event.clientY,
+            activated: false,
+            timer: 0,
+          };
+          pendingCheckboxPress = press;
+          press.timer = window.setTimeout(() => {
+            if (pendingCheckboxPress !== press || !activePointers.has(press.pointerId) || press.activated) return;
+            press.activated = true;
+            const wasSelected = press.optionCard.classList.contains('selected');
+            press.optionCard.click();
+            if (press.optionCard.classList.contains('selected') !== wasSelected) clearInkCheckMark(press.optionCard);
+          }, checkboxLongPressMs);
+          return;
+        }
+        startPointerStroke(event.pointerType, point);
       });
 
       canvas.addEventListener('pointermove', event => {
@@ -6875,6 +7051,18 @@ if (shareToken || requestedPaper === 'shared') {
           activePointerScrollY = currentY;
           return;
         }
+        if (mode === 'checkbox-press') {
+          const press = pendingCheckboxPress;
+          if (!press || press.pointerId !== event.pointerId || press.activated) return;
+          if (Math.hypot(event.clientX - press.startX, event.clientY - press.startY) > checkboxPressMoveTolerance) {
+            window.clearTimeout(press.timer);
+            pendingCheckboxPress = null;
+            startPointerStroke(press.pointerType, press.point);
+            for (const sample of coalescedPointerEvents(event)) appendPointerPoint(activeStroke, sample);
+            scheduleRedraw();
+          }
+          return;
+        }
         if (mode !== 'draw' || activePointers.size !== 1 || !activeStroke) return;
         const samples = coalescedPointerEvents(event);
         for (const sample of samples) appendPointerPoint(activeStroke, sample);
@@ -6883,6 +7071,15 @@ if (shareToken || requestedPaper === 'shared') {
 
       function finishPointer(event) {
         if (!activePointers.has(event.pointerId)) return;
+        const press = pendingCheckboxPress?.pointerId === event.pointerId ? pendingCheckboxPress : null;
+        if (press) {
+          window.clearTimeout(press.timer);
+          pendingCheckboxPress = null;
+          if (event.type === 'pointerup' && !press.activated && mode === 'checkbox-press') {
+            // A short tap keeps its existing pen behavior; the checkbox changes only after a long press.
+            startPointerStroke(press.pointerType, press.point);
+          }
+        }
         if (event.type === 'pointerup' && mode === 'draw' && activePointers.size === 1 && activeStroke) {
           const lastPoint = activeStroke.points[activeStroke.points.length - 1];
           const finalPoint = pointerPosition(event);
