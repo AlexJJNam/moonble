@@ -6164,7 +6164,9 @@ if (shareToken || requestedPaper === 'shared') {
       scheduleProgress();
     })();
   </script>
-  <script>
+  <script type="module">
+    import { getStroke } from 'perfect-freehand';
+
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
       const exitButton = document.getElementById('quizInkExit');
@@ -6242,14 +6244,30 @@ if (shareToken || requestedPaper === 'shared') {
             context.fill();
             continue;
           }
-          context.beginPath();
-          context.lineWidth = stroke.width;
-          context.moveTo(first.x, first.y - yOffset);
-          for (let index = 1; index < stroke.points.length; index += 1) {
-            const point = stroke.points[index];
-            context.lineTo(point.x, point.y - yOffset);
+
+          const isLiveStroke = stroke === activeStroke;
+          if (isLiveStroke || !stroke.outline) {
+            stroke.outline = getStroke(
+              stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
+              {
+                size: stroke.width,
+                thinning: 0,
+                smoothing: 0.65,
+                streamline: 0.55,
+                simulatePressure: false,
+                last: !isLiveStroke,
+              },
+            );
           }
-          context.stroke();
+          const outline = stroke.outline;
+          if (!outline || outline.length < 3) continue;
+          context.beginPath();
+          context.moveTo(outline[0][0], outline[0][1] - yOffset);
+          for (let index = 1; index < outline.length; index += 1) {
+            context.lineTo(outline[index][0], outline[index][1] - yOffset);
+          }
+          context.closePath();
+          context.fill();
         }
       }
 
@@ -6357,10 +6375,11 @@ if (shareToken || requestedPaper === 'shared') {
       }
 
       function drawTouch(touch, start = false) {
-        const point = { x: touch.clientX, y: touch.clientY + window.scrollY };
+        const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
         if (start || !activeStroke) {
           mode = 'draw';
           activeStroke = { width: 3, points: [{ x: point.x, y: point.y }] };
+          activeStroke.points[0].pressure = point.pressure;
           strokes.push(activeStroke);
         } else {
           activeStroke.points.push(point);
@@ -6374,8 +6393,10 @@ if (shareToken || requestedPaper === 'shared') {
         event.preventDefault();
         if (event.touches.length >= 2) {
           mode = 'scroll';
+          if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = touchMidpoint(event.touches);
+          redraw();
           return;
         }
         if (mode === 'scroll') return;
@@ -6390,8 +6411,10 @@ if (shareToken || requestedPaper === 'shared') {
         if (event.touches.length >= 2) {
           if (mode !== 'scroll') {
             mode = 'scroll';
+            if (activeStroke) activeStroke.outline = null;
             activeStroke = null;
             lastScrollMidpoint = touchMidpoint(event.touches);
+            redraw();
             return;
           }
           const current = touchMidpoint(event.touches);
@@ -6408,8 +6431,10 @@ if (shareToken || requestedPaper === 'shared') {
       function endTouchGesture(event) {
         if (event.touches.length === 0) {
           mode = null;
+          if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = null;
+          redraw();
         } else if (mode === 'scroll') {
           lastScrollMidpoint = null;
         }
@@ -6424,14 +6449,16 @@ if (shareToken || requestedPaper === 'shared') {
         activePointers.set(event.pointerId, pointerPosition(event));
         if (activePointers.size >= 2) {
           mode = 'scroll';
+          if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = midpoint();
+          redraw();
           return;
         }
         if (mode === 'scroll') return;
         mode = 'draw';
         const point = pointerPosition(event);
-        activeStroke = { width: event.pointerType === 'pen' ? 2.8 : 3, points: [{ x: point.x, y: point.docY }] };
+        activeStroke = { width: event.pointerType === 'pen' ? 2.8 : 3, points: [{ x: point.x, y: point.docY, pressure: point.pressure }] };
         strokes.push(activeStroke);
         redraw();
       });
@@ -6450,7 +6477,7 @@ if (shareToken || requestedPaper === 'shared') {
         }
         if (mode !== 'draw' || activePointers.size !== 1 || !activeStroke) return;
         const point = pointerPosition(event);
-        activeStroke.points.push({ x: point.x, y: point.docY });
+        activeStroke.points.push({ x: point.x, y: point.docY, pressure: point.pressure });
         redraw();
       });
 
@@ -6459,8 +6486,10 @@ if (shareToken || requestedPaper === 'shared') {
         activePointers.delete(event.pointerId);
         if (activePointers.size === 0) {
           mode = null;
+          if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = null;
+          redraw();
         }
       }
       canvas.addEventListener('pointerup', finishPointer);
