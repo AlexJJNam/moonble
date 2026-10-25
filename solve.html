@@ -5306,6 +5306,7 @@
 <script type="module">
 import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
 import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
+import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 
 function prepareSharedQuizPage(sharedQuiz) {
@@ -5407,6 +5408,16 @@ if (shareToken || requestedPaper === 'shared') {
     if (solveParams.get('paper') === 'custom' && !getCustomBank(user.id, solveParams.get('bank'))) {
       location.replace('./quiz.html');
     } else {
+      const paperId = solveParams.get('paper') || 'random';
+      let activityKey = ['basics', 'advanced', 'random'].includes(paperId) ? paperId : null;
+      if (paperId === 'custom' && solveParams.get('bank')) activityKey = `custom:${solveParams.get('bank')}`;
+      if (paperId === 'retry') {
+        try {
+          const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
+          activityKey = retryMeta.bankId ? `custom:${retryMeta.bankId}` : (['basics', 'advanced', 'random'].includes(retryMeta.paperId) ? retryMeta.paperId : null);
+        } catch { /* 재풀이 메타데이터가 없으면 목록 접근 기록을 갱신하지 않는다. */ }
+      }
+      if (activityKey) recordPaperAccess(user.id, activityKey);
       renderQuiz();
       renderHistory();
     }

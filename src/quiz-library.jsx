@@ -25,6 +25,7 @@ import { FlowActionButton } from './flow-action-button.jsx';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDate } from './date-format.js';
+import { getPaperAccessMap, recordPaperAccess } from './paper-activity.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
@@ -160,14 +161,36 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   </div>;
 }
 
+function QuizLibrarySkeleton({ view }) {
+  const count = view === 'list' ? 5 : 6;
+  return <div className="quiz-page quiz-page-skeleton">
+    <AppHeader active="papers" />
+    <div className="quiz-content">
+      <main className="quiz-main mb-page-gutter quiz-library-main" aria-busy="true" aria-label="문제지 목록을 불러오는 중">
+        <div className="quiz-skeleton-title-row"><span className="quiz-skeleton-line quiz-skeleton-title" /><span className="quiz-skeleton-button" /></div>
+        <div className="quiz-skeleton-tabs" aria-hidden="true">{[76, 92, 104, 68].map((width, index) => <i key={index} style={{ width }} />)}</div>
+        <div className="quiz-skeleton-tools"><span /><span /></div>
+        <section className={`quiz-library-skeleton-grid${view === 'list' ? ' is-list' : ''}`} aria-hidden="true">
+          {Array.from({ length: count }, (_, index) => <article className="quiz-library-skeleton-card" key={index}>
+            <div className="quiz-library-skeleton-preview"><i /></div>
+            <div className="quiz-library-skeleton-copy"><b /><span /><small /></div>
+          </article>)}
+        </section>
+      </main>
+    </div>
+  </div>;
+}
+
 function QuizLibrary() {
   const [user, setUser] = useState(initialUser);
+  const [collectionReady, setCollectionReady] = useState(Boolean(initialUser));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
+  const [paperAccess, setPaperAccess] = useState(() => getPaperAccessMap(initialUser?.id));
   const [activeGroup, setActiveGroup] = useState('all');
   const [openMenu, setOpenMenu] = useState(null);
   const [editor, setEditor] = useState(null);
@@ -195,6 +218,17 @@ function QuizLibrary() {
   const bankSyncUserRef = useRef(null);
   const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
+  useEffect(() => {
+    const refresh = () => setPaperAccess(getPaperAccessMap(user?.id));
+    window.addEventListener('storage', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('moonble:paper-access', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('moonble:paper-access', refresh);
+    };
+  }, [user?.id]);
   useEffect(() => {
     if (reorderingGroupId) return;
     const next = collection.groups.map(group => group.id);
@@ -308,15 +342,20 @@ function QuizLibrary() {
       setCollection(getCustomBankCollection(session.user.id));
       setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
+      if (!initialUser || initialUser.id !== session.user.id) setCollectionReady(false);
       document.documentElement.removeAttribute('data-auth-pending');
       if (bankSyncUserRef.current !== session.user.id) {
         bankSyncUserRef.current = session.user.id;
         syncCustomBankCollection(session.user.id).then(result => {
           if (!alive) return;
           setCollection(result.collection);
+          setCollectionReady(true);
           if (result.migrated > 0) setNotice(`${result.migrated}개 문제지를 계정에 저장했어요.`);
         }).catch(() => {
-          if (alive) setNotice('문제지는 이 기기에 남아 있어요. 서버 연결을 확인하면 다시 동기화합니다.');
+          if (alive) {
+            setCollectionReady(true);
+            setNotice('문제지는 이 기기에 남아 있어요. 서버 연결을 확인하면 다시 동기화합니다.');
+          }
         });
       }
     };
@@ -657,7 +696,7 @@ function QuizLibrary() {
     setEditMode(false);
     setOpenMenu(null);
   }
-  if (!user) return <div className="quiz-check" role="status" aria-label="문제지 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
+  if (!user || !collectionReady) return <QuizLibrarySkeleton view={view} />;
   const customPapers = collection.banks.map(bank => ({
     id: `custom:${bank.id}`,
     customBankId: bank.id,
@@ -672,12 +711,24 @@ function QuizLibrary() {
     samples: bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) })),
   }));
   const visibleSamples = sampleVisible ? papers : [];
-  const allPapers = [...customPapers, ...visibleSamples];
+  const allPapers = [...customPapers, ...visibleSamples].map(paper => ({
+    ...paper,
+    lastOpenedAt: paperAccess[paper.id] || null,
+  }));
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
     const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
     return groupMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
+  }).sort((a, b) => {
+    const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
+    const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
+    if (aOpened || bOpened) {
+      if (!aOpened) return 1;
+      if (!bOpened) return -1;
+      return bOpened - aOpened;
+    }
+    return new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
   });
   const activeCustom = collection.banks.find(bank => bank.id === collection.activeBankId) || collection.banks[0] || null;
   const groupTabs = [
@@ -770,10 +821,10 @@ function QuizLibrary() {
               } : undefined}
               key={paper.id}
             >
-              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } const nextAccess = recordPaperAccess(user.id, paper.id); setPaperAccess(nextAccess); if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 {groupName && <span className="paper-group-flag" style={paperGroupStyle} aria-hidden="true">{groupName}</span>}
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.savedAt && <time className="paper-added-at" dateTime={paper.savedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.savedAt))}>{formatRelativeDate(paper.savedAt)}</time>}</div></div>
+                <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDate(paper.lastOpenedAt)}</time>}</div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>

@@ -14,6 +14,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-profile-row { position: relative; z-index: 4; min-width: 0; min-height: 52px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 .mb-app-profile { min-width: 0; min-height: 52px; display: flex; flex: 1; align-items: center; gap: 10px; margin: 0; padding: 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); text-decoration: none; }
 .mb-app-profile:hover, .mb-app-profile[aria-current='page'] { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
+.mb-app-profile-avatar { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-13); line-height: 1; font-weight: 700; }
 .mb-app-profile-copy { min-width: 0; flex: 1; }
 .mb-app-profile-copy strong, .mb-app-profile-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mb-app-profile-copy strong { color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 20px; font-weight: 600; }
@@ -36,6 +37,17 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-notification-empty>svg { margin-bottom: 2px; color: var(--mb-text-disabled); }
 .mb-notification-empty>strong { font-size: var(--mb-font-15); line-height: 22px; font-weight: 650; }
 .mb-notification-empty>p { max-width: 270px; margin: 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 19px; }
+.mb-browser-alert-card { margin: 16px 0 0; padding: 16px; border-radius: 16px; background: #f5f6f7; }
+.mb-browser-alert-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mb-browser-alert-head h2 { margin: 0; font-size: var(--mb-font-16); line-height: 24px; font-weight: 650; }
+.mb-browser-alert-status { flex: 0 0 auto; padding: 3px 9px; border-radius: 999px; color: var(--mb-text-secondary); background: #e8eaed; font-size: var(--mb-font-12); line-height: 18px; font-weight: 600; }
+.mb-browser-alert-status.is-enabled { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.mb-browser-alert-copy, .mb-browser-alert-error { margin: 8px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-browser-alert-error { color: var(--mb-danger); }
+.mb-browser-alert-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.mb-browser-alert-actions button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 9px; color: var(--mb-text-secondary); background: #e9ecef; font-size: var(--mb-font-13); line-height: 20px; font-weight: 600; }
+.mb-browser-alert-actions button.is-primary { color: #fff; background: var(--mb-primary); }
+.mb-browser-alert-actions button:disabled { cursor: default; opacity: .6; }
 .mb-app-nav { display: grid; gap: 4px; }
 .mb-app-nav a { min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: 500; text-decoration: none; white-space: nowrap; }
 .mb-app-nav a:hover { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
@@ -116,7 +128,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header-inner { min-height: auto; padding: 6px max(16px, env(safe-area-inset-right)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
   .mb-app-brand-row { margin: 0; }
   .mb-app-logo { min-height: 44px; margin: 0; padding: 6px 4px; }
-  .mb-app-logo .mb-brand-wordmark, .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 90px; }
+  .mb-app-logo .mb-brand-wordmark, .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 94px; }
   .mb-app-profile-row { grid-column: 2; grid-row: 1; min-height: 40px; justify-content: flex-end; margin: 0; }
   .mb-notification-toggle--desktop { display: none; }
   .mb-notification-toggle--mobile { display: grid; flex-basis: 36px; width: 36px; height: 36px; }
