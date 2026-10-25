@@ -175,10 +175,6 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar .mb-solver-nav { min-height: 0; box-sizing: border-box; flex: 1 1 0; padding-bottom: 120px; overflow: hidden; }
   .mb-app-header.mb-solver-sidebar .mb-solver-questions { min-height: 0; flex: 1 1 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
   .mb-app-header.mb-solver-sidebar .mb-solver-questions::-webkit-scrollbar { display: none; }
-  .mb-app-header.mb-solver-sidebar.is-collapsed .mb-solver-questions { scrollbar-width: thin; scrollbar-color: rgb(120 134 154 / 48%) transparent; }
-  .mb-app-header.mb-solver-sidebar.is-collapsed .mb-solver-questions::-webkit-scrollbar { width: 4px; display: block; }
-  .mb-app-header.mb-solver-sidebar.is-collapsed .mb-solver-questions::-webkit-scrollbar-track { background: transparent; }
-  .mb-app-header.mb-solver-sidebar.is-collapsed .mb-solver-questions::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(120 134 154 / 48%); }
 }
 
 @media (max-width: 767px) {
