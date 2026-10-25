@@ -63,6 +63,9 @@ import { supabase } from './supabase.js';
     var before = options && options.sync === false ? null : readCollection(userId);
     var next = normalizeCollection(collection);
     localStorage.setItem(key, JSON.stringify(next));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('moonble:custom-bank-collection', { detail: { userId: userId || activeUserId } }));
+    }
     if (!options || options.sync !== false) queueRemoteCollectionWrite(before || emptyCollection(), next, userId || activeUserId);
   }
   function remoteGroupRow(group, sortOrder) {

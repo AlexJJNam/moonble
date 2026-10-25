@@ -3,6 +3,10 @@ import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClos
 import { profileOf } from './profile.js';
 import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
+import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
+import { getCustomBankCollection } from './custom-bank.js';
+import { getFavoritePaperIds } from './paper-favorites.js';
+import { recordPaperAccess } from './paper-activity.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
 import { formatRelativeDate } from './date-format.js';
@@ -43,6 +47,22 @@ function markShareNotificationsSeen(userId, notifications) {
   try { localStorage.setItem(shareNotificationStorageKey(userId), JSON.stringify(next)); }
   catch { /* 알림 목록은 현재 화면에서 계속 볼 수 있다. */ }
   return next;
+}
+
+function getFavoriteSidebarItems(userId) {
+  if (!userId) return [];
+  const favoriteIds = getFavoritePaperIds(userId);
+  if (!favoriteIds.length) return [];
+  const banks = getCustomBankCollection(userId).banks;
+  const builtInPapers = new Map(BUILT_IN_PAPER_PREVIEWS.map(paper => [paper.id, paper]));
+  return favoriteIds.map(id => {
+    if (id.startsWith('custom:')) {
+      const bank = banks.find(item => item.id === id.slice('custom:'.length));
+      return bank ? { id, label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz` } : null;
+    }
+    const paper = builtInPapers.get(id);
+    return paper ? { id, label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
+  }).filter(Boolean);
 }
 
 function useSolverQuestions(enabled) {
@@ -206,6 +226,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
   const [shareNotification, setShareNotification] = useState(null);
   const [shareNotifications, setShareNotifications] = useState([]);
+  const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [browserNotificationSettings, setBrowserNotificationSettings] = useState(() => getBrowserNotificationSettings(user?.id));
   const [browserNotificationBusy, setBrowserNotificationBusy] = useState(false);
@@ -233,6 +254,24 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     setShareNotifications(readShareNotifications(user?.id));
     setNotificationOpen(false);
     setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
+  }, [user?.id]);
+
+  useEffect(() => {
+    const refresh = event => {
+      if (event?.detail?.userId && event.detail.userId !== user?.id) return;
+      setFavoriteSidebarItems(getFavoriteSidebarItems(user?.id));
+    };
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('moonble:paper-favorites', refresh);
+    window.addEventListener('moonble:custom-bank-collection', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('moonble:paper-favorites', refresh);
+      window.removeEventListener('moonble:custom-bank-collection', refresh);
+    };
   }, [user?.id]);
 
   useEffect(() => {
@@ -550,6 +589,15 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           <a href="./prd.html" aria-current={active === 'prd' ? 'page' : undefined}><FileText size={18} aria-hidden="true" /><span>PRD</span></a>
           <a className="mb-app-my" href="./account.html" aria-current={active === 'account' ? 'page' : undefined}><UserRound size={18} aria-hidden="true" /><span>MY</span></a>
         </nav>}
+      {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
+        <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
+        <nav className="mb-favorites-list" aria-label="즐겨찾는 문제지">
+          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label} onClick={() => recordPaperAccess(user?.id, paper.id)}>
+            <span className="mb-favorite-icon"><BookOpen size={14} aria-hidden="true" /></span>
+            <span className="mb-favorite-title">{paper.label}</span>
+          </a>)}
+        </nav>
+      </section>}
       {(user || onLogout || error) && <div className="mb-app-account">
         {error && <p className="mb-app-error" role="alert">{error}</p>}
         {onLogout && <button className="mb-app-logout" type="button" disabled={pending} aria-label={pending ? '로그아웃 처리 중' : '로그아웃'} onClick={onLogout}>

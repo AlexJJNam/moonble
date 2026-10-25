@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Trash2, X } from 'lucide-react';
+import { Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -25,6 +25,7 @@ import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDate } from './date-format.js';
 import { getPaperAccessMap, recordPaperAccess } from './paper-activity.js';
+import { getFavoritePaperIds, toggleFavoritePaper } from './paper-favorites.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
@@ -194,6 +195,7 @@ function QuizLibrary() {
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperAccessMap(initialUser?.id));
+  const [favoritePaperIds, setFavoritePaperIds] = useState(() => getFavoritePaperIds(initialUser?.id));
   const [activeGroup, setActiveGroup] = useState('all');
   const [openMenu, setOpenMenu] = useState(null);
   const [editor, setEditor] = useState(null);
@@ -229,6 +231,20 @@ function QuizLibrary() {
       window.removeEventListener('storage', refresh);
       window.removeEventListener('pageshow', refresh);
       window.removeEventListener('moonble:paper-access', refresh);
+    };
+  }, [user?.id]);
+  useEffect(() => {
+    const refresh = event => {
+      if (event?.detail?.userId && event.detail.userId !== user?.id) return;
+      setFavoritePaperIds(getFavoritePaperIds(user?.id));
+    };
+    window.addEventListener('storage', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('moonble:paper-favorites', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('moonble:paper-favorites', refresh);
     };
   }, [user?.id]);
   useEffect(() => {
@@ -658,6 +674,11 @@ function QuizLibrary() {
     setOpenMenu(null);
     setNotice('폴더 탭으로 문제지를 드래그해 그룹을 변경할 수 있어요.');
   }
+  function togglePaperFavorite(event, paper) {
+    event.preventDefault();
+    event.stopPropagation();
+    setFavoritePaperIds(toggleFavoritePaper(user.id, paper.id));
+  }
   if (!user || !collectionReady) return quizPageHardReload ? <QuizLibrarySkeleton view={view} /> : null;
   const customPapers = collection.banks.map(bank => ({
     id: `custom:${bank.id}`,
@@ -743,6 +764,7 @@ function QuizLibrary() {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             const paperGroupStyle = paper.customBankId ? groupColorStyle(paper.groupId, groupColors) : undefined;
+            const isFavorite = favoritePaperIds.includes(paper.id);
             const CardSurface = editMode ? 'div' : 'a';
             return <article
               className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
@@ -760,6 +782,7 @@ function QuizLibrary() {
                 <PaperPreview paper={paper} style={paperGroupStyle} />
                 <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDate(paper.lastOpenedAt)}</time>}</div></div>
               </CardSurface>
+              <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
