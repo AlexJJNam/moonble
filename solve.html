@@ -1969,6 +1969,29 @@
       outline-offset: 4px;
     }
 
+    .fab.is-pen-disabled {
+      background: #e3e6eb;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .fab.is-pen-disabled:hover,
+    .fab.is-pen-disabled:active {
+      transform: none;
+    }
+
+    .fab.is-pen-disabled .fab-icon {
+      color: #818a96;
+    }
+
+    .fab.is-pen-disabled .fab-badge {
+      color: #818a96;
+      background: #f1f2f4;
+      border-color: #e1e4e8;
+      box-shadow: none;
+      animation: none;
+    }
+
     .fab-link {
       position: relative;
       z-index: 1;
@@ -6149,9 +6172,11 @@ if (shareToken || requestedPaper === 'shared') {
       const tipClose = document.getElementById('quizPenTipClose');
       const penToast = document.getElementById('quizPenToast');
       const quiz = document.getElementById('quizContainer');
+      const aiAskButton = document.querySelector('.fab');
       if (!canvas || !exitButton || !quiz) return;
 
       const context = canvas.getContext('2d');
+      const useTouchPointerEvents = 'PointerEvent' in window;
       const activePointers = new Map();
       const strokes = [];
       let mode = null;
@@ -6160,6 +6185,7 @@ if (shareToken || requestedPaper === 'shared') {
       let lastMarginTap = null;
       let penToastTimer = 0;
       let penToastHideTimer = 0;
+      let savedScrollBehavior = '';
 
       function syncTipVisibility() {
         if (!tip) return;
@@ -6237,6 +6263,17 @@ if (shareToken || requestedPaper === 'shared') {
         canvas.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);
         exitButton.tabIndex = enabled ? 0 : -1;
+        if (aiAskButton) {
+          aiAskButton.disabled = enabled;
+          aiAskButton.classList.toggle('is-pen-disabled', enabled);
+          aiAskButton.setAttribute('aria-disabled', String(enabled));
+        }
+        if (enabled) {
+          savedScrollBehavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+        } else {
+          document.documentElement.style.scrollBehavior = savedScrollBehavior;
+        }
         window.moonbleQuizPenMode = enabled;
         window.dispatchEvent(new CustomEvent('moonble:quiz-pen-mode-change', { detail: { active: enabled } }));
         if (enabled) {
@@ -6312,7 +6349,11 @@ if (shareToken || requestedPaper === 'shared') {
         const scrollRoot = document.scrollingElement || document.documentElement;
         const currentY = Math.max(window.scrollY || 0, scrollRoot.scrollTop || 0, document.body.scrollTop || 0);
         const maxY = Math.max(0, scrollRoot.scrollHeight - window.innerHeight);
-        scrollRoot.scrollTop = Math.min(maxY, Math.max(0, currentY + deltaY));
+        const nextY = Math.min(maxY, Math.max(0, currentY + deltaY));
+        if (Math.abs(nextY - currentY) < 0.5) return;
+        scrollRoot.scrollTop = nextY;
+        document.body.scrollTop = nextY;
+        window.scrollTo(0, nextY);
       }
 
       function drawTouch(touch, start = false) {
@@ -6328,6 +6369,7 @@ if (shareToken || requestedPaper === 'shared') {
       }
 
       canvas.addEventListener('touchstart', event => {
+        if (useTouchPointerEvents) return;
         if (!canvas.classList.contains('is-active')) return;
         event.preventDefault();
         if (event.touches.length >= 2) {
@@ -6342,6 +6384,7 @@ if (shareToken || requestedPaper === 'shared') {
       }, { passive: false });
 
       canvas.addEventListener('touchmove', event => {
+        if (useTouchPointerEvents) return;
         if (!canvas.classList.contains('is-active')) return;
         event.preventDefault();
         if (event.touches.length >= 2) {
@@ -6375,7 +6418,7 @@ if (shareToken || requestedPaper === 'shared') {
       canvas.addEventListener('touchcancel', endTouchGesture, { passive: true });
 
       canvas.addEventListener('pointerdown', event => {
-        if (!canvas.classList.contains('is-active') || event.pointerType === 'touch') return;
+        if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents)) return;
         event.preventDefault();
         canvas.setPointerCapture(event.pointerId);
         activePointers.set(event.pointerId, pointerPosition(event));
@@ -6394,7 +6437,7 @@ if (shareToken || requestedPaper === 'shared') {
       });
 
       canvas.addEventListener('pointermove', event => {
-        if (!canvas.classList.contains('is-active') || event.pointerType === 'touch' || !activePointers.has(event.pointerId)) return;
+        if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents) || !activePointers.has(event.pointerId)) return;
         event.preventDefault();
         activePointers.set(event.pointerId, pointerPosition(event));
         if (mode === 'scroll' && activePointers.size >= 2) {
