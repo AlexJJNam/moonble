@@ -6144,6 +6144,7 @@ if (shareToken || requestedPaper === 'shared') {
       let savedViewportContent = null;
       let scrollTargetY = null;
       let scrollAnimationFrame = 0;
+      let lastScrollFrameTime = 0;
 
       function syncTipVisibility() {
         if (!tip) return;
@@ -6258,6 +6259,7 @@ if (shareToken || requestedPaper === 'shared') {
           if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame);
           scrollAnimationFrame = 0;
           scrollTargetY = null;
+          lastScrollFrameTime = 0;
         }
         window.moonbleQuizPenMode = enabled;
         window.dispatchEvent(new CustomEvent('moonble:quiz-pen-mode-change', { detail: { active: enabled } }));
@@ -6336,14 +6338,15 @@ if (shareToken || requestedPaper === 'shared') {
 
       function getPageScrollY() {
         const root = getScrollRoot();
-        return Math.max(window.scrollY || 0, root.scrollTop || 0);
+        return root.scrollTop;
       }
 
       function beginPageScrollGesture() {
         scrollTargetY = getPageScrollY();
+        lastScrollFrameTime = 0;
       }
 
-      function animatePageScroll() {
+      function animatePageScroll(timestamp) {
         scrollAnimationFrame = 0;
         if (!canvas.classList.contains('is-active') || scrollTargetY === null) return;
 
@@ -6354,10 +6357,15 @@ if (shareToken || requestedPaper === 'shared') {
         const remaining = scrollTargetY - currentY;
         if (Math.abs(remaining) < 0.75) {
           root.scrollTop = scrollTargetY;
+          lastScrollFrameTime = 0;
           return;
         }
 
-        root.scrollTop = currentY + remaining * 0.32;
+        const now = Number.isFinite(timestamp) ? timestamp : performance.now();
+        const elapsed = lastScrollFrameTime ? Math.min(50, now - lastScrollFrameTime) : 16.67;
+        lastScrollFrameTime = now;
+        const easing = 1 - Math.exp(-elapsed / 150);
+        root.scrollTop = currentY + remaining * easing;
         scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
       }
 
@@ -6367,7 +6375,7 @@ if (shareToken || requestedPaper === 'shared') {
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
         if (scrollTargetY === null) scrollTargetY = getPageScrollY();
         const limitedDelta = Math.max(-40, Math.min(40, deltaY));
-        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY + limitedDelta * 0.45));
+        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY + limitedDelta * 0.55));
         if (!scrollAnimationFrame) scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
       }
 
