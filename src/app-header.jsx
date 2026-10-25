@@ -227,6 +227,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const solver = variant === 'solver';
   const sharedSolver = solver && hideSolverBack;
   const questions = useSolverQuestions(solver);
+  const solverHeading = sharedSolver
+    ? (questions.items.length ? `문항 수 ${questions.items.length}` : '문항 수')
+    : '문제 목록';
 
   useEffect(() => {
     setShareNotifications(readShareNotifications(user?.id));
@@ -530,7 +533,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         </a>
       </div>}
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
-        <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}<strong>문제 목록</strong></div>
+        <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}<strong>{solverHeading}</strong></div>
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => <a
             className={`mb-solver-question is-${item.status}`}
