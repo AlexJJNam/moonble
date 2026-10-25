@@ -149,7 +149,7 @@ function PushNotificationPreference({ userId }) {
     <h2 id="account-push-preference-title" className="mb-section-title">알림</h2>
     <div className="account-push-option">
       <span className="account-push-icon" aria-hidden="true"><Bell size={18} /></span>
-      <span className="account-push-copy"><strong>푸시 알림</strong><small>{settings.enabled ? '켜짐' : settings.permission === 'denied' ? '브라우저에서 차단됨' : settings.permission === 'unsupported' ? '이 브라우저에서는 사용할 수 없음' : settings.permission === 'insecure' ? '보안 연결에서 설정할 수 있음' : '공유한 문제의 풀이 결과 알림'}</small></span>
+      <span className="account-push-copy"><strong>푸시 알림</strong><small>{settings.permission === 'denied' ? '브라우저에서 차단됨' : settings.permission === 'unsupported' ? '이 브라우저에서는 사용할 수 없음' : settings.permission === 'insecure' ? '보안 연결에서 설정할 수 있음' : '공유한 문제의 풀이 결과 알림'}</small></span>
       <button className={`account-push-switch${settings.enabled ? ' is-on' : ''}`} type="button" role="switch" aria-checked={settings.enabled} aria-label="푸시 알림" aria-describedby={message || unavailable ? 'account-push-help' : undefined} aria-busy={busy} disabled={busy || unavailable} onClick={toggleNotifications}><span /></button>
     </div>
     {(message || unavailable) && <p id="account-push-help" className={`account-push-message${message && settings.permission === 'denied' ? ' is-error' : ''}`} role={message ? 'status' : undefined}>{message || (settings.permission === 'denied' ? '브라우저 사이트 설정에서 문블의 알림을 허용해주세요.' : settings.permission === 'insecure' ? 'HTTPS 보안 연결에서 접속하면 알림을 켤 수 있어요.' : '현재 브라우저에서는 알림을 지원하지 않아요.')}</p>}
