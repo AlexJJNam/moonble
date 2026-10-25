@@ -173,6 +173,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 @media (min-width: 768px) {
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { height: 100%; min-height: 0; overflow: hidden; }
   .mb-app-header.mb-solver-sidebar .mb-solver-nav { min-height: 0; box-sizing: border-box; flex: 1 1 0; padding-bottom: 120px; overflow: hidden; }
+  /* Reserve a clear lane above the vertically stacked controls in the collapsed sidebar. */
+  .mb-app-header.mb-solver-sidebar.is-collapsed .mb-solver-nav { padding-bottom: 160px; }
   .mb-app-header.mb-solver-sidebar .mb-solver-questions { min-height: 0; flex: 1 1 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
   .mb-app-header.mb-solver-sidebar .mb-solver-questions::-webkit-scrollbar { display: none; }
 }
