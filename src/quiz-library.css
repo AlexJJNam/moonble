@@ -107,7 +107,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-preview--compact .preview-sheet { width: 92%; height: 196%; padding: 5px; border-radius: 4px 4px 0 0; }
 .paper-preview--compact .preview-sheet-brand .mb-brand-wordmark { width: 23px; }
 .paper-preview--compact .preview-sheet-title { margin-top: 4px; font-size: 6px; line-height: 8px; }
-.paper-preview--compact .preview-sheet-subtitle { margin-top: 1px; font-size: 5px; line-height: 7px; }
 .paper-preview--compact .preview-question { margin-top: 4px; padding-top: 3px; }
 .paper-preview--compact .preview-question>div { gap: 2px; margin-bottom: 2px; font-size: 5px; line-height: 7px; }
 .paper-preview--compact .preview-option { gap: 2px; margin: 2px 0 0 4px; font-size: 4px; line-height: 5px; }
@@ -120,7 +119,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .preview-sheet-brand { display: flex; justify-content: space-between; align-items: center; color: #1b64da; font-size: 9px; font-weight: 700; }
 .preview-sheet-brand .mb-brand-wordmark { width: 38px; }
 .preview-sheet-title { margin-top: 10px; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: -.025em; }
-.preview-sheet-subtitle { margin-top: 3px; color: #6b7684; font-size: 8px; line-height: 12px; }
 .preview-advanced .preview-sheet { transform: translateY(2px) rotate(1.5deg); }
 .preview-random .preview-sheet { transform: translateY(2px) rotate(-.75deg); }
 .paper-card:hover .preview-sheet { transform: translateY(-2px) rotate(0); }
@@ -557,7 +555,6 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-grid:not(.paper-list) .paper-preview { padding: 8px 8px 0; }
   .paper-grid:not(.paper-list) .preview-sheet { width: 94%; height: 184%; padding: 9px; }
   .paper-grid:not(.paper-list) .preview-sheet-title { margin-top: 6px; font-size: 9px; line-height: 13px; }
-  .paper-grid:not(.paper-list) .preview-sheet-subtitle { font-size: 7px; line-height: 10px; }
   .paper-grid:not(.paper-list) .preview-question { margin-top: 6px; padding-top: 5px; }
   .paper-grid:not(.paper-list) .preview-question>div { margin-bottom: 4px; font-size: 6px; line-height: 9px; }
   .paper-grid:not(.paper-list) .preview-option { margin-top: 2px; margin-left: 8px; font-size: 6px; line-height: 8px; }
@@ -567,7 +564,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .preview-sheet { width: 94%; height: 196%; padding: 6px; transform-origin: top center; }
   .paper-list .preview-sheet-brand .mb-brand-wordmark { width: 25px; }
   .paper-list .preview-sheet-title { margin-top: 4px; font-size: 7px; line-height: 10px; }
-  .paper-list .preview-sheet-subtitle, .paper-list .preview-question { display: none; }
+  .paper-list .preview-question { display: none; }
   .paper-list .preview-count { display: none; }
   .paper-list .paper-info { min-height: 73px; grid-template-columns: minmax(0, 1fr); padding: 8px 40px 8px 10px; }
   .paper-list .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }

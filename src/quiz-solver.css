@@ -22,7 +22,7 @@ html[data-theme="light"] {
 }
 body, button, input, select, textarea, svg text { font-family: var(--mb-font-sans); }
 .section-head h2 { font-size: var(--mb-font-28); line-height: 36px; font-weight: 700; letter-spacing: -.025em; }
-.shared-quiz-description { margin-top: 6px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
+.solve-paper-description { margin-top: 6px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
 .shared-quiz-error { display: grid; gap: 7px; margin-top: 22px; padding: 20px 0; color: var(--mb-text-secondary); }
 .shared-quiz-error strong { color: var(--mb-text-primary); font-size: var(--mb-font-18); line-height: 26px; }
 .shared-quiz-error span { font-size: var(--mb-font-14); line-height: 22px; }

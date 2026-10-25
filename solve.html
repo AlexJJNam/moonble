@@ -5773,6 +5773,26 @@ import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankColl
 import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 
+function setSolvePaperHeading(title, description = '') {
+  const headerCopy = document.querySelector('#quiz .section-head > div');
+  const heading = headerCopy?.querySelector('h2');
+  if (!heading) return;
+  heading.textContent = title || '문제지';
+
+  let descriptionNode = headerCopy.querySelector('.solve-paper-description');
+  const text = typeof description === 'string' ? description.trim() : '';
+  if (!text) {
+    descriptionNode?.remove();
+    return;
+  }
+  if (!descriptionNode) {
+    descriptionNode = document.createElement('p');
+    descriptionNode.className = 'solve-paper-description';
+    headerCopy.appendChild(descriptionNode);
+  }
+  descriptionNode.textContent = text;
+}
+
 function prepareSharedQuizPage(sharedQuiz) {
   window.moonbleSharedQuiz = sharedQuiz;
   window.moonbleUserId = null;
@@ -5786,16 +5806,7 @@ function prepareSharedQuizPage(sharedQuiz) {
   document.getElementById('aiAskBar')?.remove();
   ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
   document.querySelectorAll('.solver-history-storage').forEach(element => element.hidden = true);
-  const section = document.getElementById('quiz');
-  const heading = section?.querySelector('.section-head h2');
-  if (heading) heading.textContent = sharedQuiz.title;
-  const headerCopy = section?.querySelector('.section-head > div');
-  if (sharedQuiz.description && headerCopy) {
-    const description = document.createElement('p');
-    description.className = 'shared-quiz-description';
-    description.textContent = sharedQuiz.description;
-    headerCopy.appendChild(description);
-  }
+  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '');
   document.title = `${sharedQuiz.title} · Moonble`;
   renderQuiz();
   renderHistory();
@@ -5873,6 +5884,29 @@ if (shareToken || requestedPaper === 'shared') {
       location.replace('./quiz.html');
     } else {
       const paperId = solveParams.get('paper') || 'random';
+      let paperTitle = paperId === 'basics' ? 'GA4 핵심 개념' : paperId === 'advanced' ? 'GA4 실무 응용' : paperId === 'random' ? '전체 랜덤 문제지' : '문제지';
+      let paperDescription = paperId === 'basics'
+        ? '이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.'
+        : paperId === 'advanced'
+          ? '전자상거래와 데이터 품질, 실무 개념을 익혀보세요.'
+          : '';
+      if (paperId === 'custom' && solveParams.get('bank')) {
+        const bankMeta = getCustomBankMeta(user.id, solveParams.get('bank'));
+        paperTitle = bankMeta?.title || paperTitle;
+        paperDescription = bankMeta?.description || '';
+      } else if (paperId === 'retry') {
+        try {
+          const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
+          paperTitle = retryMeta.paperTitle && retryMeta.paperTitle !== '문제지' ? retryMeta.paperTitle : paperTitle;
+          paperDescription = retryMeta.paperDescription || '';
+          if (retryMeta.bankId) {
+            const bankMeta = getCustomBankMeta(user.id, retryMeta.bankId);
+            paperTitle = retryMeta.paperTitle && retryMeta.paperTitle !== '문제지' ? retryMeta.paperTitle : (bankMeta?.title || paperTitle);
+            paperDescription = retryMeta.paperDescription || bankMeta?.description || '';
+          }
+        } catch { /* 저장된 풀이 정보가 없으면 기본 제목만 표시한다. */ }
+      }
+      setSolvePaperHeading(paperTitle, paperDescription);
       let activityKey = ['basics', 'advanced', 'random'].includes(paperId) ? paperId : null;
       if (paperId === 'custom' && solveParams.get('bank')) activityKey = `custom:${solveParams.get('bank')}`;
       if (paperId === 'retry') {
