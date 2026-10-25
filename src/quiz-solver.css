@@ -36,9 +36,12 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .quiz-wrap { gap: 24px; margin-top: 32px; }
 .q-card { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
 .q-card:focus { outline: none; }
+.q-card.is-anchor-trace::before { content: ''; position: absolute; inset: -2px; z-index: 2; padding: 4px; border-radius: inherit; background: conic-gradient(from var(--mb-anchor-trace-angle), transparent 0 70%, rgb(120 158 203 / 12%) 77%, color-mix(in srgb, var(--mb-primary) 52%, #e4eef9) 86%, rgb(111 154 203 / 48%) 91%, transparent 98% 100%); pointer-events: none; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: mb-question-card-trace 1450ms cubic-bezier(.4, 0, .2, 1) 1; }
 .q-title { font-size: var(--mb-font-16); line-height: 28px; font-weight: 600; gap: 12px; }
 .q-title .q-number { transform-origin: 50% 80%; font-size: var(--mb-font-12); line-height: 18px; }
 .q-title .q-number.is-anchor-bounce { animation: mb-question-badge-thumb 3.2s ease-in-out 1; }
+@property --mb-anchor-trace-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes mb-question-card-trace { 0% { --mb-anchor-trace-angle: 0deg; opacity: 0; } 12% { opacity: .5; } 26% { opacity: .95; } 72% { opacity: .65; } 100% { --mb-anchor-trace-angle: 360deg; opacity: 0; } }
 @keyframes mb-question-badge-thumb { 0%,38%,100% { transform: translateY(0) rotate(0) scale(1); } 8% { transform: translateY(-3px) rotate(-13deg) scale(1.08); } 16% { transform: translateY(-4px) rotate(11deg) scale(1.1); } 24% { transform: translateY(-2px) rotate(-7deg) scale(1.05); } 31% { transform: translateY(0) rotate(4deg) scale(1); } }
 .option-card { min-height: 48px; padding: 16px; font-size: var(--mb-font-16); line-height: 24px; border-radius: 12px; }
 .q-caption { font-size: var(--mb-font-12); line-height: 18px; }
@@ -132,6 +135,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .q-card.is-anchor-trace::before { animation: none; opacity: 0; }
   .q-title .q-number.is-anchor-bounce { animation: none; }
   .quiz-scroll-progress.is-tick::after,
   .quiz-scroll-progress.is-tick .tick-ring,

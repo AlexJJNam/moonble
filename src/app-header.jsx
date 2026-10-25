@@ -194,11 +194,26 @@ function useSolverQuestions(enabled) {
 
     const badge = target.querySelector('.q-number');
     window.setTimeout(() => {
-      if (reduceMotion || !badge) return;
-      badge.classList.remove('is-anchor-bounce');
-      void badge.offsetWidth;
-      badge.classList.add('is-anchor-bounce');
-      badge.addEventListener('animationend', () => badge.classList.remove('is-anchor-bounce'), { once: true });
+      if (reduceMotion) return;
+      target.classList.remove('is-anchor-trace');
+      badge?.classList.remove('is-anchor-bounce');
+      void target.offsetWidth;
+      target.classList.add('is-anchor-trace');
+
+      if (badge) {
+        void badge.offsetWidth;
+        badge.classList.add('is-anchor-bounce');
+        badge.addEventListener('animationend', () => badge.classList.remove('is-anchor-bounce'), { once: true });
+      }
+
+      const clearTrace = event => {
+        if (event.animationName !== 'mb-question-card-trace') return;
+        target.classList.remove('is-anchor-trace');
+        target.removeEventListener('animationend', clearTrace);
+        target.removeEventListener('animationcancel', clearTrace);
+      };
+      target.addEventListener('animationend', clearTrace);
+      target.addEventListener('animationcancel', clearTrace);
     }, reduceMotion ? 0 : 450);
   }
 
@@ -266,15 +281,13 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
 
       nodes.forEach((node, index) => {
         const distance = Math.abs(index - focalIndex);
-        const size = Math.max(6, 32 - distance * 6);
-        const opacity = Math.max(0.42, 1 - distance * 0.12);
-        const distanceBin = distance < 0.5 ? '0'
-          : distance < 1.5 ? '1'
-            : distance < 2.5 ? '2'
-              : distance < 3.5 ? '3'
-                : distance < 4.5 ? '4' : 'far';
+        const size = Math.max(6, 32 - Math.max(0, distance - 2.5) * 4.5);
+        const fontSize = size >= 26 ? 12 : size >= 21 ? 10 : 9;
+        const opacity = Math.max(0.72, 1 - distance * 0.04);
+        const distanceBin = distance >= 8 ? 'far' : String(Math.round(distance));
         node.dataset.distance = distanceBin;
         node.style.setProperty('--mb-solver-number-size', `${size.toFixed(2)}px`);
+        node.style.setProperty('--mb-solver-number-font-size', `${fontSize}px`);
         node.style.setProperty('--mb-solver-number-opacity', opacity.toFixed(2));
       });
     };
@@ -295,6 +308,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       if (frame) cancelAnimationFrame(frame);
       nav.querySelectorAll('.mb-solver-question').forEach(node => {
         node.style.removeProperty('--mb-solver-number-size');
+        node.style.removeProperty('--mb-solver-number-font-size');
         node.style.removeProperty('--mb-solver-number-opacity');
       });
     };
@@ -684,7 +698,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
             return (
               <a
                 className={`mb-solver-question is-${item.status}`}
-                data-distance={distance >= 5 ? 'far' : distance}
+                data-distance={distance >= 8 ? 'far' : Math.round(distance)}
                 href={`#${item.id}`}
                 key={item.id}
                 aria-current={questions.activeIndex === index ? 'true' : undefined}
