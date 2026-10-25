@@ -89,6 +89,13 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-ink-toolbar.is-active { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }
 .quiz-ink-control-row { position: relative; width: min(264px, calc(100vw - 32px)); height: 48px; }
 .quiz-ink-tool-controls { position: absolute; top: 4px; left: 12px; display: flex; align-items: center; gap: 8px; }
+.quiz-ink-session-actions { position: absolute; top: -38px; left: 50%; display: flex; align-items: center; gap: 6px; transform: translateX(-50%); }
+.quiz-ink-session-actions button { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fff; background: #252525; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity 140ms ease, transform 140ms ease; }
+.quiz-ink-session-actions button:disabled { opacity: .36; cursor: default; }
+.quiz-ink-session-actions button:not(:disabled):hover { transform: scale(1.06); }
+.quiz-ink-session-actions button:not(:disabled):active { transform: scale(.92); }
+.quiz-ink-session-actions svg { width: 16px; height: 16px; }
+.quiz-ink-session-actions button:focus-visible { outline: 2px solid #9bc7ff; outline-offset: 3px; }
 .quiz-ink-tool-button { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #687385; background: #eef1f5; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color 140ms ease, background-color 140ms ease, transform 140ms ease; }
 .quiz-ink-tool-button.is-selected { color: #fff; background: #404040; }
 .quiz-ink-tool-button:not(.is-selected):hover, .quiz-ink-tool-button:not(.is-selected):focus-visible { color: #687385; background: #e4e9ef; }
@@ -149,6 +156,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
   .quiz-scroll-progress.is-tick .tick-ring,
   .quiz-scroll-progress.is-tick .tick-spark { animation: none; }
   .quiz-ink-toolbar { transition: none; }
+  .quiz-ink-session-actions button { transition: none; }
   .quiz-ink-history-toolbar { transition: none; }
   .quiz-ink-scroll-button { transition: none; }
   .quiz-ink-tool-button { transition: none; }
