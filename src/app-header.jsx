@@ -672,14 +672,16 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         </button>}
       </div>}
     </div>
-    {solver && <button className={`mb-pen-mode-toggle${quizPenMode ? ' is-active' : ''}`} type="button" aria-pressed={quizPenMode} aria-label={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} title={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} onClick={() => window.dispatchEvent(new CustomEvent('moonble:toggle-quiz-pen-mode'))}>
-      <PenLine size={16} aria-hidden="true" />
-      <span aria-hidden="true">펜 모드</span>
-    </button>}
-    <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
-      {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
-      {!collapsed && <span aria-hidden="true">접기</span>}
-    </button>
+    <div className="mb-sidebar-tools">
+      {solver && <button className={`mb-pen-mode-toggle${quizPenMode ? ' is-active' : ''}`} type="button" aria-pressed={quizPenMode} aria-label={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} title={quizPenMode ? '펜 모드 끄기' : '펜 모드 켜기'} onClick={() => window.dispatchEvent(new CustomEvent('moonble:toggle-quiz-pen-mode'))}>
+        <PenLine size={16} aria-hidden="true" />
+        <span aria-hidden="true">펜 모드</span>
+      </button>}
+      <button className="mb-sidebar-toggle" type="button" aria-expanded={!collapsed} aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'} onClick={() => setCollapsed(value => !value)}>
+        {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
+        {!collapsed && <span aria-hidden="true">접기</span>}
+      </button>
+    </div>
   </aside>
   {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
     <div className="mb-notification-screen-nav">

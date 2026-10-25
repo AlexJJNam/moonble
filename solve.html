@@ -6246,21 +6246,14 @@ if (shareToken || requestedPaper === 'shared') {
         targetContext.strokeStyle = '#2374ee';
         targetContext.lineCap = 'round';
         targetContext.lineJoin = 'round';
-        if (stroke.points.length === 1) {
-          targetContext.beginPath();
-          targetContext.arc(first.x, first.y - yOffset, stroke.width / 2, 0, Math.PI * 2);
-          targetContext.fill();
-          return;
-        }
-
         if (isLiveStroke || !stroke.outline) {
           stroke.outline = getStroke(
-            stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
+            stroke.inputPoints || stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
             {
               size: stroke.width,
-              thinning: 0.2,
-              smoothing: 0.65,
-              streamline: 0.45,
+              thinning: 0.5,
+              smoothing: 0.5,
+              streamline: 0.5,
               simulatePressure: stroke.simulatePressure,
               start: { cap: true },
               end: { cap: true },
@@ -6270,12 +6263,27 @@ if (shareToken || requestedPaper === 'shared') {
         }
         const outline = stroke.outline;
         if (outline && outline.length >= 3) {
+          const count = outline.length;
+          const firstPoint = outline[0];
+          const lastPoint = outline[count - 1];
           targetContext.beginPath();
-          targetContext.moveTo(outline[0][0], outline[0][1] - yOffset);
-          for (let index = 1; index < outline.length; index += 1) {
-            targetContext.lineTo(outline[index][0], outline[index][1] - yOffset);
+          targetContext.moveTo((lastPoint[0] + firstPoint[0]) / 2, (lastPoint[1] + firstPoint[1]) / 2 - yOffset);
+          for (let index = 0; index < count; index += 1) {
+            const point = outline[index];
+            const next = outline[(index + 1) % count];
+            targetContext.quadraticCurveTo(
+              point[0], point[1] - yOffset,
+              (point[0] + next[0]) / 2, (point[1] + next[1]) / 2 - yOffset,
+            );
           }
           targetContext.closePath();
+          targetContext.fill();
+          return;
+        }
+
+        if (stroke.points.length === 1) {
+          targetContext.beginPath();
+          targetContext.arc(first.x, first.y - yOffset, stroke.width / 2, 0, Math.PI * 2);
           targetContext.fill();
           return;
         }
@@ -6303,6 +6311,8 @@ if (shareToken || requestedPaper === 'shared') {
       function completeActiveStroke() {
         if (!activeStroke) return;
         rebuildCompletedLayer();
+        // The live outline trails the pointer slightly (last:false). Recompute it at the real endpoint.
+        activeStroke.outline = null;
         drawStroke(completedContext, activeStroke, window.scrollY, false);
         activeStroke = null;
       }
@@ -6430,14 +6440,20 @@ if (shareToken || requestedPaper === 'shared') {
         return { x: event.clientX, y: event.clientY, docY: event.clientY + window.scrollY, pressure };
       }
 
+      function appendStrokePoint(stroke, point) {
+        const savedPoint = { x: point.x, y: point.y, pressure: point.pressure ?? 0.5 };
+        stroke.points.push(savedPoint);
+        stroke.inputPoints.push([savedPoint.x, savedPoint.y, savedPoint.pressure]);
+      }
+
       function appendPointerPoint(stroke, event) {
         const point = pointerPosition(event);
-        if (stroke.pointerType !== 'mouse' && Number.isFinite(event.pressure) && event.pressure > 0) {
+        if (stroke.pointerType === 'pen' && Number.isFinite(event.pressure) && event.pressure > 0) {
           stroke.pressureMin = Math.min(stroke.pressureMin, event.pressure);
           stroke.pressureMax = Math.max(stroke.pressureMax, event.pressure);
-          if (stroke.pressureMax - stroke.pressureMin > 0.015) stroke.simulatePressure = false;
+          if (stroke.pressureMax - stroke.pressureMin > 0.005) stroke.simulatePressure = false;
         }
-        stroke.points.push({ x: point.x, y: point.docY, pressure: point.pressure });
+        appendStrokePoint(stroke, { x: point.x, y: point.docY, pressure: point.pressure });
       }
 
       function coalescedPointerEvents(event) {
@@ -6515,11 +6531,11 @@ if (shareToken || requestedPaper === 'shared') {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
         if (start || !activeStroke) {
           mode = 'draw';
-          activeStroke = { width: 3, simulatePressure: true, points: [{ x: point.x, y: point.y }] };
-          activeStroke.points[0].pressure = point.pressure;
+          activeStroke = { width: 5, simulatePressure: true, points: [], inputPoints: [] };
+          appendStrokePoint(activeStroke, point);
           strokes.push(activeStroke);
         } else {
-          activeStroke.points.push(point);
+          appendStrokePoint(activeStroke, point);
         }
         scheduleRedraw();
       }
@@ -6580,12 +6596,13 @@ if (shareToken || requestedPaper === 'shared') {
         mode = 'draw';
         const point = pointerPosition(event);
         activeStroke = {
-          width: event.pointerType === 'pen' ? 2.8 : 3,
+          width: 5,
           pointerType: event.pointerType,
           simulatePressure: true,
           pressureMin: Infinity,
           pressureMax: -Infinity,
           points: [],
+          inputPoints: [],
         };
         appendPointerPoint(activeStroke, event);
         strokes.push(activeStroke);
@@ -6605,6 +6622,14 @@ if (shareToken || requestedPaper === 'shared') {
 
       function finishPointer(event) {
         if (!activePointers.has(event.pointerId)) return;
+        if (event.type === 'pointerup' && mode === 'draw' && activePointers.size === 1 && activeStroke) {
+          const lastPoint = activeStroke.points[activeStroke.points.length - 1];
+          const finalPoint = pointerPosition(event);
+          if (lastPoint && Math.hypot(finalPoint.x - lastPoint.x, finalPoint.docY - lastPoint.y) > 0.5) {
+            if (!(Number.isFinite(event.pressure) && event.pressure > 0)) finalPoint.pressure = lastPoint.pressure;
+            appendStrokePoint(activeStroke, { x: finalPoint.x, y: finalPoint.docY, pressure: finalPoint.pressure });
+          }
+        }
         activePointers.delete(event.pointerId);
         if (activePointers.size === 0) {
           mode = null;
