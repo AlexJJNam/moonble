@@ -1437,102 +1437,106 @@
 
     .shared-quiz-rank {
       margin: 12px 0 0;
-      padding: 15px 16px 16px;
-      border-radius: 16px;
-      color: var(--text);
-      background: #f3f5f7;
+      padding: var(--mb-space-16);
+      border-radius: var(--mb-radius-16);
+      color: var(--mb-text-primary);
+      background: #f8f9fb;
+      font-family: var(--mb-font-sans);
     }
 
     .shared-quiz-rank[hidden], .shared-quiz-rank-grid[hidden], .shared-quiz-rank-status[hidden], .shared-quiz-analytics[hidden], .shared-quiz-share-actions[hidden] { display: none; }
 
     .shared-quiz-rank h3 {
-      margin: 0 0 11px;
-      font-size: 14px;
-      line-height: 20px;
-      font-weight: 700;
+      margin: 0 0 var(--mb-space-12);
+      font-size: var(--mb-font-22);
+      line-height: 30px;
+      font-weight: var(--mb-weight-semibold);
       text-align: left;
     }
 
     .shared-quiz-rank-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--mb-space-8);
     }
 
     .shared-quiz-rank-grid article {
       min-width: 0;
       display: grid;
       justify-items: center;
-      gap: 3px;
-      padding: 2px 6px;
+      gap: var(--mb-space-4);
+      padding: var(--mb-space-4);
       text-align: center;
     }
 
     .shared-quiz-rank-grid span {
-      color: #7b8490;
-      font-size: 11px;
-      line-height: 16px;
+      color: var(--mb-text-tertiary);
+      font-size: var(--mb-font-13);
+      line-height: 20px;
       white-space: nowrap;
     }
 
     .shared-quiz-rank-grid strong {
-      color: #202833;
-      font-size: 21px;
-      line-height: 28px;
-      font-weight: 750;
+      color: var(--mb-text-primary);
+      font-size: var(--mb-font-24);
+      line-height: 32px;
+      font-weight: var(--mb-weight-bold);
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
 
-    .shared-quiz-rank-grid article:nth-child(2) strong { color: #246fe5; }
+    .shared-quiz-rank-grid article:nth-child(2) strong { color: var(--mb-primary-strong); }
 
-    .shared-quiz-rank-grid small { margin-left: 2px; color: #697586; font-size: 12px; font-weight: 600; }
+    .shared-quiz-rank-grid small { margin-left: var(--mb-space-4); color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
 
     .shared-quiz-rank-note, .shared-quiz-rank-status {
-      margin: 9px 0 0;
-      color: #7b8490;
-      font-size: 11px;
-      line-height: 16px;
-      font-weight: 500;
+      margin: var(--mb-space-8) 0 0;
+      color: var(--mb-text-tertiary);
+      font-size: var(--mb-font-13);
+      line-height: 20px;
+      font-weight: var(--mb-weight-medium);
       text-align: left;
     }
 
-    .shared-quiz-analytics { margin-top: 14px; padding-top: 13px; border-top: 1px solid rgb(106 120 140 / 12%); }
-    .shared-quiz-podium { display: grid; gap: 0; margin-top: 9px; }
+    .shared-quiz-analytics { margin-top: var(--mb-space-16); }
+    .shared-quiz-podium { display: grid; gap: var(--mb-space-4); margin-top: var(--mb-space-8); }
     .shared-quiz-podium[hidden] { display: none; }
-    .shared-quiz-podium-title { margin: 0 1px 4px; color: #647184; font-size: 10px; line-height: 15px; font-weight: 650; }
-    .shared-quiz-podium-row { min-height: 30px; display: grid; grid-template-columns: 23px 1fr auto; align-items: center; gap: 7px; border-bottom: 1px solid rgb(106 120 140 / 9%); color: #596575; font-size: 11px; }
-    .shared-quiz-podium-row:last-child { border-bottom: 0; }
-    .shared-quiz-podium-medal { font-size: 16px; line-height: 20px; text-align: center; }
-    .shared-quiz-podium-row strong { color: #303a48; font-weight: 650; }
-    .shared-quiz-podium-row b { color: #202833; font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; }
-    .shared-quiz-analytics-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .shared-quiz-analytics-summary article { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 10px; background: rgb(255 255 255 / 72%); }
-    .shared-quiz-analytics-summary span { color: #7b8490; font-size: 11px; line-height: 16px; }
-    .shared-quiz-analytics-summary strong { color: #202833; font-size: 16px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .shared-quiz-analytics-summary small { margin-left: 2px; color: #697586; font-size: 10px; }
-    .shared-quiz-chart-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 14px 1px 5px; }
-    .shared-quiz-chart-heading h4 { margin: 0; color: #293241; font-size: 12px; line-height: 18px; font-weight: 700; }
-    .shared-quiz-chart-heading span { color: #246fe5; font-size: 10px; line-height: 16px; font-weight: 650; white-space: nowrap; }
-    .shared-quiz-chart-wrap { overflow: hidden; border-radius: 10px; background: rgb(255 255 255 / 78%); }
+    .shared-quiz-podium-title { margin: 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); }
+    .shared-quiz-podium-row { min-height: 36px; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: var(--mb-space-8); color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; }
+    .shared-quiz-podium-medal { font-size: 18px; line-height: 24px; text-align: center; }
+    .shared-quiz-podium-row strong { color: var(--mb-text-secondary); font-weight: var(--mb-weight-semibold); }
+    .shared-quiz-podium-row b { color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; }
+    .shared-quiz-analytics-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mb-space-8); }
+    .shared-quiz-analytics-summary article { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: var(--mb-space-8); padding: var(--mb-space-12); border-radius: var(--mb-radius-12); background: rgb(255 255 255 / 78%); }
+    .shared-quiz-analytics-summary span { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+    .shared-quiz-analytics-summary strong { color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .shared-quiz-analytics-summary small { margin-left: var(--mb-space-4); color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; }
+    .shared-quiz-chart-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--mb-space-8); margin: var(--mb-space-16) 0 var(--mb-space-8); }
+    .shared-quiz-chart-heading h4 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
+    .shared-quiz-chart-heading span { color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); white-space: nowrap; }
+    .shared-quiz-chart-wrap { overflow: hidden; border-radius: var(--mb-radius-12); background: rgb(255 255 255 / 78%); }
     .shared-quiz-score-chart { display: block; width: 100%; height: auto; overflow: visible; }
-    .shared-quiz-score-chart text { fill: #7b8490; font: 10px/1 var(--font-sans, system-ui, sans-serif); }
+    .shared-quiz-score-chart text { fill: var(--mb-text-tertiary); font: var(--mb-font-12)/1.5 var(--mb-font-sans); }
     .shared-quiz-score-chart .shared-chart-grid { stroke: #e8edf3; stroke-width: 1; stroke-dasharray: 3 4; }
     .shared-quiz-score-chart .shared-chart-bar { fill: #8bbdff; fill-opacity: .72; transition: y 380ms cubic-bezier(.2,.7,.2,1), height 380ms cubic-bezier(.2,.7,.2,1); }
-    .shared-quiz-score-chart .shared-chart-average { stroke: #246fe5; stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .shared-quiz-score-chart .shared-chart-average-label { fill: #246fe5; font-weight: 700; }
-    .shared-quiz-chart-note { margin: 6px 1px 0; color: #7b8490; font-size: 10px; line-height: 15px; }
-    .shared-quiz-share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 13px; }
-    .shared-quiz-share-actions button { min-width: 0; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid #dfe5ec; border-radius: 10px; background: #fff; color: #3c4654; font: inherit; font-size: 12px; line-height: 18px; font-weight: 650; cursor: pointer; }
-    .shared-quiz-share-actions button:hover { background: #f8fbff; border-color: #c7d9f4; }
-    .shared-quiz-share-actions button:focus-visible { outline: 2px solid #8bbdff; outline-offset: 2px; }
-    .shared-quiz-share-status { min-height: 15px; margin: 5px 0 0; color: #64748b; font-size: 10px; line-height: 15px; text-align: center; }
+    .shared-quiz-score-chart .shared-chart-average { stroke: var(--mb-primary-strong); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .shared-quiz-score-chart .shared-chart-average-label { fill: var(--mb-primary-strong); font-weight: var(--mb-weight-bold); }
+    .shared-quiz-chart-note { margin: var(--mb-space-8) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+    .shared-quiz-share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mb-space-8); margin-top: var(--mb-space-16); }
+    .shared-quiz-share-actions button { min-width: 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 10px 8px; border: 0; border-radius: var(--mb-radius-12); background: var(--mb-surface); color: var(--mb-text-secondary); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); text-align: center; cursor: pointer; transition: color var(--mb-duration), background-color var(--mb-duration); }
+    .shared-quiz-share-actions button:hover { background: var(--mb-primary-soft); color: var(--mb-primary-strong); }
+    .shared-quiz-share-actions button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+    .shared-quiz-share-status { margin: var(--mb-space-8) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; text-align: center; }
+    .shared-quiz-share-status:empty { display: none; }
 
     @media (prefers-reduced-motion: reduce) { .shared-quiz-score-chart .shared-chart-bar { transition: none; } }
     @media (max-width: 480px) {
-      .shared-quiz-analytics-summary article { padding: 8px 9px; }
-      .shared-quiz-analytics-summary span { font-size: 10px; }
-      .shared-quiz-analytics-summary strong { font-size: 15px; }
-      .shared-quiz-share-actions button { font-size: 11px; }
+      .shared-quiz-rank h3 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); }
+      .shared-quiz-rank-grid { gap: var(--mb-space-4); }
+      .shared-quiz-rank-grid article { padding: var(--mb-space-4) 0; }
+      .shared-quiz-rank-grid strong { font-size: var(--mb-font-20); line-height: 25px; }
+      .shared-quiz-rank-grid small { font-size: var(--mb-font-13); }
+      .shared-quiz-analytics-summary article { padding: var(--mb-space-8); }
     }
 
     .shared-guest-complete .shared-guest-delivery-error {
@@ -3419,8 +3423,8 @@
         <p id="sharedQuizRankNote" class="shared-quiz-rank-note" hidden>같은 점수는 공동 순위로 표시해요.</p>
         <p id="sharedQuizRankStatus" class="shared-quiz-rank-status" role="status" hidden></p>
         <div id="sharedQuizShareActions" class="shared-quiz-share-actions" hidden>
-          <button id="shareMyQuizScore" type="button"><span aria-hidden="true">↗</span>내 점수 공유하기</button>
-          <button id="shareQuizPaper" type="button"><span aria-hidden="true">↗</span>문제 공유하기</button>
+          <button id="shareMyQuizScore" type="button">내 점수 공유하기</button>
+          <button id="shareQuizPaper" type="button">문제 공유하기</button>
         </div>
         <p id="sharedQuizShareStatus" class="shared-quiz-share-status" role="status" aria-live="polite"></p>
       </section>
@@ -3776,9 +3780,9 @@
       const tickLabels = [0, 20, 40, 60, 80, 100].map(scoreValue => `<text x="${chartX + scoreValue / 100 * chartWidth}" y="548" text-anchor="${scoreValue === 0 ? 'start' : scoreValue === 100 ? 'end' : 'middle'}" fill="#7b8490" font-size="20">${scoreValue}</text>`).join('');
       const medalColors = ['#efb63f', '#aeb8c3', '#c98f63'];
       const medal = rank >= 1 && rank <= 3
-        ? `<path d="M${426} 241l11 14 11-14v-16h-22z" fill="${medalColors[rank - 1]}" opacity=".82"/><circle cx="437" cy="264" r="18" fill="${medalColors[rank - 1]}" stroke="#fff" stroke-width="3"/><text x="437" y="270" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="17" font-weight="700">${rank}</text>`
+        ? `<path d="M${426} 241l11 14 11-14v-16h-22z" fill="${medalColors[rank - 1]}" opacity=".82"/><circle cx="437" cy="264" r="18" fill="${medalColors[rank - 1]}" stroke="#fff" stroke-width="3"/><text x="437" y="270" text-anchor="middle" fill="#fff" font-family="Pretendard, sans-serif" font-size="17" font-weight="700">${rank}</text>`
         : '';
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" rx="38" fill="#f3f7fd"/><rect x="24" y="24" width="1152" height="582" rx="30" fill="#fff"/><text x="64" y="82" fill="#246fe5" font-family="Arial,sans-serif" font-size="22" font-weight="700">MOONBLE · 공유 문제 결과</text><text x="64" y="132" fill="#202833" font-family="Arial,sans-serif" font-size="30" font-weight="700">${title}</text><text x="64" y="224" fill="#687486" font-family="Arial,sans-serif" font-size="23">내 점수</text><text x="64" y="310" fill="#202833" font-family="Arial,sans-serif" font-size="72" font-weight="750">${score}<tspan fill="#697586" font-size="28">점</tspan></text>${medal}<text x="470" y="221" fill="#687486" font-family="Arial,sans-serif" font-size="22">내 순위</text><text x="470" y="282" fill="#246fe5" font-family="Arial,sans-serif" font-size="48" font-weight="700">${rank}위 <tspan fill="#7b8490" font-size="23">/ ${participants}명</tspan></text><text x="470" y="323" fill="#687486" font-family="Arial,sans-serif" font-size="19">참여자 평균 ${average}점 · 표준편차 ${deviation}점</text><text x="64" y="374" fill="#303a48" font-family="Arial,sans-serif" font-size="21" font-weight="700">참여자 최고 점수 분포</text><line x1="64" x2="1136" y1="518" y2="518" stroke="#e8edf3" stroke-width="2"/>${bars}<line x1="${averageX}" x2="${averageX}" y1="385" y2="518" stroke="#246fe5" stroke-width="3" stroke-dasharray="8 8"/>${tickLabels}<text x="64" y="582" fill="#7b8490" font-family="Arial,sans-serif" font-size="17">문제를 풀고 내 순위도 확인해보세요.</text></svg>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Pretendard, sans-serif"><rect width="1200" height="630" rx="38" fill="#f3f7fd"/><rect x="24" y="24" width="1152" height="582" rx="30" fill="#fff"/><text x="64" y="82" fill="#246fe5" font-family="Pretendard, sans-serif" font-size="22" font-weight="700">MOONBLE · 공유 문제 결과</text><text x="64" y="132" fill="#202833" font-family="Pretendard, sans-serif" font-size="30" font-weight="700">${title}</text><text x="64" y="224" fill="#687486" font-family="Pretendard, sans-serif" font-size="23">내 점수</text><text x="64" y="310" fill="#202833" font-family="Pretendard, sans-serif" font-size="72" font-weight="750">${score}<tspan fill="#697586" font-size="28">점</tspan></text>${medal}<text x="470" y="221" fill="#687486" font-family="Pretendard, sans-serif" font-size="22">내 순위</text><text x="470" y="282" fill="#246fe5" font-family="Pretendard, sans-serif" font-size="48" font-weight="700">${rank}위 <tspan fill="#7b8490" font-size="23">/ ${participants}명</tspan></text><text x="470" y="323" fill="#687486" font-family="Pretendard, sans-serif" font-size="19">참여자 평균 ${average}점 · 표준편차 ${deviation}점</text><text x="64" y="374" fill="#303a48" font-family="Pretendard, sans-serif" font-size="21" font-weight="700">참여자 최고 점수 분포</text><line x1="64" x2="1136" y1="518" y2="518" stroke="#e8edf3" stroke-width="2"/>${bars}<line x1="${averageX}" x2="${averageX}" y1="385" y2="518" stroke="#246fe5" stroke-width="3" stroke-dasharray="8 8"/>${tickLabels}<text x="64" y="582" fill="#7b8490" font-family="Pretendard, sans-serif" font-size="17">문제를 풀고 내 순위도 확인해보세요.</text></svg>`;
     }
 
     async function scoreSvgToPng(svgMarkup) {
