@@ -54,8 +54,8 @@ test('social crawlers receive escaped, problem-specific Open Graph metadata', as
     assert.match(html, /<title>\[문블\] &lt;SQL &amp; 데이터베이스&gt; · Moonble<\/title>/);
     assert.match(html, /<meta property="og:title" content="\[문블\] &lt;SQL &amp; 데이터베이스&gt;">/);
     assert.match(html, /<meta property="og:description" content="&quot;상급&quot; 문제 &lt;20문항&gt;">/);
-    assert.match(html, /<meta property="og:image" content="https:\/\/share\.moonble\.com\/[A-Za-z0-9_-]+\/thumbnail\.svg\?preview=3&amp;tint=%23e8f3ff&amp;group=%EB%AF%B8%EB%B6%84%EB%A5%98">/);
-    assert.match(html, /<meta property="og:image:type" content="image\/svg\+xml">/);
+    assert.match(html, /<meta property="og:image" content="https:\/\/share\.moonble\.com\/[A-Za-z0-9_-]+\/thumbnail\.png\?preview=4&amp;tint=%23e8f3ff&amp;group=%EB%AF%B8%EB%B6%84%EB%A5%98">/);
+    assert.match(html, /<meta property="og:image:type" content="image\/png">/);
     assert.match(html, /<meta property="og:image:width" content="1200">/);
     assert.match(html, /<meta property="og:image:height" content="675">/);
     assert.match(html, new RegExp(`<meta property="og:url" content="https://share\\.moonble\\.com/${token}">`));
@@ -85,6 +85,25 @@ test('shared quiz thumbnail renders the saved paper preview as an accessible ima
     assert.match(svg, /정규화의 목적은 무엇인가요\?/);
     assert.match(svg, /중복을 줄입니다/);
     assert.doesNotMatch(svg, /<script/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('share thumbnail PNG endpoint returns a public, directly readable PNG', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify(paperSnapshot), {
+    headers: { 'content-type': 'application/json' },
+  });
+  try {
+    const response = await worker.fetch(new Request(`https://share.moonble.com/${token}/thumbnail.png?preview=4&tint=%23e8f3ff&group=%EB%AF%B8%EB%B6%84%EB%A5%98`, {
+      headers: { 'user-agent': 'kakaotalk-scrap/1.0' },
+    }), env);
+    const image = new Uint8Array(await response.arrayBuffer());
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /image\/png/);
+    assert.match(response.headers.get('cache-control'), /public/);
+    assert.deepEqual(Array.from(image.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
   } finally {
     globalThis.fetch = originalFetch;
   }

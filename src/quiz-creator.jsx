@@ -211,6 +211,10 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function openPopup(url) {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      window.location.assign(url);
+      return;
+    }
     const screenWidth = window.screen.availWidth || window.screen.width;
     const screenHeight = window.screen.availHeight || window.screen.height;
     const width = Math.min(480, Math.max(320, screenWidth - 32));

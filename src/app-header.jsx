@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BarChart3, Bell, BookOpen, ChevronLeft, CircleHelp, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
 import { getNextQuizShareNotification } from './quiz-share.js';
@@ -38,7 +38,7 @@ function markShareNotificationsSeen(userId, notifications) {
 function formatShareNotificationDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit', day: '2-digit' }).format(date);
+  return new Intl.DateTimeFormat('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).format(date);
 }
 
 function useSolverQuestions(enabled) {
@@ -211,7 +211,8 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     } catch { return activeDockIndex; }
   });
   const mobileDockRef = useRef(null);
-  const notificationRootRef = useRef(null);
+  const notificationBackRef = useRef(null);
+  const notificationReturnFocusRef = useRef(null);
   const shareNotificationTimer = useRef(0);
   const shareNotificationVisible = useRef(false);
   const profile = user ? profileOf(user) : null;
@@ -270,19 +271,29 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
 
   useEffect(() => {
     if (!notificationOpen) return undefined;
-    function closeOutside(event) {
-      if (!notificationRootRef.current?.contains(event.target)) setNotificationOpen(false);
-    }
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    notificationBackRef.current?.focus({ preventScroll: true });
     function closeOnEscape(event) {
       if (event.key === 'Escape') setNotificationOpen(false);
     }
-    document.addEventListener('pointerdown', closeOutside);
     document.addEventListener('keydown', closeOnEscape);
     return () => {
-      document.removeEventListener('pointerdown', closeOutside);
+      document.documentElement.style.overflow = previousOverflow;
       document.removeEventListener('keydown', closeOnEscape);
+      notificationReturnFocusRef.current?.focus?.({ preventScroll: true });
     };
   }, [notificationOpen]);
+
+  function openNotifications(event) {
+    notificationReturnFocusRef.current = event.currentTarget;
+    if (user?.id) setShareNotifications(current => markShareNotificationsSeen(user.id, current));
+    setNotificationOpen(true);
+  }
+
+  function closeNotifications() {
+    setNotificationOpen(false);
+  }
 
   useLayoutEffect(() => {
     const nav = mobileDockRef.current;
@@ -457,37 +468,20 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative /></a>
-        <span className="mb-sidebar-help">
-          <button type="button" aria-label="사이드바 단축키 안내"><CircleHelp size={17} aria-hidden="true" /></button>
-          <span role="tooltip"><kbd>Shift</kbd>와 <kbd>\</kbd>를 함께 누르면 사이드바가 사라지고, 다시 누르면 나타나요.</span>
-        </span>
-      </div>
-      {user && <div className="mb-app-profile-row" ref={notificationRootRef}>
-        {user && <button className="mb-notification-toggle" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-panel" onClick={() => {
-          if (!notificationOpen) setShareNotifications(current => markShareNotificationsSeen(user.id, current));
-          setNotificationOpen(value => !value);
-        }}>
+        {user && <button className="mb-notification-toggle mb-notification-toggle--desktop" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
           <Bell size={19} aria-hidden="true" />
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
         </button>}
+      </div>
+      {user && <div className="mb-app-profile-row">
+        <button className="mb-notification-toggle mb-notification-toggle--mobile" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
+          <Bell size={19} aria-hidden="true" />
+          {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
+        </button>
         <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
           <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>
           <Settings2 size={16} aria-hidden="true" />
         </a>
-        {notificationOpen && <section className="mb-notification-panel" id="mb-notification-panel" role="region" aria-label="알림">
-          <div className="mb-notification-panel-heading"><h2>알림</h2></div>
-          {shareNotifications.length ? <div className="mb-notification-list">
-            {shareNotifications.map(item => <button className="mb-notification-item" type="button" key={item.id} onClick={() => setShareNotifications(current => markShareNotificationsSeen(user.id, current))}>
-              <span className="mb-notification-meta">{item.title} · {formatShareNotificationDate(item.created_at)}</span>
-              <span className="mb-notification-title">공유한 문제를 누군가 풀었어요.{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
-              <span className="mb-notification-copy">{item.score}점 ({item.correct}/{item.total})</span>
-            </button>)}
-          </div> : <div className="mb-notification-empty">
-            <Bell size={30} aria-hidden="true" />
-            <strong>아직 받은 알림이 없어요</strong>
-            <p>문제지를 공유하면 풀이 결과를 여기서 확인할 수 있어요.</p>
-          </div>}
-        </section>}
       </div>}
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
         <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}<strong>문제 목록</strong></div>
@@ -519,6 +513,26 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
     </button>
   </aside>
+  {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
+    <div className="mb-notification-screen-nav">
+      <button ref={notificationBackRef} type="button" aria-label="알림 닫기" onClick={closeNotifications}><ChevronLeft size={24} aria-hidden="true" /></button>
+    </div>
+    <main className="mb-notification-screen-main">
+      <header className="mb-notification-screen-heading"><h1 id="mb-notification-title">알림</h1></header>
+      {shareNotifications.length ? <div className="mb-notification-screen-list">
+        {shareNotifications.map(item => <article className="mb-notification-screen-item" key={item.id}>
+          <span className="mb-notification-meta">문블 · {formatShareNotificationDate(item.created_at)}</span>
+          <span className="mb-notification-title">{item.title}{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
+          <span className="mb-notification-copy">공유한 문제를 누군가 풀었어요.</span>
+          <span className="mb-notification-copy">{item.score}점 ({item.correct}/{item.total})</span>
+        </article>)}
+      </div> : <div className="mb-notification-empty">
+        <Bell size={30} aria-hidden="true" />
+        <strong>아직 받은 알림이 없어요</strong>
+        <p>문제지를 공유하면 풀이 결과를 여기서 확인할 수 있어요.</p>
+      </div>}
+    </main>
+  </section>}
   {shareNotification && <div className={`mb-share-notification-toast${solver ? ' is-solver' : ''}`} role="status" aria-live="polite" aria-atomic="true">
     <strong>공유한 문제를 누군가 풀었어요.</strong>
     <span>{shareNotification.title} · {shareNotification.score}점 ({shareNotification.correct}/{shareNotification.total})</span>

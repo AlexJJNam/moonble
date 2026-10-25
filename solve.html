@@ -4225,6 +4225,10 @@
   }
 
   function openPopup(url, provider) {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      window.location.assign(url);
+      return;
+    }
     var screenWidth = window.screen.availWidth || window.screen.width;
     var screenHeight = window.screen.availHeight || window.screen.height;
     var w = Math.min(480, Math.max(320, screenWidth - 32));

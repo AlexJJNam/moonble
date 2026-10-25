@@ -1,3 +1,9 @@
+import { Resvg } from '@cf-wasm/resvg';
+import { PRETENDARD_REGULAR_BASE64 } from './pretendard-font.js';
+
+const pretendardBinary = atob(PRETENDARD_REGULAR_BASE64);
+const pretendardRegular = Uint8Array.from(pretendardBinary, character => character.charCodeAt(0));
+
 const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,50}$/;
 const CRAWLER_PATTERN = /(?:bot|crawler|spider|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|kakao[^\s]*scrap|naverbot|google-inspectiontool)/i;
 const META_IMAGE_FALLBACK = 'https://moonble.com/assets/moonble-open-graph.png';
@@ -132,6 +138,19 @@ function previewImage(paper, tint = PREVIEW_TINT_FALLBACK, groupName = '미분�
 </svg>`;
 }
 
+async function previewPng(paper, tint = PREVIEW_TINT_FALLBACK, groupName = '미분류') {
+  const renderer = await Resvg.async(previewImage(paper, tint, groupName), {
+    fitTo: { mode: 'width', value: 1200 },
+    font: {
+      fontBuffers: [pretendardRegular],
+      defaultFontFamily: 'Pretendard',
+      sansSerifFamily: 'Pretendard',
+      loadSystemFonts: false,
+    },
+  });
+  return renderer.render().asPng();
+}
+
 async function hashToken(token) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -181,7 +200,7 @@ function previewHtml(token, paper, requestUrl, env) {
   const tint = previewTint(requestParams.get('tint'));
   const group = (requestParams.get('group') || '미분류').slice(0, 80);
   const imageUrl = paper.questions.length
-    ? new URL(`/${encodeURIComponent(token)}/thumbnail.svg?preview=3&tint=${encodeURIComponent(tint)}&group=${encodeURIComponent(group)}`, requestUrl).href
+    ? new URL(`/${encodeURIComponent(token)}/thumbnail.png?preview=4&tint=${encodeURIComponent(tint)}&group=${encodeURIComponent(group)}`, requestUrl).href
     : (env.OG_IMAGE || META_IMAGE_FALLBACK);
   const solveUrl = appQuizUrl(token, env);
   const safeTitle = escapeHtml(title);
@@ -205,8 +224,9 @@ function previewHtml(token, paper, requestUrl, env) {
   <meta property="og:description" content="${safeDescription}">
   <meta property="og:url" content="${safeCanonicalUrl}">
   <meta property="og:image" content="${safeImageUrl}">
+  <meta property="og:image:url" content="${safeImageUrl}">
   <meta property="og:image:secure_url" content="${safeImageUrl}">
-  <meta property="og:image:type" content="${paper.questions.length ? 'image/svg+xml' : 'image/png'}">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="675">
   <meta property="og:image:alt" content="${escapeHtml(`${title} 문제지 미리보기`)}">
@@ -252,14 +272,26 @@ function htmlResponse(body, status = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const thumbnailMatch = url.pathname.match(/^\/([A-Za-z0-9_-]{40,50})\/thumbnail\.svg$/);
+    const thumbnailMatch = url.pathname.match(/^\/([A-Za-z0-9_-]{40,50})\/thumbnail\.(png|svg)$/);
     if (thumbnailMatch) {
       try {
         const paper = await getSharedPaper(thumbnailMatch[1], env);
         if (!paper) return htmlResponse('공유 링크가 만료됐거나 중지됐어요.', 404);
         if (!paper.questions.length) return htmlResponse('문제지 미리보기가 없습니다.', 404);
-        if (request.method === 'HEAD') return new Response(null, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } });
-        return svgResponse(previewImage(paper, previewTint(url.searchParams.get('tint')), (url.searchParams.get('group') || '미분류').slice(0, 80)));
+        const tint = previewTint(url.searchParams.get('tint'));
+        const group = (url.searchParams.get('group') || '미분류').slice(0, 80);
+        const png = thumbnailMatch[2] === 'png';
+        if (request.method === 'HEAD') return new Response(null, { headers: { 'Content-Type': png ? 'image/png' : 'image/svg+xml; charset=utf-8' } });
+        if (png) {
+          const image = await previewPng(paper, tint, group);
+          return new Response(image, { headers: {
+            'Content-Type': 'image/png',
+            'Cache-Control': 'public, max-age=300, s-maxage=900',
+            'X-Content-Type-Options': 'nosniff',
+            'Access-Control-Allow-Origin': '*',
+          } });
+        }
+        return svgResponse(previewImage(paper, tint, group));
       } catch {
         return htmlResponse('문제지 미리보기를 불러오지 못했어요.', 503);
       }
