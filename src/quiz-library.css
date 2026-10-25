@@ -88,12 +88,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-card.is-editing { z-index: 1; border-color: var(--mb-primary); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .paper-card.is-editing .paper-card-link { cursor: grab; }
 .paper-card.is-editing.is-pressing, .paper-card.is-editing.is-dragging { animation: paper-card-shrink 180ms cubic-bezier(.2,.82,.24,1) both; }
-.paper-card.is-drop-before::before, .paper-card.is-drop-after::after { content: ''; position: absolute; z-index: 8; left: 10px; right: 10px; height: 3px; border-radius: 999px; background: var(--mb-primary); box-shadow: 0 0 0 3px rgb(49 130 246 / 12%); pointer-events: none; }
-.paper-card.is-drop-before::before { top: -7px; }
-.paper-card.is-drop-after::after { bottom: -7px; }
-.paper-grid:not(.paper-list) .paper-card.is-drop-before::before, .paper-grid:not(.paper-list) .paper-card.is-drop-after::after { top: 10px; bottom: 10px; width: 3px; height: auto; }
-.paper-grid:not(.paper-list) .paper-card.is-drop-before::before { right: auto; left: -7px; }
-.paper-grid:not(.paper-list) .paper-card.is-drop-after::after { right: -7px; left: auto; }
 .paper-drag-preview { position: fixed; z-index: 5000; top: -2000px; left: -2000px; overflow: hidden; border-color: rgb(49 130 246 / 48%); opacity: .9; pointer-events: none; transform: rotate(1.5deg); animation: paper-drag-preview-pickup 160ms cubic-bezier(.2,.82,.24,1) both; }
 .paper-drag-preview .paper-preview { aspect-ratio: 16 / 9; }
 @keyframes paper-card-shrink { from { transform: scale(.92); } to { transform: scale(.86); } }
@@ -132,7 +126,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .preview-option i { width: 5px; height: 5px; border: 1px solid #b0b8c1; border-radius: 50%; flex-shrink: 0; }
 .preview-count { position: absolute; right: 10px; bottom: 9px; padding: 3px 7px; border-radius: 5px; color: #fff; background: rgb(25 31 40 / 72%); font-size: 10px; line-height: 15px; font-weight: 600; backdrop-filter: blur(8px); }
 .paper-info { min-width: 0; min-height: 76px; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; padding: 11px 13px 12px; }
-.paper-group-flag { position: absolute; z-index: 3; top: 7px; left: 7px; max-width: calc(100% - 52px); overflow: hidden; padding: 4px 8px; border: 0; border-radius: 5px; color: #fff; background: rgb(26 31 39 / 88%); font-size: 11px; line-height: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
 .paper-copy { min-width: 0; }
 .paper-name-row { min-width: 0; display: flex; align-items: center; gap: 4px; }
 .paper-name-row h2 { min-width: 0; flex: 0 1 auto; }
@@ -572,7 +565,6 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .paper-info { min-height: 73px; grid-template-columns: minmax(0, 1fr); padding: 8px 40px 8px 10px; }
   .paper-list .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }
   .paper-list .paper-copy>p { margin-top: 2px; font-size: var(--mb-font-12); line-height: 18px; }
-  .paper-group-flag { top: 6px; left: 6px; max-width: calc(100% - 42px); padding: 4px 8px; font-size: 11px; line-height: 16px; }
   .paper-card-actions { top: 4px; right: 4px; bottom: auto; }
   .paper-list .paper-card-actions { top: 4px; right: 6px; transform: none; }
   .paper-card-actions>button { width: 28px; height: 28px; border-radius: 0; }

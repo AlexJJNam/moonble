@@ -10,7 +10,6 @@ import {
   createCustomGroup,
   deleteCustomGroup,
   getCustomBankCollection,
-  reorderCustomBanks,
   reorderCustomGroups,
   setActiveCustomBank,
   setCustomBankUser,
@@ -210,7 +209,6 @@ function QuizLibrary() {
   const [dropGroupId, setDropGroupId] = useState(null);
   const [folderPulse, setFolderPulse] = useState(null);
   const [pressedBankId, setPressedBankId] = useState(null);
-  const [dropBankTarget, setDropBankTarget] = useState(null);
   const [reorderingGroupId, setReorderingGroupId] = useState(null);
   const [orderedGroupIds, setOrderedGroupIds] = useState(() => collection.groups.map(group => group.id));
   const longPressTimer = useRef(0);
@@ -344,6 +342,7 @@ function QuizLibrary() {
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html', location.href)); return; }
       setCustomBankUser(session.user.id);
       setCollection(getCustomBankCollection(session.user.id));
+      setPaperAccess(getPaperAccessMap(session.user.id));
       setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
       if (!initialUser || initialUser.id !== session.user.id) setCollectionReady(false);
@@ -530,8 +529,6 @@ function QuizLibrary() {
         source,
         active: false,
         targetGroupId: null,
-        targetBankId: null,
-        position: null,
       };
       paperPressTimer.current = window.setTimeout(() => {
         const drag = paperTouchDrag.current;
@@ -583,27 +580,6 @@ function QuizLibrary() {
     setPressedBankId(null);
     setDraggedBankId(bankId);
   }
-  function bankDropPosition(event) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    if (view === 'list') return event.clientY >= bounds.top + bounds.height / 2 ? 'after' : 'before';
-    return event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before';
-  }
-  function reorderBankNear(bankId, targetBankId, position) {
-    if (!bankId || !targetBankId || bankId === targetBankId) return;
-    const nextOrder = collection.banks.map(bank => bank.id);
-    const from = nextOrder.indexOf(bankId);
-    if (from < 0 || !nextOrder.includes(targetBankId)) return;
-    nextOrder.splice(from, 1);
-    const target = nextOrder.indexOf(targetBankId);
-    nextOrder.splice(target + (position === 'after' ? 1 : 0), 0, bankId);
-    try {
-      reorderCustomBanks(nextOrder);
-      refreshCollection();
-      setNotice('문제지 순서를 바꿨어요.');
-    } catch (reorderError) {
-      setNotice(reorderError.message || '문제지 순서를 저장하지 못했어요.');
-    }
-  }
   function finishPaperDrag() {
     window.clearTimeout(paperPressTimer.current);
     dragPreviewNode.current?.remove();
@@ -611,7 +587,6 @@ function QuizLibrary() {
     setPressedBankId(null);
     setDraggedBankId(null);
     setDropGroupId(null);
-    setDropBankTarget(null);
   }
   useEffect(() => {
     function moveTouchPaper(event) {
@@ -639,33 +614,12 @@ function QuizLibrary() {
       const groupId = group?.dataset.groupId;
       if (groupId && groupId !== 'all') {
         drag.targetGroupId = groupId;
-        drag.targetBankId = null;
-        drag.position = null;
-        setDropBankTarget(null);
         setDropGroupId(groupId);
         return;
       }
 
-      const card = pointed?.closest?.('[data-bank-id]');
-      const targetBankId = card?.dataset.bankId;
-      if (targetBankId && targetBankId !== drag.bankId) {
-        const bounds = card.getBoundingClientRect();
-        const position = view === 'list'
-          ? (event.clientY >= bounds.top + bounds.height / 2 ? 'after' : 'before')
-          : (event.clientX >= bounds.left + bounds.width / 2 ? 'after' : 'before');
-        drag.targetGroupId = null;
-        drag.targetBankId = targetBankId;
-        drag.position = position;
-        setDropGroupId(null);
-        setDropBankTarget(current => current?.id === targetBankId && current.position === position ? current : { id: targetBankId, position });
-        return;
-      }
-
       drag.targetGroupId = null;
-      drag.targetBankId = null;
-      drag.position = null;
       setDropGroupId(null);
-      setDropBankTarget(null);
     }
 
     function endTouchPaper(event) {
@@ -680,7 +634,6 @@ function QuizLibrary() {
       }
       event.preventDefault();
       if (drag.targetGroupId) moveBankToGroup(drag.bankId, drag.targetGroupId);
-      else if (drag.targetBankId) reorderBankNear(drag.bankId, drag.targetBankId, drag.position || 'before');
       finishPaperDrag();
     }
 
@@ -692,13 +645,18 @@ function QuizLibrary() {
       window.removeEventListener('pointerup', endTouchPaper);
       window.removeEventListener('pointercancel', endTouchPaper);
     };
-  }, [view, collection]);
+  }, [collection]);
 
   function leaveEditMode() {
     paperTouchDrag.current = null;
     finishPaperDrag();
     setEditMode(false);
     setOpenMenu(null);
+  }
+  function enterEditMode() {
+    setEditMode(true);
+    setOpenMenu(null);
+    setNotice('폴더 탭으로 문제지를 드래그해 그룹을 변경할 수 있어요.');
   }
   if (!user || !collectionReady) return quizPageHardReload ? <QuizLibrarySkeleton view={view} /> : null;
   const customPapers = collection.banks.map(bank => ({
@@ -756,7 +714,7 @@ function QuizLibrary() {
               data-reorder-group={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? group.id : undefined}
               key={group.id}
               onPointerDown={group.id !== 'all' && group.id !== DEFAULT_GROUP_ID ? event => beginGroupLongPress(event, group.id) : undefined}
-              onDragEnter={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); setDropBankTarget(null); setDropGroupId(group.id); } } : undefined}
+              onDragEnter={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); setDropGroupId(group.id); } } : undefined}
               onDragOver={group.id !== 'all' ? event => { if (draggedBankId) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } } : undefined}
               onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropGroupId(current => current === group.id ? null : current); }}
               onDrop={group.id !== 'all' ? event => { event.preventDefault(); const bankId = event.dataTransfer.getData('application/x-moonble-bank') || draggedBankId; setDropGroupId(null); setDraggedBankId(null); moveBankToGroup(bankId, group.id); } : undefined}
@@ -784,56 +742,28 @@ function QuizLibrary() {
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
-            const groupName = paper.customBankId
-              ? (paper.groupId === DEFAULT_GROUP_ID ? '미분류' : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류')
-              : null;
             const paperGroupStyle = paper.customBankId ? groupColorStyle(paper.groupId, groupColors) : undefined;
             const CardSurface = editMode ? 'div' : 'a';
             return <article
-              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${dropBankTarget && dropBankTarget.id === paper.customBankId ? ` is-drop-${dropBankTarget.position}` : ''}`}
+              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               data-bank-id={paper.customBankId || undefined}
-              draggable={Boolean(paper.customBankId)}
+              draggable={Boolean(editMode && paper.customBankId)}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onPointerCancel={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onContextMenu={editMode ? event => event.preventDefault() : undefined}
-              onDragStart={paper.customBankId ? event => { if (paperTouchDrag.current) { event.preventDefault(); return; } createPaperDragPreview(event, paper.customBankId); } : undefined}
+              onDragStart={editMode && paper.customBankId ? event => { if (paperTouchDrag.current) { event.preventDefault(); return; } createPaperDragPreview(event, paper.customBankId); } : undefined}
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
-              onDragEnter={paper.customBankId ? event => {
-                if (!draggedBankId || draggedBankId === paper.customBankId) return;
-                event.preventDefault();
-                setDropGroupId(null);
-                setDropBankTarget({ id: paper.customBankId, position: bankDropPosition(event) });
-              } : undefined}
-              onDragOver={paper.customBankId ? event => {
-                if (!draggedBankId || draggedBankId === paper.customBankId) return;
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'move';
-                const position = bankDropPosition(event);
-                setDropBankTarget(current => current?.id === paper.customBankId && current.position === position ? current : { id: paper.customBankId, position });
-              } : undefined}
-              onDragLeave={paper.customBankId ? event => {
-                if (!event.currentTarget.contains(event.relatedTarget)) setDropBankTarget(current => current?.id === paper.customBankId ? null : current);
-              } : undefined}
-              onDrop={paper.customBankId ? event => {
-                event.preventDefault();
-                event.stopPropagation();
-                const bankId = event.dataTransfer.getData('application/x-moonble-bank') || draggedBankId;
-                const position = dropBankTarget?.id === paper.customBankId ? dropBankTarget.position : bankDropPosition(event);
-                reorderBankNear(bankId, paper.customBankId, position);
-                finishPaperDrag();
-              } : undefined}
               key={paper.id}
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } const nextAccess = recordPaperAccess(user.id, paper.id); setPaperAccess(nextAccess); if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
-                {groupName && <span className="paper-group-flag" style={paperGroupStyle} aria-hidden="true">{groupName}</span>}
                 <PaperPreview paper={paper} style={paperGroupStyle} />
                 <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDate(paper.lastOpenedAt)}</time>}</div></div>
               </CardSurface>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => { setEditMode(true); setOpenMenu(null); }}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label }); }}><Trash2 size={15} />삭제</button></div>}
+                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label }); }}><Trash2 size={15} />삭제</button></div>}
                 </>}
               </div>}
             </article>;

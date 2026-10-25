@@ -5773,11 +5773,21 @@ import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankColl
 import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 
-function setSolvePaperHeading(title, description = '') {
+function setSolvePaperHeading(title, description = '', questionCount = null) {
   const headerCopy = document.querySelector('#quiz .section-head > div');
   const heading = headerCopy?.querySelector('h2');
   if (!heading) return;
   heading.textContent = title || '문제지';
+
+  headerCopy.querySelector('.solve-paper-count-badge')?.remove();
+  const hasQuestionCount = Number.isInteger(questionCount) && questionCount > 0;
+  headerCopy.classList.toggle('is-shared-paper-heading', hasQuestionCount);
+  if (hasQuestionCount) {
+    const countBadge = document.createElement('span');
+    countBadge.className = 'solve-paper-count-badge';
+    countBadge.textContent = `문항 수 ${questionCount}`;
+    heading.insertAdjacentElement('afterend', countBadge);
+  }
 
   let descriptionNode = headerCopy.querySelector('.solve-paper-description');
   const text = typeof description === 'string' ? description.trim() : '';
@@ -5806,7 +5816,7 @@ function prepareSharedQuizPage(sharedQuiz) {
   document.getElementById('aiAskBar')?.remove();
   ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
   document.querySelectorAll('.solver-history-storage').forEach(element => element.hidden = true);
-  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '');
+  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '', sharedQuiz.questions.length);
   document.title = `${sharedQuiz.title} · Moonble`;
   renderQuiz();
   renderHistory();

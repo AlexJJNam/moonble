@@ -7,8 +7,41 @@ const MIME_EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png' };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AVATAR_FILENAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png)$/i;
 const SIGNED_URL_SECONDS = 3600;
+const SIGNED_URL_REFRESH_MS = 55 * 60 * 1000;
+const SIGNED_URL_VALID_MS = 59 * 60 * 1000;
+const SIGNED_URL_SESSION_PREFIX = 'moonble:profile-avatar-url:';
 const signedUrls = new Map();
 const signingRequests = new Map();
+
+function signedUrlSessionKey(path) {
+  return `${SIGNED_URL_SESSION_PREFIX}${path}`;
+}
+
+function readSignedUrl(path) {
+  const now = Date.now();
+  let cached = signedUrls.get(path);
+  if (!cached) {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(signedUrlSessionKey(path)) || 'null');
+      if (saved && typeof saved.url === 'string' && Number.isFinite(saved.refreshAt) && Number.isFinite(saved.validUntil)) cached = saved;
+    } catch { /* 세션 저장이 막혀 있으면 현재 문서의 캐시를 사용한다. */ }
+  }
+  if (!cached || cached.validUntil <= now) {
+    signedUrls.delete(path);
+    try { sessionStorage.removeItem(signedUrlSessionKey(path)); } catch { /* 캐시 삭제는 선택 사항이다. */ }
+    return null;
+  }
+  signedUrls.set(path, cached);
+  return cached;
+}
+
+function writeSignedUrl(path, url, now) {
+  const cached = { url, refreshAt: now + SIGNED_URL_REFRESH_MS, validUntil: now + SIGNED_URL_VALID_MS };
+  signedUrls.set(path, cached);
+  try { sessionStorage.setItem(signedUrlSessionKey(path), JSON.stringify(cached)); }
+  catch { /* 세션 저장이 막혀도 메모리 캐시를 사용한다. */ }
+  return cached;
+}
 
 function userIdOf(user) {
   if (!UUID.test(user?.id || '')) throw new Error('로그인 상태를 확인한 뒤 다시 시도해주세요.');
@@ -42,6 +75,13 @@ function ownStoredPath(user) {
 
 function invalidateUrls(userId) {
   for (const path of signedUrls.keys()) if (path.startsWith(`${userId}/`)) signedUrls.delete(path);
+  try {
+    const prefix = `${SIGNED_URL_SESSION_PREFIX}${userId}/`;
+    for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = sessionStorage.key(index);
+      if (key?.startsWith(prefix)) sessionStorage.removeItem(key);
+    }
+  } catch { /* 캐시 삭제 실패가 프로필 변경을 막지 않게 한다. */ }
 }
 
 function assertOwnPath(userId, path) {
@@ -84,7 +124,10 @@ async function removeOwnFiles(userId, paths) {
     batch.forEach(path => assertOwnPath(userId, path));
     const { error } = await bucket.remove(batch);
     if (error) throw error;
-    batch.forEach(path => signedUrls.delete(path));
+    batch.forEach(path => {
+      signedUrls.delete(path);
+      try { sessionStorage.removeItem(signedUrlSessionKey(path)); } catch { /* 실제 파일 정리는 완료됐다. */ }
+    });
   }
 }
 
@@ -194,14 +237,14 @@ export async function clearProfileAvatarFiles(user) {
 export async function profileAvatarUrl(user) {
   const path = ownStoredPath(user);
   if (!path) return '';
-  const cached = signedUrls.get(path);
-  if (cached && cached.expiresAt > Date.now()) return cached.url;
+  const cached = readSignedUrl(path);
+  if (cached && cached.refreshAt > Date.now()) return cached.url;
   if (signingRequests.has(path)) return signingRequests.get(path);
   const request = Promise.resolve().then(async () => {
     try {
       const { data, error } = await avatarBucket().createSignedUrl(path, SIGNED_URL_SECONDS);
       if (error || !data?.signedUrl) throw error || new Error('Signed URL missing');
-      signedUrls.set(path, { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 });
+      writeSignedUrl(path, data.signedUrl, Date.now());
       return data.signedUrl;
     } catch (error) {
       throw storageError(error, '불러오기');
@@ -209,4 +252,9 @@ export async function profileAvatarUrl(user) {
   }).finally(() => signingRequests.delete(path));
   signingRequests.set(path, request);
   return request;
+}
+
+export function cachedProfileAvatarUrl(user) {
+  const path = ownStoredPath(user);
+  return path ? readSignedUrl(path)?.url || '' : '';
 }

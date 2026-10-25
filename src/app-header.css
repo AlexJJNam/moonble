@@ -62,6 +62,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-solver-heading a { width: 100%; min-height: 40px; gap: 8px; padding: 8px; border-radius: 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
 .mb-solver-heading strong { padding: 0 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 600; }
 .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading a { display: none; }
+.mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: flex; align-items: center; padding-bottom: 10px; }
+.mb-solver-shared-logo { width: 88px; height: auto; flex: 0 0 88px; }
 .mb-solver-questions { min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 40px)); flex: 1 1 auto; align-content: start; gap: 4px; padding: 2px 4px 12px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--mb-border-strong) transparent; }
 .mb-solver-question { position: relative; width: 40px; min-width: 0; min-height: 40px; display: grid !important; grid-template-columns: 1fr; place-content: center; gap: 0 !important; padding: 4px !important; border-radius: 50%; color: var(--mb-text-secondary); }
 .mb-app-nav .mb-solver-question:hover, .mb-solver-question[aria-current='true'] { background: transparent; }
@@ -162,7 +164,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-solver-heading a svg { width: 18px; height: 18px; display: block; }
   .mb-solver-heading strong { display: none; }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: flex; align-items: center; padding-right: 8px; border-right: 1px solid var(--mb-border); }
-  .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading strong { display: block; padding: 0; white-space: nowrap; }
+  .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { padding-bottom: 0; }
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { display: block; padding: 4px max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); }
   .mb-app-header.mb-solver-sidebar .mb-app-brand-row, .mb-app-header.mb-solver-sidebar .mb-app-profile-row { display: none; }
   .mb-app-header.mb-solver-sidebar .mb-app-nav.mb-solver-nav { grid-row: 1; padding: 0; }
