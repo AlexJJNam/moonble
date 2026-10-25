@@ -254,15 +254,20 @@ function AccountPage() {
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main mb-page-gutter">
-      <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>
+      <div className="account-heading">
+        <h1 className="mb-page-title">내 정보 수정</h1>
+        <button className="account-heading-edit" type="button" aria-label={profileEditing ? '입력 수정 닫기' : '입력 수정'} aria-expanded={profileEditing} onClick={() => setProfileEditing(value => !value)}>
+          <Pencil size={18} aria-hidden="true" />
+        </button>
+      </div>
       <section className="account-profile-summary" aria-label="현재 프로필">
         <span className="account-profile-avatar" aria-hidden="true">{profileInitial}</span>
         <div>
-          <div className="account-profile-name"><strong>{profile.name}</strong><button className="account-profile-edit" type="button" aria-label={profileEditing ? '내 정보 편집 닫기' : '내 정보 편집'} aria-expanded={profileEditing} onClick={() => setProfileEditing(value => !value)}><Pencil size={15} aria-hidden="true" /></button></div>
+          <div className="account-profile-name"><strong>{profile.name}</strong></div>
           <p>{profile.companyName}</p><small>{user.email}</small>
         </div>
       </section>
-      <ProfileForm user={user} initial={false} editing={profileEditing} onSaved={setUser} />
+      <ProfileForm user={user} initial={false} editing={profileEditing} onSaved={updated => { setUser(updated); setProfileEditing(false); }} />
       <AiQuestionPreference user={user} onUserUpdated={setUser} />
       <PushNotificationPreference userId={user.id} />
       <section className="profile-card account-mobile-session">

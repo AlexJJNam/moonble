@@ -49,22 +49,22 @@
       #moonble-entry-skeleton { position: fixed; inset: 0; z-index: 99999; overflow: hidden; background: #fff; color: #191f28; }
       .entry-skeleton-shimmer { background: linear-gradient(100deg, #edf1f5 20%, #f7f9fb 40%, #edf1f5 60%); background-size: 220% 100%; animation: entry-skeleton-shimmer 1.3s ease-in-out infinite; }
       @keyframes entry-skeleton-shimmer { to { background-position-x: -220%; } }
-      .entry-skeleton-header { height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+      .entry-skeleton-header { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
       .entry-skeleton-logo { width: 112px; height: 28px; border-radius: 8px; }
       .entry-skeleton-nav { display: flex; gap: 22px; }
       .entry-skeleton-nav i { width: 46px; height: 12px; border-radius: 99px; }
       .entry-skeleton-action { width: 76px; height: 34px; border-radius: 9px; }
-      .entry-skeleton-hero { max-width: 1280px; min-height: min(660px, calc(100vh - 76px)); display: grid; grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr); align-items: center; gap: 48px; margin: 0 auto; padding: 44px 32px 72px; }
-      .entry-skeleton-copy { display: grid; justify-items: start; gap: 18px; }
+      .entry-skeleton-hero { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start; gap: 56px; margin: 0 auto; padding: 80px 24px 72px; }
+      .entry-skeleton-copy { width: min(100%, 760px); display: grid; justify-items: center; gap: 15px; }
       .entry-skeleton-eyebrow { width: 124px; height: 14px; border-radius: 99px; }
-      .entry-skeleton-title { width: min(100%, 440px); height: 54px; border-radius: 12px; }
-      .entry-skeleton-title-short { width: min(78%, 340px); height: 54px; margin-top: -8px; border-radius: 12px; }
-      .entry-skeleton-description { width: min(100%, 360px); height: 14px; border-radius: 99px; }
-      .entry-skeleton-description-short { width: min(78%, 280px); height: 14px; margin-top: -8px; border-radius: 99px; }
+      .entry-skeleton-title { width: min(100%, 420px); height: 40px; border-radius: 8px; }
+      .entry-skeleton-title-short { width: min(78%, 320px); height: 40px; margin-top: -6px; border-radius: 8px; }
+      .entry-skeleton-description { width: min(100%, 440px); height: 14px; border-radius: 99px; }
+      .entry-skeleton-description-short { width: min(78%, 340px); height: 14px; margin-top: -6px; border-radius: 99px; }
       .entry-skeleton-actions { display: flex; gap: 10px; margin-top: 8px; }
       .entry-skeleton-actions i { width: 136px; height: 46px; border-radius: 12px; }
-      .entry-skeleton-preview { height: 390px; display: grid; place-items: center; padding: 24px; border-radius: 24px; background: #f5f7fa; }
-      .entry-skeleton-paper { width: 72%; height: 100%; display: grid; align-content: start; gap: 14px; padding: 28px; border-radius: 14px; background: #fff; }
+      .entry-skeleton-preview { width: min(1000px, 100%); height: 520px; display: grid; place-items: center; padding: 24px; border: 1px solid #e5e8eb; border-radius: 16px; background: #fff; }
+      .entry-skeleton-paper { width: 72%; height: 100%; display: grid; align-content: start; gap: 14px; padding: 28px; border-radius: 12px; background: #f7f8fa; }
       .entry-skeleton-paper i { height: 11px; border-radius: 99px; }
       .entry-skeleton-paper i:nth-child(1) { width: 30%; height: 8px; }
       .entry-skeleton-paper i:nth-child(2) { width: 78%; height: 18px; margin: 4px 0 2px; }
@@ -73,20 +73,20 @@
       .entry-skeleton-paper i:nth-child(5) { width: 94%; height: 64px; margin-top: 10px; border-radius: 10px; }
       .entry-skeleton-paper i:nth-child(6) { width: 88%; height: 36px; border-radius: 9px; }
       @media (max-width: 767px) {
-        .entry-skeleton-header { height: 62px; padding: 0 20px; }
+        .entry-skeleton-header { height: 60px; padding: 0 16px; }
         .entry-skeleton-logo { width: 94px; height: 25px; }
         .entry-skeleton-nav { display: none; }
-        .entry-skeleton-hero { min-height: calc(100dvh - 62px); grid-template-columns: minmax(0, 1fr); gap: 30px; align-content: center; justify-items: center; padding: 42px 24px 56px; }
+        .entry-skeleton-hero { grid-template-columns: minmax(0, 1fr); gap: 36px; align-content: start; justify-items: center; padding: 48px 16px; }
         .entry-skeleton-copy { width: 100%; justify-items: center; gap: 15px; }
         .entry-skeleton-eyebrow { width: 108px; height: 12px; }
-        .entry-skeleton-title { width: min(88%, 320px); height: 36px; }
-        .entry-skeleton-title-short { width: min(68%, 240px); height: 36px; margin-top: -7px; }
-        .entry-skeleton-description { width: min(90%, 330px); height: 12px; }
-        .entry-skeleton-description-short { width: min(70%, 250px); height: 12px; }
+        .entry-skeleton-title { width: min(88%, 300px); height: 36px; }
+        .entry-skeleton-title-short { width: min(68%, 230px); height: 36px; margin-top: -6px; }
+        .entry-skeleton-description { width: min(90%, 320px); height: 12px; }
+        .entry-skeleton-description-short { width: min(70%, 240px); height: 12px; }
         .entry-skeleton-actions { justify-content: center; width: 100%; margin-top: 4px; }
         .entry-skeleton-actions i { width: min(42%, 142px); height: 44px; }
-        .entry-skeleton-preview { width: min(100%, 420px); height: 220px; padding: 12px; border-radius: 18px; }
-        .entry-skeleton-paper { width: 72%; gap: 9px; padding: 18px; border-radius: 10px; }
+        .entry-skeleton-preview { width: 100%; height: 448px; padding: 12px; border-radius: 12px; }
+        .entry-skeleton-paper { width: 82%; gap: 9px; padding: 18px; border-radius: 8px; }
         .entry-skeleton-paper i { height: 8px; }
         .entry-skeleton-paper i:nth-child(2) { height: 13px; }
         .entry-skeleton-paper i:nth-child(5) { height: 38px; margin-top: 5px; }

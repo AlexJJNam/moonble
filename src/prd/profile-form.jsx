@@ -22,10 +22,10 @@ export function ProfileForm({ user, initial, editing = initial, onSaved }) {
     } catch { setError('저장하지 못했습니다. 입력한 내용은 유지됩니다. 잠시 후 다시 시도해주세요.'); }
     finally { setPending(false); }
   }
-  if (!initial && !editing) return null;
+  if (!initial && !editing && !celebrating) return null;
   return <div className="profile-wrap mb-page-gutter">
-    <section className="profile-card profile-form-card">
-      <h1>{initial ? 'Moonble에 오신 것을 환영합니다' : '내 정보 수정'}</h1>
+    {(initial || editing) && <section className="profile-card profile-form-card" aria-label={initial ? undefined : '내 정보 수정'}>
+      {initial && <h1>Moonble에 오신 것을 환영합니다</h1>}
       {initial && <p>Moonble을 시작하기 전에 이름과 회사를 알려주세요.</p>}
       <form onSubmit={save}>
         <fieldset disabled={pending}>
@@ -40,7 +40,7 @@ export function ProfileForm({ user, initial, editing = initial, onSaved }) {
         </fieldset>
       </form>
       {error && <p role="alert">{error}</p>}
-    </section>
+    </section>}
     {celebrating && <div className="account-profile-update-fx is-playing" role="status" aria-live="assertive" onAnimationEnd={event => {
       if (event.target === event.currentTarget && event.animationName === 'account-profile-update-out') setCelebrating(false);
     }}>
