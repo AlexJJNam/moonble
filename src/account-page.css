@@ -13,8 +13,16 @@ button { font: inherit; cursor: pointer; }
 .account-profile-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .account-profile-name strong { min-width: 0; }
 .account-profile-edit { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
-.account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-pressed="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .account-profile-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
+.account-profile-edit:disabled { cursor: wait; opacity: .6; }
+.profile-form-heading { display: flex; align-items: center; gap: 6px; }
+.account-main .profile-form-card .profile-form-heading h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
+.profile-readonly { margin: 16px 0 0; }
+.profile-readonly>div { min-height: 56px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 24px; padding: 12px 0; }
+.profile-readonly dt, .profile-readonly dd { margin: 0; font-size: var(--mb-font-16); line-height: 24px; }
+.profile-readonly dt { color: var(--mb-text-primary); font-weight: 500; }
+.profile-readonly dd { min-width: 0; color: var(--mb-text-secondary); text-align: right; overflow-wrap: anywhere; }
 .account-profile-update-fx[hidden] { display: none; }
 .account-profile-update-fx { position: fixed; inset: 0; z-index: 1200; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--mb-text-primary); background: rgb(255 255 255 / 97%); pointer-events: none; }
 .account-profile-update-fx.is-playing { animation: account-profile-update-out .42s ease 1.12s both; }
