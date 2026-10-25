@@ -253,6 +253,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-ai-prompt-icon { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin-top: 1px; color: var(--mb-text-tertiary); }
 .creator-ai-prompt-field { position: relative; grid-column: 2; grid-row: 1; min-width: 0; min-height: 24px; display: block; }
 .creator-ai-prompt-input { position: relative; z-index: 1; width: 100%; min-width: 0; min-height: 22px; max-height: 110px; margin: 0; padding: 0; overflow-y: auto; resize: none; border: 0; outline: 0; color: var(--mb-text-primary); background: transparent; font: inherit; font-size: var(--mb-font-16); line-height: 22px; }
+.creator-ai-prompt-input:focus, .creator-ai-prompt-input:focus-visible { border: 0; outline: none; outline-offset: 0; box-shadow: none; }
 .creator-prompt-sample { position: absolute; z-index: 0; inset: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 22px; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; transition: opacity 120ms ease; }
 .creator-prompt-sample.is-hidden { opacity: 0; }
 .creator-prompt-character { display: inline-block; opacity: 0; filter: blur(4px); transform: translateY(4px); animation: creator-prompt-character-in 360ms cubic-bezier(.2,.75,.25,1) forwards; animation-delay: calc(180ms + var(--sample-index) * 20ms); }
