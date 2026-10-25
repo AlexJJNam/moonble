@@ -29,12 +29,13 @@
 - `account.html`, `src/account-page.jsx`: 프로필, 계정별 로컬 데이터, 개인정보 요청과 로그아웃을 관리하는 공통 계정 화면.
 - `src/supabase.js`: Supabase 공식 클라이언트로 인증·세션 관리. 비밀번호를 자체 저장하지 않음.
 - `database/001_profiles.sql`: 최소 프로필, RLS, 가입 트리거 및 기존 계정 프로필 복구.
+- `src/profile-avatar.js`, `database/008_profile_avatars.sql`: JPG·PNG 프로필 사진을 비공개 Storage에 저장. 원본은 최대 20MB, 저장 이미지는 최대 512px 정사각형으로 변환하며 Auth 메타데이터에는 파일 경로만 기록. 회원 탈퇴 전 Storage 파일을 삭제.
 
 ## 설정 및 빌드
 
 1. Supabase Free 개발 프로젝트 생성. 결제수단·유료 옵션 등록 금지.
 2. 개발 프로젝트 SQL Editor에서 `database/001_profiles.sql`, `database/002_delete_account.sql` 순서로 실행.
-3. 공유 문제 기능을 사용할 때는 `database/003_quiz_banks_and_shares.sql`부터 번호 순서대로 적용. 공유 순위 통계 변경은 `database/007_quiz_share_score_analytics.sql`을 `006` 다음 실행.
+3. 공유 문제 기능을 사용할 때는 `database/003_quiz_banks_and_shares.sql`부터 번호 순서대로 적용. 공유 순위 통계 변경은 `database/007_quiz_share_score_analytics.sql`을 `006` 다음 실행. 프로필 사진은 `database/008_profile_avatars.sql`로 비공개 버킷과 본인 폴더 접근 정책을 적용.
 4. 이메일·비밀번호 인증과 이메일 확인 설정 점검. Site URL과 Redirect 허용 주소에 실제 프리뷰의 `login.html` 주소 설정. localhost 사용하지 않음.
 5. `.env.example`을 `.env`로 복사하여 프로젝트 URL과 **Publishable Key**만 입력. 비밀키 사용 금지. `.env` 커밋 금지.
 6. 이 폴더에서 `npm ci`, `npm run build` 실행. 서버는 실행하지 않음.

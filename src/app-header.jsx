@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
+import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
@@ -223,7 +224,6 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const shareNotificationVisible = useRef(false);
   const profile = user ? profileOf(user) : null;
   const name = profile?.name || user?.email || '내 계정';
-  const nameInitial = [...name][0] || 'M';
   const solver = variant === 'solver';
   const sharedSolver = solver && hideSolverBack;
   const questions = useSolverQuestions(solver);
@@ -515,7 +515,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
-        <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <span className="mb-app-logo-avatar" aria-hidden="true">{nameInitial}</span>}</a>
+        <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <UserAvatar user={user} className="mb-app-logo-avatar" />}</a>
         {user && <a className="mb-app-logo-my" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label="MY 메뉴 열기" title="MY" />}
         {user && <button className="mb-notification-toggle mb-notification-toggle--desktop" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
           <Bell size={16} aria-hidden="true" />
@@ -528,7 +528,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
         </button>
         <a className="mb-app-profile" href="./account.html" aria-current={active === 'account' ? 'page' : undefined} aria-label={`${name} 계정 열기`}>
-          <span className="mb-app-profile-avatar" aria-hidden="true">{nameInitial}</span>
+          <UserAvatar user={user} className="mb-app-profile-avatar" />
           <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>
           <Settings2 size={16} aria-hidden="true" />
         </a>

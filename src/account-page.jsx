@@ -7,6 +7,8 @@ import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
 import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
+import { ProfilePhotoEditor } from './profile-photo-editor.jsx';
+import { clearProfileAvatarFiles } from './profile-avatar.js';
 import { enableBrowserNotifications, getBrowserNotificationSettings, setBrowserNotificationPreference } from './browser-notifications.js';
 import './design-system.css';
 import './prd/shell.css';
@@ -173,6 +175,7 @@ function AccountDeletion({ user }) {
     setPending(true);
     setError('');
     try {
+      await clearProfileAvatarFiles(user);
       const { error: deleteError } = await supabase.rpc('moonble_delete_account');
       if (deleteError && deleteError.code !== 'P0002') throw deleteError;
       clearLocalUserData(user.id);
@@ -250,13 +253,12 @@ function AccountPage() {
 
   if (!user) return <div className="workspace-check" role="status" aria-label="계정 정보 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const profile = profileOf(user);
-  const profileInitial = [...(profile.name || 'M')][0];
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main mb-page-gutter">
       <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>
       <section className="account-profile-summary" aria-label="현재 프로필">
-        <span className="account-profile-avatar" aria-hidden="true">{profileInitial}</span>
+        <ProfilePhotoEditor user={user} onSaved={setUser} />
         <div>
           <div className="account-profile-name"><strong>{profile.name}</strong></div>
           <p>{profile.companyName}</p><small>{user.email}</small>

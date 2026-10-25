@@ -110,6 +110,8 @@ body {
 }
 
 .mb-brand-wordmark { display: block; width: auto; height: auto; object-fit: contain; }
+.mb-user-avatar { position: relative; overflow: hidden; }
+.mb-user-avatar>img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
 
 button, input, textarea, select, svg text {
   font-family: var(--mb-font-sans);
