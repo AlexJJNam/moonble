@@ -72,8 +72,8 @@ const exampleGuideDetails = [
   { topic: '웹 접근성 지침', level: '실무 적용', scope: '화면 검수 상황' },
 ];
 const providerSegments = [
-  { value: 'chatgpt', label: 'ChatGPT' },
   { value: 'gemini', label: 'Gemini' },
+  { value: 'chatgpt', label: 'ChatGPT' },
 ];
 
 const creatorStepIcons = {
@@ -117,7 +117,7 @@ function PromptSample({ hidden }) {
 
 export function QuizCreator({ custom, onChange }) {
   const [query, setQuery] = useState('');
-  const [provider, setProvider] = useState('chatgpt');
+  const [provider, setProvider] = useState('gemini');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);

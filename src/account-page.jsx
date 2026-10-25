@@ -36,17 +36,17 @@ function clearLocalUserData(userId) {
 }
 
 const aiProviderOptions = [
-  { value: 'chatgpt', label: 'ChatGPT' },
   { value: 'gemini', label: 'Gemini' },
+  { value: 'chatgpt', label: 'ChatGPT' },
 ];
 
 function getAiQuestionProvider(user) {
   const saved = user?.user_metadata?.aiQuestionProvider;
   if (saved === 'chatgpt' || saved === 'gemini') return saved;
   try {
-    return localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'gemini' ? 'gemini' : 'chatgpt';
+    return localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'chatgpt' ? 'chatgpt' : 'gemini';
   } catch {
-    return 'chatgpt';
+    return 'gemini';
   }
 }
 

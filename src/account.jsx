@@ -15,9 +15,9 @@ function syncAiQuestionProvider(user) {
     return;
   }
   try {
-    window.moonbleAiQuestionProvider = localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'gemini' ? 'gemini' : 'chatgpt';
+    window.moonbleAiQuestionProvider = localStorage.getItem(`moonble:user:${user.id}:ai-question-provider`) === 'chatgpt' ? 'chatgpt' : 'gemini';
   } catch {
-    window.moonbleAiQuestionProvider = 'chatgpt';
+    window.moonbleAiQuestionProvider = 'gemini';
   }
 }
 
