@@ -5756,11 +5756,13 @@ import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankColl
 import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 
-function setSolvePaperHeading(title, description = '', questionCount = null) {
+function setSolvePaperHeading(title, description = '', questionCount = null, paperMeta = {}) {
   const headerCopy = document.querySelector('#quiz .section-head > div');
   const heading = headerCopy?.querySelector('h2');
   if (!heading) return;
   heading.textContent = title || '문제지';
+  window.moonbleSolverPaper = { title: heading.textContent, ...paperMeta };
+  window.dispatchEvent(new CustomEvent('moonble:solve-paper-heading-change', { detail: window.moonbleSolverPaper }));
 
   headerCopy.querySelector('.solve-paper-count-badge')?.remove();
   const hasQuestionCount = Number.isInteger(questionCount) && questionCount > 0;
@@ -5799,7 +5801,7 @@ function prepareSharedQuizPage(sharedQuiz) {
   document.getElementById('aiAskBar')?.remove();
   ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
   document.querySelectorAll('.solver-history-storage').forEach(element => element.hidden = true);
-  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '', sharedQuiz.questions.length);
+  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '', sharedQuiz.questions.length, { paperId: 'shared' });
   document.title = `${sharedQuiz.title} · Moonble`;
   renderQuiz();
   renderHistory();
@@ -5877,6 +5879,8 @@ if (shareToken || requestedPaper === 'shared') {
       location.replace('./quiz.html');
     } else {
       const paperId = solveParams.get('paper') || 'random';
+      let solverBankId = paperId === 'custom' ? solveParams.get('bank') : null;
+      let solverGroupId = null;
       let paperTitle = paperId === 'basics' ? 'GA4 핵심 개념' : paperId === 'advanced' ? 'GA4 실무 응용' : paperId === 'random' ? '전체 랜덤 문제지' : '문제지';
       let paperDescription = paperId === 'basics'
         ? '이벤트부터 보고서까지, 분석의 기본기를 차근차근 익혀보세요.'
@@ -5887,19 +5891,22 @@ if (shareToken || requestedPaper === 'shared') {
         const bankMeta = getCustomBankMeta(user.id, solveParams.get('bank'));
         paperTitle = bankMeta?.title || paperTitle;
         paperDescription = bankMeta?.description || '';
+        solverGroupId = bankMeta?.groupId || null;
       } else if (paperId === 'retry') {
         try {
           const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
+          solverBankId = retryMeta.bankId || null;
           paperTitle = retryMeta.paperTitle && retryMeta.paperTitle !== '문제지' ? retryMeta.paperTitle : paperTitle;
           paperDescription = retryMeta.paperDescription || '';
           if (retryMeta.bankId) {
             const bankMeta = getCustomBankMeta(user.id, retryMeta.bankId);
             paperTitle = retryMeta.paperTitle && retryMeta.paperTitle !== '문제지' ? retryMeta.paperTitle : (bankMeta?.title || paperTitle);
             paperDescription = retryMeta.paperDescription || bankMeta?.description || '';
+            solverGroupId = bankMeta?.groupId || null;
           }
         } catch { /* 저장된 풀이 정보가 없으면 기본 제목만 표시한다. */ }
       }
-      setSolvePaperHeading(paperTitle, paperDescription);
+      setSolvePaperHeading(paperTitle, paperDescription, null, { paperId, bankId: solverBankId, groupId: solverGroupId });
       let activityKey = ['basics', 'advanced', 'random'].includes(paperId) ? paperId : null;
       if (paperId === 'custom' && solveParams.get('bank')) activityKey = `custom:${solveParams.get('bank')}`;
       if (paperId === 'retry') {
@@ -6035,7 +6042,15 @@ if (shareToken || requestedPaper === 'shared') {
   <button id="quizInkExit" class="quiz-ink-exit" type="button" tabindex="-1" aria-label="펜 모드 종료" title="펜 모드 종료">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
   </button>
-  <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>펜 모드에서는 두 손가락으로 스크롤해 주세요.</div>
+  <div class="quiz-ink-scroll-controls" role="group" aria-label="문제 화면 이동">
+    <button id="quizInkScrollUp" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 위로 이동" title="화면 위로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>
+    </button>
+    <button id="quizInkScrollDown" class="quiz-ink-scroll-button" type="button" tabindex="-1" aria-label="화면을 조금 아래로 이동" title="화면 아래로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+    </button>
+  </div>
+  <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>화면을 조금씩 이동하려면 옆의 화살표를 눌러주세요.</div>
   <script>
     (() => {
       const track = document.getElementById('quizScrollProgress');
@@ -6125,6 +6140,9 @@ if (shareToken || requestedPaper === 'shared') {
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
       const exitButton = document.getElementById('quizInkExit');
+      const scrollControls = document.querySelector('.quiz-ink-scroll-controls');
+      const scrollUpButton = document.getElementById('quizInkScrollUp');
+      const scrollDownButton = document.getElementById('quizInkScrollDown');
       const penModeEffect = document.getElementById('quizPenModeEffect');
       const tip = document.getElementById('quizPenTip');
       const tipClose = document.getElementById('quizPenTipClose');
@@ -6134,16 +6152,19 @@ if (shareToken || requestedPaper === 'shared') {
       if (!canvas || !exitButton || !quiz) return;
 
       const context = canvas.getContext('2d');
+      const completedLayer = document.createElement('canvas');
+      const completedContext = completedLayer.getContext('2d');
       const useTouchPointerEvents = 'PointerEvent' in window;
       const activePointers = new Map();
       const strokes = [];
       let mode = null;
       let activeStroke = null;
-      let lastScrollMidpoint = null;
       let lastMarginTap = null;
       let penToastTimer = 0;
       let penToastHideTimer = 0;
       let penModeEffectTimer = 0;
+      let renderFrame = 0;
+      let completedLayerDirty = true;
       let savedScrollBehavior = '';
       let scrollTargetY = null;
       let scrollAnimationFrame = 0;
@@ -6170,7 +6191,8 @@ if (shareToken || requestedPaper === 'shared') {
       }
 
       function showPenModeEffect() {
-        if (!penModeEffect || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!penModeEffect) return;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         window.clearTimeout(penModeEffectTimer);
         penModeEffect.hidden = false;
         penModeEffect.classList.remove('is-active');
@@ -6179,7 +6201,7 @@ if (shareToken || requestedPaper === 'shared') {
         penModeEffectTimer = window.setTimeout(() => {
           penModeEffect.classList.remove('is-active');
           penModeEffect.hidden = true;
-        }, 640);
+        }, reduceMotion ? 320 : 760);
       }
 
       syncTipVisibility();
@@ -6192,68 +6214,125 @@ if (shareToken || requestedPaper === 'shared') {
 
       function resizeCanvas() {
         const ratio = Math.max(1, window.devicePixelRatio || 1);
-        canvas.width = Math.round(window.innerWidth * ratio);
-        canvas.height = Math.round(window.innerHeight * ratio);
+        const width = Math.round(window.innerWidth * ratio);
+        const height = Math.round(window.innerHeight * ratio);
+        canvas.width = width;
+        canvas.height = height;
+        completedLayer.width = width;
+        completedLayer.height = height;
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        completedContext?.setTransform(ratio, 0, 0, ratio, 0, 0);
+        completedLayerDirty = true;
         redraw();
+      }
+
+      function drawStroke(targetContext, stroke, yOffset, isLiveStroke) {
+        if (!targetContext || !stroke.points.length) return;
+        const first = stroke.points[0];
+        targetContext.fillStyle = '#2374ee';
+        targetContext.strokeStyle = '#2374ee';
+        targetContext.lineCap = 'round';
+        targetContext.lineJoin = 'round';
+        if (stroke.points.length === 1) {
+          targetContext.beginPath();
+          targetContext.arc(first.x, first.y - yOffset, stroke.width / 2, 0, Math.PI * 2);
+          targetContext.fill();
+          return;
+        }
+
+        if (isLiveStroke || !stroke.outline) {
+          stroke.outline = getStroke(
+            stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
+            {
+              size: stroke.width,
+              thinning: 0.2,
+              smoothing: 0.65,
+              streamline: 0.45,
+              simulatePressure: stroke.simulatePressure,
+              start: { cap: true },
+              end: { cap: true },
+              last: !isLiveStroke,
+            },
+          );
+        }
+        const outline = stroke.outline;
+        if (outline && outline.length >= 3) {
+          targetContext.beginPath();
+          targetContext.moveTo(outline[0][0], outline[0][1] - yOffset);
+          for (let index = 1; index < outline.length; index += 1) {
+            targetContext.lineTo(outline[index][0], outline[index][1] - yOffset);
+          }
+          targetContext.closePath();
+          targetContext.fill();
+          return;
+        }
+
+        targetContext.beginPath();
+        targetContext.lineWidth = stroke.width;
+        targetContext.moveTo(first.x, first.y - yOffset);
+        const last = stroke.points[stroke.points.length - 1];
+        targetContext.lineTo(last.x, last.y - yOffset);
+        targetContext.stroke();
+      }
+
+      function rebuildCompletedLayer() {
+        if (!completedContext || !completedLayerDirty) return;
+        const ratio = Math.max(1, window.devicePixelRatio || 1);
+        completedContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+        completedContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        const yOffset = window.scrollY;
+        for (const stroke of strokes) {
+          if (stroke !== activeStroke) drawStroke(completedContext, stroke, yOffset, false);
+        }
+        completedLayerDirty = false;
+      }
+
+      function completeActiveStroke() {
+        if (!activeStroke) return;
+        rebuildCompletedLayer();
+        drawStroke(completedContext, activeStroke, window.scrollY, false);
+        activeStroke = null;
       }
 
       function redraw() {
         if (!context || !canvas.classList.contains('is-active')) return;
         const ratio = Math.max(1, window.devicePixelRatio || 1);
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        rebuildCompletedLayer();
         context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        context.lineCap = 'round';
-        context.lineJoin = 'round';
-        context.strokeStyle = '#2374ee';
-        context.fillStyle = '#2374ee';
-        for (const stroke of strokes) {
-          if (!stroke.points.length) continue;
-          const first = stroke.points[0];
-          const yOffset = window.scrollY;
-          if (stroke.points.length === 1) {
-            context.beginPath();
-            context.arc(first.x, first.y - yOffset, stroke.width / 2, 0, Math.PI * 2);
-            context.fill();
-            continue;
-          }
+        context.drawImage(completedLayer, 0, 0, window.innerWidth, window.innerHeight);
+        if (activeStroke) drawStroke(context, activeStroke, window.scrollY, true);
+      }
 
-          const isLiveStroke = stroke === activeStroke;
-          if (isLiveStroke || !stroke.outline) {
-            stroke.outline = getStroke(
-              stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
-              {
-                size: stroke.width,
-                thinning: 0,
-                smoothing: 0.65,
-                streamline: 0.55,
-                simulatePressure: false,
-                last: !isLiveStroke,
-              },
-            );
-          }
-          const outline = stroke.outline;
-          if (!outline || outline.length < 3) continue;
-          context.beginPath();
-          context.moveTo(outline[0][0], outline[0][1] - yOffset);
-          for (let index = 1; index < outline.length; index += 1) {
-            context.lineTo(outline[index][0], outline[index][1] - yOffset);
-          }
-          context.closePath();
-          context.fill();
-        }
+      function scheduleRedraw() {
+        if (renderFrame || !canvas.classList.contains('is-active')) return;
+        renderFrame = requestAnimationFrame(() => {
+          renderFrame = 0;
+          redraw();
+        });
+      }
+
+      function flushRedraw() {
+        if (renderFrame) cancelAnimationFrame(renderFrame);
+        renderFrame = 0;
+        redraw();
       }
 
       function setPenMode(enabled) {
         if (enabled === canvas.classList.contains('is-active')) return;
         strokes.length = 0;
+        completedLayerDirty = true;
         activePointers.clear();
         activeStroke = null;
         mode = null;
-        lastScrollMidpoint = null;
         canvas.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);
         exitButton.tabIndex = enabled ? 0 : -1;
+        scrollControls?.classList.toggle('is-active', enabled);
+        for (const button of [scrollUpButton, scrollDownButton]) {
+          if (!button) continue;
+          button.tabIndex = enabled ? 0 : -1;
+        }
         if (aiAskButton) {
           aiAskButton.disabled = enabled;
           aiAskButton.classList.toggle('is-pen-disabled', enabled);
@@ -6282,10 +6361,21 @@ if (shareToken || requestedPaper === 'shared') {
           window.clearTimeout(penToastHideTimer);
           if (penToast) { penToast.classList.remove('is-visible'); penToast.hidden = true; }
           context.clearRect(0, 0, canvas.width, canvas.height);
+          completedContext?.clearRect(0, 0, completedLayer.width, completedLayer.height);
+          if (renderFrame) cancelAnimationFrame(renderFrame);
+          renderFrame = 0;
         }
       }
 
       window.addEventListener('moonble:toggle-quiz-pen-mode', () => setPenMode(!canvas.classList.contains('is-active')));
+      scrollUpButton?.addEventListener('click', event => {
+        event.preventDefault();
+        nudgePage(-1);
+      });
+      scrollDownButton?.addEventListener('click', event => {
+        event.preventDefault();
+        nudgePage(1);
+      });
 
       function isPaperMargin(x, y) {
         if (!quiz.querySelector('.q-card') || document.querySelector('dialog[open]')) return false;
@@ -6320,27 +6410,29 @@ if (shareToken || requestedPaper === 'shared') {
       }
 
       function pointerPosition(event) {
-        return { x: event.clientX, y: event.clientY, docY: event.clientY + window.scrollY, pressure: event.pressure || 0.5 };
+        const pressure = Number.isFinite(event.pressure) && event.pressure > 0 ? event.pressure : 0.5;
+        return { x: event.clientX, y: event.clientY, docY: event.clientY + window.scrollY, pressure };
       }
 
-      function midpoint() {
-        const points = Array.from(activePointers.values());
-        return points.length < 2 ? null : {
-          x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
-          y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
-        };
-      }
-
-      function touchMidpoint(touches) {
-        if (!touches || touches.length < 2) return null;
-        let x = 0;
-        let y = 0;
-        const count = Math.min(2, touches.length);
-        for (let index = 0; index < count; index += 1) {
-          x += touches[index].clientX;
-          y += touches[index].clientY;
+      function appendPointerPoint(stroke, event) {
+        const point = pointerPosition(event);
+        if (stroke.pointerType !== 'mouse' && Number.isFinite(event.pressure) && event.pressure > 0) {
+          stroke.pressureMin = Math.min(stroke.pressureMin, event.pressure);
+          stroke.pressureMax = Math.max(stroke.pressureMax, event.pressure);
+          if (stroke.pressureMax - stroke.pressureMin > 0.015) stroke.simulatePressure = false;
         }
-        return { x: x / count, y: y / count };
+        stroke.points.push({ x: point.x, y: point.docY, pressure: point.pressure });
+      }
+
+      function coalescedPointerEvents(event) {
+        let samples = [];
+        try {
+          if (typeof event.getCoalescedEvents === 'function') samples = event.getCoalescedEvents();
+        } catch { /* 일부 브라우저에서 coalesced event 접근을 지원하지 않는다. */ }
+        if (!samples || samples.length === 0) return [event];
+        const lastSample = samples[samples.length - 1];
+        if (lastSample.clientX !== event.clientX || lastSample.clientY !== event.clientY || lastSample.pressure !== event.pressure) samples = [...samples, event];
+        return samples;
       }
 
       function getScrollRoot() {
@@ -6350,11 +6442,6 @@ if (shareToken || requestedPaper === 'shared') {
       function getPageScrollY() {
         const root = getScrollRoot();
         return root.scrollTop;
-      }
-
-      function beginPageScrollGesture() {
-        scrollTargetY = getPageScrollY();
-        lastScrollFrameTime = 0;
       }
 
       function animatePageScroll(timestamp) {
@@ -6380,13 +6467,14 @@ if (shareToken || requestedPaper === 'shared') {
         scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
       }
 
-      function scrollPageBy(deltaY) {
-        if (!Number.isFinite(deltaY) || Math.abs(deltaY) < 0.5) return;
+      function nudgePage(direction) {
+        if (!canvas.classList.contains('is-active')) return;
         const root = getScrollRoot();
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
-        if (scrollTargetY === null) scrollTargetY = getPageScrollY();
-        const limitedDelta = Math.max(-40, Math.min(40, deltaY));
-        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY + limitedDelta * 0.55));
+        const step = Math.round(Math.min(220, Math.max(120, window.innerHeight * 0.22)));
+        const currentTarget = scrollTargetY === null ? getPageScrollY() : scrollTargetY;
+        scrollTargetY = Math.min(maxY, Math.max(0, currentTarget + step * direction));
+        lastScrollFrameTime = 0;
         if (!scrollAnimationFrame) scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
       }
 
@@ -6417,13 +6505,13 @@ if (shareToken || requestedPaper === 'shared') {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
         if (start || !activeStroke) {
           mode = 'draw';
-          activeStroke = { width: 3, points: [{ x: point.x, y: point.y }] };
+          activeStroke = { width: 3, simulatePressure: true, points: [{ x: point.x, y: point.y }] };
           activeStroke.points[0].pressure = point.pressure;
           strokes.push(activeStroke);
         } else {
           activeStroke.points.push(point);
         }
-        redraw();
+        scheduleRedraw();
       }
 
       canvas.addEventListener('touchstart', event => {
@@ -6431,15 +6519,12 @@ if (shareToken || requestedPaper === 'shared') {
         if (!canvas.classList.contains('is-active')) return;
         event.preventDefault();
         if (event.touches.length >= 2) {
-          mode = 'scroll';
-          beginPageScrollGesture();
-          if (activeStroke) activeStroke.outline = null;
-          activeStroke = null;
-          lastScrollMidpoint = touchMidpoint(event.touches);
-          redraw();
+          mode = 'multitouch';
+          completeActiveStroke();
+          scheduleRedraw();
           return;
         }
-        if (mode === 'scroll') return;
+        if (mode === 'multitouch') return;
         const touch = event.changedTouches[0];
         if (touch) drawTouch(touch, true);
       }, { passive: false });
@@ -6449,20 +6534,11 @@ if (shareToken || requestedPaper === 'shared') {
         if (!canvas.classList.contains('is-active')) return;
         event.preventDefault();
         if (event.touches.length >= 2) {
-          if (mode !== 'scroll') {
-            mode = 'scroll';
-            beginPageScrollGesture();
-            if (activeStroke) activeStroke.outline = null;
-            activeStroke = null;
-            lastScrollMidpoint = touchMidpoint(event.touches);
-            redraw();
-            return;
+          if (mode !== 'multitouch') {
+            mode = 'multitouch';
+            completeActiveStroke();
+            scheduleRedraw();
           }
-          const current = touchMidpoint(event.touches);
-          if (current && lastScrollMidpoint) {
-            scrollPageBy(lastScrollMidpoint.y - current.y);
-          }
-          lastScrollMidpoint = current;
           return;
         }
         if (mode !== 'draw' || event.touches.length !== 1 || !activeStroke) return;
@@ -6472,12 +6548,8 @@ if (shareToken || requestedPaper === 'shared') {
       function endTouchGesture(event) {
         if (event.touches.length === 0) {
           mode = null;
-          if (activeStroke) activeStroke.outline = null;
-          activeStroke = null;
-          lastScrollMidpoint = null;
-          redraw();
-        } else if (mode === 'scroll') {
-          lastScrollMidpoint = null;
+          completeActiveStroke();
+          flushRedraw();
         }
       }
       canvas.addEventListener('touchend', endTouchGesture, { passive: true });
@@ -6489,38 +6561,36 @@ if (shareToken || requestedPaper === 'shared') {
         canvas.setPointerCapture(event.pointerId);
         activePointers.set(event.pointerId, pointerPosition(event));
         if (activePointers.size >= 2) {
-          mode = 'scroll';
-          beginPageScrollGesture();
-          if (activeStroke) activeStroke.outline = null;
-          activeStroke = null;
-          lastScrollMidpoint = midpoint();
-          redraw();
+          mode = 'multitouch';
+          completeActiveStroke();
+          scheduleRedraw();
           return;
         }
-        if (mode === 'scroll') return;
+        if (mode === 'multitouch') return;
         mode = 'draw';
         const point = pointerPosition(event);
-        activeStroke = { width: event.pointerType === 'pen' ? 2.8 : 3, points: [{ x: point.x, y: point.docY, pressure: point.pressure }] };
+        activeStroke = {
+          width: event.pointerType === 'pen' ? 2.8 : 3,
+          pointerType: event.pointerType,
+          simulatePressure: true,
+          pressureMin: Infinity,
+          pressureMax: -Infinity,
+          points: [],
+        };
+        appendPointerPoint(activeStroke, event);
         strokes.push(activeStroke);
-        redraw();
+        scheduleRedraw();
       });
 
       canvas.addEventListener('pointermove', event => {
         if (!canvas.classList.contains('is-active') || (event.pointerType === 'touch' && !useTouchPointerEvents) || !activePointers.has(event.pointerId)) return;
         event.preventDefault();
         activePointers.set(event.pointerId, pointerPosition(event));
-        if (mode === 'scroll' && activePointers.size >= 2) {
-          const current = midpoint();
-          if (current && lastScrollMidpoint) {
-            scrollPageBy(lastScrollMidpoint.y - current.y);
-          }
-          lastScrollMidpoint = current;
-          return;
-        }
+        if (mode === 'multitouch') return;
         if (mode !== 'draw' || activePointers.size !== 1 || !activeStroke) return;
-        const point = pointerPosition(event);
-        activeStroke.points.push({ x: point.x, y: point.docY, pressure: point.pressure });
-        redraw();
+        const samples = coalescedPointerEvents(event);
+        for (const sample of samples) appendPointerPoint(activeStroke, sample);
+        scheduleRedraw();
       });
 
       function finishPointer(event) {
@@ -6528,10 +6598,8 @@ if (shareToken || requestedPaper === 'shared') {
         activePointers.delete(event.pointerId);
         if (activePointers.size === 0) {
           mode = null;
-          if (activeStroke) activeStroke.outline = null;
-          activeStroke = null;
-          lastScrollMidpoint = null;
-          redraw();
+          completeActiveStroke();
+          flushRedraw();
         }
       }
       canvas.addEventListener('pointerup', finishPointer);
@@ -6546,7 +6614,10 @@ if (shareToken || requestedPaper === 'shared') {
       }, true);
       exitButton.addEventListener('click', () => setPenMode(false));
       window.addEventListener('resize', resizeCanvas, { passive: true });
-      window.addEventListener('scroll', redraw, { passive: true });
+      window.addEventListener('scroll', () => {
+        completedLayerDirty = true;
+        scheduleRedraw();
+      }, { passive: true });
       window.addEventListener('orientationchange', resizeCanvas, { passive: true });
     })();
   </script>

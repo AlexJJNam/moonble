@@ -68,6 +68,13 @@ function getFavoriteSidebarItems(userId) {
   }).filter(Boolean);
 }
 
+function getSolverPaperIconStyle(userId, paper) {
+  if (!paper) return favoriteGroupIconStyle('ungrouped', new Map());
+  const collection = userId ? getCustomBankCollection(userId) : { groups: [], banks: [] };
+  const bank = paper.bankId ? collection.banks.find(item => item.id === paper.bankId) : null;
+  return favoriteGroupIconStyle(paper.groupId || bank?.groupId || 'ungrouped', buildGroupColorMap(collection.groups));
+}
+
 function useSolverQuestions(enabled) {
   const [items, setItems] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -230,6 +237,9 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [shareNotification, setShareNotification] = useState(null);
   const [shareNotifications, setShareNotifications] = useState([]);
   const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
+  const [solverPaper, setSolverPaper] = useState(() => window.moonbleSolverPaper || {
+    title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '',
+  });
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [browserNotificationSettings, setBrowserNotificationSettings] = useState(() => getBrowserNotificationSettings(user?.id));
   const [browserNotificationBusy, setBrowserNotificationBusy] = useState(false);
@@ -253,6 +263,28 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [quizPenMode, setQuizPenMode] = useState(() => window.moonbleQuizPenMode === true);
   const questions = useSolverQuestions(solver);
   const solverHeading = '문제 목록';
+
+  useEffect(() => {
+    if (!solver) return undefined;
+    const syncHeading = event => {
+      const detail = event?.detail;
+      if (detail && typeof detail.title === 'string') {
+        setSolverPaper(current => ({ ...current, ...detail }));
+        return;
+      }
+      const title = document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '';
+      setSolverPaper(current => current.title === title ? current : { ...current, title });
+    };
+    const heading = document.querySelector('#quiz .section-head');
+    const observer = heading ? new MutationObserver(syncHeading) : null;
+    observer?.observe(heading, { childList: true, characterData: true, subtree: true });
+    window.addEventListener('moonble:solve-paper-heading-change', syncHeading);
+    syncHeading();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('moonble:solve-paper-heading-change', syncHeading);
+    };
+  }, [solver]);
 
   useEffect(() => {
     if (!solver) return undefined;
@@ -585,6 +617,10 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           <span className="mb-app-profile-copy"><strong>{name}</strong><small>{profile?.companyName || '개인 워크스페이스'}</small></span>
           <Settings2 size={16} aria-hidden="true" />
         </a>
+      </div>}
+      {solver && solverPaper.title && <div className="mb-solver-paper" title={solverPaper.title}>
+        <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
+        <span className="mb-solver-paper-title">{solverPaper.title}</span>
       </div>}
       {solver ? <nav className="mb-app-nav mb-solver-nav" aria-label="문제 목록">
         <div className="mb-solver-heading">{!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}{sharedSolver ? <BrandLogo className="mb-solver-shared-logo" /> : <strong>{solverHeading}</strong>}</div>

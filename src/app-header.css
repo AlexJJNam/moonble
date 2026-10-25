@@ -57,6 +57,9 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-nav a:hover { background: var(--mb-surface-muted); color: var(--mb-text-primary); }
 .mb-app-nav a[aria-current='page'] { background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-weight: 600; }
 .mb-app-nav .mb-app-my { display: none; }
+.mb-solver-paper { min-width: 0; min-height: 40px; display: flex; flex: 0 0 auto; align-items: center; gap: 10px; margin: 0 4px 2px; padding: 7px 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); }
+.mb-solver-paper-icon { width: 24px; height: 24px; flex: 0 0 24px; }
+.mb-solver-paper-title { min-width: 0; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 18px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
 .mb-favorites { min-height: 0; max-height: min(40vh, 360px); display: flex; flex: 0 1 auto; flex-direction: column; gap: 6px; margin-top: 20px; overflow: hidden; }
 .mb-favorites-heading { flex: 0 0 auto; margin: 0; padding: 0 8px 3px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: 650; }
 .mb-favorites-list { min-height: 0; display: grid; align-content: start; gap: 3px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
@@ -119,6 +122,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a span { display: none; }
 .mb-app-header.is-collapsed .mb-favorites-heading { display: none; }
+.mb-app-header.is-collapsed .mb-solver-paper { justify-content: center; margin-right: 0; margin-left: 0; padding-right: 0; padding-left: 0; }
+.mb-app-header.is-collapsed .mb-solver-paper-title { display: none; }
 .mb-app-header.is-collapsed .mb-favorite-link { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-favorite-title { display: none; }
 .mb-app-header.is-collapsed .mb-solver-heading { padding-right: 0; padding-left: 0; }
@@ -173,6 +178,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-notification-toggle--mobile { display: grid; flex-basis: 36px; width: 36px; height: 36px; }
   .mb-app-profile { display: none; }
   .mb-favorites { display: none; }
+  .mb-solver-paper { display: none; }
   .mb-app-account { display: none; }
   .mb-app-nav:not(.mb-solver-nav) { position: fixed; isolation: isolate; right: 0; bottom: 0; left: 0; z-index: 70; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 4px max(8px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); border-top: 1px solid var(--mb-border); background: rgb(255 255 255 / 96%); backdrop-filter: blur(18px); }
   .mb-app-nav:not(.mb-solver-nav)::before { content: ''; position: absolute; z-index: 0; top: 50%; left: var(--mb-dock-x, 50%); width: 84px; height: 58px; border-radius: 22px; background: rgb(49 130 246 / 11%); box-shadow: 0 0 18px rgb(49 130 246 / 8%); transform: translate(-50%, -50%); transition: left 360ms cubic-bezier(.22, 1, .36, 1); pointer-events: none; }
