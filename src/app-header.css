@@ -110,6 +110,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 }
 .mb-app-header.is-collapsed .mb-app-profile-row { justify-content: center; }
 .mb-app-header.is-collapsed .mb-app-profile { display: none; }
+.mb-app-header.is-collapsed .mb-profile-skeleton-copy, .mb-app-header.is-collapsed .mb-profile-skeleton-settings { display: none; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a span { display: none; }
 .mb-app-header.is-collapsed .mb-favorites-heading { display: none; }
@@ -155,6 +156,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { display: block; }
   .mb-app-logo .mb-brand-wordmark, .mb-app-header.is-collapsed .mb-app-logo .mb-brand-wordmark { width: 94px; }
   .mb-app-profile-row { grid-column: 2; grid-row: 1; min-height: 40px; justify-content: flex-end; margin: 0; }
+  .mb-app-profile-skeleton { display: none; }
   .mb-notification-toggle--desktop { display: none; }
   .mb-notification-toggle--mobile { display: grid; flex-basis: 36px; width: 36px; height: 36px; }
   .mb-app-profile { display: none; }

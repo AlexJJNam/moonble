@@ -168,7 +168,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
 function QuizLibrarySkeleton({ view }) {
   const count = view === 'list' ? 5 : 6;
   return <div className="quiz-page quiz-page-skeleton">
-    <AppHeader active="papers" />
+    <AppHeader active="papers" profileSkeleton />
     <div className="quiz-content">
       <main className="quiz-main mb-page-gutter quiz-library-main" aria-busy="true" aria-label="문제지 목록을 불러오는 중">
         <div className="quiz-skeleton-title-row"><span className="quiz-skeleton-line quiz-skeleton-title" /><span className="quiz-skeleton-button" /></div>

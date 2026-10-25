@@ -36,7 +36,7 @@ function clearLocalUserData(userId) {
 }
 
 const aiProviderOptions = [
-  { value: 'gemini', label: 'Gemini' },
+  { value: 'gemini', label: 'AI Mode' },
   { value: 'chatgpt', label: 'ChatGPT' },
 ];
 
@@ -77,7 +77,7 @@ function AiQuestionPreference({ user, onUserUpdated }) {
       try { localStorage.setItem(`moonble:user:${user.id}:ai-question-provider`, nextProvider); } catch { /* 계정 메타데이터에 저장되어 다른 기기에서도 사용할 수 있다. */ }
       window.moonbleAiQuestionProvider = nextProvider;
       onUserUpdated(data.user);
-      setMessage(`${nextProvider === 'gemini' ? 'Gemini' : 'ChatGPT'}를 기본 AI로 저장했어요.`);
+      setMessage(`${nextProvider === 'gemini' ? 'AI Mode' : 'ChatGPT'}를 기본 AI로 저장했어요.`);
     } catch {
       setProvider(previousProvider);
       setError('설정을 저장하지 못했어요. 다시 시도해주세요.');

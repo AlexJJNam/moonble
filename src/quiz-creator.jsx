@@ -72,7 +72,7 @@ const exampleGuideDetails = [
   { topic: '웹 접근성 지침', level: '실무 적용', scope: '화면 검수 상황' },
 ];
 const providerSegments = [
-  { value: 'gemini', label: 'Gemini' },
+  { value: 'gemini', label: 'AI Mode' },
   { value: 'chatgpt', label: 'ChatGPT' },
 ];
 
@@ -252,7 +252,7 @@ export function QuizCreator({ custom, onChange }) {
       promptInputRef.current.blur();
     }
     setMessage(provider === 'gemini'
-      ? 'Gemini에 문제 생성 요청을 열었어요. 완성된 Google Sheets 링크를 아래에 붙여넣어주세요.'
+      ? 'AI Mode에 문제 생성 요청을 열었어요. 완성된 Google Sheets 링크를 아래에 붙여넣어주세요.'
       : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
   }
 

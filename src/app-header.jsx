@@ -213,7 +213,7 @@ function useSolverQuestions(enabled) {
   return { activeIndex, goToQuestion, items, navRef };
 }
 
-export function AppHeader({ active, error, hideSolverBack = false, onLogout, pending = false, user, variant = 'default' }) {
+export function AppHeader({ active, error, hideSolverBack = false, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
   const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
@@ -559,6 +559,11 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}
         </button>}
       </div>
+      {!user && profileSkeleton && <div className="mb-app-profile-row mb-app-profile-skeleton" aria-hidden="true">
+        <span className="mb-profile-skeleton-avatar" />
+        <span className="mb-profile-skeleton-copy"><i /><i /></span>
+        <span className="mb-profile-skeleton-settings" />
+      </div>}
       {user && <div className="mb-app-profile-row">
         <button className="mb-notification-toggle mb-notification-toggle--mobile" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
           <Bell size={19} aria-hidden="true" />
