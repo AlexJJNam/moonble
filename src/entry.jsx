@@ -803,7 +803,10 @@ function Landing() {
   }, []);
 
   useEffect(() => {
-    if (!supabase) return undefined;
+    if (!supabase) {
+      document.documentElement.removeAttribute('data-auth-pending');
+      return undefined;
+    }
     let alive = true;
     let moving = false;
 
@@ -815,7 +818,11 @@ function Landing() {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    getSessionSafely().then(({ session }) => accept(session));
+    getSessionSafely().then(({ session }) => {
+      if (!alive || moving) return;
+      if (session) accept(session);
+      else document.documentElement.removeAttribute('data-auth-pending');
+    });
 
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);

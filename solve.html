@@ -3063,11 +3063,41 @@
       visibility: hidden !important;
     }
     #moonble-auth-status {
-      position: fixed; inset: 0; z-index: 99999; display: grid;
-      place-content: center; gap: 16px; text-align: center;
-      background: #f6f7f9; color: #191f28;
+      position: fixed; inset: 0; z-index: 99999; display: block; overflow: auto;
+      padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      background: #fff; color: #191f28;
     }
     html:not([data-auth-pending]) #moonble-auth-status { display: none; }
+    .solve-auth-skeleton { width: min(1120px, 100%); min-height: calc(100dvh - 48px); display: grid; grid-template-rows: 42px 1fr; gap: 28px; margin: 0 auto; }
+    .solve-auth-skeleton i { display: block; background: linear-gradient(100deg, #edf1f5 20%, #f7f9fb 40%, #edf1f5 60%); background-size: 220% 100%; animation: solve-auth-shimmer 1.3s ease-in-out infinite; }
+    .solve-auth-top { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .solve-auth-logo { width: 108px; height: 26px; border-radius: 8px; }
+    .solve-auth-top-lines { display: flex; gap: 10px; }
+    .solve-auth-top-lines i { width: 42px; height: 10px; border-radius: 99px; }
+    .solve-auth-main { display: grid; grid-template-columns: 178px minmax(0, 1fr); gap: 26px; }
+    .solve-auth-sidebar { display: grid; align-content: start; gap: 12px; padding-top: 9px; }
+    .solve-auth-sidebar i { height: 38px; border-radius: 10px; }
+    .solve-auth-content { min-width: 0; display: grid; align-content: start; gap: 18px; }
+    .solve-auth-title { width: 176px; height: 28px; border-radius: 7px; }
+    .solve-auth-subtitle { width: 240px; max-width: 70%; height: 12px; border-radius: 99px; }
+    .solve-auth-question { display: grid; gap: 18px; padding: 22px; border-radius: 16px; background: #f6f8fa; }
+    .solve-auth-question i:first-child { width: 82%; height: 16px; border-radius: 6px; }
+    .solve-auth-question i:nth-child(2) { width: 56%; height: 12px; border-radius: 99px; }
+    .solve-auth-question i:nth-child(n+3) { height: 48px; border-radius: 11px; background: linear-gradient(100deg, #fff 20%, #f4f7fa 40%, #fff 60%); background-size: 220% 100%; }
+    @keyframes solve-auth-shimmer { to { background-position-x: -220%; } }
+    @media (max-width: 640px) {
+      #moonble-auth-status { padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+      .solve-auth-skeleton { min-height: calc(100dvh - 40px); grid-template-rows: 38px 1fr; gap: 26px; }
+      .solve-auth-logo { width: 94px; height: 23px; }
+      .solve-auth-top-lines { display: none; }
+      .solve-auth-main { grid-template-columns: minmax(0, 1fr); }
+      .solve-auth-sidebar { display: flex; overflow: hidden; gap: 7px; padding: 0; }
+      .solve-auth-sidebar i { width: 42px; height: 30px; flex: 0 0 42px; border-radius: 999px; }
+      .solve-auth-content { gap: 14px; }
+      .solve-auth-question { gap: 15px; padding: 16px; border-radius: 14px; }
+      .solve-auth-question i:nth-child(n+3) { height: 54px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .solve-auth-skeleton i { animation: none; } }
     .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: middle; animation: moonble-spin .7s linear infinite; }
     @keyframes moonble-spin { to { transform: rotate(360deg); } }
   </style>
@@ -3076,7 +3106,10 @@
 
 <body class="tab-quiz">
   <div id="moonble-auth-status" role="status" aria-label="문제풀이 여는 중">
-    <span class="moonble-spinner" aria-hidden="true" style="justify-self:center"></span>
+    <div class="solve-auth-skeleton" aria-hidden="true">
+      <div class="solve-auth-top"><i class="solve-auth-logo"></i><div class="solve-auth-top-lines"><i></i><i></i><i></i></div></div>
+      <div class="solve-auth-main"><aside class="solve-auth-sidebar"><i></i><i></i><i></i><i></i><i></i></aside><div class="solve-auth-content"><i class="solve-auth-title"></i><i class="solve-auth-subtitle"></i><section class="solve-auth-question"><i></i><i></i><i></i><i></i><i></i></section></div></div>
+    </div>
     <noscript>서비스를 이용하려면 브라우저에서 JavaScript를 허용해주세요.</noscript>
   </div>
 <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
