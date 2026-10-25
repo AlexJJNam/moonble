@@ -147,8 +147,11 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-account { padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-logout>span:not(.moonble-spinner) { display: none; }
-.mb-app-header.is-collapsed .mb-sidebar-tools { right: 8px; flex-direction: column; gap: 6px; }
-.mb-app-header.is-collapsed .mb-sidebar-toggle, .mb-app-header.is-collapsed .mb-pen-mode-toggle { width: 24px; flex-basis: 24px; }
+.mb-app-header.is-collapsed .mb-sidebar-tools { right: 0; left: 0; align-items: center; flex-direction: column; gap: 8px; overflow: visible; background: transparent; }
+.mb-app-header.is-collapsed .mb-sidebar-tools:hover, .mb-app-header.is-collapsed .mb-sidebar-tools:focus-within { background: transparent; }
+.mb-app-header.is-collapsed .mb-sidebar-toggle, .mb-app-header.is-collapsed .mb-pen-mode-toggle { width: 40px; height: 40px; flex-basis: 40px; border-radius: 50%; }
+.mb-app-header.is-collapsed .mb-sidebar-toggle > svg, .mb-app-header.is-collapsed .mb-pen-mode-toggle > svg { width: 20px; height: 20px; }
+.mb-app-header.is-collapsed .mb-sidebar-toggle:hover, .mb-app-header.is-collapsed .mb-pen-mode-toggle:hover { background: var(--mb-surface-muted); }
 .mb-app-header.is-collapsed .mb-sidebar-toggle > span, .mb-app-header.is-collapsed .mb-pen-mode-toggle > span { display: none; }
 
 @media (max-width: 1199px) and (min-width: 768px) {

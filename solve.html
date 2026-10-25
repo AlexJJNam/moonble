@@ -6057,7 +6057,7 @@ if (shareToken || requestedPaper === 'shared') {
     <div class="quiz-ink-control-row">
       <div class="quiz-ink-tool-controls" role="group" aria-label="필기 도구">
         <button id="quizInkPen" class="quiz-ink-tool-button is-selected" type="button" tabindex="-1" aria-label="펜으로 쓰기" aria-pressed="true" title="펜">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19 7-7 3 3-7 7-3-3Z"/><path d="m18 13 3 3M2 22l7-2-5-5-2 7Z"/><path d="m14 6 4-4 4 4-4 4zM2 22 14 10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="m15 5 4 4"/></svg>
         </button>
         <button id="quizInkEraser" class="quiz-ink-tool-button" type="button" tabindex="-1" aria-label="지우개" aria-pressed="false" title="지우개">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4-4a2 2 0 0 1 0-2.8L13.2 4a2 2 0 0 1 2.8 0l4 4a2 2 0 0 1 0 2.8L12 19H7Z"/><path d="m5 12 7 7M22 21H7"/></svg>
@@ -6077,7 +6077,7 @@ if (shareToken || requestedPaper === 'shared') {
     </div>
     <div id="quizInkColors" class="quiz-ink-color-options" role="radiogroup" aria-label="필기 색상"></div>
     <label class="quiz-ink-size-control" for="quizInkSize">
-      <span>두께</span>
+      <span id="quizInkSizeLabel">두께</span>
       <input id="quizInkSize" type="range" min="1" max="12" step="0.5" value="5" tabindex="-1" aria-label="필기 두께">
       <output id="quizInkSizeValue" for="quizInkSize">5</output>
     </label>
@@ -6183,6 +6183,7 @@ if (shareToken || requestedPaper === 'shared') {
       const inkColors = document.getElementById('quizInkColors');
       const inkSizeInput = document.getElementById('quizInkSize');
       const inkSizeValue = document.getElementById('quizInkSizeValue');
+      const inkSizeLabel = document.getElementById('quizInkSizeLabel');
       const penModeEffect = document.getElementById('quizPenModeEffect');
       const tip = document.getElementById('quizPenTip');
       const tipClose = document.getElementById('quizPenTipClose');
@@ -6217,13 +6218,26 @@ if (shareToken || requestedPaper === 'shared') {
       let scrollTargetResetTimer = 0;
       let currentInkColor = GROUP_COLOR_OPTIONS[0]?.swatch || '#3182f6';
       let currentInkSize = 5;
+      const eraserSizeMultiplier = 4;
       let inkColorButtons = [];
       const inkToolButtons = [penToolButton, eraserToolButton].filter(Boolean);
-      if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
+
+      function getCurrentInkWidth() {
+        return currentInkTool === 'eraser' ? currentInkSize * eraserSizeMultiplier : currentInkSize;
+      }
+
+      function syncInkSizeControl() {
+        const label = currentInkTool === 'eraser' ? '지우개 크기' : '두께';
+        if (inkSizeLabel) inkSizeLabel.textContent = label;
+        if (inkSizeInput) inkSizeInput.setAttribute('aria-label', label);
+        if (inkSizeValue) inkSizeValue.textContent = `${getCurrentInkWidth()}px`;
+        eraserCursor?.style.setProperty('--eraser-size', `${currentInkSize * eraserSizeMultiplier}px`);
+      }
+      syncInkSizeControl();
 
       function setEraserCursor(visible, x, y) {
         if (!eraserCursor) return;
-        eraserCursor.style.setProperty('--eraser-size', `${currentInkSize}px`);
+        eraserCursor.style.setProperty('--eraser-size', `${currentInkSize * eraserSizeMultiplier}px`);
         if (Number.isFinite(x) && Number.isFinite(y)) {
           eraserCursor.style.left = `${x}px`;
           eraserCursor.style.top = `${y}px`;
@@ -6240,6 +6254,7 @@ if (shareToken || requestedPaper === 'shared') {
           button.setAttribute('aria-pressed', String(selected));
           button.tabIndex = canvas.classList.contains('is-active') ? 0 : -1;
         }
+        syncInkSizeControl();
         if (currentInkTool !== 'eraser') setEraserCursor(false);
         if (focus) selectedButton?.focus();
       }
@@ -6299,8 +6314,7 @@ if (shareToken || requestedPaper === 'shared') {
 
       inkSizeInput?.addEventListener('input', () => {
         currentInkSize = Number(inkSizeInput.value);
-        if (inkSizeValue) inkSizeValue.textContent = `${currentInkSize}px`;
-        eraserCursor?.style.setProperty('--eraser-size', `${currentInkSize}px`);
+        syncInkSizeControl();
       });
 
       function syncTipVisibility() {
@@ -6399,10 +6413,10 @@ if (shareToken || requestedPaper === 'shared') {
             stroke.inputPoints || stroke.points.map(point => [point.x, point.y, point.pressure ?? 0.5]),
             {
               size: stroke.width,
-              thinning: 0.5,
+              thinning: stroke.tool === 'eraser' ? 0 : 0.5,
               smoothing: 0.5,
               streamline: 0.5,
-              simulatePressure: stroke.simulatePressure,
+              simulatePressure: stroke.tool === 'eraser' ? false : stroke.simulatePressure,
               start: { cap: true },
               end: { cap: true },
               last: !isLiveStroke,
@@ -6747,7 +6761,7 @@ if (shareToken || requestedPaper === 'shared') {
         setEraserCursor(true, touch.clientX, touch.clientY);
         if (start || !activeStroke) {
           mode = 'draw';
-          activeStroke = { width: currentInkSize, color: currentInkColor, tool: currentInkTool, simulatePressure: true, points: [], inputPoints: [] };
+          activeStroke = { width: getCurrentInkWidth(), color: currentInkColor, tool: currentInkTool, simulatePressure: currentInkTool !== 'eraser', points: [], inputPoints: [] };
           appendStrokePoint(activeStroke, point);
           strokes.push(activeStroke);
         } else {
@@ -6829,11 +6843,11 @@ if (shareToken || requestedPaper === 'shared') {
         mode = 'draw';
         const point = pointerPosition(event);
         activeStroke = {
-          width: currentInkSize,
+          width: getCurrentInkWidth(),
           color: currentInkColor,
           tool: currentInkTool,
           pointerType: event.pointerType,
-          simulatePressure: true,
+          simulatePressure: currentInkTool !== 'eraser',
           pressureMin: Infinity,
           pressureMax: -Infinity,
           points: [],
