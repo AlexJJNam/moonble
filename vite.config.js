@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       input: {
         home: fileURLToPath(new URL('./index.html', import.meta.url)),
+        notFound: fileURLToPath(new URL('./404.html', import.meta.url)),
         solve: fileURLToPath(new URL('./solve.html', import.meta.url)),
         login: fileURLToPath(new URL('./login.html', import.meta.url)),
         signup: fileURLToPath(new URL('./signup.html', import.meta.url)),
