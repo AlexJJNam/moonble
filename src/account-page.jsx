@@ -18,13 +18,19 @@ const initialUser = initialSession && hasProfile(initialSession.user) ? initialS
 if (initialUser) document.documentElement.removeAttribute('data-auth-pending');
 
 function localDataKeys(userId) {
-  const prefixes = [`moonble:${userId}:`, `moonble:user:${userId}:`];
-  return Object.keys(localStorage).filter(key => prefixes.some(prefix => key.startsWith(prefix)));
+  try {
+    const prefixes = [`moonble:${userId}:`, `moonble:user:${userId}:`];
+    return Object.keys(localStorage).filter(key => prefixes.some(prefix => key.startsWith(prefix)));
+  } catch {
+    return [];
+  }
 }
 
 function clearLocalUserData(userId) {
-  localDataKeys(userId).forEach(key => localStorage.removeItem(key));
-  sessionStorage.removeItem('moonble:retry-question-ids');
+  localDataKeys(userId).forEach(key => {
+    try { localStorage.removeItem(key); } catch { /* 원격 계정 삭제 결과를 브라우저 저장소 상태와 분리한다. */ }
+  });
+  try { sessionStorage.removeItem('moonble:retry-question-ids'); } catch { /* 현재 탭의 임시 기록만 정리한다. */ }
 }
 
 const aiProviderOptions = [
@@ -168,7 +174,7 @@ function AccountDeletion({ user }) {
     setError('');
     try {
       const { error: deleteError } = await supabase.rpc('moonble_delete_account');
-      if (deleteError) throw deleteError;
+      if (deleteError && deleteError.code !== 'P0002') throw deleteError;
       clearLocalUserData(user.id);
       leavingAfterDeletion = true;
       try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* 계정은 이미 삭제됐으므로 로그인 화면으로 이동한다. */ }
@@ -189,7 +195,7 @@ function AccountDeletion({ user }) {
         <AlertDialog.Overlay className="account-delete-overlay" />
         <AlertDialog.Content className="account-delete-dialog">
           <AlertDialog.Title>회원 탈퇴할까요?</AlertDialog.Title>
-          <AlertDialog.Description>계정과 프로필이 즉시 삭제되며 다시 복구할 수 없습니다.</AlertDialog.Description>
+          <AlertDialog.Description>계정, 프로필, 문제지, 그룹, 공유 링크와 관련 알림이 즉시 삭제되며 다시 복구할 수 없습니다.</AlertDialog.Description>
           <ul>
             <li>현재 기기에 저장된 PRD, 문제지와 풀이 기록도 함께 삭제됩니다.</li>
             <li>다른 기기의 브라우저에 남은 데이터는 해당 기기에서 직접 삭제해야 합니다.</li>

@@ -34,10 +34,11 @@
 
 1. Supabase Free 개발 프로젝트 생성. 결제수단·유료 옵션 등록 금지.
 2. 개발 프로젝트 SQL Editor에서 `database/001_profiles.sql`, `database/002_delete_account.sql` 순서로 실행.
-3. 이메일·비밀번호 인증과 이메일 확인 설정 점검. Site URL과 Redirect 허용 주소에 실제 프리뷰의 `login.html` 주소 설정. localhost 사용하지 않음.
-4. `.env.example`을 `.env`로 복사하여 프로젝트 URL과 **Publishable Key**만 입력. 비밀키 사용 금지. `.env` 커밋 금지.
-5. 이 폴더에서 `npm ci`, `npm run build` 실행. 서버는 실행하지 않음.
-6. `dist` 폴더 내용을 호스팅에 업로드하고 클라우드 URL로 검증. `.env`를 바꾸면 다시 빌드.
+3. 공유 문제 기능을 사용할 때는 `database/003_quiz_banks_and_shares.sql`부터 번호 순서대로 적용. 공유 순위 통계 변경은 `database/007_quiz_share_score_analytics.sql`을 `006` 다음 실행.
+4. 이메일·비밀번호 인증과 이메일 확인 설정 점검. Site URL과 Redirect 허용 주소에 실제 프리뷰의 `login.html` 주소 설정. localhost 사용하지 않음.
+5. `.env.example`을 `.env`로 복사하여 프로젝트 URL과 **Publishable Key**만 입력. 비밀키 사용 금지. `.env` 커밋 금지.
+6. 이 폴더에서 `npm ci`, `npm run build` 실행. 서버는 실행하지 않음.
+7. `dist` 폴더 내용을 호스팅에 업로드하고 클라우드 URL로 검증. `.env`를 바꾸면 다시 빌드.
 
 값을 입력하지 않아도 빌드와 기존 페이지 사용은 가능하며, 인증 요청은 비활성화됨.
 React와 Supabase는 빌드에 포함되고 기존 D3·폰트·Google Analytics 외부 로드는 유지됨.

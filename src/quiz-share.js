@@ -135,7 +135,27 @@ export async function submitQuizShareAttempt(token, answers) {
       rankAvailable = true;
     }
   } catch { /* 순위 조회 실패와 풀이 결과 저장은 분리한다. */ }
-  return { ...data, rankAvailable, rank: rankData?.rank ?? null, participants: rankData?.participants ?? null, bestScore: rankData?.best_score ?? null };
+  const scoreDistribution = Array.isArray(rankData?.score_distribution)
+    ? rankData.score_distribution
+      .filter(item => Number.isInteger(item?.score) && item.score >= 0 && item.score <= 100 && Number.isInteger(item?.count) && item.count >= 0)
+      .slice(0, 11)
+    : [];
+  const topThree = Array.isArray(rankData?.top_three)
+    ? rankData.top_three
+      .filter(item => Number.isInteger(item?.rank) && item.rank >= 1 && item.rank <= 3 && Number.isInteger(item?.score) && item.score >= 0 && item.score <= 100)
+      .slice(0, 3)
+    : [];
+  return {
+    ...data,
+    rankAvailable,
+    rank: rankData?.rank ?? null,
+    participants: rankData?.participants ?? null,
+    bestScore: rankData?.best_score ?? null,
+    averageScore: rankData?.average_score != null && Number.isFinite(Number(rankData.average_score)) ? Number(rankData.average_score) : null,
+    standardDeviation: rankData?.standard_deviation != null && Number.isFinite(Number(rankData.standard_deviation)) ? Number(rankData.standard_deviation) : null,
+    scoreDistribution,
+    topThree,
+  };
 }
 
 function getQuizShareParticipantId(tokenHash) {
