@@ -408,22 +408,30 @@ export function QuizCreator({ custom, onChange }) {
 
     <div className="creator-intake-card">
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
-      <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
-        <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
-        <div className="creator-prompt-guide-panel">
-          <strong>이렇게 적어보세요</strong>
-          <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> {exampleGuide.topic}</span></p>
-          <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> {exampleGuide.level}</span></p>
-          <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> {exampleGuide.scope}</span></p>
-          <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
-            <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}</span>
-            {!exampleRevealed
-              ? <button className="creator-example-reveal" type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>
-              : null}
+      <header>
+        <CreatorStepMarker step="prompt" label="1단계" />
+        <div className="creator-prompt-heading">
+          <div className="creator-prompt-title-row">
+            <h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2>
+            <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
+              <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
+              <div className="creator-prompt-guide-panel">
+                <strong>이렇게 적어보세요</strong>
+                <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> {exampleGuide.topic}</span></p>
+                <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> {exampleGuide.level}</span></p>
+                <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> {exampleGuide.scope}</span></p>
+                <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
+                  <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}</span>
+                  {!exampleRevealed
+                    ? <button className="creator-example-reveal" type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>
+                    : null}
+                </div>
+              </div>
+            </details>
           </div>
+          <p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p>
         </div>
-      </details>
-      <header><CreatorStepMarker step="prompt" label="1단계" /><div><h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2><p>목표와 원하는 난이도를 구체적으로 적을수록 문제의 방향이 선명해져요.</p></div></header>
+      </header>
       <div className="creator-ai-prompt">
         <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
