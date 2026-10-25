@@ -6111,6 +6111,7 @@ if (shareToken || requestedPaper === 'shared') {
       if (!track || !quiz) return;
 
       const fill = track.querySelector(':scope > span');
+      const historyToolbar = document.getElementById('quizInkHistoryToolbar');
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const headerMount = document.getElementById('moonble-app-header');
       let frame = 0;
@@ -6122,10 +6123,13 @@ if (shareToken || requestedPaper === 'shared') {
       function syncProgressTop() {
         const header = document.querySelector('.mb-app-header.mb-solver-sidebar');
         let top = 0;
+        let historyTop = 12;
         if (window.matchMedia('(max-width: 767px)').matches && header && header.isConnected && !header.hidden) {
           top = Math.max(0, Math.min(window.innerHeight, header.getBoundingClientRect().bottom));
+          if (top > 0 && !header.classList.contains('is-mobile-hidden')) historyTop = Math.max(6, top - 36);
         }
         track.style.setProperty('--quiz-progress-top', `${top}px`);
+        historyToolbar?.style.setProperty('--quiz-ink-history-top', `${historyTop}px`);
       }
 
       function followHeaderPosition() {
@@ -6660,6 +6664,7 @@ if (shareToken || requestedPaper === 'shared') {
         activeStroke = null;
         mode = null;
         canvas.classList.toggle('is-active', enabled);
+        document.querySelector('.mb-app-header.mb-solver-sidebar')?.classList.toggle('is-pen-actions-open', enabled);
         toolbar.classList.toggle('is-active', enabled);
         historyToolbar?.classList.toggle('is-active', enabled);
         exitButton.classList.toggle('is-active', enabled);

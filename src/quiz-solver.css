@@ -138,6 +138,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 @keyframes quiz-progress-spark { 0% { opacity: 0; transform: rotate(var(--tick-angle)) translateX(2px) scaleX(.3); } 20% { opacity: .85; } 100% { opacity: 0; transform: rotate(var(--tick-angle)) translateX(8px) scaleX(.7); } }
 @media (max-width: 767px) {
   .section-head h2 { font-size: var(--mb-mobile-page-size); line-height: var(--mb-mobile-page-line); }
+  .quiz-ink-history-toolbar { top: var(--quiz-ink-history-top, 12px); }
   .quiz-pen-tip { display: flex; }
   .quiz-pen-ai-toast { --pen-ai-fab-size: 48px; right: max(12px, env(safe-area-inset-right)); bottom: calc(max(12px, env(safe-area-inset-bottom)) + 58px); }
 }
