@@ -26,7 +26,7 @@ import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDate } from './date-format.js';
 import { getPaperAccessMap, recordPaperAccess } from './paper-activity.js';
 import { getFavoritePaperIds, toggleFavoritePaper } from './paper-favorites.js';
-import { buildGroupColorMap, defaultGroupColorKey, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
+import { buildGroupColorMap, defaultGroupColorKey, groupColorPreviewStyle, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
@@ -110,7 +110,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
         <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
         <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
       </div> : <div className="quiz-manage-fields">
-        <label><span>그룹 이름</span><input autoFocus type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label>
+        <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label>
         <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="radiogroup" aria-label="그룹 색상">
           {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" role="radio" aria-checked={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch }} onClick={() => onChange({ ...editor, colorKey: option.key })}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
         </div></fieldset>

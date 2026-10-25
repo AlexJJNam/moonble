@@ -57,3 +57,12 @@ export function favoriteGroupIconStyle(groupId, colors) {
     '--favorite-group-color': style['--paper-group-color'],
   };
 }
+
+export function groupColorPreviewStyle(colorKey) {
+  const hue = GROUP_COLOR_OPTIONS.find(option => option.key === colorKey)?.hue ?? GROUP_COLOR_OPTIONS[0].hue;
+  return {
+    '--group-preview-tint': `hsl(${hue} 72% 95%)`,
+    '--group-preview-color': `hsl(${hue} 48% 36%)`,
+    '--group-preview-border': `hsl(${hue} 45% 86%)`,
+  };
+}
