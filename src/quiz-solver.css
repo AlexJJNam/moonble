@@ -111,8 +111,8 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-ink-color-option > svg { position: absolute; inset: 0; width: 14px; height: 14px; margin: auto; opacity: 0; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 22%)); }
 .quiz-ink-color-option.is-selected > svg { opacity: 1; }
 .quiz-ink-color-option:focus-visible { outline: 2px solid #9bc7ff; outline-offset: 2px; }
-.quiz-ink-history-toolbar { position: fixed; z-index: 1094; top: calc(var(--quiz-progress-top, 0px) + 12px); right: max(14px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 6px; opacity: 0; pointer-events: none; transform: translateY(-5px); transition: opacity 150ms ease, transform 180ms ease; }
-.quiz-ink-history-toolbar.is-active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.quiz-ink-history-toolbar { position: fixed; z-index: 1094; top: calc(var(--quiz-progress-top, 0px) + 12px); left: 50%; display: flex; align-items: center; gap: 6px; opacity: 0; pointer-events: none; transform: translate(-50%, -5px); transition: opacity 150ms ease, transform 180ms ease; }
+.quiz-ink-history-toolbar.is-active { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
 .quiz-ink-history-toolbar button { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fff; background: #252525; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity 140ms ease, transform 140ms ease; }
 .quiz-ink-history-toolbar button:disabled { opacity: .36; cursor: default; }
 .quiz-ink-history-toolbar button:not(:disabled):hover { transform: scale(1.06); }
