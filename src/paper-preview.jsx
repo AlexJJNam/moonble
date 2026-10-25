@@ -17,6 +17,7 @@ export function PaperPreview({ paper, compact = false, style }) {
     <div className="preview-sheet">
       <div className="preview-sheet-brand"><BrandLogo decorative /></div>
       <div className="preview-sheet-title">{label}</div>
+      {paper?.description && <div className="preview-sheet-subtitle">{paper.description}</div>}
       {samples.slice(0, compact ? 1 : 2).map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
         <div><b>{String(index + 1).padStart(2, '0')}</b><strong>{sample.title}</strong></div>
         {(sample.options || []).slice(0, compact ? 2 : 3).map((option, optionIndex) => <span className="preview-option" key={`${option}-${optionIndex}`}><i />{option}</span>)}
