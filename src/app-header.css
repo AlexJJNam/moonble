@@ -123,7 +123,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-solver-heading { padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-solver-heading strong, .mb-app-header.is-collapsed .mb-solver-heading a span { display: none; }
 .mb-app-header.is-collapsed .mb-solver-heading a { justify-content: center; padding-right: 0; padding-left: 0; }
-.mb-app-header.is-collapsed .mb-solver-questions { grid-template-columns: 1fr; justify-items: center; padding-right: 0; padding-left: 0; }
+.mb-app-header.is-collapsed .mb-solver-questions { grid-template-columns: 1fr; justify-items: center; padding-right: 0; padding-bottom: 120px; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-solver-question { grid-template-columns: 1fr; padding-right: 0 !important; padding-left: 0 !important; }
 .mb-app-header.is-collapsed .mb-solver-label { display: none; }
 .mb-app-header.is-collapsed .mb-solver-number { margin: auto; }
