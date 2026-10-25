@@ -5,26 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
     <title>페이지를 찾을 수 없습니다 · Moonble</title>
+    <link rel="stylesheet" href="./src/design-system.css" />
+    <link rel="stylesheet" href="./src/gradient.css" />
     <style>
-      @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css');
-      :root { color-scheme: light; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #191f28; background: #fff; }
+      :root { color-scheme: light; }
       * { box-sizing: border-box; }
-      body { min-width: 320px; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; margin: 0; padding: 24px; }
+      body { min-width: 320px; min-height: 100vh; min-height: 100svh; margin: 0; color: var(--mb-text-primary); background: #fff; font-family: var(--mb-font-sans); }
+      .not-found-page { position: relative; isolation: isolate; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 24px; overflow: hidden; }
+      .not-found-page .gradient-backdrop { opacity: .5; }
       main { width: min(100%, 480px); display: grid; justify-items: center; text-align: center; }
-      h1 { margin: 0; color: #1b64da; font-size: clamp(96px, 24vw, 144px); line-height: .95; letter-spacing: -.075em; font-weight: 800; font-variant-numeric: tabular-nums; }
-      p { margin: 12px 0 0; color: #6b7684; font-size: 16px; line-height: 24px; }
-      .action-area { width: 100%; margin-top: 28px; padding: 14px; border-radius: 18px; background: #e8f3ff; }
-      a { min-height: 48px; display: flex; align-items: center; justify-content: center; padding: 12px 18px; border: 1px solid #c6e0ff; border-radius: 12px; color: #1b64da; background: #f5faff; font-size: 16px; line-height: 24px; font-weight: 650; text-decoration: none; transition: background-color 160ms ease, border-color 160ms ease; }
-      a:hover { border-color: #9cc8fb; background: #fff; }
+      h1 { margin: 0; color: #a6cbf5; font-size: clamp(96px, 24vw, 144px); line-height: .95; letter-spacing: -.075em; font-weight: 800; font-variant-numeric: tabular-nums; }
+      p { margin: 12px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-16); line-height: 24px; }
+      .action-area { width: 100%; display: grid; justify-items: center; margin-top: 28px; padding: 14px; border-radius: 18px; background: rgb(232 243 255 / 64%); }
+      a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border: 0; border-radius: 8px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; text-decoration: none; transition: background-color 160ms ease; }
+      a:hover { background: #d8eaff; }
       a:focus-visible { outline: 3px solid rgb(49 130 246 / 28%); outline-offset: 3px; }
       @media (prefers-reduced-motion: reduce) { a { transition: none; } }
     </style>
   </head>
   <body>
-    <main>
-      <h1>404</h1>
-      <p>페이지를 찾을 수 없어요.</p>
-      <div class="action-area"><a href="/">홈으로 돌아가기</a></div>
-    </main>
+    <div class="not-found-page">
+      <div class="gradient-backdrop" aria-hidden="true"><div class="g1"></div><div class="g2"></div><div class="g3"></div><div class="g4"></div><div class="g5"></div></div>
+      <main>
+        <h1>404</h1>
+        <p>페이지를 찾을 수 없어요.</p>
+        <div class="action-area"><a href="/">홈으로 돌아가기</a></div>
+      </main>
+    </div>
   </body>
 </html>
