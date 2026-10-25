@@ -6133,6 +6133,9 @@ if (shareToken || requestedPaper === 'shared') {
       let penToastTimer = 0;
       let penToastHideTimer = 0;
       let savedScrollBehavior = '';
+      let savedViewportContent = null;
+      let scrollTargetY = null;
+      let scrollAnimationFrame = 0;
 
       function syncTipVisibility() {
         if (!tip) return;
@@ -6234,8 +6237,19 @@ if (shareToken || requestedPaper === 'shared') {
         if (enabled) {
           savedScrollBehavior = document.documentElement.style.scrollBehavior;
           document.documentElement.style.scrollBehavior = 'auto';
+          const viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport && savedViewportContent === null) {
+            savedViewportContent = viewport.getAttribute('content') || '';
+            viewport.setAttribute('content', `${savedViewportContent}, maximum-scale=1, user-scalable=no`);
+          }
         } else {
           document.documentElement.style.scrollBehavior = savedScrollBehavior;
+          const viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport && savedViewportContent !== null) viewport.setAttribute('content', savedViewportContent);
+          savedViewportContent = null;
+          if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame);
+          scrollAnimationFrame = 0;
+          scrollTargetY = null;
         }
         window.moonbleQuizPenMode = enabled;
         window.dispatchEvent(new CustomEvent('moonble:quiz-pen-mode-change', { detail: { active: enabled } }));
@@ -6308,16 +6322,56 @@ if (shareToken || requestedPaper === 'shared') {
         return { x: x / count, y: y / count };
       }
 
-      function scrollPageBy(deltaY) {
-        const scrollRoot = document.scrollingElement || document.documentElement;
-        const currentY = Math.max(window.scrollY || 0, scrollRoot.scrollTop || 0, document.body.scrollTop || 0);
-        const maxY = Math.max(0, scrollRoot.scrollHeight - window.innerHeight);
-        const nextY = Math.min(maxY, Math.max(0, currentY + deltaY));
-        if (Math.abs(nextY - currentY) < 0.5) return;
-        scrollRoot.scrollTop = nextY;
-        document.body.scrollTop = nextY;
-        window.scrollTo(0, nextY);
+      function getScrollRoot() {
+        return document.scrollingElement || document.documentElement;
       }
+
+      function getPageScrollY() {
+        const root = getScrollRoot();
+        return Math.max(window.scrollY || 0, root.scrollTop || 0);
+      }
+
+      function beginPageScrollGesture() {
+        scrollTargetY = getPageScrollY();
+      }
+
+      function animatePageScroll() {
+        scrollAnimationFrame = 0;
+        if (!canvas.classList.contains('is-active') || scrollTargetY === null) return;
+
+        const root = getScrollRoot();
+        const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
+        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY));
+        const currentY = getPageScrollY();
+        const remaining = scrollTargetY - currentY;
+        if (Math.abs(remaining) < 0.75) {
+          root.scrollTop = scrollTargetY;
+          return;
+        }
+
+        root.scrollTop = currentY + remaining * 0.32;
+        scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
+      }
+
+      function scrollPageBy(deltaY) {
+        if (!Number.isFinite(deltaY) || Math.abs(deltaY) < 0.5) return;
+        const root = getScrollRoot();
+        const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
+        if (scrollTargetY === null) scrollTargetY = getPageScrollY();
+        const limitedDelta = Math.max(-40, Math.min(40, deltaY));
+        scrollTargetY = Math.min(maxY, Math.max(0, scrollTargetY + limitedDelta * 0.45));
+        if (!scrollAnimationFrame) scrollAnimationFrame = requestAnimationFrame(animatePageScroll);
+      }
+
+      function preventPenPinchZoom(event) {
+        if (canvas.classList.contains('is-active')) event.preventDefault();
+      }
+      document.addEventListener('touchmove', event => {
+        if (canvas.classList.contains('is-active') && event.touches.length > 1) event.preventDefault();
+      }, { capture: true, passive: false });
+      document.addEventListener('gesturestart', preventPenPinchZoom, { passive: false });
+      document.addEventListener('gesturechange', preventPenPinchZoom, { passive: false });
+      document.addEventListener('gestureend', preventPenPinchZoom, { passive: false });
 
       function drawTouch(touch, start = false) {
         const point = { x: touch.clientX, y: touch.clientY + window.scrollY, pressure: touch.force || 0.5 };
@@ -6338,6 +6392,7 @@ if (shareToken || requestedPaper === 'shared') {
         event.preventDefault();
         if (event.touches.length >= 2) {
           mode = 'scroll';
+          beginPageScrollGesture();
           if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = touchMidpoint(event.touches);
@@ -6356,6 +6411,7 @@ if (shareToken || requestedPaper === 'shared') {
         if (event.touches.length >= 2) {
           if (mode !== 'scroll') {
             mode = 'scroll';
+            beginPageScrollGesture();
             if (activeStroke) activeStroke.outline = null;
             activeStroke = null;
             lastScrollMidpoint = touchMidpoint(event.touches);
@@ -6394,6 +6450,7 @@ if (shareToken || requestedPaper === 'shared') {
         activePointers.set(event.pointerId, pointerPosition(event));
         if (activePointers.size >= 2) {
           mode = 'scroll';
+          beginPageScrollGesture();
           if (activeStroke) activeStroke.outline = null;
           activeStroke = null;
           lastScrollMidpoint = midpoint();
