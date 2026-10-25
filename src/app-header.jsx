@@ -4,6 +4,7 @@ import { profileOf } from './profile.js';
 import { BrandLogo } from './brand-logo.jsx';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
+import { formatRelativeDate } from './date-format.js';
 import { supabase } from './supabase.js';
 import './app-header.css';
 
@@ -41,12 +42,6 @@ function markShareNotificationsSeen(userId, notifications) {
   try { localStorage.setItem(shareNotificationStorageKey(userId), JSON.stringify(next)); }
   catch { /* 알림 목록은 현재 화면에서 계속 볼 수 있다. */ }
   return next;
-}
-
-function formatShareNotificationDate(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }).format(date);
 }
 
 function useSolverQuestions(enabled) {
@@ -591,8 +586,10 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       })()}
       {shareNotifications.length ? <div className="mb-notification-screen-list">
         {shareNotifications.map(item => <article className="mb-notification-screen-item" key={item.id}>
-          <span className="mb-notification-meta">문블 · {formatShareNotificationDate(item.created_at)}</span>
-          <span className="mb-notification-title">{item.title}{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
+          <div className="mb-notification-item-heading">
+            <span className="mb-notification-title"><span className="mb-notification-paper-title">{item.title}</span>{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
+            <time className="mb-notification-meta" dateTime={item.created_at}>{formatRelativeDate(item.created_at)}</time>
+          </div>
           <span className="mb-notification-copy">공유한 문제를 누군가 풀었어요.</span>
           <span className="mb-notification-copy">{item.score}점 ({item.correct}/{item.total})</span>
         </article>)}
