@@ -6188,6 +6188,7 @@ if (shareToken || requestedPaper === 'shared') {
       const penToast = document.getElementById('quizPenToast');
       const aiPenToast = document.getElementById('quizPenAiToast');
       const quiz = document.getElementById('quizContainer');
+      const quizResult = document.getElementById('resultBox');
       const aiAskButton = document.querySelector('.fab');
       if (!canvas || !toolbar || !exitButton || !quiz) return;
 
@@ -6320,7 +6321,8 @@ if (shareToken || requestedPaper === 'shared') {
         let dismissed = false;
         try { dismissed = sessionStorage.getItem('moonble:quiz-pen-tip-dismissed-v1') === 'true'; } catch { /* 임시 안내는 저장하지 않아도 닫힌다. */ }
         const isMobile = window.matchMedia('(max-width: 767px)').matches;
-        tip.hidden = !isMobile || dismissed || !quiz.querySelector('.q-card');
+        const isGraded = Boolean(quizResult?.textContent.trim());
+        tip.hidden = !isMobile || dismissed || isGraded || !quiz.querySelector('.q-card');
       }
 
       function showPenToast() {
@@ -6371,6 +6373,7 @@ if (shareToken || requestedPaper === 'shared') {
       syncTipVisibility();
       window.addEventListener('resize', syncTipVisibility, { passive: true });
       new MutationObserver(syncTipVisibility).observe(quiz, { childList: true, subtree: true });
+      if (quizResult) new MutationObserver(syncTipVisibility).observe(quizResult, { childList: true, characterData: true, subtree: true });
       tipClose?.addEventListener('click', () => {
         try { sessionStorage.setItem('moonble:quiz-pen-tip-dismissed-v1', 'true'); } catch { /* 저장할 수 없어도 이 화면에서 닫힌다. */ }
         tip.hidden = true;
