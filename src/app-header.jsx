@@ -265,6 +265,60 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const solverHeading = '문제 목록';
 
   useEffect(() => {
+    const nav = questions.navRef.current;
+    if (!solver || !collapsed || !nav || !window.matchMedia('(min-width: 768px)').matches) return undefined;
+
+    let frame = 0;
+    const updateDepth = () => {
+      frame = 0;
+      const nodes = Array.from(nav.querySelectorAll('.mb-solver-question'));
+      if (!nodes.length) return;
+
+      const activeIndex = Math.min(questions.activeIndex, nodes.length - 1);
+      const active = nodes[activeIndex];
+      const step = nodes.length > 1 ? nodes[1].offsetTop - nodes[0].offsetTop : 44;
+      const maxScrollTop = Math.max(0, nav.scrollHeight - nav.clientHeight);
+      const activeCenter = active.offsetTop + active.offsetHeight / 2;
+      const activeScrollTop = Math.max(0, Math.min(maxScrollTop, activeCenter - nav.clientHeight / 2));
+      const focalIndex = activeIndex + (nav.scrollTop - activeScrollTop) / Math.max(1, step);
+
+      nodes.forEach((node, index) => {
+        const distance = Math.abs(index - focalIndex);
+        const size = Math.max(6, 32 - distance * 6);
+        const opacity = Math.max(0.42, 1 - distance * 0.12);
+        const distanceBin = distance < 0.5 ? '0'
+          : distance < 1.5 ? '1'
+            : distance < 2.5 ? '2'
+              : distance < 3.5 ? '3'
+                : distance < 4.5 ? '4' : 'far';
+        node.dataset.distance = distanceBin;
+        node.style.setProperty('--mb-solver-number-size', `${size.toFixed(2)}px`);
+        node.style.setProperty('--mb-solver-number-opacity', opacity.toFixed(2));
+      });
+    };
+    const scheduleDepthUpdate = () => {
+      if (!frame) frame = requestAnimationFrame(updateDepth);
+    };
+
+    nav.addEventListener('scroll', scheduleDepthUpdate, { passive: true });
+    window.addEventListener('resize', scheduleDepthUpdate);
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleDepthUpdate) : null;
+    observer?.observe(nav);
+    scheduleDepthUpdate();
+
+    return () => {
+      nav.removeEventListener('scroll', scheduleDepthUpdate);
+      window.removeEventListener('resize', scheduleDepthUpdate);
+      observer?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+      nav.querySelectorAll('.mb-solver-question').forEach(node => {
+        node.style.removeProperty('--mb-solver-number-size');
+        node.style.removeProperty('--mb-solver-number-opacity');
+      });
+    };
+  }, [collapsed, questions.activeIndex, questions.items.length, questions.navRef, solver]);
+
+  useEffect(() => {
     if (!solver) return undefined;
     const syncHeading = event => {
       const detail = event?.detail;
