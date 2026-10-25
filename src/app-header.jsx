@@ -692,7 +692,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
             <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-solver-paper-title">{solverPaper.title}</span>
           </div>}
-          {!sharedSolver && <strong>{solverHeading}</strong>}
+          <strong>{solverHeading}</strong>
         </div>
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => {
