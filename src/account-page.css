@@ -3,11 +3,8 @@ body { margin: 0; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
 .account-main { max-width: 720px; margin: 0 auto; }
-.account-heading { max-width: 480px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto 16px; }
+.account-heading { max-width: 480px; margin: 0 auto 16px; }
 .account-heading h1 { margin: 0; letter-spacing: -.025em; }
-.account-heading-edit { width: 40px; height: 40px; display: grid; flex: 0 0 40px; place-content: center; padding: 0; border: 0; border-radius: 10px; color: var(--mb-text-tertiary); background: transparent; }
-.account-heading-edit:hover, .account-heading-edit:focus-visible, .account-heading-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
-.account-heading-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
 .account-profile-summary { max-width: 480px; min-width: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 14px; margin: 0 auto 16px; padding: 18px 20px; border-radius: 20px; background: #fafafa; }
 .account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
 .account-profile-summary div { min-width: 0; }
@@ -15,6 +12,9 @@ button { font: inherit; cursor: pointer; }
 .account-profile-summary strong { font-size: var(--mb-font-18); line-height: 26px; }
 .account-profile-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .account-profile-name strong { min-width: 0; }
+.account-profile-edit { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
+.account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-profile-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
 .account-profile-update-fx[hidden] { display: none; }
 .account-profile-update-fx { position: fixed; inset: 0; z-index: 1200; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--mb-text-primary); background: rgb(255 255 255 / 97%); pointer-events: none; }
 .account-profile-update-fx.is-playing { animation: account-profile-update-out .42s ease 1.12s both; }
