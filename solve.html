@@ -5921,11 +5921,29 @@ if (shareToken || requestedPaper === 'shared') {
           activityKey = retryMeta.bankId ? `custom:${retryMeta.bankId}` : (['basics', 'advanced', 'random'].includes(retryMeta.paperId) ? retryMeta.paperId : null);
         } catch { /* 재풀이 메타데이터가 없으면 목록 접근 기록을 갱신하지 않는다. */ }
       }
-      if (activityKey) recordPaperAccess(user.id, activityKey);
       renderQuiz();
       const questionCount = document.querySelectorAll('#quizContainer .q-card').length;
       setSolvePaperHeading(paperTitle, paperDescription, questionCount, { paperId, bankId: solverBankId, groupId: solverGroupId });
       renderHistory();
+      document.documentElement.removeAttribute('data-auth-pending');
+      if (activityKey) {
+        let firstFramePainted = false;
+        let accessRecorded = false;
+        let accessFrame = 0;
+        const recordRenderedAccess = () => {
+          if (accessRecorded) return;
+          accessRecorded = true;
+          recordPaperAccess(user.id, activityKey);
+        };
+        accessFrame = requestAnimationFrame(() => {
+          firstFramePainted = true;
+          accessFrame = requestAnimationFrame(recordRenderedAccess);
+        });
+        window.addEventListener('pagehide', () => {
+          if (firstFramePainted) recordRenderedAccess();
+          if (accessFrame) cancelAnimationFrame(accessFrame);
+        }, { once: true });
+      }
     }
   }
 }

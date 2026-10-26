@@ -25,7 +25,7 @@ import { revealPage } from './page-readiness.js';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
-import { getPaperAccessMap, recordPaperAccess } from './paper-activity.js';
+import { getPaperAccessMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorPreviewStyle, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
@@ -187,7 +187,7 @@ function QuizLibrary() {
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperAccessMap(initialUser?.id));
-  const [paperAccessOrder, setPaperAccessOrder] = useState({});
+  const paperAccessSnapshotRef = useRef(JSON.stringify(getPaperAccessMap(initialUser?.id)));
   const [favoritePaperIds, setFavoritePaperIds] = useState(() => getFavoritePaperIds(initialUser?.id));
   const [activeGroup, setActiveGroup] = useState('all');
   const [openMenu, setOpenMenu] = useState(null);
@@ -227,7 +227,19 @@ function QuizLibrary() {
     if (user && collectionReady) document.documentElement.removeAttribute('data-auth-pending');
   }, [user, collectionReady]);
   useEffect(() => {
-    const refresh = () => setPaperAccess(getPaperAccessMap(user?.id));
+    const refresh = event => {
+      const nextAccess = getPaperAccessMap(user?.id);
+      const nextSnapshot = JSON.stringify(nextAccess);
+      if (event?.type === 'pageshow' && event.persisted && nextSnapshot !== paperAccessSnapshotRef.current) {
+        // A solver visit updated recent order while this list was in the back/forward cache.
+        // Reload under the page loader so the new order is present on the first visible list frame.
+        document.documentElement.setAttribute('data-page-pending', '');
+        window.location.reload();
+        return;
+      }
+      paperAccessSnapshotRef.current = nextSnapshot;
+      setPaperAccess(nextAccess);
+    };
     window.addEventListener('storage', refresh);
     window.addEventListener('pageshow', refresh);
     window.addEventListener('moonble:paper-access', refresh);
@@ -237,13 +249,6 @@ function QuizLibrary() {
       window.removeEventListener('moonble:paper-access', refresh);
     };
   }, [user?.id]);
-  useEffect(() => {
-    if (!user || !collectionReady) return undefined;
-    // Paint the list in its stable saved order first; apply recent-activity
-    // ordering only after the page has had time to render.
-    const timer = window.setTimeout(() => setPaperAccessOrder(paperAccess), 300);
-    return () => window.clearTimeout(timer);
-  }, [user?.id, collectionReady, paperAccess]);
   useEffect(() => {
     const refresh = event => {
       if (event?.detail?.userId && event.detail.userId !== user?.id) return;
@@ -382,7 +387,9 @@ function QuizLibrary() {
       setCustomBankUser(session.user.id);
       const cachedCollection = getCustomBankCollection(session.user.id);
       setCollection(cachedCollection);
-      setPaperAccess(getPaperAccessMap(session.user.id));
+      const nextPaperAccess = getPaperAccessMap(session.user.id);
+      paperAccessSnapshotRef.current = JSON.stringify(nextPaperAccess);
+      setPaperAccess(nextPaperAccess);
       setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
       if (bankSyncUserRef.current !== session.user.id) {
@@ -792,10 +799,8 @@ function QuizLibrary() {
     const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
     return groupMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
-    const aLastOpenedAt = paperAccessOrder[a.id] || null;
-    const bLastOpenedAt = paperAccessOrder[b.id] || null;
-    const aOpened = aLastOpenedAt ? new Date(aLastOpenedAt).getTime() : 0;
-    const bOpened = bLastOpenedAt ? new Date(bLastOpenedAt).getTime() : 0;
+    const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
+    const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
     if (aOpened || bOpened) {
       if (!aOpened) return 1;
       if (!bOpened) return -1;
@@ -868,7 +873,7 @@ function QuizLibrary() {
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
               key={paper.id}
             >
-              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } const nextAccess = recordPaperAccess(user.id, paper.id); setPaperAccess(nextAccess); if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
                 <div className={`paper-info${paper.lastOpenedAt ? ' has-last-opened-at' : ''}`}><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time>}</div></div>
               </CardSurface>

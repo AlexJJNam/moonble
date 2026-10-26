@@ -7,7 +7,6 @@ import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
 import { getCustomBankCollection } from './custom-bank.js';
 import { buildGroupColorMap, favoriteGroupIconStyle } from './paper-group-colors.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
-import { recordPaperAccess } from './paper-activity.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
 import { formatRelativeDate } from './date-format.js';
@@ -741,7 +740,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾는 문제지">
-          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label} onClick={() => recordPaperAccess(user?.id, paper.id)}>
+          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label}>
             <span className="mb-favorite-icon" style={paper.iconStyle}><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-favorite-title">{paper.label}</span>
           </a>)}
