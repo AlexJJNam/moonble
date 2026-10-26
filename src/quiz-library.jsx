@@ -33,6 +33,7 @@ import './design-system.css';
 import './quiz-library.css';
 
 const difficulties = ['전체 난이도', '기본', '심화'];
+const PAPER_TOUCH_DRAG_DELAY = 1200;
 const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
 const viewSegments = [
   { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
@@ -625,50 +626,56 @@ function QuizLibrary() {
   }
   function beginPaperPress(event, bankId) {
     if (event.target.closest('button, [role="button"], .paper-card-actions')) return;
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
     window.clearTimeout(paperPressTimer.current);
-    if (event.pointerType !== 'mouse') {
-      if (!editMode) return;
-      const source = event.currentTarget;
-      paperTouchDrag.current = {
-        bankId,
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        x: event.clientX,
-        y: event.clientY,
-        lastY: event.clientY,
-        source,
-        active: false,
-        scrolling: false,
-        targetGroupId: null,
-      };
-      paperPressTimer.current = window.setTimeout(() => {
-        const drag = paperTouchDrag.current;
-        if (!drag || drag.bankId !== bankId || drag.pointerId !== event.pointerId) return;
-        const bounds = source.getBoundingClientRect();
-        const preview = source.cloneNode(true);
-        preview.removeAttribute('draggable');
-        preview.querySelector('.paper-card-actions')?.remove();
-        preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
-        preview.classList.add('paper-drag-preview', 'is-touch-preview');
-        preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
-        document.body.appendChild(preview);
-        preview.style.left = `${drag.x - preview.offsetWidth / 2}px`;
-        preview.style.top = `${drag.y - Math.min(34, preview.offsetHeight / 2)}px`;
-        dragPreviewNode.current = preview;
-        drag.preview = preview;
-        drag.active = true;
-        setPressedBankId(null);
-        setDraggedBankId(bankId);
-        navigator.vibrate?.(18);
-      }, 170);
-      return;
-    }
     paperPressTimer.current = window.setTimeout(() => {
       setPressedBankId(bankId);
       navigator.vibrate?.(12);
     }, 180);
+  }
+  function beginPaperTouch(event, bankId) {
+    if (!editMode || event.target.closest('button, [role="button"], .paper-card-actions')) return;
+    if (event.touches.length !== 1) {
+      const activeDrag = paperTouchDrag.current?.active;
+      window.clearTimeout(paperPressTimer.current);
+      paperTouchDrag.current = null;
+      if (activeDrag) finishPaperDrag();
+      return;
+    }
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    window.clearTimeout(paperPressTimer.current);
+    const drag = {
+      bankId,
+      touchId: touch.identifier,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      x: touch.clientX,
+      y: touch.clientY,
+      source: event.currentTarget,
+      active: false,
+      targetGroupId: null,
+    };
+    paperTouchDrag.current = drag;
+    paperPressTimer.current = window.setTimeout(() => {
+      if (paperTouchDrag.current !== drag || !drag.source.isConnected) return;
+      const bounds = drag.source.getBoundingClientRect();
+      const preview = drag.source.cloneNode(true);
+      preview.removeAttribute('draggable');
+      preview.querySelector('.paper-card-actions')?.remove();
+      preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
+      preview.classList.add('paper-drag-preview', 'is-touch-preview');
+      preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
+      document.body.appendChild(preview);
+      preview.style.left = `${drag.x - preview.offsetWidth / 2}px`;
+      preview.style.top = `${drag.y - Math.min(34, preview.offsetHeight / 2)}px`;
+      dragPreviewNode.current = preview;
+      drag.preview = preview;
+      drag.active = true;
+      setPressedBankId(null);
+      setDraggedBankId(bankId);
+      navigator.vibrate?.(18);
+    }, PAPER_TOUCH_DRAG_DELAY);
   }
   function endPaperPress() {
     window.clearTimeout(paperPressTimer.current);
@@ -704,72 +711,66 @@ function QuizLibrary() {
   useEffect(() => {
     function moveTouchPaper(event) {
       const drag = paperTouchDrag.current;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      drag.x = event.clientX;
-      drag.y = event.clientY;
+      if (!drag || drag.touchId == null) return;
+      if (event.touches.length !== 1) {
+        window.clearTimeout(paperPressTimer.current);
+        paperTouchDrag.current = null;
+        if (drag.active) finishPaperDrag();
+        return;
+      }
+      const touch = Array.from(event.changedTouches).find(item => item.identifier === drag.touchId);
+      if (!touch) return;
+      drag.x = touch.clientX;
+      drag.y = touch.clientY;
       if (!drag.active) {
-        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 10) {
+        // Leave ordinary swipes to the browser. Moving before the hold delay
+        // cancels the drag candidate without preventing the native page scroll.
+        if (Math.hypot(touch.clientX - drag.startX, touch.clientY - drag.startY) > 10) {
           window.clearTimeout(paperPressTimer.current);
-          // Editing cards disable native touch scrolling so a held card can be
-          // dragged into a group. Before the long-press activates, keep normal
-          // vertical swipes working by scrolling the document ourselves.
-          drag.scrolling = true;
+          paperTouchDrag.current = null;
           setPressedBankId(null);
-        }
-        if (drag.scrolling) {
-          const scrollDelta = drag.lastY - event.clientY;
-          drag.lastY = event.clientY;
-          if (scrollDelta) {
-            event.preventDefault();
-            const scrollRoot = document.scrollingElement || document.documentElement;
-            scrollRoot.scrollTop += scrollDelta;
-          }
         }
         return;
       }
 
-      event.preventDefault();
+      if (event.cancelable) event.preventDefault();
       const preview = drag.preview;
       if (preview) {
-        preview.style.left = `${event.clientX - preview.offsetWidth / 2}px`;
-        preview.style.top = `${event.clientY - Math.min(34, preview.offsetHeight / 2)}px`;
+        preview.style.left = `${touch.clientX - preview.offsetWidth / 2}px`;
+        preview.style.top = `${touch.clientY - Math.min(34, preview.offsetHeight / 2)}px`;
       }
-
-      const pointed = document.elementFromPoint(event.clientX, event.clientY);
-      const group = pointed?.closest?.('[data-group-id]');
-      const groupId = group?.dataset.groupId;
+      const pointed = document.elementFromPoint(touch.clientX, touch.clientY);
+      const groupId = pointed?.closest?.('[data-group-id]')?.dataset.groupId;
       if (groupId && groupId !== 'all') {
         drag.targetGroupId = groupId;
         setDropGroupId(groupId);
-        return;
+      } else {
+        drag.targetGroupId = null;
+        setDropGroupId(null);
       }
-
-      drag.targetGroupId = null;
-      setDropGroupId(null);
     }
 
     function endTouchPaper(event) {
       const drag = paperTouchDrag.current;
-      if (!drag || event.pointerId !== drag.pointerId) return;
+      if (!drag || drag.touchId == null || !Array.from(event.changedTouches).some(item => item.identifier === drag.touchId)) return;
       window.clearTimeout(paperPressTimer.current);
       paperTouchDrag.current = null;
       if (!drag.active) return;
-      if (event.type === 'pointercancel') {
+      if (event.type === 'touchcancel') {
         finishPaperDrag();
         return;
       }
-      event.preventDefault();
       if (drag.targetGroupId) moveBankToGroup(drag.bankId, drag.targetGroupId);
       finishPaperDrag();
     }
 
-    window.addEventListener('pointermove', moveTouchPaper, { passive: false });
-    window.addEventListener('pointerup', endTouchPaper, { passive: false });
-    window.addEventListener('pointercancel', endTouchPaper, { passive: false });
+    window.addEventListener('touchmove', moveTouchPaper, { passive: false });
+    window.addEventListener('touchend', endTouchPaper, { passive: false });
+    window.addEventListener('touchcancel', endTouchPaper, { passive: false });
     return () => {
-      window.removeEventListener('pointermove', moveTouchPaper);
-      window.removeEventListener('pointerup', endTouchPaper);
-      window.removeEventListener('pointercancel', endTouchPaper);
+      window.removeEventListener('touchmove', moveTouchPaper);
+      window.removeEventListener('touchend', endTouchPaper);
+      window.removeEventListener('touchcancel', endTouchPaper);
     };
   }, [collection]);
 
@@ -881,6 +882,7 @@ function QuizLibrary() {
               data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(editMode && paper.customBankId)}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
+              onTouchStart={paper.customBankId ? event => beginPaperTouch(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onPointerCancel={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onContextMenu={editMode ? event => event.preventDefault() : undefined}

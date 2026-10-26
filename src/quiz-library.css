@@ -92,7 +92,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-card[draggable='true'] { cursor: grab; }
 .paper-card.is-pressing { transform: scale(.92); }
 .paper-card.is-dragging { z-index: 2; opacity: .38; transform: scale(.86); animation: paper-card-shrink 180ms cubic-bezier(.2,.82,.24,1) both; }
-.paper-card.is-editing { z-index: 1; border-color: var(--mb-primary); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.paper-card.is-editing { z-index: 1; border-color: var(--mb-primary); touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .paper-card.is-editing .paper-card-link { cursor: grab; }
 .paper-card.is-editing.is-pressing, .paper-card.is-editing.is-dragging { animation: paper-card-shrink 180ms cubic-bezier(.2,.82,.24,1) both; }
 .paper-drag-preview { position: fixed; z-index: 5000; top: -2000px; left: -2000px; overflow: hidden; border-color: rgb(49 130 246 / 48%); opacity: .9; pointer-events: none; transform: rotate(1.5deg); animation: paper-drag-preview-pickup 160ms cubic-bezier(.2,.82,.24,1) both; }
@@ -583,7 +583,6 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-card { border-radius: 16px; }
   .paper-favorite-toggle { top: 6px; left: 6px; width: 27px; height: 27px; border-radius: 7px; }
   .paper-favorite-toggle svg { width: 15px; height: 15px; }
-  .paper-card.is-editing { touch-action: none; }
   .paper-grid:not(.paper-list) .paper-info { min-height: 76px; grid-template-columns: minmax(0, 1fr); padding: 11px 13px 12px; }
   .paper-grid:not(.paper-list) .paper-info.has-last-opened-at { min-height: 82px; }
   .paper-grid:not(.paper-list) .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }
