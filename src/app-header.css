@@ -252,7 +252,6 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: flex; align-items: center; padding-right: 8px; border-right: 1px solid var(--mb-border); }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { padding-bottom: 0; }
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { display: block; padding: 4px max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); }
-  body.mb-quiz-pen-active .mb-app-header.mb-solver-sidebar { padding-bottom: 42px; }
   .mb-app-header.mb-solver-sidebar .mb-app-nav.mb-solver-nav { grid-row: 1; padding: 0; }
   .mb-solver-questions { min-width: 0; display: flex; flex: 1; gap: 6px; padding: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; }
   .mb-solver-nav.has-memos .mb-solver-questions { width: 100%; max-height: none; flex: 1 1 100%; order: 1; }
