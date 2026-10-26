@@ -34,6 +34,9 @@ import './quiz-library.css';
 
 const difficulties = ['전체 난이도', '기본', '심화'];
 const PAPER_TOUCH_DRAG_DELAY = 1200;
+const supportsMousePaperDrag = () => typeof window === 'undefined'
+  || !window.matchMedia
+  || window.matchMedia('(pointer: fine) and (hover: hover)').matches;
 const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
 const viewSegments = [
   { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
@@ -652,8 +655,10 @@ function QuizLibrary() {
       startY: touch.clientY,
       x: touch.clientX,
       y: touch.clientY,
+      lastY: touch.clientY,
       source: event.currentTarget,
       active: false,
+      scrolling: false,
       targetGroupId: null,
     };
     paperTouchDrag.current = drag;
@@ -723,12 +728,19 @@ function QuizLibrary() {
       drag.x = touch.clientX;
       drag.y = touch.clientY;
       if (!drag.active) {
-        // Leave ordinary swipes to the browser. Moving before the hold delay
-        // cancels the drag candidate without preventing the native page scroll.
         if (Math.hypot(touch.clientX - drag.startX, touch.clientY - drag.startY) > 10) {
           window.clearTimeout(paperPressTimer.current);
-          paperTouchDrag.current = null;
+          drag.scrolling = true;
           setPressedBankId(null);
+        }
+        if (drag.scrolling) {
+          const scrollDelta = drag.lastY - touch.clientY;
+          drag.lastY = touch.clientY;
+          if (scrollDelta) {
+            if (event.cancelable) event.preventDefault();
+            const scrollRoot = document.scrollingElement || document.documentElement;
+            scrollRoot.scrollTop += scrollDelta;
+          }
         }
         return;
       }
@@ -880,7 +892,7 @@ function QuizLibrary() {
             return <article
               className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               data-bank-id={paper.customBankId || undefined}
-              draggable={Boolean(editMode && paper.customBankId)}
+              draggable={Boolean(editMode && paper.customBankId && supportsMousePaperDrag())}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
               onTouchStart={paper.customBankId ? event => beginPaperTouch(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
