@@ -226,6 +226,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [shareNotification, setShareNotification] = useState(null);
   const [shareNotifications, setShareNotifications] = useState([]);
   const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
+  const [favoriteSolvePaper, setFavoriteSolvePaper] = useState(null);
   const [solverPaper, setSolverPaper] = useState(() => window.moonbleSolverPaper || {
     title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '',
   });
@@ -243,6 +244,8 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const mobileDockRef = useRef(null);
   const notificationBackRef = useRef(null);
   const notificationReturnFocusRef = useRef(null);
+  const favoriteSolveTriggerRef = useRef(null);
+  const favoriteSolveConfirmRef = useRef(null);
   const shareNotificationTimer = useRef(0);
   const shareNotificationVisible = useRef(false);
   const profile = user ? profileOf(user) : null;
@@ -252,6 +255,22 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [quizPenMode, setQuizPenMode] = useState(() => window.moonbleQuizPenMode === true);
   const questions = useSolverQuestions(solver);
   const solverHeading = '문제 목록';
+
+  useEffect(() => {
+    if (!favoriteSolvePaper) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = event => {
+      if (event.key === 'Escape') setFavoriteSolvePaper(null);
+    };
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+    favoriteSolveConfirmRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      if (favoriteSolveTriggerRef.current?.isConnected) favoriteSolveTriggerRef.current.focus();
+    };
+  }, [favoriteSolvePaper]);
 
   useEffect(() => {
     const nav = questions.navRef.current;
@@ -740,7 +759,12 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾는 문제지">
-          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label}>
+          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label} onClick={event => {
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            favoriteSolveTriggerRef.current = event.currentTarget;
+            setFavoriteSolvePaper(paper);
+          }}>
             <span className="mb-favorite-icon" style={paper.iconStyle}><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-favorite-title">{paper.label}</span>
           </a>)}
@@ -764,6 +788,16 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       </button>
     </div>
   </aside>
+  {favoriteSolvePaper && <div className="mb-favorite-solve-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setFavoriteSolvePaper(null); }}>
+    <section className="mb-favorite-solve-dialog" role="dialog" aria-modal="true" aria-labelledby="mb-favorite-solve-title" aria-describedby="mb-favorite-solve-copy">
+      <h2 id="mb-favorite-solve-title">{favoriteSolvePaper.label}</h2>
+      <p id="mb-favorite-solve-copy">이 문제지를 풀어볼까요?</p>
+      <footer>
+        <button type="button" className="mb-favorite-solve-cancel" onClick={() => setFavoriteSolvePaper(null)}>취소</button>
+        <a ref={favoriteSolveConfirmRef} className="mb-favorite-solve-confirm" href={favoriteSolvePaper.href}>문제 풀기</a>
+      </footer>
+    </section>
+  </div>}
   {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
     <div className="mb-notification-screen-nav">
       <button ref={notificationBackRef} type="button" aria-label="알림 닫기" onClick={closeNotifications}><ChevronLeft size={24} aria-hidden="true" /></button>

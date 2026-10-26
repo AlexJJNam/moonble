@@ -68,6 +68,17 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-favorite-link:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
 .mb-favorite-icon { width: 24px; height: 24px; flex: 0 0 24px; display: grid; place-content: center; border-radius: 6px; color: var(--favorite-group-color, var(--mb-primary-strong)); background: var(--favorite-group-tint, var(--mb-primary-soft)); }
 .mb-favorite-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-favorite-solve-overlay { position: fixed; inset: 0; z-index: 1250; display: grid; place-items: center; padding: 20px; background: rgb(15 23 42 / 42%); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: mb-favorite-solve-fade 160ms ease both; }
+.mb-favorite-solve-dialog { width: min(420px, 100%); padding: 22px; border: 1px solid rgb(255 255 255 / 78%); border-radius: 20px; color: var(--mb-text-primary); background: rgb(255 255 255 / 98%); box-shadow: 0 24px 72px rgb(15 23 42 / 22%); animation: mb-favorite-solve-open 220ms cubic-bezier(.2,.82,.24,1) both; }
+.mb-favorite-solve-dialog h2 { margin: 0; overflow-wrap: anywhere; font-size: var(--mb-font-20, 20px); line-height: 28px; letter-spacing: -.02em; font-weight: 700; }
+.mb-favorite-solve-dialog p { margin: 10px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
+.mb-favorite-solve-dialog footer { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 22px; }
+.mb-favorite-solve-dialog footer button, .mb-favorite-solve-dialog footer a { min-height: 46px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 11px; font-size: var(--mb-font-14); line-height: 20px; font-weight: 650; text-decoration: none; }
+.mb-favorite-solve-cancel { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
+.mb-favorite-solve-confirm { color: #fff; background: var(--mb-primary-strong); }
+.mb-favorite-solve-dialog footer button:focus-visible, .mb-favorite-solve-dialog footer a:focus-visible { outline: 3px solid rgb(31 111 235 / 38%); outline-offset: 2px; }
+@keyframes mb-favorite-solve-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mb-favorite-solve-open { from { opacity: 0; transform: translateY(5px) scale(.98); } to { opacity: 1; transform: none; } }
 .mb-solver-nav { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .mb-app-header.mb-solver-sidebar .mb-app-brand-row, .mb-app-header.mb-solver-sidebar .mb-app-profile-row { display: none; }
 .mb-solver-heading { min-width: 0; display: grid; gap: 10px; padding: 0 4px 10px; }
@@ -266,4 +277,5 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 @media (prefers-reduced-motion: reduce) {
   body.mb-has-app-sidebar, .mb-app-header, .mb-sidebar-tools, .mb-sidebar-toggle, .mb-pen-mode-toggle, .mb-sidebar-toggle > span, .mb-pen-mode-toggle > span { transition: none; }
   .mb-share-notification-toast { animation: none; opacity: 1; transform: translate(-50%, 0); }
+  .mb-favorite-solve-overlay, .mb-favorite-solve-dialog { animation: none; }
 }
