@@ -260,7 +260,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-step header p { margin: 5px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; }
 .creator-ai-prompt { display: flex; align-items: center; justify-content: center; }
 .creator-prompt-backdrop { display: none; }
-.creator-ai-prompt-bar { --creator-keyboard-offset: 0px; --creator-prompt-border-angle: 0deg; position: relative; z-index: 2; width: 100%; max-width: none; display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; align-items: start; column-gap: 12px; row-gap: 10px; padding: 18px 20px 14px; border: 2px solid transparent; border-radius: 24px; background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from var(--creator-prompt-border-angle), rgb(178 143 255 / 78%), rgb(151 192 255 / 74%), rgb(255 194 172 / 66%), rgb(178 143 255 / 78%)) border-box; box-shadow: 0 0 16px rgb(168 107 255 / 17%), 0 8px 30px rgb(77 141 255 / 14%), 0 -6px 24px rgb(255 170 144 / 12%); animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite, creator-prompt-border-rotation 8s linear infinite; }
+.creator-ai-prompt-bar { --creator-keyboard-offset: 0px; --creator-prompt-border-angle: 0deg; position: relative; z-index: 2; width: 100%; max-width: none; display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; align-items: start; column-gap: 12px; row-gap: 10px; padding: 18px 20px 14px; border: 2px solid transparent; border-radius: 24px; background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from var(--creator-prompt-border-angle), rgb(178 143 255 / 78%), rgb(151 192 255 / 74%), rgb(255 194 172 / 66%), rgb(178 143 255 / 78%)) border-box; box-shadow: 0 0 9px rgb(168 107 255 / 10%), 0 5px 16px rgb(77 141 255 / 7%), 0 -3px 14px rgb(255 170 144 / 6%); animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite, creator-prompt-border-rotation 8s linear infinite; }
 .creator-ai-prompt-bar.shake { animation: creator-ai-shake .4s ease, creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite, creator-prompt-border-rotation 8s linear infinite; }
 .creator-ai-prompt-icon { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin-top: 1px; color: var(--mb-text-tertiary); }
 .creator-ai-prompt-field { position: relative; grid-column: 2; grid-row: 1; min-width: 0; min-height: 24px; display: block; }
@@ -353,10 +353,10 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes creator-example-character-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes creator-example-use-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes creator-ai-halo-shift {
-  0%, 100% { box-shadow: 0 0 16px rgb(168 107 255 / 17%), 0 8px 30px rgb(77 141 255 / 14%), 0 -6px 24px rgb(255 170 144 / 12%); }
-  25% { box-shadow: -6px -3px 18px rgb(168 107 255 / 17%), 8px 1px 32px rgb(77 141 255 / 14%), -4px 7px 24px rgb(255 170 144 / 12%); }
-  50% { box-shadow: 0 -6px 18px rgb(168 107 255 / 17%), 0 9px 30px rgb(77 141 255 / 14%), 6px 2px 24px rgb(255 170 144 / 12%); }
-  75% { box-shadow: 6px 0 18px rgb(168 107 255 / 17%), -6px 0 30px rgb(77 141 255 / 14%), 0 -7px 24px rgb(255 170 144 / 12%); }
+  0%, 100% { box-shadow: 0 0 9px rgb(168 107 255 / 10%), 0 5px 16px rgb(77 141 255 / 7%), 0 -3px 14px rgb(255 170 144 / 6%); }
+  25% { box-shadow: -3px -2px 10px rgb(168 107 255 / 10%), 4px 1px 17px rgb(77 141 255 / 7%), -2px 4px 14px rgb(255 170 144 / 6%); }
+  50% { box-shadow: 0 -3px 10px rgb(168 107 255 / 10%), 0 5px 16px rgb(77 141 255 / 7%), 3px 1px 14px rgb(255 170 144 / 6%); }
+  75% { box-shadow: 3px 0 10px rgb(168 107 255 / 10%), -3px 0 16px rgb(77 141 255 / 7%), 0 -4px 14px rgb(255 170 144 / 6%); }
 }
 .creator-drop { position: relative; min-height: 210px; display: grid; place-items: center; align-content: center; gap: 8px; padding: 28px; overflow: hidden; border: 1.5px dashed #91b9ee; border-radius: 16px; color: var(--mb-primary-strong); background: #f8fbff; transition: border-color var(--mb-duration), background-color var(--mb-duration); }
 .creator-drop.is-dragging { border-color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
