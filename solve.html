@@ -5808,7 +5808,7 @@ function prepareSharedQuizPage(sharedQuiz) {
   document.getElementById('aiAskBar')?.remove();
   ['guide', 'firebase', 'checklist'].forEach(id => document.getElementById(id)?.remove());
   document.querySelectorAll('.solver-history-storage').forEach(element => element.hidden = true);
-  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '', sharedQuiz.questions.length, { paperId: 'shared' });
+  setSolvePaperHeading(sharedQuiz.title, sharedQuiz.description || '', sharedQuiz.questions.length, { paperId: 'shared', shareId: sharedQuiz.id || sharedQuiz.shareId || '' });
   document.title = `${sharedQuiz.title} · Moonble`;
   renderQuiz();
   renderHistory();
@@ -6093,6 +6093,9 @@ if (shareToken || requestedPaper === 'shared') {
   <div id="quizInkToolbar" class="quiz-ink-toolbar" aria-label="펜 도구">
     <div class="quiz-ink-control-row">
       <div class="quiz-ink-tool-controls" role="group" aria-label="필기 도구">
+        <button id="quizMemoToggle" class="quiz-ink-tool-button quiz-memo-toggle" type="button" tabindex="-1" aria-label="메모 캔버스 열기" aria-expanded="false" title="메모 캔버스">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        </button>
         <button id="quizInkPen" class="quiz-ink-tool-button is-selected" type="button" tabindex="-1" aria-label="펜으로 쓰기" aria-pressed="true" title="펜">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="m15 5 4 4"/></svg>
         </button>
@@ -6111,6 +6114,10 @@ if (shareToken || requestedPaper === 'shared') {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
         </button>
       </div>
+      <button id="quizInkUiVisibility" class="quiz-ink-scroll-button quiz-ink-ui-visibility" type="button" tabindex="-1" aria-label="화면 UI 숨기기" aria-pressed="false" title="화면 UI 숨기기">
+        <svg class="quiz-ink-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="quiz-ink-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a15 15 0 0 1-3.2 4.1"/><path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7c1 0 1.9-.2 2.8-.5"/></svg>
+      </button>
     </div>
     <div id="quizInkColors" class="quiz-ink-color-options" role="radiogroup" aria-label="필기 색상"></div>
     <label class="quiz-ink-size-control" for="quizInkSize">
@@ -6118,6 +6125,30 @@ if (shareToken || requestedPaper === 'shared') {
       <input id="quizInkSize" type="range" min="1" max="12" step="0.5" value="5" tabindex="-1" aria-label="필기 두께">
       <output id="quizInkSizeValue" for="quizInkSize">5</output>
     </label>
+  </div>
+  <div id="quizMemoOverlay" class="quiz-memo-overlay" hidden>
+    <button id="quizMemoBackdrop" class="quiz-memo-backdrop" type="button" aria-label="메모 창 닫기"></button>
+    <section class="quiz-memo-sheet" role="dialog" aria-modal="true" aria-labelledby="quizMemoTitle" aria-describedby="quizMemoDescription">
+      <header class="quiz-memo-sheet-header">
+        <div><span>풀이 중 메모</span><h2 id="quizMemoTitle">메모 캔버스</h2></div>
+        <button id="quizMemoClose" type="button" aria-label="메모 캔버스 닫기" title="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <p id="quizMemoDescription" class="quiz-memo-description">떠오른 내용을 적고 메모를 붙이면 문항 목록 위에서 계속 볼 수 있어요.</p>
+      <label class="quiz-memo-compose" for="quizMemoInput">
+        <span>메모</span>
+        <textarea id="quizMemoInput" rows="3" maxlength="500" placeholder="기억할 내용을 적어보세요."></textarea>
+      </label>
+      <button id="quizMemoPin" class="quiz-memo-pin" type="button" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-4 4-1 5-2-2-5 5-2-2 5-5-2-2 5-1 4-4z"/></svg>
+        <span>문항 목록에 붙이기</span>
+      </button>
+      <section class="quiz-memo-pinned" aria-labelledby="quizMemoPinnedTitle">
+        <h3 id="quizMemoPinnedTitle">붙인 메모</h3>
+        <div id="quizMemoList" class="quiz-memo-list"></div>
+      </section>
+    </section>
   </div>
   <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>두 손가락으로 위아래로 밀어 화면을 스크롤할 수 있어요.</div>
   <script>
@@ -6213,6 +6244,7 @@ if (shareToken || requestedPaper === 'shared') {
   <script type="module">
     import { getStroke } from 'perfect-freehand';
     import { GROUP_COLOR_OPTIONS } from './src/paper-group-colors.js';
+    import { addQuizMemo, quizMemoPaperKey, readQuizMemos, removeQuizMemo } from './src/quiz-memos.js';
 
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
@@ -6229,6 +6261,12 @@ if (shareToken || requestedPaper === 'shared') {
       const scrollControls = document.querySelector('.quiz-ink-scroll-controls');
       const scrollUpButton = document.getElementById('quizInkScrollUp');
       const scrollDownButton = document.getElementById('quizInkScrollDown');
+      const uiVisibilityButton = document.getElementById('quizInkUiVisibility');
+      const memoToggle = document.getElementById('quizMemoToggle');
+      const memoOverlay = document.getElementById('quizMemoOverlay');
+      const memoInput = document.getElementById('quizMemoInput');
+      const memoPinButton = document.getElementById('quizMemoPin');
+      const memoList = document.getElementById('quizMemoList');
       const inkColors = document.getElementById('quizInkColors');
       const inkSizeInput = document.getElementById('quizInkSize');
       const inkSizeValue = document.getElementById('quizInkSizeValue');
@@ -6255,6 +6293,8 @@ if (shareToken || requestedPaper === 'shared') {
       let currentInkTool = 'pen';
       let activeStroke = null;
       let pendingCheckboxPress = null;
+      let quizUiHidden = false;
+      let memoSheetCloseTimer = 0;
       let activePointerScrollY = null;
       let penGestureScrollTargetY = null;
       let penGestureScrollFrame = 0;
@@ -6293,6 +6333,119 @@ if (shareToken || requestedPaper === 'shared') {
         eraserCursor?.style.setProperty('--eraser-size', `${eraserInkSize * eraserSizeMultiplier}px`);
       }
       syncInkSizeControl();
+
+      function currentMemoPaper() {
+        return window.moonbleSolverPaper || { title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '' };
+      }
+
+      function renderMemoList(memos = readQuizMemos(currentMemoPaper())) {
+        if (!memoList) return;
+        memoList.replaceChildren();
+        if (!memos.length) {
+          const empty = document.createElement('p');
+          empty.className = 'quiz-memo-empty';
+          empty.textContent = '아직 붙여 둔 메모가 없어요.';
+          memoList.appendChild(empty);
+          return;
+        }
+        memos.forEach(memo => {
+          const item = document.createElement('article');
+          item.className = 'quiz-memo-list-item';
+          const text = document.createElement('p');
+          text.textContent = memo.text;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'quiz-memo-remove';
+          remove.setAttribute('aria-label', '메모 삭제');
+          remove.title = '메모 삭제';
+          remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>';
+          remove.addEventListener('click', () => renderMemoList(removeQuizMemo(currentMemoPaper(), memo.id)));
+          item.append(text, remove);
+          memoList.appendChild(item);
+        });
+      }
+
+      function setMemoSheetOpen(open, returnFocus = true) {
+        if (!memoOverlay) return;
+        if (open) {
+          if (!memoOverlay.hidden && !memoOverlay.classList.contains('is-closing')) return;
+          const wasHidden = memoOverlay.hidden;
+          window.clearTimeout(memoSheetCloseTimer);
+          memoOverlay.hidden = false;
+          memoOverlay.classList.remove('is-closing');
+          if (wasHidden) window.moonbleScrollLock?.lock();
+        } else {
+          if (memoOverlay.hidden || memoOverlay.classList.contains('is-closing')) return;
+          memoOverlay.classList.add('is-closing');
+          memoToggle?.classList.remove('is-active');
+          memoToggle?.setAttribute('aria-expanded', 'false');
+          memoToggle?.setAttribute('aria-label', '메모 캔버스 열기');
+          memoSheetCloseTimer = window.setTimeout(() => {
+            memoOverlay.hidden = true;
+            memoOverlay.classList.remove('is-closing');
+            window.moonbleScrollLock?.unlock();
+            if (returnFocus && canvas.classList.contains('is-active')) memoToggle?.focus({ preventScroll: true });
+          }, window.matchMedia('(max-width: 767px)').matches ? 320 : 220);
+          return;
+        }
+        memoToggle?.classList.toggle('is-active', open);
+        memoToggle?.setAttribute('aria-expanded', String(open));
+        memoToggle?.setAttribute('aria-label', open ? '메모 캔버스 닫기' : '메모 캔버스 열기');
+        if (open) {
+          renderMemoList();
+          window.requestAnimationFrame(() => memoInput?.focus({ preventScroll: true }));
+        }
+      }
+
+      function setQuizUiHidden(hidden) {
+        quizUiHidden = Boolean(hidden);
+        if (quizUiHidden && memoOverlay && !memoOverlay.hidden) setMemoSheetOpen(false, false);
+        document.body.classList.toggle('quiz-pen-ui-hidden', quizUiHidden);
+        uiVisibilityButton?.setAttribute('aria-pressed', String(quizUiHidden));
+        uiVisibilityButton?.setAttribute('aria-label', quizUiHidden ? '화면 UI 표시하기' : '화면 UI 숨기기');
+        if (uiVisibilityButton) uiVisibilityButton.title = quizUiHidden ? '화면 UI 표시하기' : '화면 UI 숨기기';
+        const dimmedControls = [
+          document.querySelector('.mb-app-header.mb-solver-sidebar'),
+          document.querySelector('#quiz .section-head'),
+          historyToolbar,
+          toolbar.querySelector('.quiz-ink-tool-controls'),
+          exitButton,
+          scrollControls,
+          inkColors,
+          toolbar.querySelector('.quiz-ink-size-control'),
+          document.getElementById('quizScrollProgress'),
+          tip,
+          aiAskButton,
+          document.querySelector('.quiz-actions'),
+          document.querySelector('.solver-back'),
+        ].filter(Boolean);
+        dimmedControls.forEach(element => { element.inert = quizUiHidden; });
+      }
+
+      memoToggle?.addEventListener('click', () => setMemoSheetOpen(memoOverlay.hidden));
+      document.getElementById('quizMemoClose')?.addEventListener('click', () => setMemoSheetOpen(false));
+      document.getElementById('quizMemoBackdrop')?.addEventListener('click', () => setMemoSheetOpen(false));
+      memoInput?.addEventListener('input', () => { if (memoPinButton) memoPinButton.disabled = !memoInput.value.trim(); });
+      memoPinButton?.addEventListener('click', () => {
+        const memo = memoInput?.value.trim();
+        if (!memo) return;
+        const memos = addQuizMemo(currentMemoPaper(), memo);
+        memoInput.value = '';
+        memoPinButton.disabled = true;
+        renderMemoList(memos);
+        showPenToast('메모를 문항 목록 위에 붙였어요.');
+        memoInput.focus({ preventScroll: true });
+      });
+      window.addEventListener('moonble:quiz-memos-change', event => {
+        if (!memoOverlay?.hidden && event.detail?.paperKey === quizMemoPaperKey(currentMemoPaper())) renderMemoList(event.detail.memos);
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && memoOverlay && !memoOverlay.hidden) {
+          event.preventDefault();
+          setMemoSheetOpen(false);
+        }
+      });
+      uiVisibilityButton?.addEventListener('click', () => setQuizUiHidden(!quizUiHidden));
 
       function setEraserCursor(visible, x, y) {
         if (!eraserCursor) return;
@@ -6678,6 +6831,10 @@ if (shareToken || requestedPaper === 'shared') {
 
       function setPenMode(enabled) {
         if (enabled === canvas.classList.contains('is-active')) return;
+        if (!enabled) {
+          if (memoOverlay && !memoOverlay.hidden) setMemoSheetOpen(false, false);
+          setQuizUiHidden(false);
+        }
         resetPenGestureScroll();
         if (pendingCheckboxPress) window.clearTimeout(pendingCheckboxPress.timer);
         pendingCheckboxPress = null;
@@ -6695,6 +6852,8 @@ if (shareToken || requestedPaper === 'shared') {
         if (enabled) selectInkTool('pen');
         else setEraserCursor(false);
         exitButton.tabIndex = enabled ? 0 : -1;
+        if (memoToggle) memoToggle.tabIndex = enabled ? 0 : -1;
+        if (uiVisibilityButton) uiVisibilityButton.tabIndex = enabled ? 0 : -1;
         scrollControls?.classList.toggle('is-active', enabled);
         inkToolButtons.forEach(button => { button.tabIndex = enabled ? 0 : -1; });
         for (const button of [saveButton, resetButton]) {
