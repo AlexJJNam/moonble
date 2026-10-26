@@ -259,7 +259,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-step header p { margin: 5px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; }
 .creator-ai-prompt { display: flex; align-items: center; justify-content: center; }
 .creator-prompt-backdrop { display: none; }
-.creator-ai-prompt-bar { --creator-keyboard-offset: 0px; position: relative; z-index: 2; width: 100%; max-width: none; display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; align-items: start; column-gap: 12px; row-gap: 10px; padding: 18px 20px 14px; border: 0; border-radius: 24px; background: rgb(255 255 255 / 88%); box-shadow: 0 -6px 14px rgb(168 107 255 / 11%), 0 -20px 46px rgb(168 107 255 / 4%), 6px 0 14px rgb(91 212 154 / 9%), 20px 0 46px rgb(91 212 154 / 3%), 0 6px 14px rgb(77 141 255 / 11%), 0 20px 46px rgb(77 141 255 / 4%), -6px 0 14px rgb(80 199 255 / 9%), -20px 0 46px rgb(80 199 255 / 3%); animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite; }
+.creator-ai-prompt-bar { --creator-keyboard-offset: 0px; position: relative; z-index: 2; width: 100%; max-width: none; display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; align-items: start; column-gap: 12px; row-gap: 10px; padding: 18px 20px 14px; border: 1px solid transparent; border-radius: 24px; background: linear-gradient(rgb(255 255 255 / 92%), rgb(255 255 255 / 92%)) padding-box, linear-gradient(115deg, rgb(178 143 255 / 58%), rgb(151 192 255 / 56%) 55%, rgb(255 194 172 / 48%)) border-box; box-shadow: 0 -6px 14px rgb(168 107 255 / 11%), 0 -20px 46px rgb(168 107 255 / 4%), 6px 0 14px rgb(91 212 154 / 9%), 20px 0 46px rgb(91 212 154 / 3%), 0 6px 14px rgb(77 141 255 / 11%), 0 20px 46px rgb(77 141 255 / 4%), -6px 0 14px rgb(80 199 255 / 9%), -20px 0 46px rgb(80 199 255 / 3%); animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite; }
 .creator-ai-prompt-bar.shake { animation: creator-ai-shake .4s ease; }
 .creator-ai-prompt-icon { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin-top: 1px; color: var(--mb-text-tertiary); }
 .creator-ai-prompt-field { position: relative; grid-column: 2; grid-row: 1; min-width: 0; min-height: 24px; display: block; }
@@ -345,7 +345,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-preview-skeleton-row b:last-child { width: min(390px, 58%); height: 9px; }
 @keyframes creator-skeleton { to { background-position-x: -220%; } }
 @keyframes creator-ai-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
-@keyframes creator-prompt-dock-in { from { opacity: .94; } to { opacity: 1; } }
 @keyframes creator-prompt-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes creator-prompt-character-in { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes creator-prompt-character-out { to { opacity: 0; filter: blur(4px); transform: translateY(-3px); } }
@@ -685,7 +684,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .creator-prompt-guide-panel { top: 42px; right: 0; width: min(310px, calc(100vw - 32px)); }
   .creator-ai-prompt-bar { grid-template-columns: 18px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; column-gap: 10px; row-gap: 8px; padding: 16px 14px 12px 16px; }
   .creator-prompt-backdrop { position: fixed; z-index: 999; inset: 0; display: block; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; color: transparent; background: rgb(15 23 42 / 42%); opacity: 0; cursor: default; touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; animation: creator-prompt-backdrop-in 180ms ease-out forwards; }
-  .creator-ai-prompt-bar.is-docked { position: fixed; z-index: 1000; right: max(var(--mb-page-pad-inline), env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom) + max(var(--creator-keyboard-offset), 66px)); left: max(var(--mb-page-pad-inline), env(safe-area-inset-left)); width: auto; max-width: none; will-change: opacity; animation: creator-prompt-dock-in 180ms ease-out both, creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite; }
+  .creator-ai-prompt-bar.is-docked { position: fixed; z-index: 1000; right: max(var(--mb-page-pad-inline), env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom) + max(var(--creator-keyboard-offset), 66px)); left: max(var(--mb-page-pad-inline), env(safe-area-inset-left)); width: auto; max-width: none; will-change: transform, opacity; animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite; }
   .creator-ai-prompt-icon { width: 18px; height: 18px; }
   .creator-ai-prompt-field { min-height: 24px; }
   .creator-prompt-sample { display: block; white-space: nowrap; }

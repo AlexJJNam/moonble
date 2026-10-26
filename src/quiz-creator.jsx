@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
@@ -138,6 +138,8 @@ export function QuizCreator({ custom, onChange }) {
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
+  const promptDockOriginRef = useRef(null);
+  const promptDockAnimationRef = useRef(null);
   const keyboardOffsetFrame = useRef(0);
   const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
@@ -205,6 +207,37 @@ export function QuizCreator({ custom, onChange }) {
     };
   }, [promptFocused]);
 
+  useLayoutEffect(() => {
+    const origin = promptDockOriginRef.current;
+    const bar = promptBarRef.current;
+    promptDockOriginRef.current = null;
+    if (!promptFocused || !origin || !bar || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const destination = bar.getBoundingClientRect();
+    const offsetX = origin.left - destination.left;
+    const offsetY = origin.top - destination.top;
+    if (Math.abs(offsetX) < 1 && Math.abs(offsetY) < 1) return undefined;
+
+    promptDockAnimationRef.current?.cancel();
+    const animation = bar.animate([
+      { transform: `translate3d(${offsetX}px, ${offsetY}px, 0)`, opacity: 0.96 },
+      { transform: 'translate3d(0, 0, 0)', opacity: 1 },
+    ], {
+      duration: 520,
+      easing: 'cubic-bezier(.22, .82, .24, 1)',
+    });
+    promptDockAnimationRef.current = animation;
+    animation.onfinish = () => {
+      if (promptDockAnimationRef.current === animation) promptDockAnimationRef.current = null;
+      animation.cancel();
+    };
+    return () => {
+      animation.onfinish = null;
+      animation.cancel();
+      if (promptDockAnimationRef.current === animation) promptDockAnimationRef.current = null;
+    };
+  }, [promptFocused]);
+
   function shakePrompt() {
     const bar = promptBarRef.current;
     if (!bar) return;
@@ -215,6 +248,11 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function dockPrompt() {
+    if (promptFocused) return;
+    if (window.matchMedia('(max-width: 767px)').matches && promptBarRef.current) {
+      const { left, top } = promptBarRef.current.getBoundingClientRect();
+      promptDockOriginRef.current = { left, top };
+    }
     setPromptFocused(true);
   }
 
