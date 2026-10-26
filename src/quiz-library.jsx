@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AlertTriangle, Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
@@ -21,6 +21,7 @@ import { QuizAchievement } from './quiz-achievement.jsx';
 import { QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
+import { revealPage } from './page-readiness.js';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
@@ -39,10 +40,38 @@ const viewSegments = [
 ];
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
-const quizPageHardReload = (() => {
-  try { return performance.getEntriesByType('navigation')[0]?.type === 'reload'; }
-  catch { return false; }
+const isWorkspaceReturn = (() => {
+  try {
+    const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+    if (!['navigate', 'back_forward'].includes(navigationType) || !document.referrer) return false;
+    const referrer = new URL(document.referrer);
+    return referrer.origin === window.location.origin
+      && ['quiz.html', 'prd.html', 'account.html', 'solve.html'].includes(referrer.pathname.split('/').pop());
+  } catch { return false; }
 })();
+const librarySyncKey = userId => `moonble:user:${userId}:quiz-library-synced-v1`;
+function libraryCacheSignature(collection) {
+  // Active paper selection changes locally on the way to the solver, so only
+  // fingerprint the group and paper data that was actually synchronized.
+  const value = JSON.stringify([collection.groups, collection.banks]);
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) hash = Math.imul(hash ^ value.charCodeAt(index), 16777619);
+  return `${collection.groups.length}:${collection.banks.length}:${hash >>> 0}`;
+}
+function hasSyncedLibraryCache(userId, collection) {
+  if (!isWorkspaceReturn || !userId) return false;
+  try { return sessionStorage.getItem(librarySyncKey(userId)) === libraryCacheSignature(collection); }
+  catch { return false; }
+}
+function markSyncedLibraryCache(userId, collection) {
+  try { sessionStorage.setItem(librarySyncKey(userId), libraryCacheSignature(collection)); }
+  catch { /* Storage restrictions keep the safe loading skeleton on return visits. */ }
+}
+function clearSyncedLibraryCache(userId) {
+  if (!userId) return;
+  try { sessionStorage.removeItem(librarySyncKey(userId)); }
+  catch { /* Readiness remains guarded by the confirmed account and server sync. */ }
+}
 const sampleVisibilityKey = userId => `moonble:user:${userId}:sample-paper-hidden-v1`;
 const sampleIsVisible = userId => {
   try { return !userId || localStorage.getItem(sampleVisibilityKey(userId)) !== 'true'; }
@@ -50,7 +79,6 @@ const sampleIsVisible = userId => {
 };
 if (initialUser) {
   setCustomBankUser(initialUser.id);
-  document.documentElement.removeAttribute('data-auth-pending');
 }
 
 function sectionFromHash() {
@@ -150,7 +178,8 @@ function QuizLibrarySkeleton({ view }) {
 
 function QuizLibrary() {
   const [user, setUser] = useState(initialUser);
-  const [collectionReady, setCollectionReady] = useState(Boolean(initialUser) && !quizPageHardReload);
+  const [collectionReady, setCollectionReady] = useState(() => Boolean(initialUser)
+    && hasSyncedLibraryCache(initialUser.id, getCustomBankCollection(initialUser.id)));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -189,6 +218,13 @@ function QuizLibrary() {
   const bankSyncUserRef = useRef(null);
   const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
+  useLayoutEffect(() => {
+    // The React skeleton has committed, so it can replace the first-paint loader.
+    revealPage();
+  }, []);
+  useLayoutEffect(() => {
+    if (user && collectionReady) document.documentElement.removeAttribute('data-auth-pending');
+  }, [user, collectionReady]);
   useEffect(() => {
     const refresh = () => setPaperAccess(getPaperAccessMap(user?.id));
     window.addEventListener('storage', refresh);
@@ -327,40 +363,66 @@ function QuizLibrary() {
   useEffect(() => {
     if (!supabase) { window.location.replace(loginUrl()); return; }
     let alive = true;
+    let resolvedByAuthEvent = false;
     const accept = session => {
       if (!alive) return;
       if (!session) { window.location.replace(loginUrl()); return; }
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html', location.href)); return; }
+      const previousUserId = bankSyncUserRef.current || initialUser?.id;
+      if (previousUserId && previousUserId !== session.user.id) clearSyncedLibraryCache(previousUserId);
       setCustomBankUser(session.user.id);
-      setCollection(getCustomBankCollection(session.user.id));
+      const cachedCollection = getCustomBankCollection(session.user.id);
+      setCollection(cachedCollection);
       setPaperAccess(getPaperAccessMap(session.user.id));
       setSampleVisible(sampleIsVisible(session.user.id));
       setUser(session.user);
-      if (!initialUser || initialUser.id !== session.user.id) setCollectionReady(false);
-      document.documentElement.removeAttribute('data-auth-pending');
       if (bankSyncUserRef.current !== session.user.id) {
+        setCollectionReady(hasSyncedLibraryCache(session.user.id, cachedCollection));
         bankSyncUserRef.current = session.user.id;
         syncCustomBankCollection(session.user.id).then(result => {
-          if (!alive) return;
+          if (!alive || bankSyncUserRef.current !== session.user.id) return;
           setCollection(result.collection);
+          if (result.synced) markSyncedLibraryCache(session.user.id, result.collection);
           setCollectionReady(true);
           if (result.migrated > 0) setNotice(`${result.migrated}개 문제지를 계정에 저장했어요.`);
         }).catch(() => {
-          if (alive) {
+          if (alive && bankSyncUserRef.current === session.user.id) {
+            // A remote read may already have merged into storage before a later
+            // upload fails. Reveal that latest available snapshot, not the old one.
+            setCollection(getCustomBankCollection(session.user.id));
             setCollectionReady(true);
             setNotice('문제지는 이 기기에 남아 있어요. 서버 연결을 확인하면 다시 동기화합니다.');
           }
         });
       }
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) accept(session);
-      else if (event === 'SIGNED_OUT') window.location.replace(loginUrl());
-    });
-    getSessionSafely().then(({ session, error }) => {
-      if (!alive) return;
+    const resolveSession = ({ session, error }) => {
+      if (!alive || resolvedByAuthEvent) return;
       if (error || !session) { window.location.replace(loginUrl()); return; }
       accept(session);
+    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!alive) return;
+      if (session) {
+        resolvedByAuthEvent = true;
+        accept(session);
+      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+        resolvedByAuthEvent = true;
+        clearSyncedLibraryCache(bankSyncUserRef.current || initialUser?.id);
+        window.location.replace(loginUrl());
+      }
+    });
+    getSessionSafely().then(({ session, error, timedOut }) => {
+      if (!alive || resolvedByAuthEvent) return;
+      if (timedOut) {
+        // A timeout says nothing about sign-in state. Keep the skeleton until
+        // the SDK finishes; cached papers must not become the loading fallback.
+        supabase.auth.getSession().then(({ data, error: sessionError }) => {
+          resolveSession({ session: data.session, error: sessionError });
+        }).catch(sessionError => resolveSession({ session: null, error: sessionError }));
+        return;
+      }
+      resolveSession({ session, error });
     });
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
@@ -696,7 +758,7 @@ function QuizLibrary() {
     event.stopPropagation();
     setFavoritePaperIds(toggleFavoritePaper(user.id, paper.id));
   }
-  if (!user || !collectionReady) return quizPageHardReload ? <QuizLibrarySkeleton view={view} /> : null;
+  if (!user || !collectionReady) return <QuizLibrarySkeleton view={view} />;
   const customPapers = collection.banks.filter(bank => bank.id !== undoablePaperDelete?.bankId).map(bank => ({
     id: `custom:${bank.id}`,
     customBankId: bank.id,
@@ -737,7 +799,7 @@ function QuizLibrary() {
     ...orderedGroupIds.map(id => collection.groups.find(group => group.id === id)).filter(Boolean).map(group => ({ ...group, count: customPapers.filter(bank => bank.groupId === group.id).length })),
   ];
   const groupColors = buildGroupColorMap(collection.groups);
-  return <div className="quiz-page" onClick={() => openMenu && setOpenMenu(null)}>
+  return <div className="quiz-page is-initial-reveal" onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">

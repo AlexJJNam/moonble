@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Dialog from '@radix-ui/react-dialog';
 import { BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, FileText, Link, MousePointer2, Plus, Upload, X } from 'lucide-react';
@@ -6,10 +6,12 @@ import { hasProfile } from './profile.js';
 import { cachedAuthSession, getSessionSafely, supabase } from './supabase.js';
 import { SiteFooter } from './site-footer.jsx';
 import { BrandLogo } from './brand-logo.jsx';
+import { revealPage } from './page-readiness.js';
 import './design-system.css';
 import './landing.css';
 
 function moveTo(path) {
+  document.documentElement.setAttribute('data-page-pending', '');
   window.location.replace(new URL(path, window.location.href));
 }
 
@@ -802,29 +804,9 @@ function Landing() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!supabase) {
-      document.documentElement.removeAttribute('data-auth-pending');
-      return undefined;
-    }
-    let alive = true;
-    let moving = false;
-
-    function accept(session) {
-      if (!alive || moving) return;
-      if (!session) return;
-      moving = true;
-      moveTo(hasProfile(session.user) ? './quiz.html' : './prd.html#/register-name');
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => accept(session));
-    getSessionSafely().then(({ session }) => {
-      if (!alive || moving) return;
-      if (session) accept(session);
-      else document.documentElement.removeAttribute('data-auth-pending');
-    });
-
-    return () => { alive = false; subscription.unsubscribe(); };
+  useLayoutEffect(() => {
+    document.documentElement.removeAttribute('data-auth-pending');
+    revealPage();
   }, []);
 
   return <>
@@ -867,6 +849,66 @@ function Landing() {
   </>;
 }
 
+function Entry() {
+  const [status, setStatus] = useState(supabase ? 'checking' : 'anonymous');
+
+  useLayoutEffect(() => {
+    if (status === 'unavailable') revealPage();
+  }, [status]);
+
+  useEffect(() => {
+    if (!supabase) return undefined;
+    let alive = true;
+    let moving = false;
+    let resolved = false;
+
+    const showConnectionError = () => {
+      if (alive && !moving && !resolved) setStatus('unavailable');
+    };
+    const deadline = window.setTimeout(showConnectionError, 12000);
+    const accept = session => {
+      if (!alive || moving) return;
+      resolved = true;
+      window.clearTimeout(deadline);
+      if (session) {
+        moving = true;
+        moveTo(hasProfile(session.user) ? './quiz.html' : './prd.html#/register-name');
+      } else {
+        setStatus('anonymous');
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session || event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') accept(session);
+    });
+    getSessionSafely().then(({ session, error, timedOut }) => {
+      if (!alive || moving || resolved) return;
+      if (timedOut) {
+        // A timeout is still an unknown login state. Wait for the SDK rather than showing the landing page.
+        supabase.auth.getSession().then(({ data, error: authError }) => {
+          if (!alive || moving || resolved) return;
+          if (authError) showConnectionError();
+          else accept(data.session);
+        }).catch(showConnectionError);
+      } else if (error) {
+        showConnectionError();
+      } else {
+        accept(session);
+      }
+    }).catch(showConnectionError);
+
+    return () => {
+      alive = false;
+      window.clearTimeout(deadline);
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (status === 'anonymous') return <Landing />;
+  if (status === 'unavailable') return <main className="entry-load-state" role="alert"><p>연결을 확인하지 못했어요.</p><button type="button" onClick={() => window.location.reload()}>다시 시도</button></main>;
+  return null;
+}
+
 const initialSession = cachedAuthSession();
 if (initialSession) moveTo(hasProfile(initialSession.user) ? './quiz.html' : './prd.html#/register-name');
-else createRoot(document.getElementById('root')).render(<Landing />);
+else createRoot(document.getElementById('root')).render(<Entry />);

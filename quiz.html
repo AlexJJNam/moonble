@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko" data-auth-pending>
+<html lang="ko" data-auth-pending data-page-pending>
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -29,7 +29,15 @@
     <meta property="og:image:alt" content="흰색 배경의 파란색 Moonble 로고" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://moonble.com/assets/moonble-open-graph.png" />
+    <style>
+      html[data-page-pending] #root { visibility: hidden; }
+      #moonble-page-loader { position: fixed; inset: 0; z-index: 99999; display: grid; place-items: center; background: #fff; }
+      html:not([data-page-pending]) #moonble-page-loader { display: none; }
+      .moonble-page-loader-spinner { box-sizing: border-box; width: 28px; height: 28px; border: 3px solid #e7f0ff; border-top-color: #3182f6; border-radius: 50%; animation: moonble-page-loader-spin .75s linear infinite; }
+      @keyframes moonble-page-loader-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .moonble-page-loader-spinner { animation: none; } }
+    </style>
   </head>
-  <body><div id="root"></div><script type="module" src="/src/quiz-library.jsx"></script>  <script type="module" src="/src/pwa-register.js"></script>
+  <body><div id="moonble-page-loader" role="status" aria-label="문제지 여는 중" aria-busy="true"><span class="moonble-page-loader-spinner" aria-hidden="true"></span></div><div id="root"></div><script type="module" src="/src/quiz-library.jsx"></script>  <script type="module" src="/src/pwa-register.js"></script>
 </body>
 </html>
