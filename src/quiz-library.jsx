@@ -187,6 +187,7 @@ function QuizLibrary() {
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperAccessMap(initialUser?.id));
+  const [paperAccessOrder, setPaperAccessOrder] = useState({});
   const [favoritePaperIds, setFavoritePaperIds] = useState(() => getFavoritePaperIds(initialUser?.id));
   const [activeGroup, setActiveGroup] = useState('all');
   const [openMenu, setOpenMenu] = useState(null);
@@ -236,6 +237,13 @@ function QuizLibrary() {
       window.removeEventListener('moonble:paper-access', refresh);
     };
   }, [user?.id]);
+  useEffect(() => {
+    if (!user || !collectionReady) return undefined;
+    // Paint the list in its stable saved order first; apply recent-activity
+    // ordering only after the page has had time to render.
+    const timer = window.setTimeout(() => setPaperAccessOrder(paperAccess), 300);
+    return () => window.clearTimeout(timer);
+  }, [user?.id, collectionReady, paperAccess]);
   useEffect(() => {
     const refresh = event => {
       if (event?.detail?.userId && event.detail.userId !== user?.id) return;
@@ -370,6 +378,7 @@ function QuizLibrary() {
       if (!hasProfile(session.user)) { window.location.replace(new URL('./prd.html', location.href)); return; }
       const previousUserId = bankSyncUserRef.current || initialUser?.id;
       if (previousUserId && previousUserId !== session.user.id) clearSyncedLibraryCache(previousUserId);
+      if (previousUserId !== session.user.id) setPaperAccessOrder({});
       setCustomBankUser(session.user.id);
       const cachedCollection = getCustomBankCollection(session.user.id);
       setCollection(cachedCollection);
@@ -783,8 +792,10 @@ function QuizLibrary() {
     const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
     return groupMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
-    const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
-    const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
+    const aLastOpenedAt = paperAccessOrder[a.id] || null;
+    const bLastOpenedAt = paperAccessOrder[b.id] || null;
+    const aOpened = aLastOpenedAt ? new Date(aLastOpenedAt).getTime() : 0;
+    const bOpened = bLastOpenedAt ? new Date(bLastOpenedAt).getTime() : 0;
     if (aOpened || bOpened) {
       if (!aOpened) return 1;
       if (!bOpened) return -1;
