@@ -51,8 +51,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-main .quiz-title p { margin-top: 3px; font-size: var(--mb-font-13); line-height: 20px; }
 .quiz-library-main .quiz-create-button { min-height: 40px; padding: 9px 14px; border-radius: 10px; font-size: var(--mb-font-13); }
 .quiz-library-main .quiz-create-button svg { width: 16px; height: 16px; }
-.paper-edit-done { width: auto; min-width: 56px; height: 28px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px 0 8px; border: 0; border-radius: 5px 0 0 5px; clip-path: polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%); color: #55730d; background: #edf6d5; font-size: var(--mb-font-12); line-height: 18px; font-weight: 700; transition: color var(--mb-duration), background-color var(--mb-duration), transform var(--mb-duration); }
-.paper-edit-done:hover { color: #3f5c00; background: #e2f0bd; transform: translateY(-1px); }
+.paper-edit-done { position: absolute; z-index: 5; left: 50%; bottom: 8px; min-width: 84px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 18px; border: 0; border-radius: 9px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-13); line-height: 20px; font-weight: 650; transform: translateX(-50%); transition: background-color var(--mb-duration), transform var(--mb-duration); }
+.paper-edit-done:hover { color: #fff; background: var(--mb-primary); transform: translate(-50%, -1px); }
 .paper-group-bar { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
 .paper-group-tabs { min-width: 0; display: flex; flex: 1 1 auto; align-items: center; gap: 4px; overflow-x: auto; padding: 2px; scrollbar-width: none; }
 .paper-group-tabs::-webkit-scrollbar { display: none; }
@@ -750,3 +750,4 @@ button:disabled { cursor: wait; opacity: .6; }
 }
 @media (prefers-reduced-motion: reduce) { .quiz-page.is-initial-reveal > .quiz-content, .quiz-skeleton-line, .quiz-skeleton-button, .quiz-skeleton-tabs i, .quiz-skeleton-tools span, .quiz-library-skeleton-preview, .quiz-library-skeleton-copy b, .quiz-library-skeleton-copy span, .quiz-library-skeleton-copy small, .mb-profile-skeleton-avatar, .mb-profile-skeleton-copy i, .mb-profile-skeleton-settings { animation: none; } }
 .paper-info h2, .preview-sheet-title { overflow-wrap: anywhere; }
+.paper-card.is-editing .paper-info { padding-bottom: 48px; }
