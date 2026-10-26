@@ -637,8 +637,10 @@ function QuizLibrary() {
         startY: event.clientY,
         x: event.clientX,
         y: event.clientY,
+        lastY: event.clientY,
         source,
         active: false,
+        scrolling: false,
         targetGroupId: null,
       };
       paperPressTimer.current = window.setTimeout(() => {
@@ -708,7 +710,20 @@ function QuizLibrary() {
       if (!drag.active) {
         if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 10) {
           window.clearTimeout(paperPressTimer.current);
-          paperTouchDrag.current = null;
+          // Editing cards disable native touch scrolling so a held card can be
+          // dragged into a group. Before the long-press activates, keep normal
+          // vertical swipes working by scrolling the document ourselves.
+          drag.scrolling = true;
+          setPressedBankId(null);
+        }
+        if (drag.scrolling) {
+          const scrollDelta = drag.lastY - event.clientY;
+          drag.lastY = event.clientY;
+          if (scrollDelta) {
+            event.preventDefault();
+            const scrollRoot = document.scrollingElement || document.documentElement;
+            scrollRoot.scrollTop += scrollDelta;
+          }
         }
         return;
       }
