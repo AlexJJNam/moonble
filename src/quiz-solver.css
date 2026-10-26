@@ -134,36 +134,25 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-ink-size-control input { width: 100%; min-width: 0; height: 20px; margin: 0; accent-color: #3182f6; cursor: pointer; }
 .quiz-ink-size-control output { color: #4c5868; font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; text-align: right; }
 .quiz-ink-size-control input:focus-visible { outline: 2px solid #9bc7ff; outline-offset: 2px; border-radius: 99px; }
-.quiz-memo-overlay { position: fixed; z-index: 1300; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.quiz-memo-overlay { position: fixed; z-index: 1300; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 0 20px 20px; }
 .quiz-memo-overlay[hidden] { display: none !important; }
 .quiz-memo-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgb(17 24 39 / 36%); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: quiz-memo-backdrop-in 180ms ease both; }
 .quiz-memo-overlay.is-closing .quiz-memo-backdrop { animation: quiz-memo-backdrop-out 200ms ease both; }
-.quiz-memo-sheet { position: relative; width: min(480px, 100%); max-height: min(78dvh, 680px); overflow-y: auto; padding: 22px; border: 1px solid rgb(255 255 255 / 62%); border-radius: 24px; color: var(--mb-text-primary); background: rgb(255 255 255 / 82%); -webkit-backdrop-filter: blur(26px) saturate(155%); backdrop-filter: blur(26px) saturate(155%); box-shadow: 0 24px 80px rgb(15 23 42 / 20%); animation: quiz-memo-sheet-in 280ms cubic-bezier(.2,.82,.24,1) both; }
+.quiz-memo-sheet { position: relative; width: min(720px, 100%); height: min(52dvh, 520px); min-height: 320px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; padding: 18px; border: 1px solid var(--mb-border); border-radius: 20px; color: var(--mb-text-primary); background: #fff; box-shadow: 0 18px 60px rgb(15 23 42 / 18%); animation: quiz-memo-sheet-in 300ms cubic-bezier(.22,.9,.25,1) both; }
 .quiz-memo-overlay.is-closing .quiz-memo-sheet { animation: quiz-memo-sheet-out 220ms cubic-bezier(.4,0,1,1) both; }
-.quiz-memo-sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.quiz-memo-sheet-header > div > span { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
-.quiz-memo-sheet-header h2 { margin: 2px 0 0; font-size: var(--mb-font-20, 20px); line-height: 28px; font-weight: 700; }
-.quiz-memo-sheet-header button { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: rgb(255 255 255 / 66%); }
-.quiz-memo-sheet-header button svg { width: 19px; height: 19px; }
-.quiz-memo-description { margin: 8px 0 18px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; }
-.quiz-memo-compose { display: grid; gap: 7px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 19px; font-weight: 600; }
-.quiz-memo-compose textarea { width: 100%; min-height: 100px; resize: vertical; box-sizing: border-box; padding: 12px; border: 1px solid rgb(132 146 166 / 28%); border-radius: 12px; color: var(--mb-text-primary); background: rgb(255 255 255 / 74%); font: inherit; font-weight: 400; line-height: 22px; }
-.quiz-memo-compose textarea:focus { outline: 2px solid rgb(49 130 246 / 30%); border-color: rgb(49 130 246 / 48%); }
-.quiz-memo-pin { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 0 14px; border: 0; border-radius: 11px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-14); line-height: 20px; font-weight: 650; }
-.quiz-memo-pin:disabled { color: var(--mb-text-tertiary); background: #e9edf2; }
-.quiz-memo-pin svg { width: 17px; height: 17px; }
-.quiz-memo-pinned { margin-top: 22px; }
-.quiz-memo-pinned h3 { margin: 0 0 8px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: 650; }
-.quiz-memo-list { display: grid; gap: 7px; }
-.quiz-memo-empty { margin: 0; padding: 14px; border-radius: 12px; color: var(--mb-text-tertiary); background: rgb(255 255 255 / 50%); font-size: var(--mb-font-13); line-height: 20px; }
-.quiz-memo-list-item { min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid rgb(132 146 166 / 16%); border-radius: 11px; background: rgb(255 248 216 / 76%); }
-.quiz-memo-list-item p { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: var(--mb-font-13); line-height: 20px; white-space: pre-wrap; }
-.quiz-memo-remove { width: 26px; height: 26px; flex: 0 0 26px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: rgb(255 255 255 / 58%); }
-.quiz-memo-remove svg { width: 15px; height: 15px; }
+.quiz-memo-sheet-header { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.quiz-memo-sheet-header h2 { margin: 0; font-size: var(--mb-font-18, 18px); line-height: 26px; font-weight: 700; }
+.quiz-memo-sheet-actions { display: flex; align-items: center; gap: 8px; }
+.quiz-memo-sheet-header button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: #f2f4f6; }
+.quiz-memo-sheet-header .quiz-memo-save { color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-13); line-height: 19px; font-weight: 650; }
+.quiz-memo-sheet-header .quiz-memo-save:disabled { color: var(--mb-text-tertiary); background: #e9edf2; }
+.quiz-memo-sheet-header .quiz-memo-close { width: 36px; flex: 0 0 36px; padding: 0; border-radius: 50%; }
+.quiz-memo-sheet-header button svg { width: 18px; height: 18px; }
+.quiz-memo-canvas { width: 100%; min-height: 0; flex: 1 1 auto; display: block; margin-top: 12px; border: 1px solid #e7eaef; border-radius: 12px; background: #fff; cursor: crosshair; touch-action: none; outline: none; }
 @keyframes quiz-memo-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes quiz-memo-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
-@keyframes quiz-memo-sheet-in { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes quiz-memo-sheet-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(12px) scale(.99); } }
+@keyframes quiz-memo-sheet-in { from { opacity: .9; transform: translateY(34px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes quiz-memo-sheet-out { from { opacity: 1; transform: translateY(0); } to { opacity: .9; transform: translateY(34px); } }
 body.quiz-pen-ui-hidden .mb-app-header,
 body.quiz-pen-ui-hidden .quiz-ink-history-toolbar,
 body.quiz-pen-ui-hidden .quiz-ink-control-row > :not(.quiz-ink-ui-visibility),
@@ -198,9 +187,8 @@ body.quiz-pen-ui-hidden .quiz-ink-ui-visibility { opacity: 1 !important; pointer
   .quiz-memo-overlay { align-items: flex-end; padding: 0; }
   .quiz-memo-backdrop { background: rgb(17 24 39 / 32%); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
   .quiz-memo-overlay.is-closing .quiz-memo-backdrop { animation-duration: 300ms; }
-  .quiz-memo-sheet { width: 100%; max-height: min(84dvh, 740px); box-sizing: border-box; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); border: 1px solid rgb(255 255 255 / 72%); border-bottom: 0; border-radius: 24px 24px 0 0; background: rgb(255 255 255 / 78%); animation: quiz-memo-sheet-rise 380ms cubic-bezier(.22,.9,.25,1) both; }
+  .quiz-memo-sheet { width: 100%; height: min(56dvh, 560px); min-height: 300px; max-height: 72dvh; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); border: 1px solid #e7eaef; border-bottom: 0; border-radius: 22px 22px 0 0; background: #fff; animation: quiz-memo-sheet-rise 380ms cubic-bezier(.22,.9,.25,1) both; }
   .quiz-memo-overlay.is-closing .quiz-memo-sheet { animation: quiz-memo-sheet-fall 320ms cubic-bezier(.4,0,1,1) both; }
-  .quiz-memo-compose textarea { min-height: 112px; }
   @keyframes quiz-memo-sheet-rise { from { opacity: .86; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes quiz-memo-sheet-fall { from { opacity: 1; transform: translateY(0); } to { opacity: .88; transform: translateY(40px); } }
 }

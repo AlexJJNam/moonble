@@ -17,7 +17,7 @@ export function readQuizMemos(paperOrKey) {
   try {
     const value = JSON.parse(sessionStorage.getItem(storageKey(paperOrKey)) || '[]');
     return Array.isArray(value)
-      ? value.filter(item => item && typeof item.id === 'string' && typeof item.text === 'string').slice(-QUIZ_MEMO_LIMIT)
+      ? value.filter(item => item && typeof item.id === 'string' && (typeof item.text === 'string' || typeof item.imageData === 'string')).slice(-QUIZ_MEMO_LIMIT)
       : [];
   } catch { return []; }
 }
@@ -35,6 +35,13 @@ export function addQuizMemo(paper, text) {
   if (!value) return readQuizMemos(paper);
   const id = globalThis.crypto?.randomUUID?.() || `memo-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const memo = { id, text: value, createdAt: Date.now() };
+  return publishQuizMemos(paper, [...readQuizMemos(paper), memo].slice(-QUIZ_MEMO_LIMIT));
+}
+
+export function addQuizMemoImage(paper, imageData) {
+  if (typeof imageData !== 'string' || !imageData.startsWith('data:image/')) return readQuizMemos(paper);
+  const id = globalThis.crypto?.randomUUID?.() || `memo-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const memo = { id, imageData, createdAt: Date.now() };
   return publishQuizMemos(paper, [...readQuizMemos(paper), memo].slice(-QUIZ_MEMO_LIMIT));
 }
 

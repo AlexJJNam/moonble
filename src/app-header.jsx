@@ -743,14 +743,6 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           </div>}
           <strong>{solverHeading}</strong>
         </div>
-        {solverMemos.length > 0 && <div className="mb-solver-memos" role="group" aria-label="문항 목록에 붙인 메모">
-          {solverMemos.map(memo => <article className="mb-solver-memo" key={memo.id}>
-            <p>{memo.text}</p>
-            <button type="button" aria-label="메모 제거" title="메모 제거" onClick={() => removeQuizMemo(solverPaper, memo.id)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>
-            </button>
-          </article>)}
-        </div>}
         <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => {
             const distance = Math.abs(index - questions.activeIndex);
@@ -771,6 +763,16 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
             );
           })}
         </div>
+        {solverMemos.length > 0 && <div className="mb-solver-memos" role="group" aria-label="문항 목록 아래 손글씨 메모">
+          {solverMemos.map((memo, index) => <article className="mb-solver-memo" key={memo.id}>
+            {memo.imageData
+              ? <img src={memo.imageData} alt={`손글씨 메모 ${index + 1}`} />
+              : <p>{memo.text}</p>}
+            <button type="button" aria-label="메모 제거" title="메모 제거" onClick={() => removeQuizMemo(solverPaper, memo.id)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>
+            </button>
+          </article>)}
+        </div>}
       </nav> : <nav className="mb-app-nav" aria-label="주 메뉴" ref={mobileDockRef}>
           <a href="./quiz.html#paper-library" aria-current={active === 'papers' ? 'page' : undefined}><BookOpen size={18} aria-hidden="true" /><span>문제지</span></a>
           <a href="./quiz.html#create" aria-current={active === 'create' ? 'page' : undefined}><Sparkles size={18} aria-hidden="true" /><span>문제 생성하기</span></a>

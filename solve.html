@@ -6128,26 +6128,17 @@ if (shareToken || requestedPaper === 'shared') {
   </div>
   <div id="quizMemoOverlay" class="quiz-memo-overlay" hidden>
     <button id="quizMemoBackdrop" class="quiz-memo-backdrop" type="button" aria-label="메모 창 닫기"></button>
-    <section class="quiz-memo-sheet" role="dialog" aria-modal="true" aria-labelledby="quizMemoTitle" aria-describedby="quizMemoDescription">
+    <section class="quiz-memo-sheet" role="dialog" aria-modal="true" aria-labelledby="quizMemoTitle">
       <header class="quiz-memo-sheet-header">
-        <div><span>풀이 중 메모</span><h2 id="quizMemoTitle">메모 캔버스</h2></div>
-        <button id="quizMemoClose" type="button" aria-label="메모 캔버스 닫기" title="닫기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
-        </button>
+        <h2 id="quizMemoTitle">손글씨 메모</h2>
+        <div class="quiz-memo-sheet-actions">
+          <button id="quizMemoSave" class="quiz-memo-save" type="button" disabled>메모 저장</button>
+          <button id="quizMemoClose" class="quiz-memo-close" type="button" aria-label="메모 캔버스 닫기" title="닫기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+          </button>
+        </div>
       </header>
-      <p id="quizMemoDescription" class="quiz-memo-description">떠오른 내용을 적고 메모를 붙이면 문항 목록 위에서 계속 볼 수 있어요.</p>
-      <label class="quiz-memo-compose" for="quizMemoInput">
-        <span>메모</span>
-        <textarea id="quizMemoInput" rows="3" maxlength="500" placeholder="기억할 내용을 적어보세요."></textarea>
-      </label>
-      <button id="quizMemoPin" class="quiz-memo-pin" type="button" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-4 4-1 5-2-2-5 5-2-2 5-5-2-2 5-1 4-4z"/></svg>
-        <span>문항 목록에 붙이기</span>
-      </button>
-      <section class="quiz-memo-pinned" aria-labelledby="quizMemoPinnedTitle">
-        <h3 id="quizMemoPinnedTitle">붙인 메모</h3>
-        <div id="quizMemoList" class="quiz-memo-list"></div>
-      </section>
+      <canvas id="quizMemoCanvas" class="quiz-memo-canvas" tabindex="0" aria-label="손글씨 메모를 작성하는 빈 흰색 종이"></canvas>
     </section>
   </div>
   <div id="quizPenToast" class="quiz-pen-toast" role="status" aria-live="polite" aria-atomic="true" hidden>두 손가락으로 위아래로 밀어 화면을 스크롤할 수 있어요.</div>
@@ -6244,7 +6235,7 @@ if (shareToken || requestedPaper === 'shared') {
   <script type="module">
     import { getStroke } from 'perfect-freehand';
     import { GROUP_COLOR_OPTIONS } from './src/paper-group-colors.js';
-    import { addQuizMemo, quizMemoPaperKey, readQuizMemos, removeQuizMemo } from './src/quiz-memos.js';
+    import { addQuizMemoImage } from './src/quiz-memos.js';
 
     (() => {
       const canvas = document.getElementById('quizInkCanvas');
@@ -6264,9 +6255,8 @@ if (shareToken || requestedPaper === 'shared') {
       const uiVisibilityButton = document.getElementById('quizInkUiVisibility');
       const memoToggle = document.getElementById('quizMemoToggle');
       const memoOverlay = document.getElementById('quizMemoOverlay');
-      const memoInput = document.getElementById('quizMemoInput');
-      const memoPinButton = document.getElementById('quizMemoPin');
-      const memoList = document.getElementById('quizMemoList');
+      const memoCanvas = document.getElementById('quizMemoCanvas');
+      const memoSaveButton = document.getElementById('quizMemoSave');
       const inkColors = document.getElementById('quizInkColors');
       const inkSizeInput = document.getElementById('quizInkSize');
       const inkSizeValue = document.getElementById('quizInkSizeValue');
@@ -6282,6 +6272,7 @@ if (shareToken || requestedPaper === 'shared') {
       if (!canvas || !toolbar || !exitButton || !quiz) return;
 
       const context = canvas.getContext('2d');
+      const memoContext = memoCanvas?.getContext('2d');
       const completedLayer = document.createElement('canvas');
       const completedContext = completedLayer.getContext('2d');
       const useTouchPointerEvents = 'PointerEvent' in window;
@@ -6295,6 +6286,10 @@ if (shareToken || requestedPaper === 'shared') {
       let pendingCheckboxPress = null;
       let quizUiHidden = false;
       let memoSheetCloseTimer = 0;
+      let memoCanvasStrokes = [];
+      let memoActiveStroke = null;
+      let memoDrawingPointerId = null;
+      let memoRenderFrame = 0;
       let activePointerScrollY = null;
       let penGestureScrollTargetY = null;
       let penGestureScrollFrame = 0;
@@ -6338,32 +6333,103 @@ if (shareToken || requestedPaper === 'shared') {
         return window.moonbleSolverPaper || { title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '' };
       }
 
-      function renderMemoList(memos = readQuizMemos(currentMemoPaper())) {
-        if (!memoList) return;
-        memoList.replaceChildren();
-        if (!memos.length) {
-          const empty = document.createElement('p');
-          empty.className = 'quiz-memo-empty';
-          empty.textContent = '아직 붙여 둔 메모가 없어요.';
-          memoList.appendChild(empty);
+      function paintMemoStroke(stroke, width, height) {
+        if (!memoContext || !stroke.points.length) return;
+        const points = stroke.points.map(point => [point.x * width, point.y * height, point.pressure]);
+        if (points.length === 1) {
+          memoContext.beginPath();
+          memoContext.fillStyle = '#3182f6';
+          memoContext.arc(points[0][0], points[0][1], 1.7, 0, Math.PI * 2);
+          memoContext.fill();
           return;
         }
-        memos.forEach(memo => {
-          const item = document.createElement('article');
-          item.className = 'quiz-memo-list-item';
-          const text = document.createElement('p');
-          text.textContent = memo.text;
-          const remove = document.createElement('button');
-          remove.type = 'button';
-          remove.className = 'quiz-memo-remove';
-          remove.setAttribute('aria-label', '메모 삭제');
-          remove.title = '메모 삭제';
-          remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>';
-          remove.addEventListener('click', () => renderMemoList(removeQuizMemo(currentMemoPaper(), memo.id)));
-          item.append(text, remove);
-          memoList.appendChild(item);
+        const outline = getStroke(points, {
+          size: 3.4,
+          thinning: 0.2,
+          smoothing: 0.65,
+          streamline: 0.45,
+          simulatePressure: stroke.pointerType === 'mouse',
+          start: { cap: true },
+          end: { cap: true },
+          last: true,
+        });
+        if (!outline || outline.length < 3) return;
+        const first = outline[0];
+        const last = outline[outline.length - 1];
+        memoContext.beginPath();
+        memoContext.moveTo((last[0] + first[0]) / 2, (last[1] + first[1]) / 2);
+        for (let index = 0; index < outline.length; index += 1) {
+          const point = outline[index];
+          const next = outline[(index + 1) % outline.length];
+          memoContext.quadraticCurveTo(point[0], point[1], (point[0] + next[0]) / 2, (point[1] + next[1]) / 2);
+        }
+        memoContext.closePath();
+        memoContext.fillStyle = '#3182f6';
+        memoContext.fill();
+      }
+
+      function redrawMemoCanvas() {
+        if (!memoCanvas || !memoContext) return;
+        const rect = memoCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const ratio = Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
+        const width = Math.round(rect.width * ratio);
+        const height = Math.round(rect.height * ratio);
+        if (memoCanvas.width !== width || memoCanvas.height !== height) {
+          memoCanvas.width = width;
+          memoCanvas.height = height;
+        }
+        memoContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+        memoContext.clearRect(0, 0, rect.width, rect.height);
+        memoContext.fillStyle = '#fff';
+        memoContext.fillRect(0, 0, rect.width, rect.height);
+        memoCanvasStrokes.forEach(stroke => paintMemoStroke(stroke, rect.width, rect.height));
+        if (memoSaveButton) memoSaveButton.disabled = memoCanvasStrokes.length === 0;
+      }
+
+      function scheduleMemoCanvasRedraw() {
+        if (memoRenderFrame) return;
+        memoRenderFrame = window.requestAnimationFrame(() => {
+          memoRenderFrame = 0;
+          redrawMemoCanvas();
         });
       }
+
+      function memoPointerPoint(event) {
+        const rect = memoCanvas.getBoundingClientRect();
+        return {
+          x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+          y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)),
+          pressure: Number.isFinite(event.pressure) && event.pressure > 0 ? event.pressure : 0.5,
+        };
+      }
+
+      memoCanvas?.addEventListener('pointerdown', event => {
+        if (memoDrawingPointerId !== null || event.button > 0) return;
+        event.preventDefault();
+        memoDrawingPointerId = event.pointerId;
+        memoCanvas.setPointerCapture?.(event.pointerId);
+        memoActiveStroke = { pointerType: event.pointerType, points: [memoPointerPoint(event)] };
+        memoCanvasStrokes.push(memoActiveStroke);
+        scheduleMemoCanvasRedraw();
+      });
+      memoCanvas?.addEventListener('pointermove', event => {
+        if (event.pointerId !== memoDrawingPointerId || !memoActiveStroke) return;
+        event.preventDefault();
+        const samples = event.getCoalescedEvents?.() || [event];
+        samples.forEach(sample => memoActiveStroke.points.push(memoPointerPoint(sample)));
+        scheduleMemoCanvasRedraw();
+      });
+      const finishMemoStroke = event => {
+        if (event.pointerId !== memoDrawingPointerId || !memoActiveStroke) return;
+        event.preventDefault();
+        memoActiveStroke.points.push(memoPointerPoint(event));
+        memoDrawingPointerId = null;
+        memoActiveStroke = null;
+        scheduleMemoCanvasRedraw();
+      };
+      memoCanvas?.addEventListener('pointerup', finishMemoStroke);
+      memoCanvas?.addEventListener('pointercancel', finishMemoStroke);
 
       function setMemoSheetOpen(open, returnFocus = true) {
         if (!memoOverlay) return;
@@ -6392,8 +6458,10 @@ if (shareToken || requestedPaper === 'shared') {
         memoToggle?.setAttribute('aria-expanded', String(open));
         memoToggle?.setAttribute('aria-label', open ? '메모 캔버스 닫기' : '메모 캔버스 열기');
         if (open) {
-          renderMemoList();
-          window.requestAnimationFrame(() => memoInput?.focus({ preventScroll: true }));
+          window.requestAnimationFrame(() => {
+            redrawMemoCanvas();
+            memoCanvas?.focus({ preventScroll: true });
+          });
         }
       }
 
@@ -6425,20 +6493,21 @@ if (shareToken || requestedPaper === 'shared') {
       memoToggle?.addEventListener('click', () => setMemoSheetOpen(memoOverlay.hidden));
       document.getElementById('quizMemoClose')?.addEventListener('click', () => setMemoSheetOpen(false));
       document.getElementById('quizMemoBackdrop')?.addEventListener('click', () => setMemoSheetOpen(false));
-      memoInput?.addEventListener('input', () => { if (memoPinButton) memoPinButton.disabled = !memoInput.value.trim(); });
-      memoPinButton?.addEventListener('click', () => {
-        const memo = memoInput?.value.trim();
-        if (!memo) return;
-        const memos = addQuizMemo(currentMemoPaper(), memo);
-        memoInput.value = '';
-        memoPinButton.disabled = true;
-        renderMemoList(memos);
-        showPenToast('메모를 문항 목록 위에 붙였어요.');
-        memoInput.focus({ preventScroll: true });
+      memoSaveButton?.addEventListener('click', () => {
+        if (!memoCanvas || memoCanvasStrokes.length === 0) return;
+        const bounds = memoCanvas.getBoundingClientRect();
+        const output = document.createElement('canvas');
+        const scale = Math.min(1, 1000 / Math.max(1, bounds.width), 600 / Math.max(1, bounds.height));
+        output.width = Math.max(1, Math.round(bounds.width * scale));
+        output.height = Math.max(1, Math.round(bounds.height * scale));
+        output.getContext('2d')?.drawImage(memoCanvas, 0, 0, output.width, output.height);
+        addQuizMemoImage(currentMemoPaper(), output.toDataURL('image/png'));
+        memoCanvasStrokes = [];
+        redrawMemoCanvas();
+        setMemoSheetOpen(false);
+        showPenToast('손글씨 메모를 저장했어요.');
       });
-      window.addEventListener('moonble:quiz-memos-change', event => {
-        if (!memoOverlay?.hidden && event.detail?.paperKey === quizMemoPaperKey(currentMemoPaper())) renderMemoList(event.detail.memos);
-      });
+      window.addEventListener('resize', scheduleMemoCanvasRedraw, { passive: true });
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && memoOverlay && !memoOverlay.hidden) {
           event.preventDefault();
