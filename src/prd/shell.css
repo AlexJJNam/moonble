@@ -8,6 +8,9 @@
 .profile-card input { width:100%; min-height:48px; padding:11px var(--mb-space-16); font-size:var(--mb-font-16); line-height:24px; border:1px solid var(--mb-border-strong); border-radius:var(--mb-radius-12); margin-bottom:var(--mb-space-16); color:var(--mb-text-primary); background:var(--mb-surface); }
 .profile-card input:disabled { color:var(--mb-text-tertiary); background:var(--mb-surface-muted); border-color:var(--mb-border); }
 .profile-card input:focus-visible, .profile-card button:focus-visible { outline:3px solid var(--mb-primary); outline-offset:3px; }
+.profile-card .profile-name-feedback { margin:-12px 0 8px; font-size:var(--mb-font-13); line-height:20px; }
+.profile-card .profile-name-feedback.is-error { color:var(--mb-danger); }
+.profile-card .profile-name-feedback.is-checking { color:var(--mb-text-tertiary); }
 .profile-card #company-hint { margin:-8px 0 var(--mb-space-16); font-size:var(--mb-font-14); line-height:20px; color:var(--mb-text-tertiary); }
 .shell-primary { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--mb-radius-12); background:var(--mb-primary-strong); color:white; padding:var(--mb-space-12) var(--mb-space-16); font-size:var(--mb-font-16); line-height:24px; font-weight:600; }
 .shell-primary:hover:not(:disabled) { background:var(--mb-primary-hover); }
