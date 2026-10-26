@@ -216,12 +216,13 @@ export function QuizCreator({ custom, onChange }) {
     const destination = bar.getBoundingClientRect();
     const offsetX = origin.left - destination.left;
     const offsetY = origin.top - destination.top;
+    const scaleX = origin.width / destination.width;
     if (Math.abs(offsetX) < 1 && Math.abs(offsetY) < 1) return undefined;
 
     promptDockAnimationRef.current?.cancel();
     const animation = bar.animate([
-      { transform: `translate3d(${offsetX}px, ${offsetY}px, 0)`, opacity: 0.96 },
-      { transform: 'translate3d(0, 0, 0)', opacity: 1 },
+      { transform: `translate3d(${offsetX}px, ${offsetY}px, 0) scaleX(${scaleX})`, transformOrigin: 'top left', opacity: 0.96 },
+      { transform: 'translate3d(0, 0, 0) scaleX(1)', transformOrigin: 'top left', opacity: 1 },
     ], {
       duration: 520,
       easing: 'cubic-bezier(.22, .82, .24, 1)',
@@ -250,8 +251,8 @@ export function QuizCreator({ custom, onChange }) {
   function dockPrompt() {
     if (promptFocused) return;
     if (window.matchMedia('(max-width: 767px)').matches && promptBarRef.current) {
-      const { left, top } = promptBarRef.current.getBoundingClientRect();
-      promptDockOriginRef.current = { left, top };
+      const { left, top, width } = promptBarRef.current.getBoundingClientRect();
+      promptDockOriginRef.current = { left, top, width };
     }
     setPromptFocused(true);
   }
