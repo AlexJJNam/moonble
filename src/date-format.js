@@ -9,3 +9,7 @@ export function formatRelativeDate(value, now = Date.now()) {
   const date = new Date(dateValue);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
+
+export function formatRelativeDateShortYear(value, now = Date.now()) {
+  return formatRelativeDate(value, now).replace(/^\d{2}(\d{2}\.\d{2}\.\d{2})$/, '$1');
+}

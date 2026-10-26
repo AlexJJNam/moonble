@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -23,9 +23,9 @@ import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
-import { formatRelativeDate } from './date-format.js';
+import { formatRelativeDateShortYear } from './date-format.js';
 import { getPaperAccessMap, recordPaperAccess } from './paper-activity.js';
-import { getFavoritePaperIds, toggleFavoritePaper } from './paper-favorites.js';
+import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorPreviewStyle, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
@@ -98,25 +98,32 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isBank = editor.type.startsWith('bank-');
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
+  const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <form className="quiz-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
-      <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
-      {isDelete ? <>
-        <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
-        {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
-      </> : isBank ? <div className="quiz-manage-fields">
-        <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
-        <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
-        <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
-      </div> : <div className="quiz-manage-fields">
-        <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label>
-        <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="radiogroup" aria-label="그룹 색상">
-          {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" role="radio" aria-checked={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch }} onClick={() => onChange({ ...editor, colorKey: option.key })}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
-        </div></fieldset>
-      </div>}
-      {editor.error && <p className="quiz-manage-error" role="alert">{editor.error}</p>}
-      <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={!isDelete && !(isBank ? editor.title.trim() : editor.name.trim())}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
+    <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby={isFavoriteDelete ? undefined : 'quiz-manage-title'} aria-label={isFavoriteDelete ? '즐겨찾기 문제지 삭제 확인' : undefined} onSubmit={event => { event.preventDefault(); onSubmit(); }}>
+      {isFavoriteDelete ? <>
+        <div className="quiz-favorite-delete-icon" aria-hidden="true"><AlertTriangle size={25} /></div>
+        <p><strong>{editor.title}</strong><br />즐겨찾기한 문제지예요.<br />그래도 삭제할까요?</p>
+        <footer><button type="button" onClick={onClose}>취소할래요.</button><button className="is-danger" type="submit">삭제할래요.</button></footer>
+      </> : <>
+        <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+        {isDelete ? <>
+          <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
+          {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
+        </> : isBank ? <div className="quiz-manage-fields">
+          <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
+          <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
+          <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
+        </div> : <div className="quiz-manage-fields">
+          <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength="24" value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value })} /></label>
+          <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="radiogroup" aria-label="그룹 색상">
+            {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" role="radio" aria-checked={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch }} onClick={() => onChange({ ...editor, colorKey: option.key })}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
+          </div></fieldset>
+        </div>}
+        {editor.error && <p className="quiz-manage-error" role="alert">{editor.error}</p>}
+        <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={!isDelete && !(isBank ? editor.title.trim() : editor.name.trim())}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
+      </>}
     </form>
   </div>;
 }
@@ -380,6 +387,8 @@ function QuizLibrary() {
         localStorage.setItem(sampleVisibilityKey(user.id), 'true');
         setSampleVisible(false);
       }
+      const nextFavorites = removeFavoritePaper(user.id, pendingDelete.id);
+      setFavoritePaperIds(nextFavorites);
     } catch (deleteError) {
       setNotice(deleteError.message || '문제지를 삭제하지 못했어요.');
     }
@@ -406,7 +415,9 @@ function QuizLibrary() {
   }
   function submitEditor() {
     try {
-      if (editor.type === 'bank-edit') {
+      if (editor.type === 'favorite-delete-confirm') {
+        queuePaperDeletion(editor.paper);
+      } else if (editor.type === 'bank-edit') {
         updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId);
         setNotice('문제지 정보를 저장했어요.');
       } else if (editor.type === 'bank-delete') {
@@ -786,13 +797,13 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } const nextAccess = recordPaperAccess(user.id, paper.id); setPaperAccess(nextAccess); if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDate(paper.lastOpenedAt)}</time>}</div></div>
+                <div className={`paper-info${paper.lastOpenedAt ? ' has-last-opened-at' : ''}`}><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time>}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && <div className="paper-card-actions">
                 {editMode && paper.customBankId ? <button className="paper-edit-done" type="button" title="편집 완료" aria-label={`${paper.label} 편집 완료`} onClick={event => { event.stopPropagation(); leaveEditMode(); }}><span>완료</span></button> : <>
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label }); }}><Trash2 size={15} />삭제</button></div>}
+                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div>}
                 </>}
               </div>}
             </article>;

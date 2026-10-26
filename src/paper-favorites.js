@@ -28,3 +28,17 @@ export function toggleFavoritePaper(userId, paperId) {
   }
   return next;
 }
+
+export function removeFavoritePaper(userId, paperId) {
+  const next = getFavoritePaperIds(userId).filter(id => id !== paperId);
+  const key = favoriteStorageKey(userId);
+  try {
+    if (key) localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    // Storage limits should not interrupt the current page interaction.
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('moonble:paper-favorites', { detail: { userId, paperIds: next } }));
+  }
+  return next;
+}
