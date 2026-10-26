@@ -241,20 +241,17 @@
 }
 
 .prd-list-summary {
-  padding-top: 12px !important;
-  padding-bottom: 12px !important;
-  border: 1px solid transparent !important;
-  border-top-color: var(--mb-border) !important;
-  border-bottom-color: var(--mb-border) !important;
-  border-radius: 0;
+  padding: 12px 16px !important;
+  border: 0 !important;
+  border-radius: 14px;
   color: var(--mb-text-secondary) !important;
-  background: transparent !important;
+  background: var(--mb-surface-muted) !important;
   box-shadow: none;
   font-size: var(--mb-font-14);
   line-height: 22px;
 }
 
-.prd-list-summary > svg { color: var(--mb-primary-strong); }
+.prd-list-summary > svg { color: var(--mb-text-tertiary); }
 
 .prd-studio-main {
   padding-bottom: 88px;
