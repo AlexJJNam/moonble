@@ -120,7 +120,9 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-ink-history-toolbar svg { width: 16px; height: 16px; }
 .quiz-ink-history-toolbar button:focus-visible { outline: 2px solid #9bc7ff; outline-offset: 3px; }
 .quiz-ink-history-toolbar .quiz-ink-session-action { color: #4f5966; background: #e3e7ec; }
-.quiz-ink-history-toolbar .quiz-ink-session-action:not(:disabled):hover { background: #d8dde4; }
+.quiz-ink-history-toolbar .quiz-ink-session-action:disabled { opacity: .62; }
+.quiz-ink-history-toolbar .quiz-ink-session-action:not(:disabled) { color: #fff; background: #252525; opacity: 1; }
+.quiz-ink-history-toolbar .quiz-ink-session-action:not(:disabled):hover { background: #111; }
 .quiz-ink-size-control { width: min(236px, calc(100vw - 48px)); min-height: 24px; display: grid; grid-template-columns: auto minmax(72px, 1fr) 26px; align-items: center; gap: 8px; color: #687385; font-size: 12px; line-height: 18px; font-weight: 600; }
 .quiz-ink-size-control input { width: 100%; min-width: 0; height: 20px; margin: 0; accent-color: #3182f6; cursor: pointer; }
 .quiz-ink-size-control output { color: #4c5868; font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; text-align: right; }

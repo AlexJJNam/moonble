@@ -62,6 +62,54 @@ self.addEventListener('activate', event => {
   );
 });
 
+self.addEventListener('push', event => {
+  let message = {};
+  try {
+    message = event.data?.json() || {};
+  } catch {
+    try { message = { body: event.data?.text() || '' }; } catch { /* 알림 내용이 없어도 기본 알림을 표시한다. */ }
+  }
+
+  const title = typeof message.title === 'string' ? message.title.slice(0, 80) : '문블 알림';
+  const body = typeof message.body === 'string' ? message.body.slice(0, 180) : '새로운 알림이 도착했어요.';
+  const tag = typeof message.tag === 'string' ? message.tag.slice(0, 120) : 'moonble-notification';
+  const destination = new URL('/quiz.html?openNotifications=1', self.location.origin);
+  try {
+    const requestedUrl = new URL(message.url, self.location.origin);
+    if (requestedUrl.origin === self.location.origin) destination.href = requestedUrl.href;
+  } catch { /* 기본 알림 화면으로 이동한다. */ }
+
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    tag,
+    icon: '/assets/moonble-app-icon-192.png',
+    badge: '/assets/moonble-app-icon-192.png',
+    data: { url: destination.href },
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const targetUrl = new URL('/quiz.html?openNotifications=1', self.location.origin);
+  try {
+    const requestedUrl = new URL(event.notification.data?.url, self.location.origin);
+    if (requestedUrl.origin === self.location.origin) targetUrl.href = requestedUrl.href;
+  } catch { /* 기본 알림 화면으로 이동한다. */ }
+
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const existing = windows.find(client => new URL(client.url).origin === self.location.origin);
+    if (existing) {
+      const navigated = await existing.navigate(targetUrl.href).catch(() => null);
+      const client = navigated || existing;
+      await client.focus();
+      client.postMessage({ type: 'moonble:open-notifications' });
+      return;
+    }
+    await self.clients.openWindow(targetUrl.href);
+  })());
+});
+
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);

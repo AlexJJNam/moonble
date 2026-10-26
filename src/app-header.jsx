@@ -8,7 +8,7 @@ import { getCustomBankCollection } from './custom-bank.js';
 import { buildGroupColorMap, favoriteGroupIconStyle } from './paper-group-colors.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { recordPaperAccess } from './paper-activity.js';
-import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings, deliverBrowserNotification } from './browser-notifications.js';
+import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
 import { formatRelativeDate } from './date-format.js';
 import { supabase } from './supabase.js';
@@ -18,13 +18,6 @@ const SHARE_NOTIFICATION_LIMIT = 40;
 
 function shareNotificationStorageKey(userId) {
   return userId ? `moonble:user:${userId}:quiz-share-notifications-v1` : null;
-}
-
-function showBrowserShareNotification(userId, notification) {
-  if (!getBrowserNotificationSettings(userId).enabled) return;
-  deliverBrowserNotification('문블 · 공유한 문제 풀이', `${notification.title} · ${notification.score}점 (${notification.correct}/${notification.total})`).catch(() => {
-    // 시스템 알림 실패가 문제 풀이 알림 목록이나 인앱 토스트를 막지 않게 한다.
-  });
 }
 
 function readShareNotifications(userId) {
@@ -356,6 +349,27 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('openNotifications') !== '1') return;
+    setShareNotifications(current => markShareNotificationsSeen(user.id, current));
+    setNotificationOpen(true);
+    url.searchParams.delete('openNotifications');
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined;
+    const onServiceWorkerMessage = event => {
+      if (event.data?.type !== 'moonble:open-notifications' || !user?.id) return;
+      setShareNotifications(current => markShareNotificationsSeen(user.id, current));
+      setNotificationOpen(true);
+    };
+    navigator.serviceWorker.addEventListener('message', onServiceWorkerMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onServiceWorkerMessage);
+  }, [user?.id]);
+
+  useEffect(() => {
     const refresh = event => {
       if (event?.detail?.userId && event.detail.userId !== user?.id) return;
       setFavoriteSidebarItems(getFavoriteSidebarItems(user?.id));
@@ -402,7 +416,6 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         const notification = await getNextQuizShareNotification();
         if (!alive || !notification?.id) return;
         setShareNotifications(rememberShareNotification(user.id, notification));
-        showBrowserShareNotification(user.id, notification);
         shareNotificationVisible.current = true;
         setShareNotification(notification);
         window.clearTimeout(shareNotificationTimer.current);
@@ -468,6 +481,10 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       setBrowserNotificationSettings(settings);
       if (settings.permission === 'denied') {
         setBrowserNotificationError('알림이 차단돼 있어요. 브라우저 사이트 설정에서 알림을 허용해주세요.');
+      } else if (settings.permission === 'install-required') {
+        setBrowserNotificationError('iPhone·iPad에서는 문블을 홈 화면에 추가한 뒤 앱에서 알림을 켤 수 있어요.');
+      } else if (settings.permission === 'unconfigured') {
+        setBrowserNotificationError('푸시 알림 서버 설정을 준비하고 있어요.');
       } else if (!settings.enabled && settings.permission !== 'unsupported' && settings.permission !== 'insecure') {
         setBrowserNotificationError('알림 권한을 허용한 뒤 다시 켜주세요.');
       }
@@ -658,7 +675,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   }, [solver]);
 
   return <>
-  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${quizPenMode ? ' is-pen-actions-open' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <UserAvatar user={user} className="mb-app-logo-avatar" />}</a>
@@ -756,20 +773,24 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       <header className="mb-notification-screen-heading"><h1 id="mb-notification-title">알림</h1></header>
       {!browserNotificationSettings.enabled && (() => {
         const permission = browserNotificationSettings.permission;
-        const disabled = browserNotificationBusy || ['denied', 'unsupported', 'insecure'].includes(permission);
+        const disabled = browserNotificationBusy || ['denied', 'unsupported', 'insecure', 'install-required', 'unconfigured'].includes(permission);
         const description = permission === 'unsupported'
           ? '현재 환경에서는 푸시 알림을 사용할 수 없어요. 아래 알림 기록에서 공유 문제 풀이 결과를 확인해주세요.'
           : permission === 'insecure'
             ? '보안 연결에서 접속하면 푸시 알림을 켤 수 있어요.'
             : permission === 'denied'
               ? '브라우저에서 알림이 차단돼 있어요. 사이트 설정에서 알림을 허용해주세요.'
-              : '공유한 문제를 누군가 풀면 푸시 알림으로 알려드려요.';
+              : permission === 'install-required'
+                ? 'iPhone·iPad에서는 문블을 홈 화면에 추가한 뒤 앱에서 알림을 켤 수 있어요.'
+                : permission === 'unconfigured'
+                  ? '푸시 알림 서버 설정을 준비하고 있어요.'
+                  : '공유한 문제를 누군가 풀면 푸시 알림으로 알려드려요.';
         return <section className="mb-browser-alert-card" aria-label="푸시 알림 설정">
           <div className="mb-browser-alert-head"><h2>푸시 알림</h2><span className="mb-browser-alert-status">꺼짐</span></div>
           <p className="mb-browser-alert-copy">{description}</p>
           {browserNotificationError && <p className="mb-browser-alert-error" role="status">{browserNotificationError}</p>}
           <div className="mb-browser-alert-actions">
-            <button type="button" className="is-primary" disabled={disabled} onClick={enableBrowserNotifications}>{browserNotificationBusy ? '알림 권한 요청 중' : permission === 'denied' ? '브라우저 설정에서 허용' : permission === 'unsupported' ? '알림 사용 불가' : permission === 'insecure' ? '보안 연결 필요' : '푸시 알림 켜기'}</button>
+            <button type="button" className="is-primary" disabled={disabled} onClick={enableBrowserNotifications}>{browserNotificationBusy ? '알림 권한 요청 중' : permission === 'denied' ? '브라우저 설정에서 허용' : permission === 'unsupported' ? '알림 사용 불가' : permission === 'insecure' ? '보안 연결 필요' : permission === 'install-required' ? '홈 화면 앱에서 설정' : permission === 'unconfigured' ? '설정 준비 중' : '푸시 알림 켜기'}</button>
           </div>
         </section>;
       })()}

@@ -6124,7 +6124,9 @@ if (shareToken || requestedPaper === 'shared') {
         let historyTop = 12;
         if (window.matchMedia('(max-width: 767px)').matches && header && header.isConnected && !header.hidden) {
           top = Math.max(0, Math.min(window.innerHeight, header.getBoundingClientRect().bottom));
-          if (top > 0 && !header.classList.contains('is-mobile-hidden')) historyTop = Math.max(6, top - 36);
+          // Keep the floating pen history controls below the mobile question header.
+          // Placing these above the header bottom made the buttons look like header items.
+          if (top > 0 && !header.classList.contains('is-mobile-hidden')) historyTop = top + 12;
         }
         track.style.setProperty('--quiz-progress-top', `${top}px`);
         historyToolbar?.style.setProperty('--quiz-ink-history-top', `${historyTop}px`);
@@ -6557,6 +6559,7 @@ if (shareToken || requestedPaper === 'shared') {
 
       function syncInkHistoryControls() {
         const active = canvas.classList.contains('is-active');
+        const hasPenInk = strokes.some(stroke => stroke.tool !== 'eraser');
         historyToolbar?.classList.toggle('is-active', active);
         if (undoButton) {
           undoButton.disabled = !active || (!activeStroke && strokes.length === 0);
@@ -6565,6 +6568,10 @@ if (shareToken || requestedPaper === 'shared') {
         if (redoButton) {
           redoButton.disabled = !active || redoStrokes.length === 0;
           redoButton.tabIndex = active ? 0 : -1;
+        }
+        if (saveButton) {
+          saveButton.disabled = !active || !hasPenInk;
+          saveButton.tabIndex = active && hasPenInk ? 0 : -1;
         }
       }
 

@@ -9,7 +9,7 @@ import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
 import { ProfilePhotoEditor } from './profile-photo-editor.jsx';
 import { clearProfileAvatarFiles } from './profile-avatar.js';
-import { enableBrowserNotifications, getBrowserNotificationSettings, setBrowserNotificationPreference } from './browser-notifications.js';
+import { disableBrowserNotifications, enableBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
 import './design-system.css';
 import './prd/shell.css';
 import './account-page.css';
@@ -127,11 +127,26 @@ function PushNotificationPreference({ userId }) {
     if (busy) return;
     setMessage('');
     if (settings.enabled) {
-      setSettings(setBrowserNotificationPreference(userId, false));
+      setBusy(true);
+      try {
+        setSettings(await disableBrowserNotifications(userId));
+      } catch {
+        setMessage('푸시 알림을 끄지 못했어요. 다시 시도해주세요.');
+      } finally {
+        setBusy(false);
+      }
       return;
     }
-    if (['denied', 'unsupported', 'insecure'].includes(settings.permission)) {
-      setMessage(settings.permission === 'denied' ? '브라우저 사이트 설정에서 알림을 허용해주세요.' : settings.permission === 'insecure' ? '보안 연결에서 접속해 알림을 설정해주세요.' : '현재 브라우저에서는 알림을 사용할 수 없어요.');
+    if (['denied', 'unsupported', 'insecure', 'install-required', 'unconfigured'].includes(settings.permission)) {
+      setMessage(settings.permission === 'denied'
+        ? '브라우저 사이트 설정에서 알림을 허용해주세요.'
+        : settings.permission === 'insecure'
+          ? '보안 연결에서 접속해 알림을 설정해주세요.'
+          : settings.permission === 'install-required'
+            ? 'iPhone·iPad에서는 문블을 홈 화면에 추가한 뒤 앱에서 알림을 켤 수 있어요.'
+            : settings.permission === 'unconfigured'
+              ? '푸시 알림 서버 설정을 준비하고 있어요.'
+              : '현재 브라우저에서는 알림을 사용할 수 없어요.');
       return;
     }
     setBusy(true);
@@ -146,15 +161,15 @@ function PushNotificationPreference({ userId }) {
     }
   }
 
-  const unavailable = ['denied', 'unsupported', 'insecure'].includes(settings.permission);
+  const unavailable = ['denied', 'unsupported', 'insecure', 'install-required', 'unconfigured'].includes(settings.permission);
   return <section className="account-push-preference" aria-labelledby="account-push-preference-title">
     <h2 id="account-push-preference-title" className="mb-section-title">알림</h2>
     <div className="account-push-option">
       <span className="account-push-icon" aria-hidden="true"><Bell size={18} /></span>
-      <span className="account-push-copy"><strong>푸시 알림</strong><small>{settings.permission === 'denied' ? '브라우저에서 차단됨' : settings.permission === 'unsupported' ? '이 브라우저에서는 사용할 수 없음' : settings.permission === 'insecure' ? '보안 연결에서 설정할 수 있음' : '공유한 문제의 풀이 결과 알림'}</small></span>
+      <span className="account-push-copy"><strong>푸시 알림</strong><small>{settings.permission === 'denied' ? '브라우저에서 차단됨' : settings.permission === 'unsupported' ? '이 브라우저에서는 사용할 수 없음' : settings.permission === 'insecure' ? '보안 연결에서 설정할 수 있음' : settings.permission === 'install-required' ? '홈 화면에 추가한 앱에서 사용 가능' : settings.permission === 'unconfigured' ? '푸시 서버 설정 대기 중' : '공유한 문제의 풀이 결과 알림'}</small></span>
       <button className={`account-push-switch${settings.enabled ? ' is-on' : ''}`} type="button" role="switch" aria-checked={settings.enabled} aria-label="푸시 알림" aria-describedby={message || unavailable ? 'account-push-help' : undefined} aria-busy={busy} disabled={busy || unavailable} onClick={toggleNotifications}><span /></button>
     </div>
-    {(message || unavailable) && <p id="account-push-help" className={`account-push-message${message && settings.permission === 'denied' ? ' is-error' : ''}`} role={message ? 'status' : undefined}>{message || (settings.permission === 'denied' ? '브라우저 사이트 설정에서 문블의 알림을 허용해주세요.' : settings.permission === 'insecure' ? 'HTTPS 보안 연결에서 접속하면 알림을 켤 수 있어요.' : '현재 브라우저에서는 알림을 지원하지 않아요.')}</p>}
+    {(message || unavailable) && <p id="account-push-help" className={`account-push-message${message && settings.permission === 'denied' ? ' is-error' : ''}`} role={message ? 'status' : undefined}>{message || (settings.permission === 'denied' ? '브라우저 사이트 설정에서 문블의 알림을 허용해주세요.' : settings.permission === 'insecure' ? 'HTTPS 보안 연결에서 접속하면 알림을 켤 수 있어요.' : settings.permission === 'install-required' ? 'iPhone·iPad에서는 홈 화면에 추가한 문블 앱에서 푸시 알림을 설정할 수 있어요.' : settings.permission === 'unconfigured' ? '푸시 알림 서버 설정을 준비하고 있어요.' : '현재 브라우저에서는 알림을 지원하지 않아요.')}</p>}
   </section>;
 }
 
