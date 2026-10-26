@@ -138,6 +138,7 @@ export function QuizCreator({ custom, onChange }) {
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
+  const keyboardOffsetFrame = useRef(0);
   const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
   const uploadSuccessTimer = useRef(0);
@@ -178,17 +179,27 @@ export function QuizCreator({ custom, onChange }) {
     const hideMobileDock = window.matchMedia('(max-width: 767px)').matches;
     if (hideMobileDock) document.body.classList.add('mb-creator-prompt-focused');
     const updateKeyboardOffset = () => {
+      keyboardOffsetFrame.current = 0;
       const bar = promptBarRef.current;
       if (!bar || !viewport) return;
-      const keyboardGap = Math.max(0, window.innerHeight - (viewport.offsetTop + viewport.height));
-      bar.style.setProperty('--creator-keyboard-offset', `${keyboardGap}px`);
+      const keyboardGap = Math.max(0, Math.round(window.innerHeight - (viewport.offsetTop + viewport.height)));
+      const currentGap = Number.parseFloat(bar.style.getPropertyValue('--creator-keyboard-offset')) || 0;
+      if (Math.abs(keyboardGap - currentGap) >= 1) {
+        bar.style.setProperty('--creator-keyboard-offset', `${keyboardGap}px`);
+      }
     };
-    updateKeyboardOffset();
-    viewport?.addEventListener('resize', updateKeyboardOffset);
-    viewport?.addEventListener('scroll', updateKeyboardOffset);
+    const scheduleKeyboardOffsetUpdate = () => {
+      if (keyboardOffsetFrame.current) return;
+      keyboardOffsetFrame.current = window.requestAnimationFrame(updateKeyboardOffset);
+    };
+    scheduleKeyboardOffsetUpdate();
+    viewport?.addEventListener('resize', scheduleKeyboardOffsetUpdate);
+    viewport?.addEventListener('scroll', scheduleKeyboardOffsetUpdate);
     return () => {
-      viewport?.removeEventListener('resize', updateKeyboardOffset);
-      viewport?.removeEventListener('scroll', updateKeyboardOffset);
+      viewport?.removeEventListener('resize', scheduleKeyboardOffsetUpdate);
+      viewport?.removeEventListener('scroll', scheduleKeyboardOffsetUpdate);
+      if (keyboardOffsetFrame.current) window.cancelAnimationFrame(keyboardOffsetFrame.current);
+      keyboardOffsetFrame.current = 0;
       document.body.classList.remove('mb-creator-prompt-focused');
       promptBarRef.current?.style.removeProperty('--creator-keyboard-offset');
     };
@@ -204,23 +215,7 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function dockPrompt() {
-    if (promptFocused) return;
-    const bar = promptBarRef.current;
-    const before = bar?.getBoundingClientRect();
     setPromptFocused(true);
-    if (!bar || !before || !window.matchMedia?.('(max-width: 540px)').matches) return;
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      const after = bar.getBoundingClientRect();
-      const deltaX = before.left - after.left;
-      const deltaY = before.top - after.top;
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return;
-      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      if (reducedMotion) return;
-      bar.animate?.([
-        { transform: `translate3d(${deltaX}px, ${deltaY}px, 0)`, opacity: .88 },
-        { transform: 'translate3d(0, 0, 0)', opacity: 1 },
-      ], { duration: 340, easing: 'cubic-bezier(.2,.82,.24,1)' });
-    }));
   }
 
   function openPopup(url) {
@@ -404,6 +399,7 @@ export function QuizCreator({ custom, onChange }) {
   </main>;
 
   return <main className="quiz-main mb-page-gutter quiz-creator" id="quiz-creator" tabIndex={-1}>
+    {promptFocused && <button className="creator-prompt-backdrop" type="button" aria-label="프롬프트 입력 닫기" onPointerDown={event => { event.preventDefault(); promptInputRef.current?.blur(); }} />}
     <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
 
     <div className="creator-intake-card">
