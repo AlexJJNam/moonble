@@ -4714,8 +4714,10 @@
     var quizBottom = quizContainer ? quizContainer.getBoundingClientRect().bottom : 0;
     var historyBottom = historyBox.getBoundingClientRect().bottom;
     var bottom = Math.max(quizBottom, historyBottom) + window.scrollY - window.innerHeight + 24;
-    top = Math.max(0, top);
-    bottom = Math.max(top, bottom);
+    var root = document.scrollingElement || document.documentElement;
+    var pageMax = Math.max(0, root.scrollHeight - window.innerHeight);
+    top = Math.min(pageMax, Math.max(0, top));
+    bottom = Math.max(top, Math.min(pageMax, bottom));
     return { min: top, max: bottom };
   }
 
@@ -4754,9 +4756,9 @@
     document.body.classList.add('ai-pick-mode');
     scrollBounds = getScrollBounds();
     scrollLockActive = true;
-    if (window.scrollY < scrollBounds.min || window.scrollY > scrollBounds.max) {
-      window.scrollTo({ top: scrollBounds.min, behavior: 'smooth' });
-    }
+    var currentY = window.scrollY;
+    var targetY = currentY < scrollBounds.min ? scrollBounds.min : currentY > scrollBounds.max ? scrollBounds.max : null;
+    if (targetY !== null && Math.abs(targetY - currentY) > 1) window.scrollTo({ top: targetY, behavior: 'smooth' });
     window.addEventListener('scroll', clampScroll, { passive: true });
     window.addEventListener('wheel', handleWheel, { passive: false });
   }
@@ -6303,6 +6305,7 @@ if (shareToken || requestedPaper === 'shared') {
       let completedLayerDirty = true;
       let savedScrollBehavior = '';
       let scrollTargetY = null;
+      let scrollTargetQuestionIndex = null;
       let scrollTargetResetTimer = 0;
       let currentInkColor = GROUP_COLOR_OPTIONS[0]?.swatch || '#3182f6';
       let penInkSize = 5;
@@ -7254,7 +7257,22 @@ if (shareToken || requestedPaper === 'shared') {
         window.clearTimeout(scrollTargetResetTimer);
         scrollTargetResetTimer = 0;
         scrollTargetY = null;
+        scrollTargetQuestionIndex = null;
       }
+
+      function syncScrollButtonLabels() {
+        const mobile = window.matchMedia('(max-width: 767px)').matches;
+        const labels = mobile
+          ? ['이전 문항을 화면 가운데로 이동', '다음 문항을 화면 가운데로 이동']
+          : ['화면을 조금 위로 이동', '화면을 조금 아래로 이동'];
+        [[scrollUpButton, labels[0]], [scrollDownButton, labels[1]]].forEach(([button, label]) => {
+          if (!button) return;
+          button.setAttribute('aria-label', label);
+          button.title = label;
+        });
+      }
+      syncScrollButtonLabels();
+      window.addEventListener('resize', syncScrollButtonLabels, { passive: true });
 
       function handlePenWheel(event) {
         if (!canvas.classList.contains('is-active') || window.matchMedia('(max-width: 767px)').matches || event.ctrlKey || !event.deltaY) return;
@@ -7270,9 +7288,40 @@ if (shareToken || requestedPaper === 'shared') {
         resetPenGestureScroll();
         const root = getScrollRoot();
         const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
-        const step = Math.round(Math.min(620, Math.max(260, window.innerHeight * 0.58)));
-        const currentTarget = scrollTargetY === null ? getPageScrollY() : scrollTargetY;
-        scrollTargetY = Math.min(maxY, Math.max(0, currentTarget + step * direction));
+        if (window.matchMedia('(max-width: 767px)').matches) {
+          const cards = Array.from(quiz.querySelectorAll('.q-card'));
+          if (!cards.length) return;
+          let viewportTop = 0;
+          let viewportBottom = window.innerHeight;
+          const mobileHeader = document.querySelector('.mb-app-header.mb-solver-sidebar:not(.is-mobile-hidden)');
+          const headerRect = mobileHeader?.getBoundingClientRect();
+          if (headerRect && headerRect.bottom > viewportTop && headerRect.bottom < viewportBottom) viewportTop = headerRect.bottom;
+          const toolbarRect = toolbar.getBoundingClientRect();
+          if (toolbar.classList.contains('is-active') && toolbarRect.top > viewportTop && toolbarRect.top < viewportBottom) viewportBottom = toolbarRect.top;
+          const centerY = viewportTop + Math.max(0, viewportBottom - viewportTop) / 2;
+          let currentIndex = scrollTargetQuestionIndex;
+          if (currentIndex === null || currentIndex < 0 || currentIndex >= cards.length) {
+            let nearestDistance = Infinity;
+            currentIndex = 0;
+            cards.forEach((card, index) => {
+              const rect = card.getBoundingClientRect();
+              const distance = Math.abs(rect.top + rect.height / 2 - centerY);
+              if (distance < nearestDistance) {
+                nearestDistance = distance;
+                currentIndex = index;
+              }
+            });
+          }
+          scrollTargetQuestionIndex = Math.min(cards.length - 1, Math.max(0, currentIndex + Math.sign(direction)));
+          const targetCard = cards[scrollTargetQuestionIndex];
+          const targetRect = targetCard.getBoundingClientRect();
+          const cardCenterDocumentY = targetRect.top + getPageScrollY() + targetRect.height / 2;
+          scrollTargetY = Math.min(maxY, Math.max(0, cardCenterDocumentY - centerY));
+        } else {
+          const step = Math.round(Math.min(620, Math.max(260, window.innerHeight * 0.58)));
+          const currentTarget = scrollTargetY === null ? getPageScrollY() : scrollTargetY;
+          scrollTargetY = Math.min(maxY, Math.max(0, currentTarget + step * direction));
+        }
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         root.scrollTo({ top: scrollTargetY, behavior: reducedMotion ? 'auto' : 'smooth' });
         window.clearTimeout(scrollTargetResetTimer);
