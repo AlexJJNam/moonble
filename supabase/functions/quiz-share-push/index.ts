@@ -49,8 +49,13 @@ Deno.serve(async request => {
     ...configuredSecretKeys.map(key => secretMatches(apiKey, key)),
     secretMatches(apiKey, Deno.env.get('SUPABASE_SECRET_KEY') || ''),
   ])).some(Boolean);
+  const bearerKeyMatches = bearerSecret !== '' && (await Promise.all([
+    ...configuredSecretKeys.map(key => secretMatches(bearerSecret, key)),
+    secretMatches(bearerSecret, Deno.env.get('SUPABASE_SECRET_KEY') || ''),
+  ])).some(Boolean);
   const authorized = await secretMatches(customHeaderSecret, expectedWebhookSecret)
     || apiKeyMatches
+    || bearerKeyMatches
     || await secretMatches(bearerSecret, expectedWebhookSecret)
     || await secretMatches(bearerSecret, serviceRoleKey);
   if (!authorized) return jsonResponse(401, { error: 'Unauthorized' });
