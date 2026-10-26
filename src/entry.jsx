@@ -806,8 +806,9 @@ function Landing() {
 
   useLayoutEffect(() => {
     document.documentElement.removeAttribute('data-auth-pending');
-    const revealTimer = window.setTimeout(revealPage, 280);
-    return () => window.clearTimeout(revealTimer);
+    // The intro page is the real anonymous landing state, so hand off directly
+    // from the auth-check spinner instead of showing a landing-page skeleton.
+    revealPage();
   }, []);
 
   return <>
