@@ -34,8 +34,12 @@
     <meta name="twitter:image" content="https://moonble.com/assets/moonble-open-graph.png" />
     <style>
       html[data-page-pending] #root { visibility: hidden; }
+      #moonble-entry-spinner { display: none; }
+      html[data-auth-pending] #moonble-entry-spinner { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; background: #fff; }
+      #moonble-entry-spinner .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; color: #4e5968; vertical-align: middle; animation: moonble-entry-spin .7s linear infinite; }
+      @keyframes moonble-entry-spin { to { transform: rotate(360deg); } }
       #moonble-entry-skeleton { display: none; }
-      html[data-page-pending] #moonble-entry-skeleton { display: block; }
+      html[data-page-pending]:not([data-auth-pending]) #moonble-entry-skeleton { display: block; }
       #moonble-entry-skeleton, #moonble-entry-skeleton * { box-sizing: border-box; }
       .entry-skeleton-nav i, .entry-skeleton-actions i, .entry-skeleton-header>i, .entry-skeleton-copy>i, .entry-skeleton-paper i { display: block; }
       #moonble-entry-skeleton { position: fixed; inset: 0; z-index: 99999; overflow: hidden; background: #fff; color: #191f28; }
@@ -84,13 +88,14 @@
         .entry-skeleton-paper i:nth-child(5) { height: 38px; margin-top: 5px; }
         .entry-skeleton-paper i:nth-child(6) { height: 24px; }
       }
-      @media (prefers-reduced-motion: reduce) { .entry-skeleton-shimmer { animation: none; } }
+      @media (prefers-reduced-motion: reduce) { .entry-skeleton-shimmer, #moonble-entry-spinner .moonble-spinner { animation: none; } }
     </style>
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebSite","name":"Moonble","alternateName":"문블","url":"https://moonble.com/","description":"문제지 등록부터 풀이, 채점, 실력 기록, PRD 작성까지 이어가는 개인 학습·기획 워크스페이스"}
     </script>
   </head>
   <body>
+    <div id="moonble-entry-spinner" role="status" aria-label="로그인 상태 확인 중" aria-busy="true"><span class="moonble-spinner" aria-hidden="true"></span></div>
     <div id="moonble-entry-skeleton" role="status" aria-label="Moonble 여는 중" aria-busy="true">
       <header class="entry-skeleton-header"><i class="entry-skeleton-logo entry-skeleton-shimmer"></i><div class="entry-skeleton-nav"><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i></div><i class="entry-skeleton-action entry-skeleton-shimmer"></i></header>
       <main class="entry-skeleton-hero"><div class="entry-skeleton-copy"><i class="entry-skeleton-eyebrow entry-skeleton-shimmer"></i><i class="entry-skeleton-title entry-skeleton-shimmer"></i><i class="entry-skeleton-title-short entry-skeleton-shimmer"></i><i class="entry-skeleton-description entry-skeleton-shimmer"></i><i class="entry-skeleton-description-short entry-skeleton-shimmer"></i><div class="entry-skeleton-actions"><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i></div></div><div class="entry-skeleton-preview"><div class="entry-skeleton-paper"><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i><i class="entry-skeleton-shimmer"></i></div></div></main>

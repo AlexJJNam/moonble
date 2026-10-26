@@ -806,7 +806,8 @@ function Landing() {
 
   useLayoutEffect(() => {
     document.documentElement.removeAttribute('data-auth-pending');
-    revealPage();
+    const revealTimer = window.setTimeout(revealPage, 280);
+    return () => window.clearTimeout(revealTimer);
   }, []);
 
   return <>
@@ -853,7 +854,10 @@ function Entry() {
   const [status, setStatus] = useState(supabase ? 'checking' : 'anonymous');
 
   useLayoutEffect(() => {
-    if (status === 'unavailable') revealPage();
+    if (status === 'unavailable') {
+      document.documentElement.removeAttribute('data-auth-pending');
+      revealPage();
+    }
   }, [status]);
 
   useEffect(() => {
