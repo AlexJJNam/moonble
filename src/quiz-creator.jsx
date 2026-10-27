@@ -88,17 +88,13 @@ const exampleGuideDetails = [
   { topic: '정보보안기사 필기', level: '상급', scope: '네트워크와 암호 기술', field: '정보 보안' },
 ];
 
-function pickExampleIndexes(previous = []) {
+function pickExampleIndexes() {
   const indexes = Array.from({ length: examplePrompts.length }, (_, index) => index);
   for (let index = indexes.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
   }
-  const next = indexes.slice(0, 3);
-  if (previous.length === next.length && previous.every(index => next.includes(index))) {
-    return [...next.slice(1), indexes.find(index => !next.includes(index))];
-  }
-  return next;
+  return indexes;
 }
 const providerSegments = [
   { value: 'gemini', label: 'AI Mode' },
@@ -156,10 +152,7 @@ export function QuizCreator({ custom, onChange }) {
   const [promptFocused, setPromptFocused] = useState(false);
   const [exampleRevealed, setExampleRevealed] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
-  const [exampleCardIndexes, setExampleCardIndexes] = useState(() => pickExampleIndexes());
-  const [exampleCardRound, setExampleCardRound] = useState(0);
-  const [exampleCardsHovered, setExampleCardsHovered] = useState(false);
-  const [exampleCardsFocused, setExampleCardsFocused] = useState(false);
+  const [exampleCardIndexes] = useState(() => pickExampleIndexes());
   const [guideOpen, setGuideOpen] = useState(false);
   const [uploadRevealed, setUploadRevealed] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -176,6 +169,8 @@ export function QuizCreator({ custom, onChange }) {
   const keyboardOffsetFrame = useRef(0);
   const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
+  const exampleTypingTimerRef = useRef(0);
+  const exampleTypingRunRef = useRef(0);
   const uploadSuccessTimer = useRef(0);
   const metaRevealTimer = useRef(0);
   const resultScreenTimer = useRef(0);
@@ -192,6 +187,7 @@ export function QuizCreator({ custom, onChange }) {
   }, [custom?.title, custom?.description, custom?.savedAt]);
 
   useEffect(() => () => {
+    window.clearInterval(exampleTypingTimerRef.current);
     window.clearTimeout(uploadSuccessTimer.current);
     window.clearTimeout(metaRevealTimer.current);
     window.clearTimeout(resultScreenTimer.current);
@@ -207,16 +203,6 @@ export function QuizCreator({ custom, onChange }) {
     }, 4800);
     return () => window.clearInterval(timer);
   }, [guideOpen]);
-
-  useEffect(() => {
-    if (exampleCardsHovered || exampleCardsFocused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-    const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      setExampleCardIndexes(current => pickExampleIndexes(current));
-      setExampleCardRound(round => round + 1);
-    }, 7600);
-    return () => window.clearInterval(timer);
-  }, [exampleCardsHovered, exampleCardsFocused]);
 
   useEffect(() => {
     if (!promptFocused) return undefined;
@@ -317,6 +303,9 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function requestGeneration() {
+    window.clearInterval(exampleTypingTimerRef.current);
+    exampleTypingTimerRef.current = 0;
+    exampleTypingRunRef.current += 1;
     const value = query.trim();
     if (!value) { shakePrompt(); return; }
     setError('');
@@ -335,15 +324,35 @@ export function QuizCreator({ custom, onChange }) {
 
   function useExample(prompt = examplePrompt) {
     const selectedPrompt = typeof prompt === 'string' ? prompt : examplePrompt;
-    setQuery(selectedPrompt);
+    const characters = [...selectedPrompt];
+    window.clearInterval(exampleTypingTimerRef.current);
+    exampleTypingTimerRef.current = 0;
+    const run = ++exampleTypingRunRef.current;
+    setQuery('');
     if (promptGuideRef.current) promptGuideRef.current.open = false;
     requestAnimationFrame(() => {
       const input = promptInputRef.current;
       if (!input) return;
       input.style.height = 'auto';
-      input.style.height = `${Math.min(110, input.scrollHeight)}px`;
       input.focus({ preventScroll: true });
-      input.setSelectionRange(selectedPrompt.length, selectedPrompt.length);
+      let characterIndex = 0;
+      exampleTypingTimerRef.current = window.setInterval(() => {
+        if (run !== exampleTypingRunRef.current) {
+          window.clearInterval(exampleTypingTimerRef.current);
+          exampleTypingTimerRef.current = 0;
+          return;
+        }
+        characterIndex += 1;
+        const revealedPrompt = characters.slice(0, characterIndex).join('');
+        setQuery(revealedPrompt);
+        input.style.height = 'auto';
+        input.style.height = `${Math.min(110, input.scrollHeight)}px`;
+        input.setSelectionRange(revealedPrompt.length, revealedPrompt.length);
+        if (characterIndex >= characters.length) {
+          window.clearInterval(exampleTypingTimerRef.current);
+          exampleTypingTimerRef.current = 0;
+        }
+      }, 18);
     });
   }
 
@@ -513,7 +522,7 @@ export function QuizCreator({ custom, onChange }) {
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
           <span className="creator-ai-prompt-field">
             <PromptSample hidden={Boolean(query)} />
-            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={dockPrompt} onBlur={() => setPromptFocused(false)} onChange={event => { setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
+            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={dockPrompt} onBlur={() => { window.clearInterval(exampleTypingTimerRef.current); exampleTypingTimerRef.current = 0; exampleTypingRunRef.current += 1; setPromptFocused(false); }} onChange={event => { window.clearInterval(exampleTypingTimerRef.current); exampleTypingTimerRef.current = 0; exampleTypingRunRef.current += 1; setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
           <div className="creator-ai-actions">
             <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
@@ -524,10 +533,10 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </div>
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
-        <div className="creator-example-cards" onMouseEnter={() => setExampleCardsHovered(true)} onMouseLeave={() => setExampleCardsHovered(false)} onFocusCapture={() => setExampleCardsFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setExampleCardsFocused(false); }}>
+        <div className="creator-example-cards">
           {exampleCardIndexes.map((exampleIndex, index) => {
             const example = exampleGuideDetails[exampleIndex];
-            return <button className="creator-example-card is-revealing" type="button" key={`${exampleCardRound}-${exampleIndex}`} style={{ '--creator-example-reveal-delay': `${index * 48}ms` }} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[exampleIndex])}>
+            return <button className="creator-example-card is-revealing" type="button" key={exampleIndex} style={{ '--creator-example-reveal-delay': `${Math.min(index, 5) * 48}ms` }} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[exampleIndex])}>
               <span className="creator-example-card-meta">{example.field}</span>
               <strong>{example.topic}</strong>
               <span className="creator-example-card-prompt">{examplePrompts[exampleIndex]}</span>
