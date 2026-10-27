@@ -34,7 +34,8 @@ import './design-system.css';
 import './quiz-library.css';
 
 const difficulties = ['전체 난이도', '기본', '심화'];
-const PAPER_TOUCH_DRAG_DELAY = 1200;
+const PAPER_TOUCH_DRAG_DELAY = 1000;
+const paperDragPreviewWidth = cardWidth => Math.max(112, Math.min(176, cardWidth * .52));
 const supportsMousePaperDrag = () => typeof window === 'undefined'
   || !window.matchMedia
   || window.matchMedia('(pointer: fine) and (hover: hover)').matches;
@@ -207,6 +208,7 @@ function QuizLibrary() {
   const [sampleVisible, setSampleVisible] = useState(() => sampleIsVisible(initialUser?.id));
   const [editMode, setEditMode] = useState(false);
   const [draggedBankId, setDraggedBankId] = useState(null);
+  const [touchDraggingBankId, setTouchDraggingBankId] = useState(null);
   const [dropGroupId, setDropGroupId] = useState(null);
   const [folderPulse, setFolderPulse] = useState(null);
   const [pressedBankId, setPressedBankId] = useState(null);
@@ -330,6 +332,7 @@ function QuizLibrary() {
   }, []);
   useEffect(() => () => {
     window.clearTimeout(paperPressTimer.current);
+    paperTouchDrag.current?.source?.style.removeProperty('--paper-touch-scale');
     paperTouchDrag.current = null;
     dragPreviewNode.current?.remove();
   }, []);
@@ -337,8 +340,8 @@ function QuizLibrary() {
     const syncSection = () => {
       setSection(sectionFromHash());
       setEditMode(false);
+      finishPaperDrag(paperTouchDrag.current);
       paperTouchDrag.current = null;
-      finishPaperDrag();
     };
     window.addEventListener('hashchange', syncSection);
     return () => window.removeEventListener('hashchange', syncSection);
@@ -680,14 +683,16 @@ function QuizLibrary() {
       preview.querySelector('.paper-card-actions')?.remove();
       preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
       preview.classList.add('paper-drag-preview', 'is-touch-preview');
-      preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
+      const previewWidth = paperDragPreviewWidth(bounds.width);
+      preview.style.width = `${previewWidth}px`;
+      drag.source.style.setProperty('--paper-touch-scale', String(previewWidth / bounds.width));
       document.body.appendChild(preview);
       preview.style.left = `${drag.x - preview.offsetWidth / 2}px`;
       preview.style.top = `${drag.y - Math.min(34, preview.offsetHeight / 2)}px`;
       dragPreviewNode.current = preview;
       drag.preview = preview;
       drag.active = true;
-      setPressedBankId(null);
+      setTouchDraggingBankId(bankId);
       setDraggedBankId(bankId);
       navigator.vibrate?.(18);
     }, PAPER_TOUCH_DRAG_DELAY);
@@ -706,7 +711,7 @@ function QuizLibrary() {
     preview.querySelector('.paper-card-actions')?.remove();
     preview.classList.remove('is-dragging', 'is-pressing', 'is-editing');
     preview.classList.add('paper-drag-preview');
-    preview.style.width = `${Math.max(112, Math.min(176, bounds.width * .52))}px`;
+    preview.style.width = `${paperDragPreviewWidth(bounds.width)}px`;
     document.body.appendChild(preview);
     dragPreviewNode.current = preview;
     event.dataTransfer.setDragImage(preview, preview.offsetWidth / 2, Math.min(34, preview.offsetHeight / 2));
@@ -715,10 +720,12 @@ function QuizLibrary() {
     setPressedBankId(null);
     setDraggedBankId(bankId);
   }
-  function finishPaperDrag() {
+  function finishPaperDrag(touchDrag = null) {
     window.clearTimeout(paperPressTimer.current);
+    if (touchDrag?.source) touchDrag.source.style.removeProperty('--paper-touch-scale');
     dragPreviewNode.current?.remove();
     dragPreviewNode.current = null;
+    setTouchDraggingBankId(null);
     setPressedBankId(null);
     setDraggedBankId(null);
     setDropGroupId(null);
@@ -730,7 +737,7 @@ function QuizLibrary() {
       if (event.touches.length !== 1) {
         window.clearTimeout(paperPressTimer.current);
         paperTouchDrag.current = null;
-        if (drag.active) finishPaperDrag();
+        if (drag.active) finishPaperDrag(drag);
         return;
       }
       const touch = Array.from(event.changedTouches).find(item => item.identifier === drag.touchId);
@@ -779,11 +786,11 @@ function QuizLibrary() {
       paperTouchDrag.current = null;
       if (!drag.active) return;
       if (event.type === 'touchcancel') {
-        finishPaperDrag();
+        finishPaperDrag(drag);
         return;
       }
       if (drag.targetGroupId) moveBankToGroup(drag.bankId, drag.targetGroupId);
-      finishPaperDrag();
+      finishPaperDrag(drag);
     }
 
     window.addEventListener('touchmove', moveTouchPaper, { passive: false });
@@ -797,8 +804,8 @@ function QuizLibrary() {
   }, [collection]);
 
   function leaveEditMode() {
+    finishPaperDrag(paperTouchDrag.current);
     paperTouchDrag.current = null;
-    finishPaperDrag();
     setEditMode(false);
     setOpenMenu(null);
   }
@@ -900,7 +907,7 @@ function QuizLibrary() {
             const isFavorite = favoritePaperIds.includes(paper.id);
             const CardSurface = editMode ? 'div' : 'a';
             return <article
-              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
+              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(editMode && paper.customBankId && supportsMousePaperDrag())}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}

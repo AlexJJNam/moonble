@@ -74,7 +74,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-group-manage { position: relative; flex: 0 0 auto; }
 .paper-group-manage>button { width: 38px; height: 38px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 10px; color: var(--mb-text-tertiary); background: transparent; }
 .paper-group-manage>button:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
-.paper-group-manage-menu { top: calc(100% + 7px); right: 0; min-width: 220px; }
+.paper-group-manage-menu { top: calc(100% + 7px); right: 0; width: min(320px, calc(100vw - 32px)); min-width: min(260px, calc(100vw - 32px)); }
 .paper-group-manage-menu>strong { padding: 6px 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); }
 .paper-group-manage-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px 34px; align-items: center; gap: 2px; }
 .paper-group-manage-row>b { min-width: 0; padding: 0 8px; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-13); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -100,6 +100,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-card.is-editing { z-index: 1; border-color: var(--mb-primary); touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .paper-card.is-editing .paper-card-link { cursor: grab; touch-action: none; }
 .paper-card.is-editing.is-pressing, .paper-card.is-editing.is-dragging { animation: paper-card-shrink 180ms cubic-bezier(.2,.82,.24,1) both; }
+.paper-card.is-editing.is-dragging.is-touch-dragging { animation: none; transform: scale(var(--paper-touch-scale, .52)); opacity: .38; }
 .paper-drag-preview { position: fixed; z-index: 5000; top: -2000px; left: -2000px; overflow: hidden; border-color: rgb(49 130 246 / 48%); opacity: .9; pointer-events: none; transform: rotate(1.5deg); animation: paper-drag-preview-pickup 160ms cubic-bezier(.2,.82,.24,1) both; }
 .paper-drag-preview .paper-preview { aspect-ratio: 16 / 9; }
 @keyframes paper-card-shrink { from { transform: scale(.92); } to { transform: scale(.86); } }
@@ -679,6 +680,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .paper-card-actions { top: 4px; right: 6px; transform: none; }
   .paper-card-actions>button { width: 28px; height: 28px; border-radius: 0; }
   .paper-action-menu { position: fixed; z-index: 1250; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); top: auto; min-width: 180px; }
+  .paper-action-menu.paper-group-manage-menu { width: min(320px, calc(100vw - 32px)); min-width: min(260px, calc(100vw - 32px)); }
   .paper-action-menu.paper-card-action-menu { display: grid; grid-auto-rows: minmax(38px, auto); }
   .paper-group-tab>.paper-action-menu { top: auto; }
   .achievement-title { align-items: stretch; flex-direction: column; }
