@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BarChart3, Bell, BookOpen, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, PenLine, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, ChevronDown, ChevronLeft, FileText, LogOut, PanelLeftClose, PanelLeftOpen, PenLine, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { profileOf } from './profile.js';
 import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
@@ -249,6 +249,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [shareNotification, setShareNotification] = useState(null);
   const [shareNotifications, setShareNotifications] = useState([]);
   const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
+  const [favoriteGroupsOpen, setFavoriteGroupsOpen] = useState({ paper: true, prd: true });
   const [favoriteSolvePaper, setFavoriteSolvePaper] = useState(null);
   const [solverPaper, setSolverPaper] = useState(() => window.moonbleSolverPaper || {
     title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '',
@@ -814,19 +815,26 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾기">
           {favoriteGroups.map(group => <div className="mb-favorite-group" key={group.type}>
-            <h3 className="mb-favorite-group-caption">{group.label}</h3>
-            {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
-              if (paper.type !== 'paper') return;
-              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-              event.preventDefault();
-              favoriteSolveTriggerRef.current = event.currentTarget;
-              setFavoriteSolvePaper(paper);
-            }}>
-              <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
-              <span className="mb-favorite-copy">
-                <span className="mb-favorite-title">{paper.label}</span>
-              </span>
-            </a>)}
+            <div className="mb-favorite-group-heading">
+              <h3 className="mb-favorite-group-caption" id={`mb-favorite-${group.type}-heading`}>{group.label}</h3>
+              <button className="mb-favorite-group-toggle" type="button" aria-label={`${group.label} 즐겨찾기 ${favoriteGroupsOpen[group.type] ? '접기' : '펼치기'}`} aria-expanded={favoriteGroupsOpen[group.type]} aria-controls={`mb-favorite-${group.type}-items`} onClick={() => setFavoriteGroupsOpen(current => ({ ...current, [group.type]: !current[group.type] }))}>
+                <ChevronDown size={14} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="mb-favorite-group-items" id={`mb-favorite-${group.type}-items`} role="group" aria-labelledby={`mb-favorite-${group.type}-heading`} hidden={!favoriteGroupsOpen[group.type]}>
+              {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
+                if (paper.type !== 'paper') return;
+                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                favoriteSolveTriggerRef.current = event.currentTarget;
+                setFavoriteSolvePaper(paper);
+              }}>
+                <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
+                <span className="mb-favorite-copy">
+                  <span className="mb-favorite-title">{paper.label}</span>
+                </span>
+              </a>)}
+            </div>
           </div>)}
         </nav>
       </section>}
