@@ -722,6 +722,7 @@ export default function PrdListPage() {
       return prd;
     });
     userStorage.setItem('prds', JSON.stringify(updatedPrds));
+    window.dispatchEvent(new CustomEvent('moonble:prd-favorites', { detail: { userId: currentUser?.id } }));
 
     // Then update state for re-render
     const animationDelay = newFavoriteStatus ? 0 : 500;

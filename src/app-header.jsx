@@ -46,19 +46,41 @@ function markShareNotificationsSeen(userId, notifications) {
 function getFavoriteSidebarItems(userId) {
   if (!userId) return [];
   const favoriteIds = getFavoritePaperIds(userId);
-  if (!favoriteIds.length) return [];
   const collection = getCustomBankCollection(userId);
   const groupColors = buildGroupColorMap(collection.groups);
   const banks = collection.banks;
   const builtInPapers = new Map(BUILT_IN_PAPER_PREVIEWS.map(paper => [paper.id, paper]));
-  return favoriteIds.map(id => {
+  const favoritePapers = favoriteIds.map(id => {
     if (id.startsWith('custom:')) {
       const bank = banks.find(item => item.id === id.slice('custom:'.length));
-      return bank ? { id, label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
+      return bank ? { id, type: 'paper', label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
     }
     const paper = builtInPapers.get(id);
-    return paper ? { id, label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
+    return paper ? { id, type: 'paper', label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
   }).filter(Boolean);
+
+  let favoritePrds = [];
+  try {
+    const savedPrds = JSON.parse(localStorage.getItem(`moonble:${userId}:prds`) || '[]');
+    if (Array.isArray(savedPrds)) {
+      const latestByDocument = new Map();
+      savedPrds.forEach(prd => {
+        if (!prd || typeof prd.documentId !== 'string' || !prd.documentId || prd.isFavorite !== true) return;
+        const previous = latestByDocument.get(prd.documentId);
+        if (!previous || Number.parseFloat(prd.version) > Number.parseFloat(previous.version)) {
+          latestByDocument.set(prd.documentId, prd);
+        }
+      });
+      favoritePrds = Array.from(latestByDocument.values()).map(prd => ({
+        id: `prd:${prd.documentId}`,
+        type: 'prd',
+        label: typeof prd.title === 'string' && prd.title.trim() ? prd.title : '제목 없는 PRD',
+        href: `./prd.html#/edit/${encodeURIComponent(prd.id)}`,
+      }));
+    }
+  } catch { /* 저장된 PRD가 없거나 손상되어도 문제지 즐겨찾기는 표시한다. */ }
+
+  return [...favoritePapers, ...favoritePrds];
 }
 
 function getSolverPaperIconStyle(userId, paper) {
@@ -411,11 +433,13 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     window.addEventListener('pageshow', refresh);
     window.addEventListener('moonble:paper-favorites', refresh);
     window.addEventListener('moonble:custom-bank-collection', refresh);
+    window.addEventListener('moonble:prd-favorites', refresh);
     return () => {
       window.removeEventListener('storage', refresh);
       window.removeEventListener('pageshow', refresh);
       window.removeEventListener('moonble:paper-favorites', refresh);
       window.removeEventListener('moonble:custom-bank-collection', refresh);
+      window.removeEventListener('moonble:prd-favorites', refresh);
     };
   }, [user?.id]);
 
@@ -782,15 +806,19 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         </nav>}
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
-        <nav className="mb-favorites-list" aria-label="즐겨찾는 문제지">
-          {favoriteSidebarItems.map(paper => <a className="mb-favorite-link" href={paper.href} key={paper.id} title={paper.label} onClick={event => {
+        <nav className="mb-favorites-list" aria-label="즐겨찾기">
+          {favoriteSidebarItems.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
+            if (paper.type !== 'paper') return;
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
             event.preventDefault();
             favoriteSolveTriggerRef.current = event.currentTarget;
             setFavoriteSolvePaper(paper);
           }}>
-            <span className="mb-favorite-icon" style={paper.iconStyle}><BookOpen size={14} aria-hidden="true" /></span>
-            <span className="mb-favorite-title">{paper.label}</span>
+            <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
+            <span className="mb-favorite-copy">
+              <span className="mb-favorite-title">{paper.label}</span>
+              <span className="mb-favorite-caption">{paper.type === 'prd' ? 'PRD' : '문제지'}</span>
+            </span>
           </a>)}
         </nav>
       </section>}
