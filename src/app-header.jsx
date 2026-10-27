@@ -279,6 +279,10 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   const [quizPenMode, setQuizPenMode] = useState(() => window.moonbleQuizPenMode === true);
   const questions = useSolverQuestions(solver);
   const solverHeading = '문제 목록';
+  const favoriteGroups = [
+    { type: 'paper', label: '문제지', items: favoriteSidebarItems.filter(item => item.type === 'paper') },
+    { type: 'prd', label: 'PRD', items: favoriteSidebarItems.filter(item => item.type === 'prd') },
+  ].filter(group => group.items.length > 0);
 
   useEffect(() => {
     if (!favoriteSolvePaper) return undefined;
@@ -807,19 +811,21 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾기">
-          {favoriteSidebarItems.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
-            if (paper.type !== 'paper') return;
-            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            event.preventDefault();
-            favoriteSolveTriggerRef.current = event.currentTarget;
-            setFavoriteSolvePaper(paper);
-          }}>
-            <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
-            <span className="mb-favorite-copy">
-              <span className="mb-favorite-title">{paper.label}</span>
-              <span className="mb-favorite-caption">{paper.type === 'prd' ? 'PRD' : '문제지'}</span>
-            </span>
-          </a>)}
+          {favoriteGroups.map(group => <div className="mb-favorite-group" key={group.type}>
+            <h3 className="mb-favorite-group-caption">{group.label}</h3>
+            {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
+              if (paper.type !== 'paper') return;
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              favoriteSolveTriggerRef.current = event.currentTarget;
+              setFavoriteSolvePaper(paper);
+            }}>
+              <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
+              <span className="mb-favorite-copy">
+                <span className="mb-favorite-title">{paper.label}</span>
+              </span>
+            </a>)}
+          </div>)}
         </nav>
       </section>}
       {(user || onLogout || error) && <div className="mb-app-account">

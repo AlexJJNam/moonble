@@ -62,13 +62,15 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-solver-paper-title { min-width: 0; flex: 1 1 0; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 18px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
 .mb-favorites { min-height: 0; max-height: min(40vh, 360px); display: flex; flex: 0 1 auto; flex-direction: column; gap: 6px; margin-top: 20px; overflow: hidden; }
 .mb-favorites-heading { flex: 0 0 auto; margin: 0; padding: 0 8px 3px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: 650; }
-.mb-favorites-list { min-height: 0; display: grid; align-content: start; gap: 3px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
+.mb-favorites-list { min-height: 0; display: grid; align-content: start; gap: 8px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
 .mb-favorites-list::-webkit-scrollbar { display: none; }
+.mb-favorite-group { min-width: 0; display: grid; align-content: start; gap: 3px; }
+.mb-favorite-group-caption { margin: 0; padding: 0 8px 1px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 16px; font-weight: 400; }
 .mb-favorite-link { min-width: 0; min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 18px; font-weight: 500; text-decoration: none; }
 .mb-favorite-link:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
 .mb-favorite-icon { width: 24px; height: 24px; flex: 0 0 24px; display: grid; place-content: center; border-radius: 6px; color: var(--favorite-group-color, var(--mb-primary-strong)); background: var(--favorite-group-tint, var(--mb-primary-soft)); }
 .mb-favorite-link.is-prd .mb-favorite-icon { color: var(--mb-text-tertiary); background: var(--mb-surface-muted); }
-.mb-favorite-copy { min-width: 0; display: grid; gap: 1px; }
+.mb-favorite-copy { min-width: 0; display: block; }
 .mb-favorite-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mb-favorite-caption { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 16px; font-weight: 400; }
 .mb-favorite-solve-overlay { position: fixed; inset: 0; z-index: 1250; display: grid; place-items: center; padding: 20px; background: rgb(15 23 42 / 42%); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: mb-favorite-solve-fade 160ms ease both; }
@@ -152,6 +154,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a { justify-content: center; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-app-nav:not(.mb-solver-nav) a span { display: none; }
 .mb-app-header.is-collapsed .mb-favorites-heading { display: none; }
+.mb-app-header.is-collapsed .mb-favorite-group-caption { display: none; }
 .mb-app-header.is-collapsed .mb-solver-paper { justify-content: center; margin-right: 0; margin-left: 0; padding-right: 0; padding-left: 0; }
 .mb-app-header.is-collapsed .mb-solver-paper-title { display: none; }
 .mb-app-header.is-collapsed .mb-favorite-link { justify-content: center; padding-right: 0; padding-left: 0; }
