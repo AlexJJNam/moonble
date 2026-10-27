@@ -814,7 +814,7 @@ function QuizLibrary() {
     savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
-    samples: bank.questions.slice(0, 2).map(question => ({ title: question.q, options: question.options.slice(0, 3) })),
+    samples: bank.questions.slice(0, 4).map(question => ({ title: question.q, options: question.options })),
   }));
   const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers : [];
   const allPapers = [...customPapers, ...visibleSamples].map(paper => ({

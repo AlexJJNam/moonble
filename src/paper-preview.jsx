@@ -14,14 +14,31 @@ export function PaperPreview({ paper, compact = false, style }) {
   const count = Number(paper?.count) || 0;
 
   return <div className={`paper-preview preview-${paper?.kind || 'custom'}${compact ? ' paper-preview--compact' : ''}`} style={style} aria-hidden="true">
-    <div className="preview-sheet">
-      <div className="preview-sheet-brand"><BrandLogo decorative /></div>
-      <div className="preview-sheet-title">{label}</div>
-      {paper?.description && <div className="preview-sheet-subtitle">{paper.description}</div>}
-      {samples.slice(0, compact ? 1 : 2).map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
-        <div><b>{String(index + 1).padStart(2, '0')}</b><strong>{sample.title}</strong></div>
-        {(sample.options || []).slice(0, compact ? 2 : 3).map((option, optionIndex) => <span className="preview-option" key={`${option}-${optionIndex}`}><i />{option}</span>)}
-      </div>)}
+    <div className={`preview-sheet${compact ? ' preview-sheet--compact' : ' preview-solver-sheet'}`}>
+      {compact ? <>
+        <div className="preview-sheet-brand"><BrandLogo decorative /></div>
+        <div className="preview-sheet-title">{label}</div>
+        {paper?.description && <div className="preview-sheet-subtitle">{paper.description}</div>}
+        {samples.slice(0, 1).map((sample, index) => <div className="preview-question" key={`${sample.title}-${index}`}>
+          <div><b>{String(index + 1).padStart(2, '0')}</b><strong>{sample.title}</strong></div>
+          {(sample.options || []).slice(0, 2).map((option, optionIndex) => <span className="preview-option" key={`${option}-${optionIndex}`}><i />{option}</span>)}
+        </div>)}
+      </> : <>
+        <div className="preview-sheet-brand"><BrandLogo decorative /></div>
+        <div className="preview-solver-title">{label}</div>
+        {paper?.description && <div className="preview-solver-description">{paper.description}</div>}
+        <div className="preview-solver-grid">
+          {samples.slice(0, 4).map((sample, index) => <article className="preview-solver-card" key={`${sample.title}-${index}`}>
+            <div className="preview-solver-question">
+              <span className="preview-solver-number">Q{index + 1}</span>
+              <strong>{sample.title}</strong>
+            </div>
+            <div className="preview-solver-options">
+              {(sample.options || []).slice(0, 4).map((option, optionIndex) => <span className="preview-solver-option" key={`${option}-${optionIndex}`}><i /><span>{option}</span></span>)}
+            </div>
+          </article>)}
+        </div>
+      </>}
     </div>
     <span className="preview-count">{count}문항</span>
   </div>;
