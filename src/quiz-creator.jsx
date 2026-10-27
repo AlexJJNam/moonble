@@ -142,10 +142,13 @@ function PromptSample({ hidden }) {
 
 function PromptReveal({ text, id }) {
   let revealIndex = 0;
-  return <span className="creator-ai-prompt-reveal" aria-hidden="true">{text.split(' ').map((word, wordIndex) => <span className="creator-ai-prompt-reveal-word" key={`${id}-word-${wordIndex}`}>{[...word].map(character => {
-    const index = revealIndex++;
-    return <span className="creator-ai-prompt-reveal-character" style={{ '--reveal-index': index }} key={`${id}-${index}`}>{character}</span>;
-  })}</span>)}</span>;
+  return <span className="creator-ai-prompt-reveal" aria-hidden="true">{text.split(/(\s+)/).map((segment, segmentIndex) => {
+    if (/^\s+$/.test(segment)) return <React.Fragment key={`${id}-space-${segmentIndex}`}>{segment}</React.Fragment>;
+    return [...segment].map(character => {
+      const index = revealIndex++;
+      return <span className="creator-ai-prompt-reveal-character" style={{ '--reveal-index': index }} key={`${id}-${index}`}>{character}</span>;
+    });
+  })}</span>;
 }
 
 export function QuizCreator({ custom, onChange }) {
@@ -563,7 +566,7 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </header>
       <div className="creator-ai-prompt">
-        <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
+        <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}${provider === 'chatgpt' ? ' is-chatgpt' : ' is-ai-mode'}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
           <span className={`creator-ai-prompt-field${examplePromptReveal ? ' is-revealing' : ''}`}>
             <PromptSample hidden={Boolean(query)} />
