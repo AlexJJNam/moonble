@@ -94,7 +94,7 @@ function pickExampleIndexes() {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
   }
-  return indexes;
+  return indexes.slice(0, 7);
 }
 const providerSegments = [
   { value: 'gemini', label: 'AI Mode' },
@@ -140,6 +140,14 @@ function PromptSample({ hidden }) {
   </span>;
 }
 
+function PromptReveal({ text, id }) {
+  let revealIndex = 0;
+  return <span className="creator-ai-prompt-reveal" aria-hidden="true">{text.split(' ').map((word, wordIndex) => <span className="creator-ai-prompt-reveal-word" key={`${id}-word-${wordIndex}`}>{[...word].map(character => {
+    const index = revealIndex++;
+    return <span className="creator-ai-prompt-reveal-character" style={{ '--reveal-index': index }} key={`${id}-${index}`}>{character}</span>;
+  })}</span>)}</span>;
+}
+
 export function QuizCreator({ custom, onChange }) {
   const [query, setQuery] = useState('');
   const [provider, setProvider] = useState('gemini');
@@ -151,8 +159,10 @@ export function QuizCreator({ custom, onChange }) {
   const [dragging, setDragging] = useState(false);
   const [promptFocused, setPromptFocused] = useState(false);
   const [exampleRevealed, setExampleRevealed] = useState(false);
+  const [examplePromptReveal, setExamplePromptReveal] = useState(null);
   const [exampleIndex, setExampleIndex] = useState(0);
   const [exampleCardIndexes] = useState(() => pickExampleIndexes());
+  const [exampleCardsDragging, setExampleCardsDragging] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [uploadRevealed, setUploadRevealed] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -169,8 +179,10 @@ export function QuizCreator({ custom, onChange }) {
   const keyboardOffsetFrame = useRef(0);
   const promptGuideRef = useRef(null);
   const uploadInputRef = useRef(null);
-  const exampleTypingTimerRef = useRef(0);
-  const exampleTypingRunRef = useRef(0);
+  const examplePromptRevealTimerRef = useRef(0);
+  const examplePromptRevealIdRef = useRef(0);
+  const exampleCardsDragRef = useRef(null);
+  const suppressExampleCardClickRef = useRef(false);
   const uploadSuccessTimer = useRef(0);
   const metaRevealTimer = useRef(0);
   const resultScreenTimer = useRef(0);
@@ -187,7 +199,7 @@ export function QuizCreator({ custom, onChange }) {
   }, [custom?.title, custom?.description, custom?.savedAt]);
 
   useEffect(() => () => {
-    window.clearInterval(exampleTypingTimerRef.current);
+    window.clearTimeout(examplePromptRevealTimerRef.current);
     window.clearTimeout(uploadSuccessTimer.current);
     window.clearTimeout(metaRevealTimer.current);
     window.clearTimeout(resultScreenTimer.current);
@@ -303,9 +315,10 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function requestGeneration() {
-    window.clearInterval(exampleTypingTimerRef.current);
-    exampleTypingTimerRef.current = 0;
-    exampleTypingRunRef.current += 1;
+    window.clearTimeout(examplePromptRevealTimerRef.current);
+    examplePromptRevealTimerRef.current = 0;
+    examplePromptRevealIdRef.current += 1;
+    setExamplePromptReveal(null);
     const value = query.trim();
     if (!value) { shakePrompt(); return; }
     setError('');
@@ -325,35 +338,67 @@ export function QuizCreator({ custom, onChange }) {
   function useExample(prompt = examplePrompt) {
     const selectedPrompt = typeof prompt === 'string' ? prompt : examplePrompt;
     const characters = [...selectedPrompt];
-    window.clearInterval(exampleTypingTimerRef.current);
-    exampleTypingTimerRef.current = 0;
-    const run = ++exampleTypingRunRef.current;
-    setQuery('');
+    window.clearTimeout(examplePromptRevealTimerRef.current);
+    examplePromptRevealTimerRef.current = 0;
+    const revealId = ++examplePromptRevealIdRef.current;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setExamplePromptReveal(reduceMotion ? null : { text: selectedPrompt, id: revealId });
+    setQuery(selectedPrompt);
     if (promptGuideRef.current) promptGuideRef.current.open = false;
     requestAnimationFrame(() => {
       const input = promptInputRef.current;
       if (!input) return;
       input.style.height = 'auto';
+      input.style.height = `${Math.min(110, input.scrollHeight)}px`;
       input.focus({ preventScroll: true });
-      let characterIndex = 0;
-      exampleTypingTimerRef.current = window.setInterval(() => {
-        if (run !== exampleTypingRunRef.current) {
-          window.clearInterval(exampleTypingTimerRef.current);
-          exampleTypingTimerRef.current = 0;
-          return;
-        }
-        characterIndex += 1;
-        const revealedPrompt = characters.slice(0, characterIndex).join('');
-        setQuery(revealedPrompt);
-        input.style.height = 'auto';
-        input.style.height = `${Math.min(110, input.scrollHeight)}px`;
-        input.setSelectionRange(revealedPrompt.length, revealedPrompt.length);
-        if (characterIndex >= characters.length) {
-          window.clearInterval(exampleTypingTimerRef.current);
-          exampleTypingTimerRef.current = 0;
-        }
-      }, 18);
     });
+    if (reduceMotion) return;
+    examplePromptRevealTimerRef.current = window.setTimeout(() => {
+      setExamplePromptReveal(current => current?.id === revealId ? null : current);
+      examplePromptRevealTimerRef.current = 0;
+    }, 420 + Math.max(0, characters.length - 1) * 22 + 460);
+  }
+
+  function startExampleCardsDrag(event) {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    exampleCardsDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: event.currentTarget.scrollLeft,
+      moved: false,
+    };
+  }
+
+  function moveExampleCardsDrag(event) {
+    const drag = exampleCardsDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - drag.startX;
+    if (!drag.moved && Math.abs(deltaX) > 5) {
+      drag.moved = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setExampleCardsDragging(true);
+    }
+    if (drag.moved) {
+      event.preventDefault();
+      event.currentTarget.scrollLeft = drag.startScrollLeft - deltaX;
+    }
+  }
+
+  function endExampleCardsDrag(event) {
+    const drag = exampleCardsDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    suppressExampleCardClickRef.current = drag.moved;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    exampleCardsDragRef.current = null;
+    setExampleCardsDragging(false);
+    window.setTimeout(() => { suppressExampleCardClickRef.current = false; }, 0);
+  }
+
+  function handleExampleCardClickCapture(event) {
+    if (!suppressExampleCardClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressExampleCardClickRef.current = false;
   }
 
   function saveQuestions(text, source) {
@@ -520,9 +565,10 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-ai-prompt">
         <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
-          <span className="creator-ai-prompt-field">
+          <span className={`creator-ai-prompt-field${examplePromptReveal ? ' is-revealing' : ''}`}>
             <PromptSample hidden={Boolean(query)} />
-            <textarea ref={promptInputRef} className="creator-ai-prompt-input" value={query} onFocus={dockPrompt} onBlur={() => { window.clearInterval(exampleTypingTimerRef.current); exampleTypingTimerRef.current = 0; exampleTypingRunRef.current += 1; setPromptFocused(false); }} onChange={event => { window.clearInterval(exampleTypingTimerRef.current); exampleTypingTimerRef.current = 0; exampleTypingRunRef.current += 1; setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
+            {examplePromptReveal && <PromptReveal text={examplePromptReveal.text} id={examplePromptReveal.id} />}
+            <textarea ref={promptInputRef} className={`creator-ai-prompt-input${examplePromptReveal ? ' is-example-revealing' : ''}`} value={query} onFocus={dockPrompt} onBlur={() => setPromptFocused(false)} onChange={event => { window.clearTimeout(examplePromptRevealTimerRef.current); examplePromptRevealTimerRef.current = 0; examplePromptRevealIdRef.current += 1; setExamplePromptReveal(null); setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
           <div className="creator-ai-actions">
             <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
@@ -533,7 +579,7 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </div>
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
-        <div className="creator-example-cards">
+        <div className={`creator-example-cards${exampleCardsDragging ? ' is-dragging' : ''}`} role="region" aria-label="문제 생성 예시, 좌우로 넘겨 선택" tabIndex={0} onPointerDown={startExampleCardsDrag} onPointerMove={moveExampleCardsDrag} onPointerUp={endExampleCardsDrag} onPointerCancel={endExampleCardsDrag} onClickCapture={handleExampleCardClickCapture}>
           {exampleCardIndexes.map((exampleIndex, index) => {
             const example = exampleGuideDetails[exampleIndex];
             return <button className="creator-example-card is-revealing" type="button" key={exampleIndex} style={{ '--creator-example-reveal-delay': `${Math.min(index, 5) * 48}ms` }} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[exampleIndex])}>

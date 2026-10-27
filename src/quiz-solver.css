@@ -35,6 +35,18 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 #quiz { padding-bottom: 96px; }
 .quiz-wrap { gap: 24px; margin-top: 32px; }
 .q-card { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 24px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
+/* The solver is an interactive surface: suppress browser text selection/callouts
+   on question content and its number navigation so long presses don't paint
+   native blue selection over the quiz or interfere with pen gestures. */
+#quizContainer, #quizContainer *,
+.mb-app-header.mb-solver-sidebar .mb-solver-questions,
+.mb-app-header.mb-solver-sidebar .mb-solver-questions *,
+.quiz-ink-toolbar, .quiz-ink-history-toolbar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 .q-card.is-reveal-pending { opacity: 0; transform: translate3d(0, 20px, 0); }
 .q-card.is-revealing { animation: q-card-float-in 680ms cubic-bezier(.22,.61,.36,1) var(--q-card-reveal-delay, 0ms) both; }
 @keyframes q-card-float-in { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }

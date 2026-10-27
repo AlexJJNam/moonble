@@ -284,6 +284,10 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-ai-prompt-icon { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin-top: 1px; color: var(--mb-text-tertiary); }
 .creator-ai-prompt-field { position: relative; grid-column: 2; grid-row: 1; min-width: 0; min-height: 24px; display: block; }
 .creator-ai-prompt-input { position: relative; z-index: 1; width: 100%; min-width: 0; min-height: 22px; max-height: 110px; margin: 0; padding: 0; overflow-y: auto; resize: none; border: 0; outline: 0; color: var(--mb-text-primary); background: transparent; box-shadow: none; font: inherit; font-size: var(--mb-font-16); line-height: 22px; }
+.creator-ai-prompt-field.is-revealing .creator-ai-prompt-input { z-index: 3; color: transparent; caret-color: var(--mb-text-primary); }
+.creator-ai-prompt-reveal { position: absolute; z-index: 2; inset: 0; display: block; overflow: hidden; color: var(--mb-text-primary); font: inherit; font-size: var(--mb-font-16); line-height: 22px; pointer-events: none; }
+.creator-ai-prompt-reveal-word { display: inline-block; margin-right: .28em; white-space: nowrap; }
+.creator-ai-prompt-reveal-character { display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(5px); animation: creator-keyvisual-character-reveal 420ms cubic-bezier(.2,.75,.25,1) forwards; animation-delay: calc(420ms + var(--reveal-index) * 22ms); will-change: opacity, filter, transform; }
 .creator-ai-prompt-input:focus, .creator-ai-prompt-input:focus-visible { border: 0; outline: none; outline-offset: 0; box-shadow: none; }
 .creator-prompt-sample { position: absolute; z-index: 0; inset: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 22px; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; transition: opacity 120ms ease; }
 .creator-prompt-sample.is-hidden { opacity: 0; }
@@ -301,10 +305,9 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-ai-prompt-btn.is-inactive { opacity: .45; }
 .creator-ai-prompt-btn.is-inactive:hover { border-color: var(--mb-primary); background: var(--mb-primary); }
 .creator-example-suggestions { margin-top: 18px; }
-.creator-example-cards { display: flex; align-items: stretch; gap: 10px; padding-bottom: 5px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; scrollbar-color: #d6dde6 transparent; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
-.creator-example-cards::-webkit-scrollbar { height: 5px; }
-.creator-example-cards::-webkit-scrollbar-track { background: transparent; }
-.creator-example-cards::-webkit-scrollbar-thumb { border-radius: 999px; background: #d6dde6; }
+.creator-example-cards { display: flex; align-items: stretch; gap: 10px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; touch-action: pan-x; cursor: grab; }
+.creator-example-cards::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.creator-example-cards.is-dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; }
 .creator-example-card { min-width: 0; min-height: 0; height: auto; flex: 0 0 calc(30% - 9px); align-self: stretch; display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 12px 14px; border: 0; border-radius: 14px; color: var(--mb-text-primary); background: #f1f4f8; text-align: left; cursor: pointer; scroll-snap-align: start; transition: background-color var(--mb-duration), transform var(--mb-duration); }
 .creator-example-card.is-revealing { animation: creator-example-card-float-in 680ms cubic-bezier(.22,.61,.36,1) var(--creator-example-reveal-delay, 0ms) backwards; }
 .creator-example-card:hover { background: #eaf0f7; transform: translateY(-1px); }
@@ -377,6 +380,7 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes creator-prompt-character-in { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes creator-prompt-character-out { to { opacity: 0; filter: blur(4px); transform: translateY(-3px); } }
 @keyframes creator-example-character-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes creator-keyvisual-character-reveal { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes creator-ai-halo-shift {
   0%, 100% { box-shadow: 0 0 12px rgb(201 185 244 / 22%), 0 5px 18px rgb(171 217 243 / 18%), 0 -3px 16px rgb(244 180 217 / 18%); }
   25% { box-shadow: -3px -2px 13px rgb(201 185 244 / 22%), 4px 1px 19px rgb(171 217 243 / 18%), -2px 4px 16px rgb(244 180 217 / 18%); }
