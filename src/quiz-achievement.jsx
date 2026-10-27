@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { BUILT_IN_PAPER_PREVIEWS, PaperPreview } from './paper-preview.jsx';
-import { formatRelativeDate, formatRelativeDateShortYear } from './date-format.js';
+import { formatRelativeDate } from './date-format.js';
 
 const HISTORY_KEY_PREFIX = 'moonble:user:';
 const PERIOD_OPTIONS = [['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['all', '전체'], ['custom', '직접 선택']];
@@ -50,7 +50,12 @@ function formatDate(value) {
 }
 
 function formatSummaryRelativeDate(value) {
-  return formatRelativeDateShortYear(value);
+  const relative = formatRelativeDate(value);
+  if (!relative) return { kind: 'label', text: '날짜 정보 없음' };
+  if (relative.endsWith('전')) return { kind: 'relative', text: relative };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return { kind: 'label', text: '날짜 정보 없음' };
+  return { kind: 'calendar', month: date.getMonth() + 1, day: date.getDate() };
 }
 
 function formatShortDate(value) {
@@ -447,7 +452,7 @@ export function QuizAchievement({ userId }) {
   }, [dateFrom, dateTo, history, period, selectedGroups, selectedPapers]);
 
   const stats = useMemo(() => {
-    if (!filteredHistory.length) return { latest: 0, average: 0, best: 0, latestDate: '-' };
+    if (!filteredHistory.length) return { latest: 0, average: 0, best: 0, latestDate: { kind: 'label', text: '-' } };
     const scores = filteredHistory.map(item => Number(item.score) || 0);
     return {
       latest: scores[0],
@@ -607,7 +612,7 @@ export function QuizAchievement({ userId }) {
       <section className="achievement-performance" aria-labelledby="achievement-performance-title">
         <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2></div></div>
         <div className="achievement-summary" aria-label="성취도 요약">
-          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate}</strong><small>{filteredHistory.length}회 완료</small></article>
+          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate.kind === 'calendar' ? <>{stats.latestDate.month}<small>월</small><span className="achievement-date-day">{stats.latestDate.day}<small>일</small></span></> : stats.latestDate.text}</strong><small>{filteredHistory.length}회 완료</small></article>
           <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
           <article><span>평균 점수</span><strong>{stats.average}<small>점</small></strong></article>
           <article><span>최고 점수</span><strong>{stats.best}<small>점</small></strong></article>

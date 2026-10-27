@@ -104,7 +104,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-drag-preview .paper-preview { aspect-ratio: 16 / 9; }
 @keyframes paper-card-shrink { from { transform: scale(.92); } to { transform: scale(.86); } }
 @keyframes paper-drag-preview-pickup { from { opacity: .6; transform: scale(.88) rotate(0); } to { opacity: .9; transform: scale(1) rotate(1.5deg); } }
-.paper-card-link { display: block; overflow: hidden; border-radius: inherit; }
+.paper-card-link { display: block; overflow: hidden; border-radius: 15px; }
 .paper-card:hover { border-color: #b5cdf0; background: #fcfdff; }
 .paper-card.is-editing:hover { border-color: var(--mb-primary); }
 .paper-card:focus-visible { outline-offset: 4px; }
@@ -506,6 +506,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-summary strong small { display: inline; margin-left: 3px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); font-weight: 600; }
 .achievement-summary article>small { display: block; margin-top: 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 500; }
 .achievement-summary .achievement-summary-date { font-size: 20px; line-height: 32px; }
+.achievement-summary-date .achievement-date-day { margin-left: 5px; }
 .achievement-chart { position: relative; }
 .achievement-legend { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .achievement-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
