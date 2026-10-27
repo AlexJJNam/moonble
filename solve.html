@@ -3665,6 +3665,7 @@
     let gradeFxTimer = 0;
     let gradeScrollTimer = 0;
     let sharedGuestPopupTimer = 0;
+    let quizCardRevealObserver = null;
 
     sharedGuestClose?.addEventListener('click', () => sharedGuestDialog?.close());
 
@@ -4025,10 +4026,11 @@
       picked = sourceArray ? sourceArray.slice() : sample(typeof getActiveBank === 'function' ? getActiveBank() : (getSelectedPaperBank() || BANK), QUESTION_COUNT);
       const questionCountBadge = document.querySelector('#quiz .section-head .solve-paper-count-badge');
       if (questionCountBadge) questionCountBadge.textContent = `문항 수 ${picked.length}`;
+      const revealCardsOnScroll = 'IntersectionObserver' in window && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
       picked.forEach((q, idx) => {
         const card = document.createElement('div');
-        card.className = 'q-card';
+        card.className = revealCardsOnScroll ? 'q-card is-reveal-pending' : 'q-card';
         card.id = `question-${idx + 1}`;
         card.tabIndex = -1;
         card.dataset.qid = q.id;
@@ -4115,6 +4117,26 @@
 
         quizEl.appendChild(card);
       });
+
+      quizCardRevealObserver?.disconnect();
+      if (revealCardsOnScroll) {
+        const cards = $$('.q-card', quizEl);
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const card = entry.target;
+            card.classList.remove('is-reveal-pending');
+            card.classList.add('is-revealing');
+            observer.unobserve(card);
+          });
+          if (!quizEl.querySelector('.q-card.is-reveal-pending')) observer.disconnect();
+        }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+        quizCardRevealObserver = observer;
+        cards.forEach((card, index) => {
+          card.style.setProperty('--q-card-reveal-delay', `${Math.min(index * 48, 192)}ms`);
+          observer.observe(card);
+        });
+      }
 
       retryWrongBtn.disabled = true;
       csvBtn.disabled = true;
