@@ -583,7 +583,7 @@ export function QuizAchievement({ userId }) {
           <span className="achievement-filter-label">문제지</span>
           <div className="achievement-paper-filters" role="group" aria-label="선택한 그룹의 문제지 복수 선택">
             <button className={!selectedPapers.length ? 'is-active' : ''} type="button" aria-pressed={!selectedPapers.length} onClick={() => setSelectedPapers([])}>전체 <small>{paperFilters.reduce((sum, paper) => sum + paper.count, 0)}</small></button>
-            {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}>{paper.name} <small>{paper.count}</small></button>)}
+            {paperFilters.map(paper => <button className={selectedPapers.includes(paper.id) ? 'is-active' : ''} type="button" aria-pressed={selectedPapers.includes(paper.id)} key={paper.id} onClick={() => setSelectedPapers(current => current.includes(paper.id) ? current.filter(id => id !== paper.id) : [...current, paper.id])}><span className="achievement-paper-name" title={paper.name}>{paper.name}</span> <small>{paper.count}</small></button>)}
           </div>
         </div>}
         <div className="achievement-period-filter" ref={periodFilterRef}>

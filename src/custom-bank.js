@@ -323,7 +323,7 @@ import { supabase } from './supabase.js';
   export function createCustomGroup(name, userId, colorKey) {
     try {
       var collection = readCollection(userId);
-      var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
+      var cleanName = typeof name === 'string' ? name.trim().slice(0, 12) : '';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
       var group = { id: makeId('group'), name: cleanName, colorKey: colorKey || 'blue', createdAt: new Date().toISOString() };
@@ -335,7 +335,7 @@ import { supabase } from './supabase.js';
   export function updateCustomGroup(groupId, name, userId, colorKey) {
     try {
       var collection = readCollection(userId);
-      var cleanName = typeof name === 'string' ? name.trim().slice(0, 24) : '';
+      var cleanName = typeof name === 'string' ? name.trim().slice(0, 12) : '';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.id !== groupId && group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
       if (!collection.groups.some(group => group.id === groupId)) throw new Error('그룹을 찾지 못했습니다.');
