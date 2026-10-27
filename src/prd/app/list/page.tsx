@@ -848,15 +848,15 @@ export default function PrdListPage() {
           <h1 className="mb-page-title">PRD</h1>
         </div>
         <div className="prd-list-toolbar flex justify-between items-center mb-4">
-            <div className='flex items-center gap-2'>
+            <div className='prd-list-project-controls flex items-center gap-2'>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    {currentProjectName}
+                  <Button variant="outline" className="prd-project-filter-trigger">
+                    <span className="prd-project-filter-label">{currentProjectName}</span>
                     <ChevronDown className="ml-2 h-4 w-4"/>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="start" collisionPadding={12} className="prd-project-dropdown">
                   <DropdownMenuItem onClick={() => setSelectedProject('all')}>전체보기</DropdownMenuItem>
                   {projects.map(project => (
                     <DropdownMenuItem key={project.id} onClick={() => setSelectedProject(project.name)}>

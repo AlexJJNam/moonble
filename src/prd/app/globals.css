@@ -240,6 +240,12 @@
   background: var(--mb-surface);
 }
 
+.prd-list-project-controls { min-width: 0; flex: 1 1 auto; }
+.prd-project-filter-trigger { min-width: 0; max-width: min(280px, 100%); flex: 0 1 auto; }
+.prd-project-filter-label { min-width: 0; max-width: min(240px, calc(100vw - 220px)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prd-project-dropdown { box-sizing: border-box; width: max-content; max-width: min(360px, calc(100vw - 24px)); max-height: min(360px, calc(100dvh - 24px)); overflow-x: hidden; overflow-y: auto; }
+.prd-project-dropdown [role="menuitem"] { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+
 .prd-list-summary {
   padding: 12px 16px !important;
   border: 0 !important;

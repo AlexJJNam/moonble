@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -170,7 +170,7 @@ export function QuizCreator({ custom, onChange }) {
     setExampleIndex(Math.floor(Math.random() * examplePrompts.length));
     const timer = window.setInterval(() => {
       setExampleIndex(index => (index + 1) % examplePrompts.length);
-      setExampleRevealed(false);
+      setExampleRevealed(true);
     }, 4800);
     return () => window.clearInterval(timer);
   }, [guideOpen]);
@@ -291,15 +291,16 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   function useExample(prompt = examplePrompt) {
-    setQuery(prompt);
+    const selectedPrompt = typeof prompt === 'string' ? prompt : examplePrompt;
+    setQuery(selectedPrompt);
     if (promptGuideRef.current) promptGuideRef.current.open = false;
     requestAnimationFrame(() => {
       const input = promptInputRef.current;
       if (!input) return;
       input.style.height = 'auto';
       input.style.height = `${Math.min(110, input.scrollHeight)}px`;
-      input.focus();
-      input.setSelectionRange(prompt.length, prompt.length);
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(selectedPrompt.length, selectedPrompt.length);
     });
   }
 
@@ -448,7 +449,7 @@ export function QuizCreator({ custom, onChange }) {
         <div className="creator-prompt-heading">
           <div className="creator-prompt-title-row">
             <h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2>
-            <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); if (!open) setExampleRevealed(false); }}>
+            <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); setExampleRevealed(open); }}>
               <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
               <div className="creator-prompt-guide-panel">
                 <strong>이렇게 적어보세요</strong>
@@ -456,10 +457,7 @@ export function QuizCreator({ custom, onChange }) {
                 <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> {exampleGuide.level}</span></p>
                 <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> {exampleGuide.scope}</span></p>
                 <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
-                  <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={useExample}>예시 사용</button>}</span>
-                  {!exampleRevealed
-                    ? <button className="creator-example-reveal" type="button" aria-controls="creator-prompt-example" aria-expanded="false" onClick={() => setExampleRevealed(true)}>예시 보기</button>
-                    : null}
+                  <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${exampleIndex}-${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={() => useExample()}>예시 사용</button>}</span>
                 </div>
               </div>
             </details>
@@ -483,7 +481,6 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </div>
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
-        <div className="creator-example-suggestions-heading"><span>예시</span></div>
         <div className="creator-example-cards">
           {[0, 1, 2].map(index => {
             const example = exampleGuideDetails[index];
@@ -491,7 +488,6 @@ export function QuizCreator({ custom, onChange }) {
               <span className="creator-example-card-meta">{example.level} · {example.scope}</span>
               <strong>{example.topic}</strong>
               <span className="creator-example-card-prompt">{examplePrompts[index]}</span>
-              <span className="creator-example-card-action">예시 사용 <ChevronRight size={15} aria-hidden="true" /></span>
             </button>;
           })}
         </div>
