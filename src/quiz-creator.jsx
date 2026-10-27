@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -290,8 +290,8 @@ export function QuizCreator({ custom, onChange }) {
       : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
   }
 
-  function useExample() {
-    setQuery(examplePrompt);
+  function useExample(prompt = examplePrompt) {
+    setQuery(prompt);
     if (promptGuideRef.current) promptGuideRef.current.open = false;
     requestAnimationFrame(() => {
       const input = promptInputRef.current;
@@ -299,7 +299,7 @@ export function QuizCreator({ custom, onChange }) {
       input.style.height = 'auto';
       input.style.height = `${Math.min(110, input.scrollHeight)}px`;
       input.focus();
-      input.setSelectionRange(examplePrompt.length, examplePrompt.length);
+      input.setSelectionRange(prompt.length, prompt.length);
     });
   }
 
@@ -482,6 +482,20 @@ export function QuizCreator({ custom, onChange }) {
           </div>
         </div>
       </div>
+      <section className="creator-example-suggestions" aria-label="문제 생성 예시">
+        <div className="creator-example-suggestions-heading"><span>예시</span></div>
+        <div className="creator-example-cards">
+          {[0, 1, 2].map(index => {
+            const example = exampleGuideDetails[index];
+            return <button className="creator-example-card" type="button" key={example.topic} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[index])}>
+              <span className="creator-example-card-meta">{example.level} · {example.scope}</span>
+              <strong>{example.topic}</strong>
+              <span className="creator-example-card-prompt">{examplePrompts[index]}</span>
+              <span className="creator-example-card-action">예시 사용 <ChevronRight size={15} aria-hidden="true" /></span>
+            </button>;
+          })}
+        </div>
+      </section>
     </section>
 
     <div className="creator-flow-chevron" aria-hidden="true"><ChevronDown size={22} strokeWidth={2.4} /></div>

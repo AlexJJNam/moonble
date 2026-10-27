@@ -25,7 +25,7 @@ import { revealPage } from './page-readiness.js';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
-import { getPaperAccessMap } from './paper-activity.js';
+import { getPaperLastActivityMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorPreviewStyle, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
@@ -190,8 +190,8 @@ function QuizLibrary() {
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
-  const [paperAccess, setPaperAccess] = useState(() => getPaperAccessMap(initialUser?.id));
-  const paperAccessSnapshotRef = useRef(JSON.stringify(getPaperAccessMap(initialUser?.id)));
+  const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
+  const paperAccessSnapshotRef = useRef(JSON.stringify(getPaperLastActivityMap(initialUser?.id)));
   const [favoritePaperIds, setFavoritePaperIds] = useState(() => getFavoritePaperIds(initialUser?.id));
   const [activeGroup, setActiveGroup] = useState('all');
   const [openMenu, setOpenMenu] = useState(null);
@@ -232,7 +232,7 @@ function QuizLibrary() {
   }, [user, collectionReady]);
   useEffect(() => {
     const refresh = event => {
-      const nextAccess = getPaperAccessMap(user?.id);
+      const nextAccess = getPaperLastActivityMap(user?.id);
       const nextSnapshot = JSON.stringify(nextAccess);
       if (event?.type === 'pageshow' && event.persisted && nextSnapshot !== paperAccessSnapshotRef.current) {
         // A solver visit updated recent order while this list was in the back/forward cache.
@@ -391,7 +391,7 @@ function QuizLibrary() {
       setCustomBankUser(session.user.id);
       const cachedCollection = getCustomBankCollection(session.user.id);
       setCollection(cachedCollection);
-      const nextPaperAccess = getPaperAccessMap(session.user.id);
+      const nextPaperAccess = getPaperLastActivityMap(session.user.id);
       paperAccessSnapshotRef.current = JSON.stringify(nextPaperAccess);
       setPaperAccess(nextPaperAccess);
       setSampleVisible(sampleIsVisible(session.user.id));
@@ -904,7 +904,7 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className={`paper-info${paper.lastOpenedAt ? ' has-last-opened-at' : ''}`}><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt && <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time>}</div></div>
+                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editMode && <div className="paper-card-actions">
