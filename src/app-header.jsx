@@ -769,9 +769,10 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
             <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-solver-paper-title">{solverPaper.title}</span>
           </div>}
-          <strong>{solverHeading}</strong>
         </div>
-        <div className="mb-solver-questions" ref={questions.navRef}>
+        <div className="mb-solver-question-list" role="group" aria-labelledby="mb-solver-list-heading">
+          <strong id="mb-solver-list-heading">{solverHeading}</strong>
+          <div className="mb-solver-questions" ref={questions.navRef}>
           {questions.items.map((item, index) => {
             const distance = Math.abs(index - questions.activeIndex);
             return (
@@ -790,6 +791,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
               </a>
             );
           })}
+          </div>
         </div>
         {solverMemos.length > 0 && <div className="mb-solver-memos" role="group" aria-label="문항 목록 아래 손글씨 메모">
           {solverMemos.map((memo, index) => <article className="mb-solver-memo" key={memo.id}>
