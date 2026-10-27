@@ -58,19 +58,48 @@ const examplePrompts = [
   '프로덕트 매니저 면접에 자주 나오는 지표와 실험 설계 문제를 출제해줘.',
   '데이터베이스 정규화와 트랜잭션을 비교하는 고난도 문제를 만들어줘.',
   '웹 접근성 지침을 실제 화면 검수 상황에 적용하는 문제를 만들어줘.',
+  'DA 애널리틱스 실무에서 자주 쓰는 지표와 분석 방법을 사례형으로 출제해줘.',
+  'A/B 테스트의 가설 설정과 결과 해석을 연습할 수 있는 문제를 만들어줘.',
+  '파이썬 판다스로 데이터를 정제하고 분석하는 실무 문제를 만들어줘.',
+  '데이터 모델링과 ERD 설계를 평가하는 상급 문제를 만들어줘.',
+  '클라우드 환경의 접근 제어와 보안 설정을 사례로 출제해줘.',
+  '기초 통계와 가설 검정을 데이터 분석 사례에 적용하는 문제를 만들어줘.',
+  '제품 분석에서 퍼널과 리텐션 지표를 해석하는 문제를 만들어줘.',
+  '정보보안기사 시험 대비 네트워크와 암호 기술 문제를 상급으로 만들어줘.',
 ];
 const exampleGuideDetails = [
-  { topic: '정보처리기사 필기', level: '상급', scope: '데이터베이스와 SQL 중심' },
-  { topic: 'GA4 전자상거래 이벤트', level: '중급', scope: '실무 사례 중심' },
-  { topic: '신입 서비스 기획자 데이터 분석', level: '기본', scope: '주요 분석 지표' },
-  { topic: 'SQL 조인과 서브쿼리', level: '상급', scope: '두 개념의 차이와 활용' },
-  { topic: 'UX 리서치 방법론', level: '실무 적용', scope: '실제 프로젝트 상황' },
-  { topic: '컴퓨터활용능력 시험', level: '중급', scope: '엑셀 함수' },
-  { topic: '네트워크 보안', level: '사례형', scope: '핵심 보안 개념' },
-  { topic: '프로덕트 매니저 면접', level: '면접 대비', scope: '주요 지표와 실험 설계' },
-  { topic: '데이터베이스 정규화와 트랜잭션', level: '고난도', scope: '두 개념 비교' },
-  { topic: '웹 접근성 지침', level: '실무 적용', scope: '화면 검수 상황' },
+  { topic: '정보처리기사 필기', level: '상급', scope: '데이터베이스와 SQL 중심', field: 'DB · SQL' },
+  { topic: 'GA4 전자상거래 이벤트', level: '중급', scope: '실무 사례 중심', field: 'GA4 애널리틱스' },
+  { topic: '서비스 기획 데이터 분석', level: '기본', scope: '주요 분석 지표', field: '서비스 분석' },
+  { topic: 'SQL 조인과 서브쿼리', level: '상급', scope: '두 개념의 차이와 활용', field: 'SQL' },
+  { topic: 'UX 리서치 방법론', level: '실무 적용', scope: '실제 프로젝트 상황', field: 'UX 리서치' },
+  { topic: '컴퓨터활용능력 시험', level: '중급', scope: '엑셀 함수', field: '엑셀' },
+  { topic: '네트워크 보안', level: '사례형', scope: '핵심 보안 개념', field: '네트워크' },
+  { topic: '프로덕트 매니저 면접', level: '면접 대비', scope: '주요 지표와 실험 설계', field: '제품 분석' },
+  { topic: '데이터베이스 정규화와 트랜잭션', level: '고난도', scope: '두 개념 비교', field: 'DB 설계' },
+  { topic: '웹 접근성 지침', level: '실무 적용', scope: '화면 검수 상황', field: '웹 접근성' },
+  { topic: 'DA 애널리틱스', level: '실무 적용', scope: '주요 지표와 분석 방법', field: '데이터 분석' },
+  { topic: 'A/B 테스트', level: '중급', scope: '가설 설정과 결과 해석', field: '실험 설계' },
+  { topic: '파이썬 데이터 분석', level: '실무 적용', scope: '판다스 데이터 정제', field: '파이썬' },
+  { topic: '데이터 모델링과 ERD', level: '상급', scope: '데이터 구조 설계', field: '데이터 모델링' },
+  { topic: '클라우드 보안', level: '실무 적용', scope: '접근 제어와 보안 설정', field: '클라우드' },
+  { topic: '통계와 가설 검정', level: '중급', scope: '분석 사례 적용', field: '통계 분석' },
+  { topic: '퍼널과 리텐션 지표', level: '실무 적용', scope: '제품 사용 흐름 분석', field: '제품 분석' },
+  { topic: '정보보안기사 필기', level: '상급', scope: '네트워크와 암호 기술', field: '정보 보안' },
 ];
+
+function pickExampleIndexes(previous = []) {
+  const indexes = Array.from({ length: examplePrompts.length }, (_, index) => index);
+  for (let index = indexes.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
+  }
+  const next = indexes.slice(0, 3);
+  if (previous.length === next.length && previous.every(index => next.includes(index))) {
+    return [...next.slice(1), indexes.find(index => !next.includes(index))];
+  }
+  return next;
+}
 const providerSegments = [
   { value: 'gemini', label: 'AI Mode' },
   { value: 'chatgpt', label: 'ChatGPT' },
@@ -127,6 +156,10 @@ export function QuizCreator({ custom, onChange }) {
   const [promptFocused, setPromptFocused] = useState(false);
   const [exampleRevealed, setExampleRevealed] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
+  const [exampleCardIndexes, setExampleCardIndexes] = useState(() => pickExampleIndexes());
+  const [exampleCardRound, setExampleCardRound] = useState(0);
+  const [exampleCardsHovered, setExampleCardsHovered] = useState(false);
+  const [exampleCardsFocused, setExampleCardsFocused] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [uploadRevealed, setUploadRevealed] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -174,6 +207,16 @@ export function QuizCreator({ custom, onChange }) {
     }, 4800);
     return () => window.clearInterval(timer);
   }, [guideOpen]);
+
+  useEffect(() => {
+    if (exampleCardsHovered || exampleCardsFocused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      setExampleCardIndexes(current => pickExampleIndexes(current));
+      setExampleCardRound(round => round + 1);
+    }, 7600);
+    return () => window.clearInterval(timer);
+  }, [exampleCardsHovered, exampleCardsFocused]);
 
   useEffect(() => {
     if (!promptFocused) return undefined;
@@ -457,7 +500,7 @@ export function QuizCreator({ custom, onChange }) {
                 <p><Gauge size={16} aria-hidden="true" /><span><b>난이도</b> {exampleGuide.level}</span></p>
                 <p><ListChecks size={16} aria-hidden="true" /><span><b>범위</b> {exampleGuide.scope}</span></p>
                 <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
-                  <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${exampleIndex}-${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q>{exampleRevealed && <button className="creator-example-use" type="button" onClick={() => useExample()}>예시 사용</button>}</span>
+                  <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${exampleIndex}-${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q></span>
                 </div>
               </div>
             </details>
@@ -481,13 +524,13 @@ export function QuizCreator({ custom, onChange }) {
         </div>
       </div>
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
-        <div className="creator-example-cards">
-          {[0, 1, 2].map(index => {
-            const example = exampleGuideDetails[index];
-            return <button className="creator-example-card" type="button" key={example.topic} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[index])}>
-              <span className="creator-example-card-meta">{example.level} · {example.scope}</span>
+        <div className="creator-example-cards" onMouseEnter={() => setExampleCardsHovered(true)} onMouseLeave={() => setExampleCardsHovered(false)} onFocusCapture={() => setExampleCardsFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setExampleCardsFocused(false); }}>
+          {exampleCardIndexes.map((exampleIndex, index) => {
+            const example = exampleGuideDetails[exampleIndex];
+            return <button className="creator-example-card is-revealing" type="button" key={`${exampleCardRound}-${exampleIndex}`} style={{ '--creator-example-reveal-delay': `${index * 48}ms` }} aria-label={`${example.topic} 예시 사용`} onClick={() => useExample(examplePrompts[exampleIndex])}>
+              <span className="creator-example-card-meta">{example.field}</span>
               <strong>{example.topic}</strong>
-              <span className="creator-example-card-prompt">{examplePrompts[index]}</span>
+              <span className="creator-example-card-prompt">{examplePrompts[exampleIndex]}</span>
             </button>;
           })}
         </div>

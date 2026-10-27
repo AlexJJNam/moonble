@@ -300,14 +300,16 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-ai-prompt-btn:active { transform: scale(.97); }
 .creator-ai-prompt-btn.is-inactive { opacity: .45; }
 .creator-ai-prompt-btn.is-inactive:hover { border-color: var(--mb-primary); background: var(--mb-primary); }
-.creator-example-suggestions { margin-top: 8px; }
-.creator-example-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.creator-example-card { min-width: 0; min-height: 144px; display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 12px 14px; border: 0; border-radius: 14px; color: var(--mb-text-primary); background: #f1f4f8; text-align: left; cursor: pointer; transition: background-color var(--mb-duration), transform var(--mb-duration); }
+.creator-example-suggestions { margin-top: 18px; }
+.creator-example-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 10px; }
+.creator-example-card { min-width: 0; min-height: 0; height: auto; align-self: stretch; display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 12px 14px; border: 0; border-radius: 14px; color: var(--mb-text-primary); background: #f1f4f8; text-align: left; cursor: pointer; transition: background-color var(--mb-duration), transform var(--mb-duration); }
+.creator-example-card.is-revealing { animation: creator-example-card-float-in 680ms cubic-bezier(.22,.61,.36,1) var(--creator-example-reveal-delay, 0ms) backwards; }
 .creator-example-card:hover { background: #eaf0f7; transform: translateY(-1px); }
 .creator-example-card:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 2px; }
 .creator-example-card-meta { min-width: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: 11px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
-.creator-example-card strong { display: -webkit-box; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 19px; font-weight: 650; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-.creator-example-card-prompt { display: -webkit-box; min-width: 0; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.creator-example-card strong { color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 19px; font-weight: 650; overflow-wrap: anywhere; }
+.creator-example-card-prompt { min-width: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; overflow-wrap: anywhere; }
+@keyframes creator-example-card-float-in { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 .creator-prompt-guide { position: static; z-index: 5; flex: 0 0 auto; line-height: 0; }
 .creator-prompt-guide summary { width: 32px; height: 32px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; cursor: pointer; list-style: none; transition: color var(--mb-duration); }
 .creator-prompt-guide summary::-webkit-details-marker { display: none; }
@@ -321,12 +323,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-example-line { display: block; min-height: 58px; padding: 11px 12px; color: var(--mb-text-primary); font-size: var(--mb-font-12); line-height: 18px; }
 .creator-prompt-example q { display: inline; color: var(--mb-text-primary); font-size: inherit; line-height: inherit; quotes: none; opacity: 0; user-select: none; }
 .creator-prompt-example q span { display: inline-block; }
-.creator-prompt-example>button { border: 0; cursor: pointer; }
-.creator-example-line>.creator-example-use { display: inline; margin-left: 6px; padding: 0; border: 0; color: var(--mb-text-tertiary); background: transparent; font-size: var(--mb-font-11, 11px); line-height: inherit; font-weight: 600; vertical-align: baseline; cursor: pointer; }
-.creator-example-line>.creator-example-use:hover { color: var(--mb-primary-strong); text-decoration: underline; text-underline-offset: 2px; }
 .creator-prompt-example.is-revealed q { color: var(--mb-text-primary); opacity: 1; user-select: text; }
 .creator-prompt-example.is-revealed q span { animation: creator-example-character-in 340ms cubic-bezier(.2,.75,.25,1) both; animation-delay: calc(80ms + var(--example-index) * 15ms); }
-.creator-prompt-example.is-revealed .creator-example-use { animation: creator-example-use-in 220ms ease-out both; animation-delay: calc(120ms + var(--example-total) * 15ms); }
 .creator-drop button, .creator-ready>a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 10px; padding: 10px 15px; font-size: var(--mb-font-14); font-weight: 650; white-space: nowrap; }
 .creator-drop button { color: var(--mb-primary-strong); background: #e8f3ff; }
 .creator-drop button:hover { color: var(--mb-primary-hover); background: #dcecff; }
@@ -376,7 +374,6 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes creator-prompt-character-in { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes creator-prompt-character-out { to { opacity: 0; filter: blur(4px); transform: translateY(-3px); } }
 @keyframes creator-example-character-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes creator-example-use-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes creator-ai-halo-shift {
   0%, 100% { box-shadow: 0 0 12px rgb(201 185 244 / 22%), 0 5px 18px rgb(171 217 243 / 18%), 0 -3px 16px rgb(244 180 217 / 18%); }
   25% { box-shadow: -3px -2px 13px rgb(201 185 244 / 22%), 4px 1px 19px rgb(171 217 243 / 18%), -2px 4px 16px rgb(244 180 217 / 18%); }
@@ -577,10 +574,10 @@ button:disabled { cursor: wait; opacity: .6; }
   .creator-step { padding: 22px; }
   .creator-intake-card { margin-top: 0; padding: 0 0 4px; border: 0; border-radius: 0; background: transparent; }
   .creator-intake-card>.creator-prompt { padding: 0; }
-  .creator-example-suggestions { margin-top: 8px; margin-right: -16px; }
-  .creator-example-cards { display: flex; gap: 8px; padding-right: 16px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .creator-example-suggestions { margin-top: 18px; margin-right: -16px; }
+  .creator-example-cards { display: flex; align-items: stretch; gap: 8px; padding-right: 16px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
   .creator-example-cards::-webkit-scrollbar { display: none; }
-  .creator-example-card { min-width: min(250px, 72vw); min-height: 132px; flex: 0 0 min(250px, 72vw); padding: 11px 12px; scroll-snap-align: start; }
+  .creator-example-card { min-width: min(250px, 72vw); min-height: 0; height: auto; flex: 0 0 min(250px, 72vw); padding: 11px 12px; scroll-snap-align: start; }
   .creator-flow-chevron { height: 28px; }
   .creator-intake-card>.creator-step[aria-labelledby='creator-upload-title'] { padding: 14px 0 20px; }
 }
@@ -789,7 +786,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-chart-table { font-size: 10px !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
-@media (prefers-reduced-motion: reduce) { .paper-card, .preview-sheet, .achievement-chart-bar, .achievement-chart-tooltip { transition: none; } .paper-card:hover, .paper-card:hover .preview-sheet { transform: none; } .creator-ai-prompt-bar, .creator-ai-prompt-bar.is-docked, .creator-ai-prompt-bar.shake, .creator-prompt-character, .creator-prompt-example.is-revealed q span, .creator-prompt-example.is-revealed .creator-example-use, .creator-upload-complete, .creator-upload-complete>span, .creator-upload-complete path, .creator-upload-complete strong, .creator-bank-meta.is-revealing label, .creator-preview-skeleton-meta i, .creator-preview-skeleton-ready i, .creator-preview-skeleton-ready b, .creator-preview-skeleton-row i, .creator-preview-skeleton-row b, .creator-flow-chevron, .paper-card.is-editing, .paper-card.is-dragging, .paper-drag-preview, .paper-action-menu, .quiz-manage-overlay, .quiz-manage-dialog, .quiz-library-notice, .quiz-library-undo-toast, .achievement-custom-popover, .achievement-period-overlay, .achievement-period-sheet { animation: none; } .creator-prompt-character, .creator-prompt-example.is-revealed q span, .creator-prompt-example.is-revealed .creator-example-use { opacity: 1; filter: none; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .paper-card, .preview-sheet, .achievement-chart-bar, .achievement-chart-tooltip { transition: none; } .paper-card:hover, .paper-card:hover .preview-sheet { transform: none; } .creator-ai-prompt-bar, .creator-ai-prompt-bar.is-docked, .creator-ai-prompt-bar.shake, .creator-prompt-character, .creator-prompt-example.is-revealed q span, .creator-prompt-example.is-revealed .creator-example-use, .creator-example-card.is-revealing, .creator-upload-complete, .creator-upload-complete>span, .creator-upload-complete path, .creator-upload-complete strong, .creator-bank-meta.is-revealing label, .creator-preview-skeleton-meta i, .creator-preview-skeleton-ready i, .creator-preview-skeleton-ready b, .creator-preview-skeleton-row i, .creator-preview-skeleton-row b, .creator-flow-chevron, .paper-card.is-editing, .paper-card.is-dragging, .paper-drag-preview, .paper-action-menu, .quiz-manage-overlay, .quiz-manage-dialog, .quiz-library-notice, .quiz-library-undo-toast, .achievement-custom-popover, .achievement-period-overlay, .achievement-period-sheet { animation: none; } .creator-prompt-character, .creator-prompt-example.is-revealed q span, .creator-prompt-example.is-revealed .creator-example-use { opacity: 1; filter: none; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .creator-prompt-backdrop { animation: none; opacity: 1; } }
 @media (max-width: 1199px) { .quiz-library-skeleton-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 920px) { .quiz-library-skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
