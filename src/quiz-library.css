@@ -579,8 +579,8 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-actions { grid-column: 2 / -1; justify-content: flex-start; flex-wrap: wrap; }
   .paper-list .paper-preview { width: 160px; }
   .creator-step { padding: 22px; }
-  .creator-intake-card { margin-top: 0; padding: 0 0 4px; border: 0; border-radius: 0; background: transparent; }
-  .creator-intake-card>.creator-prompt { padding: 0; }
+  .creator-intake-card { margin-top: 0; padding: 0 0 34px; border: 0; border-radius: 0; background: transparent; }
+  .creator-intake-card>.creator-prompt { padding: 0 0 10px; }
   .creator-example-suggestions { margin-top: 18px; margin-right: -16px; }
   .creator-example-cards { align-items: stretch; gap: 8px; padding-right: 16px; padding-bottom: 0; overflow-x: auto; scrollbar-width: none; }
   .creator-example-cards::-webkit-scrollbar { display: none; }

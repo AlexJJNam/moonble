@@ -109,7 +109,7 @@ body {
     max(var(--mb-page-pad-inline), env(safe-area-inset-left));
 }
 
-.mb-brand-wordmark { display: block; width: auto; height: auto; object-fit: contain; }
+.mb-brand-wordmark { display: block; width: 112px; max-width: 100%; height: auto; aspect-ratio: 2048 / 682; object-fit: contain; }
 .mb-user-avatar { position: relative; overflow: hidden; }
 .mb-user-avatar>img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
 
