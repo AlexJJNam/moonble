@@ -632,8 +632,8 @@ export function QuizAchievement({ userId }) {
                 <time dateTime={item.date}>{formatDate(item.date)}</time>
               </div>
               <div className="achievement-actions">
-                <button type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
-                {item.wrongIds?.length > 0 && <button type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
+                <button className="achievement-retry-action" type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
+                {item.wrongIds?.length > 0 && <button className="achievement-retry-action" type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
                 {confirming === item.date ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter(record => record !== item))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(item.date)}><Trash2 size={17} aria-hidden="true" /></button>}
               </div>
             </li>;

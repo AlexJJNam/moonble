@@ -551,8 +551,10 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-attempt time { display: block; margin-top: 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .achievement-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .achievement-actions button { display: inline-flex; align-items: center; gap: 5px; }
-.achievement-actions button:not(.icon-button):not(.danger) { border-radius: 999px; background: var(--mb-surface-muted); }
-.achievement-actions button:not(.icon-button):not(.danger):hover { background: var(--mb-border); }
+.achievement-actions button:not(.icon-button):not(.danger):not(.achievement-retry-action) { border-radius: 999px; background: var(--mb-surface-muted); }
+.achievement-actions button:not(.icon-button):not(.danger):not(.achievement-retry-action):hover { background: var(--mb-border); }
+.achievement-actions button.achievement-retry-action { min-height: 36px; padding: 6px 6px; border-radius: 0; color: var(--mb-text-secondary); background: transparent; }
+.achievement-actions button.achievement-retry-action:hover:not(:disabled) { color: var(--mb-text-primary); background: transparent; }
 .achievement-actions .icon-button { width: 40px; padding: 0; justify-content: center; }
 .achievement-empty { display: grid; justify-items: center; padding: 48px 20px; border: 0; border-radius: 0; background: transparent; text-align: center; }
 .achievement-empty>span { display: grid; place-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--mb-primary-soft); color: var(--mb-primary-strong); }
@@ -581,7 +583,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-list li { grid-template-columns: 36px 78px minmax(0, 1fr); gap: 10px; }
   .achievement-paper-thumb { width: 78px; height: 50px; }
   .achievement-paper-thumb .paper-preview--compact { width: 78px; height: 50px; flex-basis: 78px; }
-  .achievement-actions { grid-column: 2 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  .achievement-actions { grid-column: 2 / -1; justify-content: flex-end; flex-wrap: wrap; }
   .paper-list .paper-preview { width: 160px; }
   .creator-step { padding: 22px; }
   .creator-intake-card { margin-top: 0; padding: 0 0 34px; border: 0; border-radius: 0; background: transparent; }
