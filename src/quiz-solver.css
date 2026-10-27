@@ -34,7 +34,7 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 #quiz>.muted { font-size: var(--mb-font-16); line-height: 28px; margin-top: 12px; }
 #quiz { padding-bottom: 96px; }
 .quiz-wrap { gap: 24px; margin-top: 32px; }
-.q-card { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
+.q-card { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 24px; padding: 24px; box-shadow: none; scroll-margin-top: 24px; }
 .q-card:focus { outline: none; }
 .q-card.is-anchor-trace::before { content: ''; position: absolute; inset: -2px; z-index: 2; padding: 4px; border-radius: inherit; background: conic-gradient(from var(--mb-anchor-trace-angle), transparent 0 70%, rgb(120 158 203 / 12%) 77%, color-mix(in srgb, var(--mb-primary) 52%, #e4eef9) 86%, rgb(111 154 203 / 48%) 91%, transparent 98% 100%); pointer-events: none; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; animation: mb-question-card-trace 1450ms cubic-bezier(.4, 0, .2, 1) 1; }
 .q-title { font-size: var(--mb-font-16); line-height: 28px; font-weight: 600; gap: 12px; }
