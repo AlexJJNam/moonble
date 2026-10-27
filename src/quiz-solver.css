@@ -66,6 +66,8 @@ body, button, input, select, textarea, svg text { font-family: var(--mb-font-san
 .quiz-actions #retryBtn:hover:not(:disabled), .quiz-actions #retryWrongBtn:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); }
 .quiz-actions #retryBtn { display: none; }
 #quizContainer.quiz-locked ~ .quiz-actions #retryBtn { display: inline-flex; }
+.quiz-actions #retryWrongBtn:disabled { display: none; }
+#quizContainer.quiz-locked ~ .quiz-actions #retryWrongBtn:not(:disabled) { display: inline-flex; }
 html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 /* Expert intro modal's scroll progress line, reused in Moonble blue on the solver page. */
 .quiz-scroll-progress { position: fixed; z-index: 75; top: var(--quiz-progress-top, 0px); right: 0; left: 0; height: 3px; pointer-events: none; }
@@ -237,4 +239,58 @@ body.quiz-pen-ui-hidden .quiz-ink-ui-visibility { opacity: 1 !important; pointer
   .quiz-pen-mode-effect.is-active .quiz-pen-logo-reveal { animation: none; stroke-dashoffset: 0; opacity: 1; }
   .quiz-pen-toast { transition: none; }
   .quiz-pen-ai-toast { transition: none; }
+}
+
+.quiz-print-answer-key { display: none; }
+.quiz-print-answer-key h2 { margin: 0 0 6px; font-size: 22px; line-height: 1.3; letter-spacing: -.02em; }
+.quiz-print-answer-key > p { margin: 0 0 18px; color: var(--mb-text-secondary); font-size: 13px; }
+.quiz-print-answer-key table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+.quiz-print-answer-key tr { break-inside: avoid; page-break-inside: avoid; }
+.quiz-print-answer-key th, .quiz-print-answer-key td { padding: 9px 10px; border: 1px solid var(--mb-border); text-align: left; vertical-align: top; white-space: pre-wrap; overflow-wrap: anywhere; }
+.quiz-print-answer-key thead th { color: var(--mb-text-secondary); background: #f3f5f7; font-weight: 650; }
+.quiz-print-answer-key tbody th { width: 56px; text-align: center; }
+.quiz-print-answer-key td:nth-child(2) { width: 34%; }
+@media print {
+  @page { size: A4 portrait; margin: 14mm; }
+  html, body { min-height: 0 !important; background: #fff !important; color: #202733 !important; }
+  body.moonble-paper-print { padding: 0 !important; }
+  body.moonble-paper-print #moonble-app-header,
+  body.moonble-paper-print .header,
+  body.moonble-paper-print .site-footer,
+  body.moonble-paper-print main.container > :not(#quiz),
+  body.moonble-paper-print #quiz > .quiz-top-controls,
+  body.moonble-paper-print #quizPenTip,
+  body.moonble-paper-print #modePill,
+  body.moonble-paper-print #resultBox,
+  body.moonble-paper-print #sharedQuizRank,
+  body.moonble-paper-print .quiz-actions,
+  body.moonble-paper-print #historyBox,
+  body.moonble-paper-print #historyChart,
+  body.moonble-paper-print #quizGradeFx,
+  body.moonble-paper-print .quiz-scroll-progress,
+  body.moonble-paper-print .fab,
+  body.moonble-paper-print #aiPickOverlay,
+  body.moonble-paper-print #aiAskBar,
+  body.moonble-paper-print .quiz-ink-toolbar,
+  body.moonble-paper-print .quiz-ink-history-toolbar { display: none !important; }
+  body.moonble-paper-print main.container { width: auto !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  body.moonble-paper-print #quiz { display: block !important; margin: 0 !important; padding: 0 !important; }
+  body.moonble-paper-print #quiz .section-head { margin: 0 0 8mm !important; }
+  body.moonble-paper-print #quiz .section-head h2 { margin: 0; font-size: 22pt; line-height: 1.3; }
+  body.moonble-paper-print #quiz .solve-paper-description { margin-top: 2mm; font-size: 10pt; line-height: 1.5; }
+  body.moonble-paper-print #quizContainer { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 5mm !important; margin: 0 !important; overflow: visible !important; }
+  body.moonble-paper-print .q-card,
+  body.moonble-paper-print .q-card.is-reveal-pending,
+  body.moonble-paper-print .q-card.is-revealing { break-inside: avoid; page-break-inside: avoid; border: 1px solid #e1e6ed !important; border-radius: 16px !important; padding: 5mm !important; background: #fff !important; box-shadow: none !important; opacity: 1 !important; transform: none !important; animation: none !important; }
+  body.moonble-paper-print .q-card .explain { display: none !important; }
+  body.moonble-paper-print .option-card { border-color: transparent !important; border-radius: 12px !important; background: #f4f6f8 !important; box-shadow: none !important; color: #202733 !important; }
+  body.moonble-paper-print .option-card input,
+  body.moonble-paper-print .option-card .tick { display: none !important; }
+  body.moonble-paper-print .quiz-print-answer-key { display: block !important; break-before: page; page-break-before: always; margin-top: 0; }
+  body.moonble-paper-print .quiz-print-answer-key h2 { font-size: 22pt; }
+  body.moonble-paper-print .quiz-print-answer-key > p { font-size: 10pt; }
+  body.moonble-paper-print .quiz-print-answer-key table { font-size: 9.5pt; }
+  body.moonble-paper-print .quiz-print-answer-key th,
+  body.moonble-paper-print .quiz-print-answer-key td { padding: 2.5mm 3mm; }
+  body.moonble-paper-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

@@ -5885,6 +5885,54 @@ function showSharedQuizUnavailable(message) {
   document.documentElement.removeAttribute('data-auth-pending');
 }
 
+function appendQuizPrintAnswerKey(bank) {
+  const section = document.createElement('section');
+  section.className = 'quiz-print-answer-key';
+  const heading = document.createElement('h2');
+  heading.textContent = '정답 및 해설';
+  const subtitle = document.createElement('p');
+  subtitle.textContent = `${bank.title || '문제지'} · ${bank.questions.length}문항`;
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  ['문항', '정답', '해설'].forEach(label => {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.textContent = label;
+    headerRow.appendChild(cell);
+  });
+  thead.appendChild(headerRow);
+  const tbody = document.createElement('tbody');
+  bank.questions.forEach((question, index) => {
+    const row = document.createElement('tr');
+    const number = document.createElement('th');
+    number.scope = 'row';
+    number.textContent = String(index + 1);
+    const answer = document.createElement('td');
+    const options = Array.isArray(question.options) ? question.options : [];
+    const correct = Array.isArray(question.correct) ? question.correct : [];
+    answer.textContent = correct.map(optionIndex => {
+      const choice = options[optionIndex];
+      return `${Number(optionIndex) + 1}번${choice ? ` · ${choice}` : ''}`;
+    }).join(', ') || '정답 정보 없음';
+    const explanation = document.createElement('td');
+    explanation.textContent = question.explain || '—';
+    row.append(number, answer, explanation);
+    tbody.appendChild(row);
+  });
+  table.append(thead, tbody);
+  section.append(heading, subtitle, table);
+  document.getElementById('quizContainer')?.insertAdjacentElement('afterend', section);
+}
+
+async function openQuizPrintDialog(bank) {
+  document.body.classList.add('moonble-paper-print');
+  document.title = `${document.querySelector('#quiz .section-head h2')?.textContent || '문제지'} · PDF`;
+  appendQuizPrintAnswerKey(bank);
+  if (document.fonts?.ready) await document.fonts.ready;
+  requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(() => window.print(), 140)));
+}
+
 const shareToken = window.__moonbleSharedQuizToken || (() => {
   try { return sessionStorage.getItem('moonble:pending-shared-quiz') || ''; }
   catch { return ''; }
@@ -5938,8 +5986,10 @@ if (shareToken || requestedPaper === 'shared') {
         : paperId === 'advanced'
           ? '전자상거래와 데이터 품질, 실무 개념을 익혀보세요.'
           : '';
+      let printBankMeta = null;
       if (paperId === 'custom' && solveParams.get('bank')) {
         const bankMeta = getCustomBankMeta(user.id, solveParams.get('bank'));
+        printBankMeta = bankMeta;
         paperTitle = bankMeta?.title || paperTitle;
         paperDescription = bankMeta?.description || '';
         solverGroupId = bankMeta?.groupId || null;
@@ -5965,12 +6015,18 @@ if (shareToken || requestedPaper === 'shared') {
           activityKey = retryMeta.bankId ? `custom:${retryMeta.bankId}` : (['basics', 'advanced', 'random'].includes(retryMeta.paperId) ? retryMeta.paperId : null);
         } catch { /* 재풀이 메타데이터가 없으면 목록 접근 기록을 갱신하지 않는다. */ }
       }
-      renderQuiz();
+      const printExport = solveParams.get('print') === '1' && paperId === 'custom' && printBankMeta;
+      renderQuiz(printExport ? printBankMeta.questions : undefined);
+      if (printExport) {
+        const modePill = document.getElementById('modePill');
+        if (modePill) modePill.style.display = 'none';
+      }
       const questionCount = document.querySelectorAll('#quizContainer .q-card').length;
       setSolvePaperHeading(paperTitle, paperDescription, questionCount, { paperId, bankId: solverBankId, groupId: solverGroupId });
       renderHistory();
       document.documentElement.removeAttribute('data-auth-pending');
-      if (activityKey) {
+      if (printExport) await openQuizPrintDialog(printBankMeta);
+      if (activityKey && !printExport) {
         let firstFramePainted = false;
         let accessRecorded = false;
         let accessFrame = 0;
