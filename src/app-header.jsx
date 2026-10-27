@@ -4,7 +4,7 @@ import { profileOf } from './profile.js';
 import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
-import { getCustomBankCollection } from './custom-bank.js';
+import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { buildGroupColorMap, favoriteGroupIconStyle } from './paper-group-colors.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
@@ -53,7 +53,8 @@ function getFavoriteSidebarItems(userId) {
   const favoritePapers = favoriteIds.map(id => {
     if (id.startsWith('custom:')) {
       const bank = banks.find(item => item.id === id.slice('custom:'.length));
-      return bank ? { id, type: 'paper', label: bank.title, href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
+      const group = bank && collection.groups.find(item => item.id === bank.groupId);
+      return bank ? { id, type: 'paper', label: bank.title, caption: bank.groupId === DEFAULT_GROUP_ID ? '미분류' : (group?.name || '미분류'), href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
     }
     const paper = builtInPapers.get(id);
     return paper ? { id, type: 'paper', label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
@@ -832,6 +833,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
                 <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
                 <span className="mb-favorite-copy">
                   <span className="mb-favorite-title">{paper.label}</span>
+                  {paper.type === 'paper' && paper.caption && <span className="mb-favorite-caption">{paper.caption}</span>}
                 </span>
               </a>)}
             </div>
