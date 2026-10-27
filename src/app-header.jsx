@@ -815,12 +815,12 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className="mb-favorites-list" aria-label="즐겨찾기">
           {favoriteGroups.map(group => <div className="mb-favorite-group" key={group.type}>
-            <div className="mb-favorite-group-heading">
-              <h3 className="mb-favorite-group-caption" id={`mb-favorite-${group.type}-heading`}>{group.label}</h3>
+            <h3 className="mb-favorite-group-heading" id={`mb-favorite-${group.type}-heading`}>
               <button className="mb-favorite-group-toggle" type="button" aria-label={`${group.label} 즐겨찾기 ${favoriteGroupsOpen[group.type] ? '접기' : '펼치기'}`} aria-expanded={favoriteGroupsOpen[group.type]} aria-controls={`mb-favorite-${group.type}-items`} onClick={() => setFavoriteGroupsOpen(current => ({ ...current, [group.type]: !current[group.type] }))}>
                 <ChevronDown size={14} aria-hidden="true" />
+                <span>{group.label}</span>
               </button>
-            </div>
+            </h3>
             <div className="mb-favorite-group-items" id={`mb-favorite-${group.type}-items`} role="group" aria-labelledby={`mb-favorite-${group.type}-heading`} hidden={!favoriteGroupsOpen[group.type]}>
               {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
                 if (paper.type !== 'paper') return;
