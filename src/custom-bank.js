@@ -508,36 +508,52 @@ import { supabase } from './supabase.js';
     URL.revokeObjectURL(url);
   }
 
-  export function downloadCustomBankCSV(bank) {
+  export function exportCustomBankPDF(bank) {
     if (!bank || !Array.isArray(bank.questions) || !bank.questions.length) return false;
-    var escapeCSV = function (value) {
-      var text = String(value == null ? '' : value);
-      return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    var escapeHTML = function (value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+      });
     };
-    var rows = [
-      ['# title', bank.title || '문제지'],
-      ['# description', bank.description || ''],
-      ['question', 'option1', 'option2', 'option3', 'option4', 'correct', 'explain']
-    ];
-    bank.questions.forEach(function (question) {
+    var title = escapeHTML(bank.title || '문제지');
+    var description = escapeHTML(bank.description || '');
+    var questionMarkup = bank.questions.map(function (question, index) {
+      var options = Array.isArray(question.options) ? question.options : [];
+      var optionMarkup = options.map(function (option, optionIndex) {
+        return '<li><span>' + (optionIndex + 1) + '.</span><span>' + escapeHTML(option) + '</span></li>';
+      }).join('');
+      return '<article class="question"><h2><span>Q' + (index + 1) + '</span>' + escapeHTML(question.q || '') + '</h2><ol>' + optionMarkup + '</ol></article>';
+    }).join('');
+    var answerRows = bank.questions.map(function (question, index) {
       var options = Array.isArray(question.options) ? question.options : [];
       var correct = Array.isArray(question.correct) ? question.correct : [];
-      rows.push([
-        question.q || '',
-        options[0] || '', options[1] || '', options[2] || '', options[3] || '',
-        correct.map(function (index) { return Number(index) + 1; }).join(','),
-        question.explain || ''
-      ]);
-    });
-    var csv = rows.map(function (row) { return row.map(escapeCSV).join(','); }).join('\r\n');
-    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var anchor = document.createElement('a');
-    var safeTitle = String(bank.title || '문제지').replace(/[\\/:*?"<>|]/g, '-').trim() || '문제지';
-    anchor.href = url;
-    anchor.download = safeTitle + '.csv';
-    anchor.click();
-    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      var answers = correct.map(function (optionIndex) {
+        var answerText = options[Number(optionIndex)];
+        return (Number(optionIndex) + 1) + '번' + (answerText ? ' · ' + escapeHTML(answerText) : '');
+      }).join('<br>') || '정답 정보 없음';
+      return '<tr><th scope="row">' + (index + 1) + '</th><td>' + answers + '</td><td>' + (escapeHTML(question.explain || '') || '—') + '</td></tr>';
+    }).join('');
+    var printWindow = window.open('', '_blank');
+    if (!printWindow) return false;
+    printWindow.opener = null;
+    printWindow.document.open();
+    printWindow.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' + title + '</title><style>' +
+      '*{box-sizing:border-box}body{margin:0;color:#202733;background:#fff;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;font-size:12pt;line-height:1.6}.document{max-width:820px;margin:0 auto;padding:38px 32px 60px}header{margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid #dfe5ec}h1{margin:0;font-size:24pt;line-height:1.3;letter-spacing:-.03em}.description{margin:9px 0 0;color:#667487;white-space:pre-wrap}.meta{margin:12px 0 0;color:#768294;font-size:9.5pt}.question{break-inside:avoid;margin:0 0 16px;padding:16px 18px;border:1px solid #e1e6ed;border-radius:12px}.question h2{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;font-size:12pt;line-height:1.55;white-space:pre-wrap}.question h2>span{flex:0 0 auto;color:#2374ee;font-size:10pt;font-weight:700}.question ol{display:grid;gap:7px;margin:0;padding:0;list-style:none}.question li{display:flex;gap:9px;white-space:pre-wrap}.question li>span:first-child{flex:0 0 auto;color:#6b7684}.answer-key{break-before:page;page-break-before:always}.answer-key h2{margin:0 0 8px;font-size:21pt;letter-spacing:-.02em}.answer-key>p{margin:0 0 20px;color:#667487}.answer-key table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5pt}.answer-key thead{display:table-header-group}.answer-key tr{break-inside:avoid;page-break-inside:avoid}.answer-key th,.answer-key td{padding:10px 12px;border:1px solid #dfe5ec;vertical-align:top;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}.answer-key thead th{color:#475569;background:#f3f6f9;font-weight:700}.answer-key th:first-child,.answer-key td:first-child{width:54px;text-align:center}.answer-key td:nth-child(2){width:34%}.answer-key td:nth-child(3){color:#596579}@page{size:A4;margin:16mm}@media print{body{font-size:10.5pt}.document{max-width:none;margin:0;padding:0}.question{margin-bottom:12px;padding:12px 14px}h1{font-size:21pt}.question h2{font-size:10.5pt}.question li,.answer-key table{font-size:9.5pt}}' +
+      '</style></head><body><main class="document"><header><h1>' + title + '</h1>' + (description ? '<p class="description">' + description + '</p>' : '') + '<p class="meta">총 ' + bank.questions.length + '문항 · 내보낸 날짜 ' + escapeHTML(new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(new Date())) + '</p></header><section aria-label="문제지">' + questionMarkup + '</section><section class="answer-key" aria-label="정답 및 해설"><h2>정답 및 해설</h2><p>' + title + ' · ' + bank.questions.length + '문항</p><table><thead><tr><th>문항</th><th>정답</th><th>해설</th></tr></thead><tbody>' + answerRows + '</tbody></table></section></main></body></html>');
+    printWindow.document.close();
+    var printStarted = false;
+    var startPrint = function () {
+      if (printStarted) return;
+      printStarted = true;
+      window.setTimeout(function () {
+        printWindow.focus();
+        printWindow.print();
+      }, 250);
+    };
+    printWindow.addEventListener('load', startPrint, { once: true });
+    window.setTimeout(function () {
+      try { if (printWindow.document.readyState === 'complete') startPrint(); } catch { /* 닫힌 인쇄 창은 무시한다. */ }
+    }, 800);
     return true;
   }
   // ---- 구글 시트 링크 → export CSV URL ----
