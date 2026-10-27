@@ -285,6 +285,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
     { type: 'paper', label: '문제지', items: favoriteSidebarItems.filter(item => item.type === 'paper') },
     { type: 'prd', label: 'PRD', items: favoriteSidebarItems.filter(item => item.type === 'prd') },
   ].filter(group => group.items.length > 0);
+  const openFavoriteGroupCount = favoriteGroups.filter(group => favoriteGroupsOpen[group.type]).length;
 
   useEffect(() => {
     if (!favoriteSolvePaper) return undefined;
@@ -814,15 +815,15 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         </nav>}
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
-        <nav className="mb-favorites-list" aria-label="즐겨찾기">
-          {favoriteGroups.map(group => <div className="mb-favorite-group" key={group.type}>
+        <nav className={`mb-favorites-list${openFavoriteGroupCount > 1 ? ' has-multiple-open-groups' : ''}`} aria-label="즐겨찾기">
+          {favoriteGroups.map(group => <div className={`mb-favorite-group${favoriteGroupsOpen[group.type] ? '' : ' is-collapsed'}`} key={group.type}>
             <h3 className="mb-favorite-group-heading" id={`mb-favorite-${group.type}-heading`}>
               <button className="mb-favorite-group-toggle" type="button" aria-label={`${group.label} 즐겨찾기 ${favoriteGroupsOpen[group.type] ? '접기' : '펼치기'}`} aria-expanded={favoriteGroupsOpen[group.type]} aria-controls={`mb-favorite-${group.type}-items`} onClick={() => setFavoriteGroupsOpen(current => ({ ...current, [group.type]: !current[group.type] }))}>
                 <ChevronDown size={14} aria-hidden="true" />
                 <span>{group.label}</span>
               </button>
             </h3>
-            <div className="mb-favorite-group-items" id={`mb-favorite-${group.type}-items`} role="group" aria-labelledby={`mb-favorite-${group.type}-heading`} hidden={!favoriteGroupsOpen[group.type]}>
+            <div className="mb-favorite-group-items" id={`mb-favorite-${group.type}-items`} role="group" aria-labelledby={`mb-favorite-${group.type}-heading`} tabIndex={favoriteGroupsOpen[group.type] ? 0 : undefined} hidden={!favoriteGroupsOpen[group.type]}>
               {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
                 if (paper.type !== 'paper') return;
                 if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
