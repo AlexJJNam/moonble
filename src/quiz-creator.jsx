@@ -340,7 +340,7 @@ export function QuizCreator({ custom, onChange }) {
 
   function useExample(prompt = examplePrompt) {
     const selectedPrompt = typeof prompt === 'string' ? prompt : examplePrompt;
-    const characters = [...selectedPrompt];
+    const characters = [...selectedPrompt].filter(character => !/\s/.test(character));
     window.clearTimeout(examplePromptRevealTimerRef.current);
     examplePromptRevealTimerRef.current = 0;
     const revealId = ++examplePromptRevealIdRef.current;
@@ -359,7 +359,7 @@ export function QuizCreator({ custom, onChange }) {
     examplePromptRevealTimerRef.current = window.setTimeout(() => {
       setExamplePromptReveal(current => current?.id === revealId ? null : current);
       examplePromptRevealTimerRef.current = 0;
-    }, 420 + Math.max(0, characters.length - 1) * 22 + 460);
+    }, 420 + Math.max(0, characters.length - 1) * 22 + 420);
   }
 
   function startExampleCardsDrag(event) {
