@@ -318,7 +318,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-example-card:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 2px; }
 .creator-example-card-meta { min-width: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: 11px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .creator-example-card strong { color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 19px; font-weight: 650; overflow-wrap: anywhere; }
-.creator-example-card-prompt { min-width: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; overflow-wrap: anywhere; }
+.creator-example-card-prompt { min-width: 0; margin-top: -2px; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; overflow-wrap: anywhere; }
 @keyframes creator-example-card-float-in { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 .creator-prompt-guide { position: static; z-index: 5; flex: 0 0 auto; line-height: 0; }
 .creator-prompt-guide summary { width: 32px; height: 32px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; cursor: pointer; list-style: none; transition: color var(--mb-duration); }
