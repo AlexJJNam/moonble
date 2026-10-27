@@ -283,10 +283,12 @@ function ScoreChart({ history }) {
 
 export function QuizAchievement({ userId }) {
   const [history, setHistory] = useState(() => readHistory(userId));
+  const requestedPaperKey = new URLSearchParams(window.location.search).get('achievementPaper');
+  const requestedPaperEntry = requestedPaperKey ? history.find(item => historyPaperKey(item) === requestedPaperKey) : null;
   const [confirming, setConfirming] = useState(null);
   const [collection, setCollection] = useState(() => getCustomBankCollection(userId));
-  const [selectedGroups, setSelectedGroups] = useState([]);
-  const [selectedPapers, setSelectedPapers] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState(() => requestedPaperEntry ? [requestedPaperEntry.groupId || DEFAULT_GROUP_ID] : []);
+  const [selectedPapers, setSelectedPapers] = useState(() => requestedPaperEntry ? [requestedPaperKey] : []);
   const [period, setPeriod] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');

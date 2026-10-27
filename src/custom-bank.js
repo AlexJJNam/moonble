@@ -507,6 +507,39 @@ import { supabase } from './supabase.js';
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  export function downloadCustomBankCSV(bank) {
+    if (!bank || !Array.isArray(bank.questions) || !bank.questions.length) return false;
+    var escapeCSV = function (value) {
+      var text = String(value == null ? '' : value);
+      return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    };
+    var rows = [
+      ['# title', bank.title || '문제지'],
+      ['# description', bank.description || ''],
+      ['question', 'option1', 'option2', 'option3', 'option4', 'correct', 'explain']
+    ];
+    bank.questions.forEach(function (question) {
+      var options = Array.isArray(question.options) ? question.options : [];
+      var correct = Array.isArray(question.correct) ? question.correct : [];
+      rows.push([
+        question.q || '',
+        options[0] || '', options[1] || '', options[2] || '', options[3] || '',
+        correct.map(function (index) { return Number(index) + 1; }).join(','),
+        question.explain || ''
+      ]);
+    });
+    var csv = rows.map(function (row) { return row.map(escapeCSV).join(','); }).join('\r\n');
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var anchor = document.createElement('a');
+    var safeTitle = String(bank.title || '문제지').replace(/[\\/:*?"<>|]/g, '-').trim() || '문제지';
+    anchor.href = url;
+    anchor.download = safeTitle + '.csv';
+    anchor.click();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    return true;
+  }
   // ---- 구글 시트 링크 → export CSV URL ----
   export function extractSheetExportUrl(link) {
     var m = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);

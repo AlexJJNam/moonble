@@ -3662,6 +3662,7 @@
     let wrongPicked = [];
     let wrongMode = false;
     let isLocked = false;
+    let achievementPaperKey = null;
     let gradeFxTimer = 0;
     let gradeScrollTimer = 0;
     let sharedGuestPopupTimer = 0;
@@ -4018,6 +4019,8 @@
       window.clearTimeout(sharedGuestPopupTimer);
       quizEl.innerHTML = '';
       resultEl.textContent = '';
+      achievementPaperKey = null;
+      submitBtn.textContent = '제출하기';
       unlockQuiz();
       wrongPicked = [];
       wrongMode = !!sourceArray && sourceArray.length && sourceArray.every(q => q && q.id);
@@ -4212,6 +4215,7 @@
           paperDescription = retryMeta.paperDescription || bankMeta?.description || '';
         } catch { /* 재풀이 메타데이터가 없어도 결과는 저장한다. */ }
       }
+      achievementPaperKey = bankId ? `bank:${bankId}` : `paper:${paperId}`;
       pushHistory({
         score, correct: correctCount, total, date: new Date().toISOString(),
         paperId, bankId, groupId, paperTitle, paperDescription,
@@ -4246,10 +4250,21 @@
         }
       }
 
+      submitBtn.textContent = '성취도 확인';
+      submitBtn.disabled = false;
       if (typeof updateActiveByVisibility === 'function') updateActiveByVisibility();
     }
 
-    submitBtn.addEventListener('click', grade);
+    submitBtn.addEventListener('click', () => {
+      if (!isLocked) {
+        grade();
+        return;
+      }
+      const destination = new URL('./quiz.html', window.location.href);
+      if (achievementPaperKey) destination.searchParams.set('achievementPaper', achievementPaperKey);
+      destination.hash = 'achievement';
+      window.location.assign(destination.toString());
+    });
     retryBtn.addEventListener('click', () => {renderQuiz();});
     retryWrongBtn.addEventListener('click', () => {if (wrongPicked.length) renderQuiz(wrongPicked);});
 
@@ -5606,6 +5621,7 @@
       bypassCheck = false;
       return;
     }
+    if (quizContainer.classList.contains('quiz-locked')) return;
     if (!window.moonbleOpenConfirm || !hasUnanswered()) return;
     e.preventDefault();
     e.stopImmediatePropagation();
