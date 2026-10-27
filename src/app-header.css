@@ -253,7 +253,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-nav:not(.mb-solver-nav) a>svg, .mb-app-nav:not(.mb-solver-nav) a>span { position: relative; z-index: 1; }
   .mb-app-nav:not(.mb-solver-nav) .mb-app-my { display: flex; }
   .mb-app-nav a svg { width: var(--mb-mobile-dock-icon-size); height: var(--mb-mobile-dock-icon-size); }
-  .mb-app-nav.mb-solver-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 6px 0 0; overflow: hidden; }
+  .mb-app-nav.mb-solver-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; min-height: 50px; display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 6px 0 0; overflow: hidden; }
   .mb-solver-heading { flex: 0 0 auto; display: block; padding: 0 8px 0 0; border-right: 1px solid var(--mb-border); border-bottom: 0; }
   .mb-solver-heading a { width: 44px; min-height: 44px; justify-content: center; padding: 0; font-size: 0; }
   .mb-solver-heading a svg { width: 18px; height: 18px; display: block; }
@@ -269,8 +269,8 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { padding-bottom: 0; }
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { display: block; padding: 4px max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); }
   .mb-app-header.mb-solver-sidebar .mb-app-nav.mb-solver-nav { grid-row: 1; padding: 0; }
-  .mb-solver-questions { min-width: 0; display: flex; flex: 1; gap: 6px; padding: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; }
-  .mb-solver-nav.has-memos .mb-solver-questions { width: 100%; max-height: none; flex: 1 1 100%; order: 1; }
+  .mb-solver-questions { min-width: 0; min-height: 44px; height: 44px; max-height: 44px; display: flex; flex: 1 1 0; align-self: center; gap: 6px; padding: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .mb-solver-nav.has-memos .mb-solver-questions { width: 100%; min-height: 44px; height: 44px; max-height: 44px; flex: 1 1 100%; order: 1; }
   .mb-solver-questions::-webkit-scrollbar { display: none; }
   .mb-solver-question { flex: 0 0 44px; min-height: 44px; display: grid !important; grid-template-columns: 1fr; padding: 0 !important; scroll-snap-align: center; }
   .mb-solver-number { margin: auto; }
