@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -529,7 +529,11 @@ export function QuizCreator({ custom, onChange }) {
           <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
           <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
         </div>
-        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{displayBank.source} · {displayBank.questions.length}문항</p></div><a href={`./solve.html?paper=custom&bank=${encodeURIComponent(displayBank.id)}#quiz`}>문제 풀이하기</a></div>
+        <nav className="creator-result-actions" aria-label="문제지 등록 후 이동">
+          <a className="creator-result-action-library" href="./quiz.html#paper-library"><BookOpen size={16} aria-hidden="true" />문제지 목록으로 가기</a>
+          <a className="creator-result-action-solve" href={`./solve.html?paper=custom&bank=${encodeURIComponent(displayBank.id)}#quiz`}>문제풀이하기<ArrowRight size={16} aria-hidden="true" /></a>
+        </nav>
+        <div className="creator-ready" role="status"><span><Check size={18} aria-hidden="true" /></span><div><strong>문제지 등록이 완료됐어요</strong><p>{displayBank.source} · {displayBank.questions.length}문항</p></div></div>
         <div className="creator-question-list">{preview.map((question, index) => <article style={{ '--result-index': index }} key={question.id}><span>{String(index + 1).padStart(2, '0')}</span><div><strong>{question.q}</strong><p>{question.options.join(' · ')}</p></div></article>)}</div>
         {displayBank.questions.length > preview.length && <p className="creator-more">외 {displayBank.questions.length - preview.length}문항이 등록되어 있어요.</p>}
       </div> : null}

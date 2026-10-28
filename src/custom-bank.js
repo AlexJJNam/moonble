@@ -326,7 +326,7 @@ import { supabase } from './supabase.js';
       var cleanName = typeof name === 'string' ? name.trim().slice(0, 12) : '';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
-      var group = { id: makeId('group'), name: cleanName, colorKey: colorKey || 'blue', createdAt: new Date().toISOString() };
+      var group = { id: makeId('group'), name: cleanName, colorKey: colorKey || 'default', createdAt: new Date().toISOString() };
       collection.groups.push(group);
       writeCollection(collection, userId);
       return group;
@@ -339,7 +339,7 @@ import { supabase } from './supabase.js';
       if (!cleanName) throw new Error('그룹 이름을 입력해주세요.');
       if (collection.groups.some(group => group.id !== groupId && group.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase())) throw new Error('같은 이름의 그룹이 이미 있어요.');
       if (!collection.groups.some(group => group.id === groupId)) throw new Error('그룹을 찾지 못했습니다.');
-      collection.groups = collection.groups.map(group => group.id === groupId ? { ...group, name: cleanName, colorKey: colorKey || group.colorKey || 'blue', updatedAt: new Date().toISOString() } : group);
+      collection.groups = collection.groups.map(group => group.id === groupId ? { ...group, name: cleanName, colorKey: colorKey || group.colorKey || 'default', updatedAt: new Date().toISOString() } : group);
       writeCollection(collection, userId);
       return collection.groups.find(group => group.id === groupId);
     } catch (e) { throw new Error(e.message || '그룹 이름을 바꾸지 못했습니다.'); }

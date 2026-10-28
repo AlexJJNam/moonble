@@ -1,6 +1,7 @@
 import { DEFAULT_GROUP_ID } from './custom-bank.js';
 
 export const GROUP_COLOR_OPTIONS = [
+  { key: 'default', label: '기본', hue: 212, swatch: '#1b64da', tint: '#e8f3ff', color: '#1b64da', border: '#d5e8ff' },
   { key: 'blue', label: '파랑', hue: 212, swatch: '#3182f6' },
   { key: 'cyan', label: '하늘', hue: 190, swatch: '#14a8c7' },
   { key: 'green', label: '초록', hue: 145, swatch: '#20a36a' },
@@ -36,9 +37,9 @@ export function buildGroupColorMap(groups) {
       usedHues.add(hue);
     }
     colors.set(group.id, {
-      '--paper-group-tint': `hsl(${hue} 72% 95%)`,
-      '--paper-group-color': `hsl(${hue} 48% 36%)`,
-      '--paper-group-border': `hsl(${hue} 45% 86%)`,
+      '--paper-group-tint': selected?.tint || `hsl(${hue} 72% 95%)`,
+      '--paper-group-color': selected?.color || `hsl(${hue} 48% 36%)`,
+      '--paper-group-border': selected?.border || `hsl(${hue} 45% 86%)`,
     });
   });
   return colors;
@@ -59,10 +60,11 @@ export function favoriteGroupIconStyle(groupId, colors) {
 }
 
 export function groupColorPreviewStyle(colorKey) {
-  const hue = GROUP_COLOR_OPTIONS.find(option => option.key === colorKey)?.hue ?? GROUP_COLOR_OPTIONS[0].hue;
+  const option = GROUP_COLOR_OPTIONS.find(item => item.key === colorKey) || GROUP_COLOR_OPTIONS[0];
+  const hue = option.hue;
   return {
-    '--group-preview-tint': `hsl(${hue} 72% 95%)`,
-    '--group-preview-color': `hsl(${hue} 48% 36%)`,
-    '--group-preview-border': `hsl(${hue} 45% 86%)`,
+    '--group-preview-tint': option.tint || `hsl(${hue} 72% 95%)`,
+    '--group-preview-color': option.color || `hsl(${hue} 48% 36%)`,
+    '--group-preview-border': option.border || `hsl(${hue} 45% 86%)`,
   };
 }
