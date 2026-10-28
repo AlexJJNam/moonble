@@ -9,6 +9,7 @@ import './design-system.css';
 import './login.css';
 
 const initialSession = cachedAuthSession();
+const MIN_NEW_PASSWORD_LENGTH = 8;
 
 function PasswordField({ autoComplete, id, label, maxLength = 128, minLength, onChange, setVisible, value, visible }) {
   const inputRef = useRef(null);
@@ -128,8 +129,8 @@ function Login() {
       setError('비밀번호 확인이 일치하지 않습니다.');
       return;
     }
-    if ((mode === 'register' || mode === 'update') && password.length < 12) {
-      setError('비밀번호는 조합 규칙 없이 12자 이상 입력해주세요.');
+    if ((mode === 'register' || mode === 'update') && password.length < MIN_NEW_PASSWORD_LENGTH) {
+      setError(`비밀번호는 ${MIN_NEW_PASSWORD_LENGTH}자 이상 입력해주세요.`);
       return;
     }
     setPending(true);
@@ -194,8 +195,8 @@ function Login() {
       </div> : <><form onSubmit={submit}>
         <fieldset disabled={pending || checking || !supabase}>
           {mode !== 'update' && <div className="floating-field"><input id="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} placeholder=" " /><label htmlFor="email">이메일</label></div>}
-          {mode !== 'reset' && <PasswordField id="password" label="비밀번호" autoComplete={newPassword ? 'new-password' : 'current-password'} minLength={newPassword ? 12 : undefined} value={password} onChange={e => setPassword(e.target.value)} visible={passwordVisible} setVisible={setPasswordVisible} />}
-          {newPassword && <><p className="auth-hint">12자 이상 · 특수문자 조합은 필수가 아닙니다</p><PasswordField id="password-confirmation" label="비밀번호 확인" autoComplete="new-password" minLength={12} value={confirmation} onChange={e => setConfirmation(e.target.value)} visible={confirmationVisible} setVisible={setConfirmationVisible} /></>}
+          {mode !== 'reset' && <PasswordField id="password" label="비밀번호" autoComplete={newPassword ? 'new-password' : 'current-password'} minLength={newPassword ? MIN_NEW_PASSWORD_LENGTH : undefined} value={password} onChange={e => setPassword(e.target.value)} visible={passwordVisible} setVisible={setPasswordVisible} />}
+          {newPassword && <><p className="auth-hint">8자 이상 · 특수문자 조합은 필수가 아닙니다</p><PasswordField id="password-confirmation" label="비밀번호 확인" autoComplete="new-password" minLength={MIN_NEW_PASSWORD_LENGTH} value={confirmation} onChange={e => setConfirmation(e.target.value)} visible={confirmationVisible} setVisible={setConfirmationVisible} /></>}
           {mode === 'register' && <div className="signup-consents">
             <div className="consent-row"><label><input type="checkbox" required checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} /><span>[필수] 이용약관 동의</span></label><a href="./terms.html" target="_blank" rel="noopener noreferrer" aria-label="이용약관 내용 보기 (새 창)">보기</a></div>
             <div className="consent-row"><label><input type="checkbox" required checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} /><span>[필수] 개인정보 수집·이용 동의</span></label><a href="./privacy.html" target="_blank" rel="noopener noreferrer" aria-label="개인정보 처리방침 보기 (새 창)">보기</a></div>
