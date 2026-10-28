@@ -10,6 +10,7 @@ const legacyPaths = [
   'jjn_chatGPT_1', 'multi_agent_chatgpt', 'pocketfolio', 'rassi_survey.html',
   'rassipromo', 'rassipromo_avh', 'widget-launcher-src',
   'widget-launcher.html', 'widget-launcher.vanilla.backup.html',
+  'stylepass-promo.html', 'stylepass-promo',
   'manifest.webmanifest', 'sw.js',
 ];
 
