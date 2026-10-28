@@ -1,0 +1,328 @@
+/* 라씨 스타일 패스 평생할인 이벤트 — Figma 1347:189, 기준 폭 390px. 수치는 docs/figma-spec.md 참조. */
+:root{--page-max:480px;--safe-bottom:0px;--purple:#532eff;font-family:Pretendard,-apple-system,BlinkMacSystemFont,sans-serif;color:#141414;font-synthesis:none;-webkit-font-smoothing:antialiased}
+/* 하단 안전 영역: 앱 WebView는 시스템 버튼 영역 위에서 끝나므로 기본 0. 전체 화면 WebView에 쓸 때만
+   :root{--safe-bottom:env(safe-area-inset-bottom,0px)}로 바꾸세요. (이전 페이지와 동일) */
+/* 폴드 펼침 화면을 480px 디자인으로 꽉 채울 때 (js/foldable-fit.js) */
+:root.is-fit-width{--page-max:100%}
+*{box-sizing:border-box}
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+html{background:#f2f3f7;overflow-x:hidden;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0}
+h1,h2,h3,h4,p,ol,ul{margin:0}
+ol,ul{padding:0;list-style:none}
+img{display:block}
+button,a{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,.guide-track:focus-visible{outline:3px solid #ffb02e;outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.event-page{width:100%;max-width:var(--page-max);margin-inline:auto;background:#fff;overflow:hidden;overflow:clip}
+
+/* ── S1 히어로 ─────────────────────────────────────────── */
+.hero{padding:60px 0;background:var(--purple);color:#fff;font-family:Paperlogy,sans-serif;font-weight:500}
+.hero-head{width:calc(100% - 32px);max-width:358px;margin-inline:auto;display:flex;flex-direction:column;align-items:center;gap:20px}
+/* 키비주얼 뱃지: S2 "혜택 안내" 뱃지와 같은 형태, 검정 바탕. 큰 제목의 위 여백(행간)을 감안해 간격 12px */
+.pill-badge.hero-badge{margin-bottom:-8px;background:#141414}
+.hero-title{display:flex;flex-direction:column;width:100%;font-size:min(110px,28.205vw);font-weight:500;line-height:1.2;letter-spacing:2.2px;text-align:center;white-space:nowrap}
+/* TOP 블록과 중괄호 줄은 Figma에서 한 묶음(간격 0) */
+.hero-pick{display:flex;flex-direction:column;align-items:center;width:100%}
+.top15{display:flex;flex-direction:column;align-items:center;width:min(300px,100%)}
+.top15-label{font-size:24px;line-height:1.4;letter-spacing:.48px;text-align:center}
+.top15-stage{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden}
+/* 프레임별 이미지 크기·위치(300×200 창 기준 %). 전환 효과 없이 즉시 교체(매치컷). */
+.top15-shot{position:absolute;max-width:none;object-fit:cover;visibility:hidden;pointer-events:none;user-select:none}
+.top15-shot.is-active{visibility:visible}
+.top15-shot--1{left:0;top:0;width:100%;height:100%}
+.top15-shot--2{left:-4.3333%;top:-8.5%;width:108.3333%;height:108.5%}
+.top15-shot--3{left:-16.6667%;top:-3.5%;width:133.3333%;height:100%}
+.top15-shot--4{left:.3333%;top:-3.5%;width:99.6667%;height:99.5%}
+.top15-shot--5{left:-1.6667%;top:-6.5%;width:103.3333%;height:103%}
+.hero-brace{display:flex;align-items:center;justify-content:space-between;width:100%;white-space:nowrap}
+.brace{font-size:min(110px,28.205vw);line-height:1.2;letter-spacing:2.2px}
+.hero-brace p{font-size:min(20px,5.128vw);line-height:1.4;letter-spacing:.4px;text-align:center}
+
+/* 안내 카드 캐러셀: 카드 350, gap 30, 가운데 정렬 스냅. 한 번에 한 장(scroll-snap-stop), 끝에서 멈춤. */
+.guide{--card:min(350px,calc(100vw - 40px));--track:min(100vw,var(--page-max));margin-top:20px}
+@supports (width:1cqw){.guide{container-type:inline-size;--card:min(350px,calc(100cqw - 40px));--track:100cqw}}
+.guide-track{display:flex;gap:30px;padding-inline:calc((var(--track) - var(--card)) / 2);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+.guide-track::-webkit-scrollbar{display:none}
+.guide-track.is-dragging{cursor:grabbing;scroll-snap-type:none}
+.guide-card{position:relative;flex:0 0 var(--card);height:476px;border-radius:20px;background:#fff;overflow:hidden;scroll-snap-align:center;scroll-snap-stop:always;user-select:none;-webkit-user-select:none}
+/* Figma 값(#fff 36.667%, .6 22.766%)은 stop 순서가 뒤집혀 36.667%에 경계선이 생김 → 오름차순으로 정리. 시안 픽셀과 더 가까움 */
+.guide-card::after{content:'';position:absolute;left:0;right:0;bottom:0;height:123px;background:linear-gradient(to top,#fff 22.766%,rgba(255,255,255,.6) 36.667%,rgba(255,255,255,0));pointer-events:none}
+.guide-copy{position:absolute;left:0;right:0;top:40px;color:#141414;font-size:18px;font-weight:500;line-height:1.4;letter-spacing:.36px;text-align:center;white-space:nowrap}
+.guide-phone{position:absolute;left:50%;top:135px;width:270px;height:498px;margin-left:-135px;border:1px solid #000;border-radius:20px;overflow:hidden}
+.guide-phone img{position:absolute;left:var(--x,0);top:var(--y);width:var(--w,100%);height:var(--h);max-width:none;-webkit-user-drag:none}
+.guide-phone--1{--y:-16.07%;--h:117.66%}
+.guide-phone--2{--x:-.05%;--y:-8.96%;--w:100.09%;--h:117.8%}
+.guide-phone--3{--x:-.05%;--y:-15.32%;--w:100.09%;--h:117.94%}
+.guide-dots{display:flex;justify-content:center;gap:8px;margin-top:22px}
+.guide-dot{position:relative;flex:none;width:6px;height:6px;padding:0;border:0;border-radius:3px;background:rgba(255,255,255,.4);transition:width .25s ease,background-color .25s ease}
+.guide-dot::before{content:'';position:absolute;inset:-12px -4px}
+.guide-dot.is-active{width:18px;border-radius:200px;background:#fff}
+
+/* ── 혜택 기간 리본 (expert-promo와 동일 동작, 이 페이지 색) ───────── */
+/* 키비주얼 하단 캐러셀(점 표시) 아래 */
+.event-period-slot{width:calc(100% - 32px);max-width:358px;height:42px;margin:30px auto 0}
+.event-period{width:100%;height:42px;flex:none;border-radius:100px;background:#fff;color:#141414;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;line-height:17px}
+.event-period strong{font-weight:700}
+.event-period.is-sticky{position:fixed;z-index:30;top:0;left:0;right:0;margin-inline:auto;width:var(--period-start-width);height:42px;padding:0 44px 0 28px;transition:width .45s cubic-bezier(.22,1,.36,1),border-radius .45s,background-color .45s,box-shadow .45s}
+.event-period.is-sticky.is-expanded{width:min(100%,var(--page-max));border-radius:0;background:rgb(255 255 255 / .85);box-shadow:0 5px 16px #0002;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.period-rolling{display:none}
+.event-period.is-sticky .calendar,.event-period.is-sticky .period-static{display:none}
+.event-period.is-sticky .period-rolling{display:block;width:100%;height:20px;overflow:hidden;text-align:center}
+.period-track{animation:period-roll 15s infinite cubic-bezier(.22,1,.36,1)}
+.period-track strong{display:block;height:20px;line-height:20px;white-space:nowrap;font-size:14px;color:var(--purple)}
+@keyframes period-roll{0%,30.167%{transform:translateY(0)}33.333%,63.5%{transform:translateY(-20px)}66.667%,96.833%{transform:translateY(-40px)}100%{transform:translateY(-60px)}}
+.period-close{position:absolute;right:0;top:0;width:44px;height:42px;padding:0;border:0;background:transparent;color:#7a7f8c;display:grid;place-items:center;font-size:20px;line-height:1}
+.period-close[hidden]{display:none}
+.period-close:hover{color:#3a3f4b}
+.period-close:focus-visible{outline-offset:-4px}
+.calendar{position:relative;display:block;width:23px;height:23px;overflow:hidden;filter:drop-shadow(0 4px 4px #0004)}
+.calendar img{position:absolute;width:129.94%;height:195.22%;left:-12.27%;top:-46.97%;max-width:none}
+@media(max-width:374px){.period-track strong{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.event-period.is-sticky{transition:none}.period-track{animation-timing-function:steps(1,end)}}
+
+/* ── S2 혜택 가격 ──────────────────────────────────────── */
+.offer{display:flex;flex-direction:column;align-items:center;gap:20px;padding:60px 16px;background:#ff7c65}
+.offer-card,.target-banner{width:100%;max-width:358px}
+.offer-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:416.943px;padding:30px 26px;border-radius:16px;background:#fff;text-align:center}
+.pill-badge{display:inline-flex;padding:8px 16px;border-radius:100px;background:var(--purple);color:#fff;font:700 14px/14px Paperlogy,sans-serif}
+.offer-title{margin-top:13px;color:#000;font:500 24px/1.2 Paperlogy,sans-serif;letter-spacing:-.24px}
+.offer-title strong{font-weight:700}
+.offer-price{display:flex;flex-direction:column;align-items:center;margin-top:24px}
+.offer-product{color:#ff4a00;font:500 20px/1.45 Paperlogy,sans-serif;white-space:nowrap}
+.price-original{margin-top:10px;color:#404040}
+.price-original del{display:flex;align-items:center;text-decoration:none}
+.price-original-num{position:relative;width:103.5px;padding-left:8.25px;font-size:26px;font-weight:500;line-height:normal;text-align:left}
+.price-strike{position:absolute;left:0;top:13.05px;width:103.5px;height:4px;transform:rotate(180deg)}
+.price-original-unit{font-size:20px;font-weight:400;line-height:normal}
+.price-sale{display:flex;align-items:center;gap:2px;color:#000;font-family:Paperlogy,sans-serif;line-height:1.2;letter-spacing:1.999px;white-space:nowrap}
+.price-sale strong{font-size:42px;font-weight:800}
+.price-sale>span{font-size:36px;font-weight:400}
+/* 혜택가 숫자 롤링 (js/price-odometer.js): pocketfolio 총자산 금액의 odometer CSS 그대로입니다.
+ * 줄 높이 변수(--lh-display)만 혜택가 글자(42px × 1.2)에 맞췄고, 화면에 들어오기 전에는 0에서 멈춰 있습니다(.odo-wait). */
+[data-odometer]{--lh-display:1.2em}
+.odo{display:inline-flex}
+.odo-in{display:inline-flex}
+.odo-d{display:inline-block;height:var(--lh-display);overflow:hidden;vertical-align:top}
+.odo-s{display:flex;flex-direction:column;animation:odo-roll 1s cubic-bezier(.16,.84,.24,1) both;animation-delay:calc(var(--k) * 45ms)}
+.odo-s span{display:block;height:var(--lh-display);line-height:var(--lh-display)}
+.odo-c{display:inline-block;height:var(--lh-display);line-height:var(--lh-display)}
+.odo-wait .odo-s{animation-play-state:paused}
+@keyframes odo-roll{from{transform:translateY(0)}to{transform:translateY(calc(var(--n) * -1 * var(--lh-display)))}}
+@media (prefers-reduced-motion: reduce){.odo-s{animation:none;transform:translateY(calc(var(--n) * -1 * var(--lh-display)))}}
+.offer-guarantee{margin-top:20px;padding:12px 24px;border:1.4px solid #ff4a00;border-radius:100px;color:#ff4a00;font:500 16px/19.99px Paperlogy,sans-serif;letter-spacing:-.22px;white-space:pre}
+.offer-note{margin-top:14px;color:#4a4a4a;font-size:10px;line-height:1.45;letter-spacing:-.4px;white-space:nowrap}
+.target-banner{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 47px;border-radius:10px;background:linear-gradient(146.249deg,rgba(255,201,56,.8) .665%,rgba(255,166,22,.8) 21.761%,rgba(236,117,0,.8) 46.021%,rgba(255,94,30,.8) 74.035%,rgba(253,0,1,.8) 110.36%);box-shadow:0 0 24px rgba(0,0,0,.14);color:#fffeff;font-family:Paperlogy,sans-serif;font-size:20px;line-height:26px;letter-spacing:-.24px;text-align:center;white-space:nowrap}
+.target-brand{display:flex;align-items:center;gap:6px;font-weight:500}
+.target-brand img{width:27px;height:28.021px;object-fit:cover}
+.target-message{display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:400}
+.target-message strong{font-weight:800}
+
+/* ── S3 이런분들께 강추 ────────────────────────────────── */
+.recommend{display:flex;flex-direction:column;align-items:center;gap:20px;padding:60px 16px;background:linear-gradient(179.424deg,#e9ffdd .73%,#e3eeff 47.5%,#ddfdff 100%)}
+.recommend-title{display:flex;align-items:center;gap:10px;color:#141414;font:700 40px/1.2 Paperlogy,sans-serif;letter-spacing:-1px;white-space:nowrap}
+.recommend-title img{flex:none;width:20px;height:20px}
+.intro-card{display:flex;flex-direction:column;align-items:center;width:100%;max-width:358px;padding:30px 24px;border-radius:20px;background:#fefdfd;text-align:center}
+/* Figma 선은 안쪽 선(테두리가 크기에 포함) → 101×26 */
+.pill-outline{display:inline-flex;padding:5px 11px;border:1px solid #434ff9;border-radius:100px;color:#434ff9;font:700 14px/14px Paperlogy,sans-serif}
+.intro-title{margin-top:16px;color:#141414;font:700 30px/1.2 Paperlogy,sans-serif;letter-spacing:-1px;white-space:nowrap}
+.intro-subtitle{margin-top:12px;color:#131313;font-size:18px;font-weight:500;line-height:25px;letter-spacing:-.6px}
+.intro-art{position:relative;width:100%;height:calc(220px * var(--fit,1));margin-top:14px}
+.intro-art-inner{position:absolute;left:50%;top:0;width:310px;height:220px;margin-left:-155px;overflow:hidden;transform:scale(var(--fit,1));transform-origin:50% 0}
+.intro-object{position:absolute;left:80px;top:29px;width:170px;height:166px}
+.intro-object>img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
+.intro-object>.intro-object-blur{filter:blur(12px)}
+.intro-bubble{position:absolute;left:73px;top:83px;display:flex;align-items:center;justify-content:center;width:156.947px;height:98.383px}
+.intro-bubble span{flex:none;padding:20px 30px;border-radius:42.577px;background:#ffffe4;filter:drop-shadow(6px 4px 5px rgba(255,122,122,.14));color:#141414;font:700 17px/1.2 Paperlogy,sans-serif;letter-spacing:-.7096px;white-space:nowrap;transform:rotate(-16.22deg)}
+/* "오늘 시장은?" 스티커 효과 (js/intro-bubble.js): 크게 떠 있다가 '탁' 붙고, 살짝 눌렸다 튀며 자리를 잡습니다. 회전 -16.22deg는 시안 값 */
+.intro-bubble--animated span{opacity:0}
+.intro-bubble--animated.is-stuck span{animation:intro-bubble-slap .62s cubic-bezier(.3,0,.2,1) .15s both}
+@keyframes intro-bubble-slap{
+  0%{opacity:0;transform:rotate(-27deg) scale(1.75);filter:drop-shadow(16px 22px 14px rgba(255,122,122,.22))}
+  45%{opacity:1;transform:rotate(-14.5deg) scale(.88);filter:drop-shadow(3px 2px 2px rgba(255,122,122,.16))}
+  66%{transform:rotate(-17deg) scale(1.05)}
+  84%{transform:rotate(-15.8deg) scale(.985)}
+  100%{opacity:1;transform:rotate(-16.22deg) scale(1);filter:drop-shadow(6px 4px 5px rgba(255,122,122,.14))}
+}
+@media(prefers-reduced-motion:reduce){.intro-bubble--animated span,.intro-bubble--animated.is-stuck span{opacity:1;animation:none}}
+.intro-character{position:absolute;left:-16px;top:8px;width:203px;height:190px;max-width:none;object-fit:cover}
+.intro-quote{width:100%;margin-top:14px;padding:12px 0;border-radius:12px;background:#fff4ed;color:#ff6000;font-size:14px;font-weight:700;line-height:1.45;letter-spacing:-.42px;white-space:nowrap}
+.feature-box{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;margin-top:16px;padding:40px 0;border-radius:20px;background:url('../assets/images/feature-background.png') center bottom / 100% 100% no-repeat}
+.feature{display:flex;flex-direction:column;align-items:center;gap:8px}
+.feature h4{display:flex;align-items:center;gap:8px;color:#131313;font-size:20px;font-weight:800;line-height:25px;letter-spacing:-.6px;white-space:nowrap}
+.feature h4 img{flex:none;width:8px;height:8px}
+.feature p{color:#5a5a5a;font-size:18px;font-weight:500;line-height:1.45;letter-spacing:-.6px;white-space:nowrap}
+.feature-plus{display:flex;align-items:center;justify-content:center;width:23.864px;height:24px;border-radius:50%;background:#c4c8ed}
+.feature-plus img{width:11.932px;height:11.974px}
+
+/* ── S3-1 성과 맛보기 — 이전 이벤트(event_chuseok.html) 섹션. 원본 common.css 값, 글꼴만 Pretendard ── */
+.performance{padding:60px 20px;background:#f5f7f9;color:#141414;text-align:center}
+.performance-title{margin-bottom:8px;font-size:26px;font-weight:700;line-height:34px}
+.performance-txt{margin-bottom:30px;font-size:16px;font-weight:400;line-height:24px}
+.result{display:flex;flex-direction:column;gap:30px;text-align:left}
+/* 슬라이딩 탭: 흰 선택 배경(::before)이 선택한 탭 쪽으로 미끄러집니다. --tab-index는 js/performance-tabs.js가 설정 */
+.result-tab{position:relative;display:flex;width:100%;padding:4px;border-radius:8px;background:#edf0f3}
+.result-tab::before{content:'';position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / 2);border-radius:6px;background:#fff;box-shadow:0 0 4px rgba(0,0,0,.1);transform:translateX(calc(var(--tab-index,0) * 100%));transition:transform .36s cubic-bezier(.22,1,.36,1)}
+.result-tab button{position:relative;z-index:1;flex:1;height:30px;margin:0;padding:0;border:0;border-radius:6px;background:transparent;color:#788591;font-size:16px;font-weight:400;line-height:24px;transition:color .25s ease}
+.result-tab button.is-active{color:#202632;font-weight:700}
+.result-panel{animation:result-fade .15s linear}
+.result-panel[hidden]{display:none}
+@keyframes result-fade{from{opacity:0}to{opacity:1}}
+.result-group{display:flex;flex-direction:column;gap:16px;margin-bottom:30px}
+.result-box{min-width:0;padding:16px;border-radius:16px;background:#fff}
+.result-chart img{width:100%;height:auto}
+.result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.result-grid .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.result-grid .top img{flex:none;width:28px;height:28px}
+.result-grid .top strong{font-size:16px;font-weight:600;line-height:24px}
+.result-grid .up{color:#ff5050}
+.result-grid .bot{display:flex;flex-direction:column;gap:4px;min-width:0}
+.result-grid .bot strong{display:block;overflow:hidden;color:#202632;font-size:16px;font-weight:700;line-height:24px;text-overflow:ellipsis;white-space:nowrap}
+.result-grid .bot p{color:#788591;font-size:11px;font-weight:400;line-height:17px}
+/* 성과 보기 버튼: 메인 버튼(.sign-up) 규격 그대로(높이 45·둥근 50·16px 굵게), 회색 */
+.result-more{width:100%;height:45px;padding:0 16px;border:0;border-radius:50px;background:#dfe3e8;color:#364350;font-size:16px;font-weight:700;line-height:24px;transition:background-color .12s ease,transform .12s ease}
+.result-more:active{transform:scale(.98);background:#d2d7de}
+@media(hover:hover){.result-more:hover{background:#d2d7de}}
+/* 성과 기간·보장 안내 캡션: 혜택 안내 카드의 *본 페이지 외 경로 결제 캡션(.offer-note)과 같은 글자 스타일 */
+.result-note{margin-top:14px;color:#4a4a4a;font-size:10px;line-height:1.45;letter-spacing:-.4px;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.result-panel{animation:none}.result-tab::before,.result-tab button{transition:none}}
+
+/* ── S4 마지막 ─────────────────────────────────────────── */
+.closing{display:flex;justify-content:center;padding:30px 16px;background:#fff}
+.closing-card{position:relative;display:flex;align-items:center;justify-content:center;flex:none;width:min(360px,calc(100% + 2px));height:346px;margin-inline:-1px;border-radius:50px;background:#fefdfd;box-shadow:6px 4px 24px rgba(0,0,0,.1);overflow:hidden}
+/* 479.626×652.738, -11.28° 회전. 회전 bbox(-131.29, -318.63, 598.046×733.95)의 중심 (167.733, 48.345) */
+.closing-bg{position:absolute;left:-72.08px;top:-278.024px;width:479.626px;height:652.738px;max-width:none;object-fit:cover;transform:rotate(-11.28deg)}
+.closing-body{position:relative;display:flex;flex-direction:column;align-items:center;gap:24px;flex:none;width:312px;transform:translateY(.12px) scale(var(--fit,1))}
+.closing-lead{display:flex;flex-direction:column;align-items:center;gap:12px}
+.closing-check{display:block;width:100px;height:100px}
+.closing-check img{width:100px;height:100px}
+/* 체크 뱃지: 엑스퍼트 '라씨의 선택' 따봉 아이콘과 같은 효과. 튀어 오르며 나타난 뒤(0.75초), 보이는 동안 3.2초마다 위로 튀며 흔들립니다. (js/closing-badge.js) */
+.closing-check--animated{opacity:0;transform:translateY(12px) scale(.96)}
+.closing-check--animated.is-revealed{opacity:1;transform:none;animation:closing-check-reveal .75s cubic-bezier(.22,1,.36,1) .3s both}
+.closing-check--animated.is-revealed img{transform-origin:50% 80%;animation:closing-check-thumb 3.2s ease-in-out 1.05s infinite;animation-play-state:paused}
+.closing-check--animated.is-revealed.is-in-view img{animation-play-state:running}
+@keyframes closing-check-reveal{0%{opacity:0;transform:translateY(12px) scale(.96)}70%{opacity:1;transform:translateY(-2px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes closing-check-thumb{0%,38%,100%{transform:translateY(0) rotate(0) scale(1)}8%{transform:translateY(-3px) rotate(-13deg) scale(1.08)}16%{transform:translateY(-4px) rotate(11deg) scale(1.1)}24%{transform:translateY(-2px) rotate(-7deg) scale(1.05)}31%{transform:translateY(0) rotate(4deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){.closing-check--animated,.closing-check--animated.is-revealed{opacity:1;transform:none;animation:none}.closing-check--animated.is-revealed img{animation:none;transform:none}}
+.closing-title{color:#295aff;font-size:20px;font-weight:400;line-height:22.5px;text-align:center;white-space:nowrap}
+.closing-title strong{font-weight:700}
+.closing-flow{display:flex;align-items:center;justify-content:space-between;width:100%}
+.flow-circle,.flow-box{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;text-align:center;white-space:nowrap}
+.flow-circle{gap:1px;width:110px;height:110px;padding:15px;border:1px solid #000;border-radius:50%;background:rgba(255,255,255,.7);color:#202632}
+.flow-circle strong{font-size:16.046px;font-weight:700;line-height:1.45}
+.flow-circle span{font-size:14.263px;font-weight:400;line-height:1.45}
+.flow-arrow{flex:none;width:24px;height:24px}
+.flow-box{width:136.389px;height:98.057px;border-radius:12px;background:rgba(138,159,232,.6);box-shadow:0 0 40px rgba(255,255,255,.3);color:#0038f3}
+.flow-box strong{font-size:15.511px;font-weight:700;line-height:1.45}
+.flow-box span{font-size:14.263px;font-weight:500;line-height:1.45}
+/* 흐름도 순차 표출 (js/closing-flow.js): 왼쪽부터 원 → 화살표 → 박스가 0.28초 간격으로, 왼쪽에서 20px 미끄러지며 나타납니다. */
+.closing-flow--animated>*{opacity:0;transform:translate3d(-20px,0,0)}
+.closing-flow--animated.is-shown>*{animation:closing-flow-in .8s cubic-bezier(.22,1,.36,1) both}
+.closing-flow--animated.is-shown>:nth-child(2){animation-delay:.28s}
+.closing-flow--animated.is-shown>:nth-child(3){animation-delay:.56s}
+@keyframes closing-flow-in{from{opacity:0;transform:translate3d(-20px,0,0)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.closing-flow--animated>*,.closing-flow--animated.is-shown>*{opacity:1;transform:none;animation:none}}
+
+/* ── S5 Footer ─────────────────────────────────────────── */
+/* 하단 200px: 고정 액션 버튼 자리 */
+.event-footer{display:flex;flex-direction:column;gap:12px;padding:30px 16px calc(200px + var(--safe-bottom));background:#e9ecf2;color:#141414}
+.notice-title{display:flex;align-items:center;gap:7px;font-size:14.583px;font-weight:700;line-height:21.875px}
+.notice-title img{flex:none;width:25px;height:25px}
+.notice-list{display:flex;flex-direction:column;gap:10px}
+.notice-list li{display:flex;align-items:flex-start;gap:6px;font-size:14px;line-height:20px;letter-spacing:-.14px}
+.notice-list li.is-loose{line-height:22.917px}
+.notice-list li img{flex:none;width:6px;height:20px}
+.notice-list p{flex:1;min-width:0}
+.contact-box{width:327px;max-width:100%;margin-top:-2px;padding:12px 14px;border-radius:6px;background:#f8f8f8}
+.contact-box ul{padding-left:18px;list-style:disc;color:#686868;font-size:12px;line-height:20px;letter-spacing:-.12px}
+.contact-box a{text-decoration:none}
+
+/* ── 액션 버튼(하단 고정) — 이전 페이지 .sign-up 규격(높이 45·둥근 50), 글자는 16px/24px로 키움, 색은 이 페이지 보라 ─────── */
+.sign-up{position:fixed;z-index:99;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:var(--page-max);margin:0 auto;padding:20px 20px calc(20px + var(--safe-bottom));background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.4) 25%,rgba(255,255,255,.8) 55%,#fff 100%)}
+/* 혜택 남은 시간: 버튼 6px 위 가운데, 진한 검정 글자(숫자만 빨강). 뒤 콘텐츠 위에서도 읽히도록 흰 번짐 */
+.sign-up-timer{margin-bottom:6px;color:#222;font-size:14px;font-weight:700;line-height:20px;text-align:center;white-space:nowrap;text-shadow:0 0 4px #fff,0 0 2px #fff,0 0 1px #fff}
+.sign-up-countdown{font-variant-numeric:tabular-nums}
+/* 남은 시간 숫자만 빨간색 */
+.sign-up-countdown b{color:#f03e3e;font-weight:700}
+.sign-up button{width:100%;height:45px;border:0;border-radius:50px;background:var(--purple);color:#fff;font-size:16px;font-weight:700;line-height:24px;transition:transform .12s ease,background-color .12s ease}
+.sign-up button:active{transform:scale(.98);background:#4423e0}
+@media(hover:hover){.sign-up button:hover{background:#4423e0}}
+
+/* ── 스타일 성과 바텀시트 — 엑스퍼트 소개 시트와 같은 구조·동작, 이 페이지 색(밝은 시트·보라) ── */
+.is-sheet-open,.is-sheet-open body{overflow:hidden}
+.portfolio-modal{position:fixed;inset:0;z-index:120}
+.portfolio-modal[hidden]{display:none}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65);opacity:0;transition:opacity .28s ease;touch-action:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:24px;display:flex;flex-direction:column;width:100%;max-width:var(--page-max);margin-inline:auto;border-radius:16px 16px 0 0;background:#fff;box-shadow:0 -8px 30px rgba(0,0,0,.25);overflow:hidden;transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.portfolio-modal.is-open .sheet-backdrop{opacity:1}
+.portfolio-modal.is-open .sheet{transform:translateY(0)}
+.sheet-header{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:52px;padding:0 52px;border-bottom:1px solid #eceef2}
+.sheet-header h2{overflow:hidden;color:#141414;font-size:16px;font-weight:700;line-height:20px;white-space:nowrap;text-overflow:ellipsis}
+.sheet-close{position:absolute;right:4px;top:4px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:transparent;color:#5b6170;font-size:26px;line-height:1}
+.sheet-close:focus-visible{outline-offset:-6px}
+/* 스크롤은 iframe 안(성과 페이지 자체)에서 합니다. 성과 페이지의 상단 고정 탭이 그대로 동작합니다. */
+.sheet-body{position:relative;flex:1;min-height:0;overflow:hidden}
+.sheet-frame{display:block;width:100%;height:100%;border:0;background:#fff}
+.sheet-status{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 24px;background:#fff;color:#5b6170;font-size:14px;line-height:20px;text-align:center;word-break:keep-all}
+.sheet-status[hidden],.sheet-retry[hidden]{display:none}
+.sheet-spinner{width:32px;height:32px;border:3px solid rgba(83,46,255,.2);border-top-color:var(--purple);border-radius:50%;animation:sheet-spin .8s linear infinite}
+.sheet-status.is-error .sheet-spinner{display:none}
+.sheet-retry{height:36px;padding:0 18px;border:1px solid #c9cdd6;border-radius:100px;background:#fff;color:#141414;font-size:14px;font-weight:500}
+@keyframes sheet-spin{to{transform:rotate(360deg)}}
+.sheet-footer{position:relative;flex:none;display:flex;justify-content:center;padding:12px 16px calc(12px + var(--safe-bottom));border-top:1px solid #eceef2;background:#fff}
+/* 성과 화면을 내려 본 만큼 버튼 영역 윗변에서 왼쪽부터 차오르는 2px 보라 막대 */
+.sheet-progress{position:absolute;left:0;right:0;top:-1px;height:2px;pointer-events:none}
+.sheet-progress[hidden]{display:none}
+.sheet-progress span{display:block;width:100%;height:100%;background:var(--purple);transform:scaleX(0);transform-origin:left center}
+/* 끝에 닿으면 미묘한 '틱!': 막대 끝이 살짝 밝아지고, 끝 지점에서 작은 고리가 퍼지며 짧은 불꽃 4개가 위로 튑니다(약 0.5초).
+   막대가 100%인 동안 버튼 글자가 노랑(#ffd84d)에 옅은 빛이 번지며 0.45초 동안 불이 켜지듯 바뀌고, 100%에서 벗어나면 같은 속도로 꺼집니다. */
+.sheet-progress::after{content:'';position:absolute;right:0;top:-.5px;bottom:-.5px;width:28px;border-radius:2px;background:linear-gradient(90deg,rgba(176,160,255,0),#b0a0ff);box-shadow:2px 0 4px rgba(83,46,255,.6);opacity:0}
+.sheet-progress-tick{position:absolute;right:0;top:50%;width:0;height:0}
+.sheet-progress .tick-ring{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border:1px solid #8b75ff;border-radius:50%;opacity:0;transform:scale(.2)}
+.sheet-progress .tick-spark{position:absolute;left:0;top:-.5px;width:4px;height:1px;border-radius:1px;background:#a898ff;box-shadow:0 0 2px rgba(83,46,255,.67);opacity:0;transform-origin:0 50%}
+.sheet-progress .tick-spark:nth-child(2){--a:-165deg}
+.sheet-progress .tick-spark:nth-child(3){--a:-128deg}
+.sheet-progress .tick-spark:nth-child(4){--a:-92deg}
+.sheet-progress .tick-spark:nth-child(5){--a:-56deg}
+.sheet-progress.is-tick::after{animation:tick-head .5s ease-out}
+.sheet-progress.is-tick .tick-ring{animation:tick-ring .5s cubic-bezier(.2,.7,.3,1)}
+.sheet-progress.is-tick .tick-spark{animation:tick-spark .45s cubic-bezier(.2,.7,.3,1) .04s both}
+@keyframes tick-head{0%{opacity:0}25%{opacity:.7}100%{opacity:0}}
+@keyframes tick-ring{0%{opacity:.6;transform:scale(.2)}100%{opacity:0;transform:scale(1)}}
+@keyframes tick-spark{0%{opacity:0;transform:rotate(var(--a)) translateX(2px) scaleX(.3)}20%{opacity:.85}100%{opacity:0;transform:rotate(var(--a)) translateX(8px) scaleX(.7)}}
+.sheet-cta{width:100%;max-width:400px;height:45px;padding:0 16px;border:0;border-radius:50px;background:var(--purple);color:#fff;font-size:16px;font-weight:700;line-height:24px}
+.sheet-cta:active{background:#4423e0}
+@media(hover:hover){.sheet-cta:hover{background:#4423e0}}
+.sheet-cta-label{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-shadow:0 0 0 rgba(255,216,77,0);transition:color .45s ease-out,text-shadow .45s ease-out}
+.sheet-progress.is-complete ~ .sheet-cta .sheet-cta-label{color:#ffd84d;text-shadow:0 0 8px rgba(255,216,77,.55)}
+@media(prefers-reduced-motion:reduce){
+  .sheet-backdrop,.sheet,.sheet-cta-label{transition:none}
+  .sheet-progress.is-tick::after,.sheet-progress.is-tick .tick-ring,.sheet-progress.is-tick .tick-spark{animation:none}
+  .sheet-spinner{animation-duration:2s}
+}
+
+/* ── 뷰포트 진입 애니메이션 (js/reveal.js) ───────────────── */
+.js-reveal [data-reveal]{opacity:0;transform:translate3d(0,28px,0);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);transition-delay:var(--reveal-delay,0s)}
+.js-reveal [data-reveal].is-revealed{opacity:1;transform:none}
+
+/* ── 좁은 화면(폴드 접힘 등) ───────────────────────────── */
+@media(max-width:374px){
+  .guide-copy{font-size:16px;letter-spacing:0}
+  .recommend-title{font-size:34px}
+  .intro-title{font-size:26px}
+  .intro-quote{font-size:12.5px;letter-spacing:-.5px}
+  .feature h4{font-size:18px}
+  .feature p{font-size:15.5px}
+  .offer-note{font-size:9px;letter-spacing:-.5px}
+  .result-grid{gap:12px}
+  .result-grid .result-box{padding:12px}
+  .result-grid .bot strong{font-size:14px}
+}
+@media(max-width:300px){
+  .guide-copy{font-size:14px}
+  .intro-quote{font-size:10px;letter-spacing:-.6px}
+  .result-grid .bot strong{font-size:12.5px}
+}
+@media(prefers-reduced-motion:reduce){.guide-dot,.sign-up button{transition:none}}

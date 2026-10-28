@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="오늘의 추천주 TOP 15 · 스타일 패스 평생할인 이벤트">
+  <title>라씨매매비서 스타일 패스 평생할인 이벤트</title>
+  <script src="./js/foldable-fit.js"></script>
+  <script>
+    /* 뷰포트 진입 애니메이션: JS·IntersectionObserver가 있고 모션 감소 설정이 아닐 때만 숨김 상태로 시작합니다.
+       js/reveal.js가 3초 안에 준비되지 않으면 숨김을 풀어 콘텐츠가 사라지지 않게 합니다. */
+    if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('js-reveal');
+      setTimeout(function () { if (!window.__revealReady) document.documentElement.classList.remove('js-reveal'); }, 3000);
+    }
+  </script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
+  <link rel="stylesheet" href="./styles/fonts.css">
+  <link rel="stylesheet" href="./styles/event.css">
+</head>
+<body>
+  <main class="event-page">
+    <!-- S1 · Figma 1347:190 · 390 × 1294 -->
+    <section class="hero" aria-labelledby="hero-title" data-node-id="1347:190">
+      <div class="hero-head">
+        <span class="pill-badge hero-badge" data-reveal>평생 할인 이벤트</span>
+        <h1 id="hero-title" class="hero-title" data-reveal><span>오늘의</span><span>추천주</span></h1>
+        <div class="hero-pick" data-reveal>
+        <div class="top15">
+          <p class="top15-label">AI Pick<br>TOP</p>
+          <!-- 같은 자리에서 5장을 매치컷으로 교체해 "15"를 강조합니다 (js/top15.js) -->
+          <div class="top15-stage" role="img" aria-label="TOP 15">
+            <img class="top15-shot top15-shot--1 is-active" src="./assets/images/top15-01.png" alt="" width="1536" height="1024" fetchpriority="high">
+            <img class="top15-shot top15-shot--2" src="./assets/images/top15-02.png" alt="" width="1536" height="1024">
+            <img class="top15-shot top15-shot--3" src="./assets/images/top15-03.png" alt="" width="1774" height="887">
+            <img class="top15-shot top15-shot--4" src="./assets/images/top15-04.png" alt="" width="1536" height="1024">
+            <img class="top15-shot top15-shot--5" src="./assets/images/top15-05.png" alt="" width="1536" height="1024">
+          </div>
+        </div>
+        <div class="hero-brace">
+          <span class="brace" aria-hidden="true">{</span>
+          <p>다음 한달 기준<br>강세를 보일 종목 15개를<br>매일 매일 추천해 드립니다!</p>
+          <span class="brace" aria-hidden="true">}</span>
+        </div>
+        </div>
+      </div>
+
+      <!-- 안내 카드: 한 장씩 넘김, 반복 없음 (js/guide-carousel.js) -->
+      <div class="guide" role="region" data-reveal aria-roledescription="carousel" aria-label="스타일 패스 이용 안내">
+        <ol class="guide-track" tabindex="0">
+          <li class="guide-card" aria-roledescription="slide" aria-label="1 / 3">
+            <p class="guide-copy">22개의 AI파워스타일 중<br>한 달간 가장 강세를 보일 3개의<br>파워스타일을 알려드려요!</p>
+            <div class="guide-phone guide-phone--1"><img src="./assets/images/guide-screen-01.png" alt="AI파워스타일 추천 화면" width="1260" height="2736" draggable="false"></div>
+          </li>
+          <li class="guide-card" aria-roledescription="slide" aria-label="2 / 3">
+            <p class="guide-copy">AI파워스타일 3개 안에는<br>해당 스타일 스코어 기준으로<br>상위 5개의 종목이 추천돼요!</p>
+            <div class="guide-phone guide-phone--2"><img src="./assets/images/guide-screen-02.png" alt="스타일별 상위 5개 종목 추천 화면" width="1260" height="2736" loading="lazy" draggable="false"></div>
+          </li>
+          <li class="guide-card" aria-roledescription="slide" aria-label="3 / 3">
+            <p class="guide-copy">강세를 보일 종목 15개의<br>추천된 종목은 앞으로 한 달간<br>성과가 추적됩니다. 지금 확인해 보세요!</p>
+            <div class="guide-phone guide-phone--3"><img src="./assets/images/guide-screen-03.png" alt="추천 종목 성과 추적 화면" width="1260" height="2736" loading="lazy" draggable="false"></div>
+          </li>
+        </ol>
+        <div class="guide-dots" role="group" aria-label="안내 카드 선택">
+          <button type="button" class="guide-dot is-active" aria-label="1번째 안내" aria-current="true"></button>
+          <button type="button" class="guide-dot" aria-label="2번째 안내" aria-current="false"></button>
+          <button type="button" class="guide-dot" aria-label="3번째 안내" aria-current="false"></button>
+        </div>
+      </div>
+      <!-- 혜택 기간 리본: expert-promo와 동일 (js/event-period.js). Figma 시안에 없는 요소 -->
+      <div class="event-period-slot" data-reveal>
+        <div class="event-period">
+          <span class="calendar"><img src="./assets/images/calendar.png" alt=""></span>
+          <span class="period-static">혜택 기간&nbsp; <strong>~ 10월 29일(목)</strong></span>
+          <div class="period-rolling" aria-live="off">
+            <div class="period-track">
+              <strong>혜택 기간이 얼마 남지 않았어요!</strong>
+              <strong>지금 본 페이지에서만 평생 혜택 받아보세요!</strong>
+              <strong>혜택 기간 ~ 10월 29일(목)</strong>
+              <strong aria-hidden="true">혜택 기간이 얼마 남지 않았어요!</strong>
+            </div>
+          </div>
+          <button class="period-close" type="button" aria-label="혜택 안내 배너 닫기" hidden><span aria-hidden="true">×</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- S2 · Figma 1347:220 · 390 × 681.96 -->
+    <section class="offer" aria-labelledby="offer-title" data-node-id="1347:220">
+      <div class="offer-card" data-reveal>
+        <span class="pill-badge">혜택 안내</span>
+        <h2 id="offer-title" class="offer-title">오직 지금, 본 페이지 통해<br><strong>스타일 패스</strong> 시작하면 <strong>평생할인!</strong></h2>
+        <div class="offer-price">
+          <p class="offer-product">스타일 패스(AI종목추천)</p>
+          <p class="price-original"><span class="sr-only">정가</span><del><span class="price-original-num">24,000<img class="price-strike" src="./assets/icons/price-strike.svg" alt="" width="103.5" height="4"></span><span class="price-original-unit">원</span></del></p>
+          <p class="price-sale"><span class="sr-only">혜택가</span><strong data-odometer>14,800</strong><span>원</span></p>
+          <span class="offer-guarantee">평생 38% 할인 보장</span>
+        </div>
+        <p class="offer-note">*본 페이지 외 경로 결제 시 혜택 적용이 어려우며,<br>플랫폼 정기 구독을 취소하시는 경우 혜택의 재적용이 어렵습니다.</p>
+      </div>
+      <div class="target-banner" data-reveal>
+        <p class="target-brand"><img src="./assets/images/rassi-logo.png" alt="" width="291" height="302">라씨 매매비서</p>
+        <p class="target-message"><span><strong>지금 들어오신 회원</strong>님은</span><strong>이번 특별 혜택 대상이에요!</strong></p>
+      </div>
+    </section>
+
+    <!-- S3 · Figma 1347:258 · 390 × 1218 -->
+    <section class="recommend" aria-labelledby="recommend-title" data-node-id="1347:258">
+      <h2 id="recommend-title" class="recommend-title" data-reveal><img src="./assets/icons/sparkle-dark.svg" alt="" width="20" height="20">이런분들께 강추!<img src="./assets/icons/sparkle-dark.svg" alt="" width="20" height="20"></h2>
+      <article class="intro-card" aria-labelledby="intro-title">
+        <span class="pill-outline" data-reveal>스타일 패스란</span>
+        <h3 id="intro-title" class="intro-title" data-reveal>아무리 봐도<br>요즘 시장을 모르겠다면?</h3>
+        <p class="intro-subtitle" data-reveal>AI파워스타일 종목 추천 받아보자!</p>
+        <div class="intro-art" data-reveal data-fit="310" aria-hidden="true">
+          <div class="intro-art-inner">
+            <div class="intro-object">
+              <img class="intro-object-blur" src="./assets/images/intro-object.png" alt="" width="1268" height="1241" loading="lazy">
+              <img src="./assets/images/intro-object.png" alt="" width="1268" height="1241" loading="lazy">
+              <span class="intro-bubble"><span>오늘 시장은?</span></span>
+            </div>
+            <img class="intro-character" src="./assets/images/intro-character.png" alt="" width="1297" height="1213" loading="lazy">
+          </div>
+        </div>
+        <p class="intro-quote" data-reveal>“이 종목은 어떤 성격을 가진 종목일까?”<br>“지금 시장에서는 어떤 스타일이 주목받고 있을까?”</p>
+        <div class="feature-box" data-reveal>
+          <div class="feature">
+            <h4><img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8">AI가 추천한 강세 스타일<img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8"></h4>
+            <p>AI가 매일매일 분석해서 한달 간 강세로<br>예상되는 스타일을 추천해 드립니다.</p>
+          </div>
+          <span class="feature-plus" aria-hidden="true"><img src="./assets/icons/plus.svg" alt="" width="11.932" height="11.9742"></span>
+          <div class="feature">
+            <h4><img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8">파워스타일 Top15 종목 추천<img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8"></h4>
+            <p>다음 한달의 종목 성과가 기대되는<br>3개의 파워스타일 5개 종목씩<br>총 15개의 종목이 추천돼요!</p>
+          </div>
+          <span class="feature-plus" aria-hidden="true"><img src="./assets/icons/plus.svg" alt="" width="11.932" height="11.9742"></span>
+          <div class="feature">
+            <h4><img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8">한 달간 실적을 추적합니다<img src="./assets/icons/sparkle-blue.svg" alt="" width="8" height="8"></h4>
+            <p>추천된 종목들은 앞으로 한 달 간<br>실제 종목 성과를 추적하며,<br>앱 내에서 확인이 가능해요!</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- S3-1 · 성과 맛보기: 이전 스타일 패스 이벤트(event_chuseok.html) 섹션 그대로. Figma 시안에 없는 요소 -->
+    <section class="performance" aria-labelledby="performance-title">
+      <h2 id="performance-title" class="performance-title" data-reveal>스타일 패스 종목 추천<br>성과 맛보기</h2>
+      <p class="performance-txt" data-reveal>라씨가 추천하는 핵심 파워스타일의 누적 성과를<br>직접 확인해 보세요!</p>
+      <div class="result" data-reveal>
+        <div class="result-tab" role="tablist" aria-label="스타일 선택">
+          <button type="button" class="is-active" role="tab" id="tab-value" aria-controls="panel-value" aria-selected="true">황금값어치 스타일</button>
+          <button type="button" role="tab" id="tab-core" aria-controls="panel-core" aria-selected="false" tabindex="-1">황금코어 스타일</button>
+        </div>
+        <!-- 황금값어치 탭 -->
+        <div class="result-panel" id="panel-value" role="tabpanel" aria-labelledby="tab-value">
+          <div class="result-group">
+            <div class="result-box result-chart"><img src="./assets/images/performance/chart01.png" alt="황금값어치 스타일과 코스피의 누적 수익률 차트" width="570" height="514" loading="lazy"></div>
+            <ul class="result-grid">
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-402340.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+332.9%</strong></div>
+                <div class="bot"><strong>SK스퀘어</strong><p>2026년 1월 편입 후<br>2026년 6월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-267260.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+175.6%</strong></div>
+                <div class="bot"><strong>HD 현대일렉트릭</strong><p>2023년 10월 편입 후<br>2024년 3월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-086520.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+468.5%</strong></div>
+                <div class="bot"><strong>에코프로</strong><p>2023년 2월 편입 후<br>2023년 4월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-011200.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+242.1%</strong></div>
+                <div class="bot"><strong>HMM</strong><p>2021년 2월 편입 후<br>2021년 5월 수익률 TOP</p></div>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="result-more" data-portfolio="value" onclick="showPortfolio('value')">스타일 성과 자세히 보기</button>
+        </div>
+        <!-- 황금코어 탭 -->
+        <div class="result-panel" id="panel-core" role="tabpanel" aria-labelledby="tab-core" hidden>
+          <div class="result-group">
+            <div class="result-box result-chart"><img src="./assets/images/performance/chart02.png" alt="황금코어 스타일과 코스피의 누적 수익률 차트" width="570" height="512" loading="lazy"></div>
+            <ul class="result-grid">
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-000660.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+636.1%</strong></div>
+                <div class="bot"><strong>SK하이닉스</strong><p>2025년 10월 편입 후<br>2026년 6월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-222800.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+160.2%</strong></div>
+                <div class="bot"><strong>심텍</strong><p>2025년 9월 편입 후<br>2025년 10월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-204270.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+206.1%</strong></div>
+                <div class="bot"><strong>제이앤티씨</strong><p>2025년 4월 편입 후<br>2024년 6월 수익률 TOP</p></div>
+              </li>
+              <li class="result-box">
+                <div class="top"><img src="./assets/images/performance/logo-298020.svg" alt="" width="28" height="28" loading="lazy"><strong class="up">+131.4%</strong></div>
+                <div class="bot"><strong>효성티앤씨</strong><p>2021년 2월 편입 후<br>2021년 6월 수익률 TOP</p></div>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="result-more" data-portfolio="core" onclick="showPortfolio('core')">스타일 성과 자세히 보기</button>
+        </div>
+      </div>
+      <p class="result-note" data-reveal>*2021년 1월 4일부터 2026년 9월 2일까지의 성과이며,<br>스타일 패스 서비스는 향후 수익을 보장하지 않습니다.</p>
+    </section>
+
+    <!-- S4 · Figma 1347:318 · 390 × 406 -->
+    <section class="closing" aria-labelledby="closing-title" data-node-id="1347:318">
+      <div class="closing-card" data-reveal>
+        <img class="closing-bg" src="./assets/images/closing-background.png" alt="" width="753" height="1024" loading="lazy">
+        <div class="closing-body" data-fit="312" data-fit-gutter="48">
+          <div class="closing-lead">
+            <span class="closing-check"><img src="./assets/icons/check-circle.svg" alt="" width="100" height="100"></span>
+            <h2 id="closing-title" class="closing-title">지금 바로 가장 특별한 제안으로<br><strong>스타일 패스를 시작해 보세요.</strong></h2>
+          </div>
+          <div class="closing-flow">
+            <p class="flow-circle"><strong>N개</strong><span>종목스타일<br>조합</span></p>
+            <img class="flow-arrow" src="./assets/icons/arrow-circle.svg" alt="" width="24" height="24">
+            <p class="flow-box"><strong>22개</strong><span>파워스타일<br>완성</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5 · Figma 1347:339 · 390 × 720 -->
+    <footer class="event-footer" aria-labelledby="notice-title" data-node-id="1347:339">
+      <h2 id="notice-title" class="notice-title"><img src="./assets/icons/caution.svg" alt="" width="25" height="25">이벤트 유의 사항</h2>
+      <ul class="notice-list">
+        <li><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>이벤트 기간과 내용은 운영 상황 등 내부 사정에 따라 변경되거나 조기 종료될 수 있으며, 변경 사항은 본 이벤트 페이지를 통해 안내됩니다.</p></li>
+        <li class="is-loose"><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>본 이벤트 페이지는 AI 생성 이미지가 포함되어 있습니다.</p></li>
+        <li><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>투자성향진단은 본인 인증 후 완료되며, 꼭 업그레이드된 서비스를 위해 투자성향진단을 진행해 주세요.</p></li>
+        <li class="is-loose"><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>본 혜택은 계정당 1회만 적용되며, 이미 혜택을 적용받으신 이력이 있는 경우에는 적용이 어려울 수 있습니다.</p></li>
+        <li><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>구독을 취소하시거나 결제를 취소하실 경우 혜택의 재적용이 어렵습니다.</p></li>
+        <li><img src="./assets/icons/list-dot.svg" alt="" width="6" height="20"><p>이벤트 참여 및 혜택 적용과 관련한 문의 사항은 고객센터로 연락해 주시면 안내해 드리겠습니다.<br>(고객센터 운영시간은 평일 오전 9시~오후 5시까지, 점심시간 오전 11시 30분~오후 1시입니다.)</p></li>
+      </ul>
+      <div class="contact-box">
+        <ul>
+          <li>카카오톡 : 라씨매매비서 채널</li>
+          <li>앱 내 고객센터 : 라씨 매매비서 앱 하단<br>전체 메뉴 &gt; MY &gt; 고객센터 &gt; 1대1 문의</li>
+          <li>유선 : <a href="tel:02-2174-6446">02-2174-6446</a></li>
+        </ul>
+      </div>
+    </footer>
+  </main>
+
+  <!-- 액션 버튼: Figma 시안에 없음 → 이전 스타일 패스 평생할인 페이지(event_chuseok.html)의 .sign-up 버튼·join() 그대로 -->
+  <div class="sign-up">
+    <!-- 혜택 남은 시간: 마감 시각은 data-deadline (한국시간) — js/countdown.js -->
+    <p class="sign-up-timer">혜택 남은 시간 : <span class="sign-up-countdown" role="timer" aria-live="off" data-deadline="2026-10-30T00:00:00+09:00"><b>00</b>일 <b>00</b>시간 <b>00</b>분 <b>00</b>초</span></p>
+    <button type="button" onclick="join('mb_st.am1c4', 38, 24000)">스타일 패스 평생 할인 혜택 받기</button>
+  </div>
+
+  <!-- 스타일 성과 자세히 보기: 바텀시트 안에 성과 페이지(portfolio/style_portfolio.html)를 iframe으로 표시.
+       엑스퍼트 소개 시트와 같은 동작(스크롤 진행 막대·끝 '틱'·버튼 글자 강조·뒤로가기 닫기) — js/portfolio-sheet.js -->
+  <div class="portfolio-modal" id="portfolio-sheet" role="dialog" aria-modal="true" aria-labelledby="portfolio-sheet-title" hidden>
+    <div class="sheet-backdrop" data-sheet-close></div>
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2 id="portfolio-sheet-title">스타일 성과 자세히 보기</h2>
+        <button type="button" class="sheet-close" data-sheet-close aria-label="성과 보기 닫기"><span aria-hidden="true">×</span></button>
+      </header>
+      <div class="sheet-body">
+        <iframe class="sheet-frame" title="스타일 포트폴리오 성과" data-src="./portfolio/style_portfolio.html"></iframe>
+        <div class="sheet-status" role="status" aria-live="polite">
+          <span class="sheet-spinner" aria-hidden="true"></span>
+          <p class="sheet-message">성과 화면을 불러오는 중입니다.</p>
+          <button type="button" class="sheet-retry" hidden>다시 시도</button>
+        </div>
+      </div>
+      <footer class="sheet-footer">
+        <div class="sheet-progress" aria-hidden="true"><span></span><i class="sheet-progress-tick"><b class="tick-ring"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b><b class="tick-spark"></b></i></div>
+        <button type="button" class="sheet-cta" onclick="join('mb_st.am1c4', 38, 24000)"><span class="sheet-cta-label">스타일 패스 평생 할인 혜택 받기</span></button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="./js/fit.js"></script>
+  <script src="./js/reveal.js"></script>
+  <script src="./js/price-odometer.js"></script>
+  <script src="./js/intro-bubble.js"></script>
+  <script src="./js/top15.js"></script>
+  <script src="./js/guide-carousel.js"></script>
+  <script src="./js/event-period.js"></script>
+  <script src="./js/performance-tabs.js"></script>
+  <script src="./js/countdown.js"></script>
+  <script src="./js/portfolio-sheet.js"></script>
+  <script src="./js/closing-badge.js"></script>
+  <script src="./js/closing-flow.js"></script>
+  <script>
+    /**
+     * ✅ Flutter InAppWebView 핸들러 호출 함수
+     * (이전 스타일 패스 평생할인 페이지 event_chuseok.html 코드 그대로)
+     */
+    function join(productId, discountPct, discountAmt) {
+      console.log('productId:::::::' + productId);
+
+      if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+        window.flutter_inappwebview.callHandler(
+          "thinkpool_webview_handler",
+          "webToApp_goLandingPageExp",
+          {
+            landingPage: "LPHT",
+            productId: productId,
+            discountPct: discountPct,
+            discountAmt: discountAmt,
+          }
+        );
+      } else {
+        console.warn("Flutter handler not found.");
+      }
+    }
+
+    /**
+     * ✅ 성과 전체보기 - 바텀시트로 표시 (js/portfolio-sheet.js)
+     * 시트 스크립트가 없을 때만 이전 페이지(event_chuseok.html)처럼 현재 웹뷰에서 원본 페이지를 엽니다.
+     */
+    function showPortfolio(style) {
+      if (window.openPortfolioSheet) { window.openPortfolioSheet(style); return; }
+      window.location.href = "https://files.thinkpool.com/rassi_signal/style/style_portfolio.html?style=" + style;
+    }
+  </script>
+</body>
+</html>

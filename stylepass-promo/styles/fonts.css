@@ -1,0 +1,8 @@
+/* 웹폰트만 사용합니다(로컬 폰트 파일 없음).
+ * Pretendard: index.html에서 jsDelivr dynamic subset CSS를 불러옵니다. 화면에 쓰인 글자 구간(unicode-range)만 내려받아
+ *   굵기당 약 770KB인 전체 WOFF2보다 훨씬 가볍습니다.
+ * Paperlogy: 이 페이지에서 쓰는 4개 굵기(400/500/700/800)만 선언합니다. 굵기당 약 160KB. */
+@font-face{font-family:Paperlogy;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-4Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:Paperlogy;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-5Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:Paperlogy;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-7Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:Paperlogy;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-8ExtraBold.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap}
