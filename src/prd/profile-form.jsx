@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { supabase } from '../supabase.js';
 import { profileOf } from '../profile.js';
 import { AccountDialog } from '../account-dialog.jsx';
@@ -115,7 +115,7 @@ export function ProfileForm({ user, initial, editing = initial, onSaved, onEditi
       </> : <>
         <header className="profile-form-heading">
           <h2 className="mb-section-title">회원정보</h2>
-          <AccountDialog open={editing} onOpenChange={changeEditing} busy={pending} title="회원정보" description="계정 이름과 소속을 수정할 수 있어요." className="profile-card profile-form-card account-profile-edit-dialog" trigger={<button className="account-profile-edit" type="button" aria-label="회원정보 편집" disabled={pending}><Pencil size={15} aria-hidden="true" /></button>}>
+          <AccountDialog open={editing} onOpenChange={changeEditing} busy={pending} title="회원정보" description="계정 이름과 소속을 수정할 수 있어요." className="profile-card profile-form-card account-profile-edit-dialog" trigger={<button className="account-profile-edit" type="button" aria-label="회원정보 편집" disabled={pending}><ChevronRight size={18} aria-hidden="true" /></button>}>
             {form}
             {error && <p className="account-dialog-error" role="alert">{error}</p>}
           </AccountDialog>

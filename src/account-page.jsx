@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { Bell, Check, CircleHelp, LogOut, UserRoundX } from 'lucide-react';
+import { Bell, Check, LogOut, UserRoundX } from 'lucide-react';
+import { TooltipIcon } from './tooltip-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { ProfileForm } from './prd/profile-form.jsx';
@@ -87,7 +88,7 @@ function AiQuestionPreference({ user, onUserUpdated }) {
   }
 
   return <section className="account-ai-preference" aria-labelledby="account-ai-preference-title">
-    <div className="account-ai-title"><h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2><button className="account-ai-help" type="button" aria-label="문제풀이 AI 설정 안내" aria-describedby="account-ai-help-copy"><CircleHelp size={16} aria-hidden="true" /><span id="account-ai-help-copy" role="tooltip">문제풀이 중 ‘AI에게 물어보기’를 누르면 답변할 AI를 여기서 선택할 수 있어요.</span></button></div>
+    <div className="account-ai-title"><h2 id="account-ai-preference-title" className="mb-section-title">문제풀이 AI</h2><button className="account-ai-help" type="button" aria-label="문제풀이 AI 설정 안내" aria-describedby="account-ai-help-copy"><TooltipIcon /><span id="account-ai-help-copy" role="tooltip">문제풀이 중 ‘AI에게 물어보기’를 누르면 답변할 AI를 여기서 선택할 수 있어요.</span></button></div>
     <div className="account-ai-provider" role="group" aria-label="AI에게 물어보기 기본 서비스">
       {aiProviderOptions.map(option => <button
         key={option.value}

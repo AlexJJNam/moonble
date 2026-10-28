@@ -1,8 +1,9 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, Check, ChevronDown, ChevronLeft, CircleHelp, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronDown, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
+import { TooltipIcon } from './tooltip-icon.jsx';
 
 function generationPrompt(query, provider) {
   const format = `시트와 CSV의 맨 위에 다음 문제지 정보 2개 행을 반드시 먼저 넣어주세요.
@@ -554,7 +555,7 @@ export function QuizCreator({ custom, onChange }) {
           <div className="creator-prompt-title-row">
             <h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2>
             <details className="creator-prompt-guide" ref={promptGuideRef} onToggle={event => { const open = event.currentTarget.open; setGuideOpen(open); setExampleRevealed(open); }}>
-              <summary aria-label="문제 생성 요청 작성 가이드"><CircleHelp size={20} aria-hidden="true" /></summary>
+              <summary aria-label="문제 생성 요청 작성 가이드"><TooltipIcon /></summary>
               <div className="creator-prompt-guide-panel">
                 <strong>이렇게 적어보세요</strong>
                 <p><BookOpen size={16} aria-hidden="true" /><span><b>목표와 주제</b> {exampleGuide.topic}</span></p>
