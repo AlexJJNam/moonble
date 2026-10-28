@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, Check, ChevronDown, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -112,6 +112,19 @@ function CreatorStepMarker({ step, label }) {
   return <span className="creator-step-marker" role="img" aria-label={label}><Icon size={16} strokeWidth={2} aria-hidden="true" /></span>;
 }
 
+function initialCreatorScreen() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('shared') === '1' || params.has('shareError') || window.history.state?.moonbleCreatorStep === 'upload' ? 'upload' : 'create';
+}
+
+function CreatorProgress({ screen }) {
+  const step = screen === 'create' ? 1 : 2;
+  return <div className="creator-progress">
+    <div className="creator-progress-track" role="progressbar" aria-label="문제지 생성 진행" aria-valuemin={0} aria-valuemax={2} aria-valuenow={step} aria-valuetext={screen === 'result' ? '문제지 등록 완료' : `${step}/2단계: ${step === 1 ? '문제 만들기' : '파일 등록'}`}><span style={{ width: `${step * 50}%` }} /></div>
+    <div className="creator-progress-labels"><span className={step === 1 ? 'is-current' : ''} aria-current={step === 1 ? 'step' : undefined}>1. 문제 만들기</span><span className={step === 2 ? 'is-current' : ''} aria-current={step === 2 ? 'step' : undefined}>2. 파일 등록</span></div>
+  </div>;
+}
+
 function PromptSample({ hidden }) {
   const [sampleIndex, setSampleIndex] = useState(0);
   const [erasing, setErasing] = useState(false);
@@ -168,10 +181,9 @@ export function QuizCreator({ custom, onChange }) {
   const [exampleCardIndexes] = useState(() => pickExampleIndexes());
   const [exampleCardsDragging, setExampleCardsDragging] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [uploadRevealed, setUploadRevealed] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [metaReveal, setMetaReveal] = useState(false);
-  const [screen, setScreen] = useState('create');
+  const [screen, setScreen] = useState(initialCreatorScreen);
   const [resultBank, setResultBank] = useState(null);
   const [resultReady, setResultReady] = useState(true);
   const [bankTitle, setBankTitle] = useState(custom?.title || '');
@@ -191,10 +203,38 @@ export function QuizCreator({ custom, onChange }) {
   const metaRevealTimer = useRef(0);
   const resultScreenTimer = useRef(0);
   const resultRevealTimer = useRef(0);
+  const previousScreen = useRef(screen);
   const displayBank = resultBank || custom;
   const preview = useMemo(() => displayBank?.questions?.slice(0, 8) || [], [displayBank]);
   const examplePrompt = examplePrompts[exampleIndex];
   const exampleGuide = exampleGuideDetails[exampleIndex];
+
+  useLayoutEffect(() => {
+    if (previousScreen.current === screen) return;
+    previousScreen.current = screen;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.getElementById('quiz-creator')?.focus({ preventScroll: true });
+  }, [screen]);
+
+  useEffect(() => {
+    const restoreAIRegistration = event => {
+      if (event.persisted && initialCreatorScreen() === 'upload') setScreen(current => current === 'create' ? 'upload' : current);
+    };
+    window.addEventListener('pageshow', restoreAIRegistration);
+    return () => window.removeEventListener('pageshow', restoreAIRegistration);
+  }, []);
+
+  function changeStep(next) {
+    promptInputRef.current?.blur();
+    setPromptFocused(false);
+    if (promptGuideRef.current) promptGuideRef.current.open = false;
+    setGuideOpen(false);
+    setError('');
+    setMessage('');
+    // Keep the registration step on this history entry when returning from mobile AI navigation.
+    window.history.replaceState({ ...window.history.state, moonbleCreatorStep: next }, '');
+    setScreen(next);
+  }
 
   useEffect(() => {
     if (resultBank && custom?.id !== resultBank.id) return;
@@ -328,6 +368,7 @@ export function QuizCreator({ custom, onChange }) {
     setError('');
     const prompt = encodeURIComponent(generationPrompt(value, provider));
     const url = provider === 'gemini' ? `https://www.google.com/search?q=${prompt}&udm=50` : `https://chatgpt.com/?q=${prompt}`;
+    changeStep('upload');
     openPopup(url);
     setQuery('');
     if (promptInputRef.current) {
@@ -335,8 +376,8 @@ export function QuizCreator({ custom, onChange }) {
       promptInputRef.current.blur();
     }
     setMessage(provider === 'gemini'
-      ? 'AI Mode에 문제 생성 요청을 열었어요. 완성된 Google Sheets 링크를 아래에 붙여넣어주세요.'
-      : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받은 뒤 아래 영역에 올려주세요.');
+      ? 'AI Mode에 문제 생성 요청을 열었어요. 완성된 Google Sheets 공유 링크를 등록해주세요.'
+      : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받아 등록해주세요.');
   }
 
   function useExample(prompt = examplePrompt) {
@@ -476,7 +517,7 @@ export function QuizCreator({ custom, onChange }) {
     cleanLocation.searchParams.delete('shared');
     cleanLocation.searchParams.delete('shareError');
     window.history.replaceState(window.history.state, '', `${cleanLocation.pathname}${cleanLocation.search}${cleanLocation.hash}`);
-    setUploadRevealed(true);
+    setScreen('upload');
 
     if (shareError) {
       setError(shareError === 'missing-file' ? '공유할 CSV 파일을 찾지 못했어요.' : '공유한 파일을 가져오지 못했어요. 다시 공유해주세요.');
@@ -521,10 +562,11 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   if (screen === 'result') return <main className="quiz-main mb-page-gutter quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
-    <button className="creator-result-back" type="button" onClick={() => { setScreen('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
+    <button className="creator-result-back" type="button" onClick={() => { changeStep('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
     <div className="quiz-title creator-result-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
+    <CreatorProgress screen={screen} />
     <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
-      <header><span>3</span><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
+      <header><CreatorStepMarker step="upload" label="등록 완료" /><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
       {!resultReady ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">생성한 문제지 목록을 정리하고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : displayBank ? <div className="creator-result-reveal">
         <div className={`creator-bank-meta${metaReveal ? ' is-revealing' : ''}`}>
           <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
@@ -543,12 +585,13 @@ export function QuizCreator({ custom, onChange }) {
     {error && <p className="creator-error" role="alert">{error}</p>}
   </main>;
 
-  return <main className="quiz-main mb-page-gutter quiz-creator" id="quiz-creator" tabIndex={-1}>
+  return <main className="quiz-main mb-page-gutter quiz-creator is-step-flow" id="quiz-creator" tabIndex={-1}>
     {promptFocused && <button className="creator-prompt-backdrop" type="button" aria-label="프롬프트 입력 닫기" onPointerDown={event => { event.preventDefault(); promptInputRef.current?.blur(); }} />}
     <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
+    <CreatorProgress screen={screen} />
 
     <div className="creator-intake-card">
-    <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title">
+    <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title" hidden={screen !== 'create'}>
       <header>
         <CreatorStepMarker step="prompt" label="1단계" />
         <div className="creator-prompt-heading">
@@ -574,7 +617,7 @@ export function QuizCreator({ custom, onChange }) {
         <div className={`creator-ai-prompt-bar${promptFocused ? ' is-docked' : ''}${provider === 'chatgpt' ? ' is-chatgpt' : ' is-ai-mode'}`} ref={promptBarRef} onAnimationEnd={event => { if (event.animationName === 'creator-ai-shake') event.currentTarget.classList.remove('shake'); }}>
           <Search className="creator-ai-prompt-icon" aria-hidden="true" />
           <span className={`creator-ai-prompt-field${examplePromptReveal ? ' is-revealing' : ''}`}>
-            <PromptSample hidden={Boolean(query)} />
+            <PromptSample hidden={screen !== 'create' || Boolean(query)} />
             {examplePromptReveal && <PromptReveal text={examplePromptReveal.text} id={examplePromptReveal.id} />}
             <textarea ref={promptInputRef} className={`creator-ai-prompt-input${examplePromptReveal ? ' is-example-revealing' : ''}`} value={query} onFocus={dockPrompt} onBlur={() => setPromptFocused(false)} onChange={event => { window.clearTimeout(examplePromptRevealTimerRef.current); examplePromptRevealTimerRef.current = 0; examplePromptRevealIdRef.current += 1; setExamplePromptReveal(null); setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
@@ -600,13 +643,11 @@ export function QuizCreator({ custom, onChange }) {
       </section>
     </section>
 
-    <div className="creator-flow-chevron" aria-hidden="true"><ChevronDown size={22} strokeWidth={2.4} /></div>
-
-    <section className="creator-step" aria-labelledby="creator-upload-title">
+    <section className="creator-step" aria-labelledby="creator-upload-title" hidden={screen !== 'upload'}>
       <header><CreatorStepMarker step="upload" label="2단계" /><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
-        className={`creator-drop${uploadRevealed ? ' is-revealed' : ' is-concealed'}${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
-        onDragEnter={event => { event.preventDefault(); setUploadRevealed(true); setDragging(true); }}
+        className={`creator-drop is-revealed${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
+        onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => event.preventDefault()}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
         onDrop={event => { event.preventDefault(); upload(event.dataTransfer.files[0]); }}
@@ -616,7 +657,6 @@ export function QuizCreator({ custom, onChange }) {
         <strong>{pending ? '문제를 확인하고 있어요' : 'CSV 파일을 여기에 놓으세요'}</strong>
         <p>또는</p>
         <button type="button" disabled={pending} onClick={() => uploadInputRef.current?.click()}>파일 선택</button>
-        {!uploadRevealed && <button className="creator-drop-reveal" type="button" aria-label="파일 생성했다면?" onClick={() => setUploadRevealed(true)}>파일 생성했다면?</button>}
         {uploadSuccess && <div className="creator-upload-complete" role="status"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13.5 24.8l7 7L35 17.5" /></svg></span><strong>문제지 등록 완료</strong></div>}
       </div>
       <div className="creator-source-divider"><span>또는</span></div>
@@ -628,6 +668,7 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
       {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
+    {screen === 'create' ? <button className="creator-step-link" type="button" onClick={() => changeStep('upload')}>이미 파일이 있으신가요?</button> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}><ChevronLeft size={15} aria-hidden="true" />문제 만들기로 돌아가기</button>}
     </div>
 
     {message && <p className="creator-message" role="status">{message}</p>}
