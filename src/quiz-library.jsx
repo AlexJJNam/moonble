@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { AlertTriangle, Check, Copy, FileDown, FolderPlus, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -543,6 +543,16 @@ function QuizLibrary() {
       navigator.vibrate?.(18);
     }, 460);
   }
+  function beginGroupHandleDrag(event, groupId) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.clearTimeout(longPressTimer.current);
+    groupPress.current = { id: groupId, x: event.clientX, y: event.clientY, active: true };
+    suppressGroupClick.current = true;
+    setReorderingGroupId(groupId);
+    navigator.vibrate?.(18);
+  }
   function moveBankToGroup(bankId, groupId) {
     if (!bankId || groupId === 'all') return;
     const bank = collection.banks.find(item => item.id === bankId);
@@ -859,6 +869,11 @@ function QuizLibrary() {
     { id: DEFAULT_GROUP_ID, name: '미분류', count: customPapers.filter(bank => bank.groupId === DEFAULT_GROUP_ID).length },
     ...orderedGroupIds.map(id => collection.groups.find(group => group.id === id)).filter(Boolean).map(group => ({ ...group, count: customPapers.filter(bank => bank.groupId === group.id).length })),
   ];
+  const managedGroups = [...collection.groups].sort((a, b) => {
+    const aIndex = orderedGroupIds.indexOf(a.id);
+    const bIndex = orderedGroupIds.indexOf(b.id);
+    return (aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex);
+  });
   const groupColors = buildGroupColorMap(collection.groups);
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
@@ -887,7 +902,7 @@ function QuizLibrary() {
             <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
             {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
               <strong>그룹 편집</strong>
-              {collection.groups.map(group => <span className="paper-group-manage-row" key={group.id}><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+              {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><b>{group.name}</b><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
             </span>}
           </span>}
           <button className="paper-group-add" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>

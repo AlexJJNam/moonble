@@ -78,9 +78,13 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-group-manage>button:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
 .paper-group-manage-menu { top: calc(100% + 7px); right: 0; width: min(320px, calc(100vw - 32px)); min-width: min(260px, calc(100vw - 32px)); }
 .paper-group-manage-menu>strong { padding: 6px 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); }
-.paper-group-manage-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px 34px; align-items: center; gap: 2px; }
+.paper-group-manage-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px 34px 34px; align-items: center; gap: 2px; border-radius: 9px; transition: background-color 140ms ease, transform 140ms ease; }
+.paper-group-manage-row.is-reordering { background: var(--mb-primary-soft); transform: scale(.98); }
 .paper-group-manage-row>b { min-width: 0; padding: 0 8px; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-13); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .paper-group-manage-row>button { width: 34px; min-height: 34px; justify-content: center; padding: 0; }
+.paper-group-manage-row>.paper-group-reorder-handle { color: var(--mb-text-tertiary); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.paper-group-manage-row>.paper-group-reorder-handle:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
+.paper-group-manage-row>.paper-group-reorder-handle:active { cursor: grabbing; }
 .paper-group-add { flex: 0 0 auto; min-height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 0; border-radius: 999px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-13, 13px); font-weight: 600; white-space: nowrap; }
 .paper-group-add:hover { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .quiz-subject { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; background: var(--mb-surface); border: 1px solid var(--mb-border); border-radius: 8px; padding: 8px 12px; white-space: nowrap; }
