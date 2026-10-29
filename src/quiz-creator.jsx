@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, Check, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -561,7 +561,7 @@ export function QuizCreator({ custom, onChange }) {
   }
 
   if (screen === 'result') return <main className="quiz-main mb-page-gutter quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
-    <button className="creator-result-back" type="button" onClick={() => { changeStep('create'); setResultBank(null); setResultReady(true); }}><ChevronLeft size={18} aria-hidden="true" />문제 만들기로 돌아가기</button>
+    <button className="creator-result-back" type="button" onClick={() => { changeStep('create'); setResultBank(null); setResultReady(true); }}>문제 만들기로 돌아가기</button>
     <div className="quiz-title creator-result-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
     <CreatorProgress screen={screen} />
     <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
@@ -667,7 +667,7 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
       {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
-    {screen === 'create' ? <div className="creator-file-choice"><span>이미 파일이 있으신가요?</span><button type="button" onClick={() => changeStep('upload')}>파일 등록</button></div> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}><ChevronLeft size={15} aria-hidden="true" />문제 만들기로 돌아가기</button>}
+    {screen === 'create' ? <div className="creator-file-choice"><span>이미 파일이 있으신가요?</span><button type="button" onClick={() => changeStep('upload')}>파일 등록</button></div> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}>문제 만들기로 돌아가기</button>}
     </div>
 
     {message && <p className="creator-message" role="status">{message}</p>}

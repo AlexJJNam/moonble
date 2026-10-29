@@ -3070,6 +3070,9 @@
     .solve-auth-logo { width: 108px; height: 26px; border-radius: 8px; }
     .solve-auth-top-lines { display: flex; gap: 10px; }
     .solve-auth-top-lines i { width: 42px; height: 10px; border-radius: 99px; }
+    .solve-auth-profile { display: none; align-items: center; gap: 8px; }
+    .solve-auth-profile i { width: 20px; height: 20px; border-radius: 50%; }
+    .solve-auth-profile .solve-auth-profile-avatar { width: 30px; height: 30px; }
     .solve-auth-main { display: grid; grid-template-columns: 178px minmax(0, 1fr); gap: 26px; }
     .solve-auth-sidebar { display: grid; align-content: start; gap: 12px; padding-top: 9px; }
     .solve-auth-sidebar i { height: 38px; border-radius: 10px; }
@@ -3086,6 +3089,7 @@
       .solve-auth-skeleton { min-height: calc(100dvh - 40px); grid-template-rows: 38px 1fr; gap: 26px; }
       .solve-auth-logo { width: 94px; height: 23px; }
       .solve-auth-top-lines { display: none; }
+      .solve-auth-profile { display: flex; }
       .solve-auth-main { grid-template-columns: minmax(0, 1fr); }
       .solve-auth-sidebar { display: flex; overflow: hidden; gap: 7px; padding: 0; }
       .solve-auth-sidebar i { width: 42px; height: 30px; flex: 0 0 42px; border-radius: 999px; }
@@ -3103,7 +3107,7 @@
 <body class="tab-quiz">
   <div id="moonble-auth-status" role="status" aria-label="문제풀이 여는 중">
     <div class="solve-auth-skeleton" aria-hidden="true">
-      <div class="solve-auth-top"><i class="solve-auth-logo"></i><div class="solve-auth-top-lines"><i></i><i></i><i></i></div></div>
+      <div class="solve-auth-top"><i class="solve-auth-logo"></i><div class="solve-auth-top-lines"><i></i><i></i><i></i></div><div class="solve-auth-profile"><i class="solve-auth-profile-avatar"></i><i class="solve-auth-profile-notification"></i></div></div>
       <div class="solve-auth-main"><aside class="solve-auth-sidebar"><i></i><i></i><i></i><i></i><i></i></aside><div class="solve-auth-content"><i class="solve-auth-title"></i><i class="solve-auth-subtitle"></i><section class="solve-auth-question"><i></i><i></i><i></i><i></i><i></i></section></div></div>
     </div>
     <noscript>서비스를 이용하려면 브라우저에서 JavaScript를 허용해주세요.</noscript>

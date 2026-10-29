@@ -644,7 +644,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
       }
 
       const currentY = Math.max(0, window.scrollY);
-      if (solver && window.moonbleQuizPenMode) {
+      if (solver) {
         setMobileHeaderHidden(false);
         direction = 0;
         distance = 0;
@@ -743,8 +743,12 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
         <span className="mb-profile-skeleton-avatar" />
         <span className="mb-profile-skeleton-copy"><i /><i /></span>
         <span className="mb-profile-skeleton-settings" />
+        <span className="mb-profile-skeleton-notification" />
       </div>}
       {user && <div className="mb-app-profile-row">
+        <a className="mb-mobile-avatar-link" href="./account.html" aria-label={`${name} 계정 열기`}>
+          <UserAvatar user={user} className="mb-mobile-profile-avatar" />
+        </a>
         <button className="mb-notification-toggle mb-notification-toggle--mobile" type="button" aria-label={`알림 ${shareNotifications.filter(item => !item.seen).length}개`} aria-expanded={notificationOpen} aria-controls="mb-notification-screen" onClick={openNotifications}>
           <Bell size={19} aria-hidden="true" />
           {shareNotifications.some(item => !item.seen) && <span className="mb-notification-badge" aria-label={`${shareNotifications.filter(item => !item.seen).length}개 안 읽은 알림`}>{Math.min(99, shareNotifications.filter(item => !item.seen).length)}</span>}

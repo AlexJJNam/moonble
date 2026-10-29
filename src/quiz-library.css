@@ -1,9 +1,9 @@
 * { box-sizing: border-box; }
 @property --creator-prompt-border-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-@property --creator-prompt-line-a { syntax: '<color>'; inherits: true; initial-value: #93aaff; }
-@property --creator-prompt-line-b { syntax: '<color>'; inherits: true; initial-value: #b898f0; }
-@property --creator-prompt-line-c { syntax: '<color>'; inherits: true; initial-value: #5ec4ee; }
-@property --creator-prompt-line-d { syntax: '<color>'; inherits: true; initial-value: #84d8d9; }
+@property --creator-prompt-line-a { syntax: '<color>'; inherits: true; initial-value: #8fa8ff; }
+@property --creator-prompt-line-b { syntax: '<color>'; inherits: true; initial-value: #b28dec; }
+@property --creator-prompt-line-c { syntax: '<color>'; inherits: true; initial-value: #52bde9; }
+@property --creator-prompt-line-d { syntax: '<color>'; inherits: true; initial-value: #7ed5d5; }
 @property --creator-prompt-tone-a { syntax: '<color>'; inherits: true; initial-value: #b7c6ff; }
 @property --creator-prompt-tone-b { syntax: '<color>'; inherits: true; initial-value: #c7b6f4; }
 @property --creator-prompt-tone-c { syntax: '<color>'; inherits: true; initial-value: #8bcff0; }
@@ -27,12 +27,13 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-main { width: 100%; max-width: 1320px; flex: 1; margin: auto; }
 .quiz-page-skeleton .quiz-library-main { padding-top: 32px; }
 .quiz-skeleton-title-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
-.quiz-skeleton-line, .quiz-skeleton-button, .quiz-skeleton-tabs i, .quiz-skeleton-tools span, .quiz-library-skeleton-preview, .quiz-library-skeleton-copy b, .quiz-library-skeleton-copy span, .quiz-library-skeleton-copy small, .mb-profile-skeleton-avatar, .mb-profile-skeleton-copy i, .mb-profile-skeleton-settings { display: block; background: linear-gradient(100deg, #edf0f3 20%, #f8f9fa 40%, #edf0f3 60%); background-size: 220% 100%; animation: quiz-list-skeleton 1.25s ease-in-out infinite; }
+.quiz-skeleton-line, .quiz-skeleton-button, .quiz-skeleton-tabs i, .quiz-skeleton-tools span, .quiz-library-skeleton-preview, .quiz-library-skeleton-copy b, .quiz-library-skeleton-copy span, .quiz-library-skeleton-copy small, .mb-profile-skeleton-avatar, .mb-profile-skeleton-copy i, .mb-profile-skeleton-settings, .mb-profile-skeleton-notification { display: block; background: linear-gradient(100deg, #edf0f3 20%, #f8f9fa 40%, #edf0f3 60%); background-size: 220% 100%; animation: quiz-list-skeleton 1.25s ease-in-out infinite; }
 .mb-app-header .mb-profile-skeleton-avatar { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; }
 .mb-app-header .mb-profile-skeleton-copy { min-width: 0; flex: 1; display: grid; gap: 6px; padding: 0 2px; }
 .mb-app-header .mb-profile-skeleton-copy i { width: 68%; height: 10px; border-radius: 5px; }
 .mb-app-header .mb-profile-skeleton-copy i:last-child { width: 46%; height: 8px; }
 .mb-app-header .mb-profile-skeleton-settings { width: 16px; height: 16px; flex: 0 0 16px; border-radius: 50%; }
+.mb-app-header .mb-profile-skeleton-notification { width: 20px; height: 20px; flex: 0 0 20px; border-radius: 50%; }
 .quiz-skeleton-title { width: 88px; height: 30px; border-radius: 7px; }
 .quiz-skeleton-button { width: 114px; height: 40px; border-radius: 10px; }
 .quiz-skeleton-tabs { display: flex; gap: 7px; margin-bottom: 18px; overflow: hidden; }
@@ -321,7 +322,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-step-link:hover { color: var(--mb-text-secondary); }
 .creator-step-link:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 2px; }
 .creator-file-choice { min-height: 44px; display: flex; align-self: center; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: auto 0 0; padding: 24px 8px 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
-.creator-file-choice button { padding: 4px 0; border: 0; color: var(--mb-text-secondary); background: transparent; font: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.creator-file-choice button { padding: 4px 0; border: 0; color: inherit; background: transparent; font: inherit; font-weight: 400; text-decoration: none; }
 .creator-file-choice button:hover { color: var(--mb-text-primary); }
 .creator-file-choice button:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 3px; }
 .creator-step>header { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 14px; margin-bottom: 22px; }
@@ -337,8 +338,8 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-ai-prompt-bar { --creator-keyboard-offset: 0px; --creator-prompt-border-angle: 0deg; --creator-prompt-border-duration: 8s; --creator-prompt-tone-a: #b7c6ff; --creator-prompt-tone-b: #c7b6f4; --creator-prompt-tone-c: #8bcff0; --creator-prompt-tone-d: #b8e7e7; position: relative; z-index: 2; width: 100%; max-width: none; display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-rows: minmax(24px, auto) auto; align-items: start; column-gap: 12px; row-gap: 10px; padding: 18px 20px 14px; border: 2px solid transparent; border-radius: 24px; background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from var(--creator-prompt-border-angle), var(--creator-prompt-line-a), var(--creator-prompt-line-b), var(--creator-prompt-line-c), var(--creator-prompt-line-d), var(--creator-prompt-line-a)) border-box; box-shadow: 0 0 12px color-mix(in srgb, var(--creator-prompt-tone-b) 22%, transparent), 0 5px 18px color-mix(in srgb, var(--creator-prompt-tone-c) 18%, transparent), 0 -3px 16px color-mix(in srgb, var(--creator-prompt-tone-a) 18%, transparent); transition: --creator-prompt-tone-a 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-b 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-c 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-d 1.5s cubic-bezier(.22,.61,.36,1); animation: creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite, creator-prompt-border-rotation var(--creator-prompt-border-duration) linear infinite; }
 .creator-ai-prompt-bar.is-chatgpt { --creator-prompt-tone-a: #f0c5df; --creator-prompt-tone-b: #a5c9f0; --creator-prompt-tone-c: #c5b7f0; --creator-prompt-tone-d: #b5e6d5; }
 /* The border has its own vivid palette so the soft halo keeps its original colors. */
-.creator-ai-prompt-bar { --creator-prompt-line-a: #93aaff; --creator-prompt-line-b: #b898f0; --creator-prompt-line-c: #5ec4ee; --creator-prompt-line-d: #84d8d9; transition: --creator-prompt-tone-a 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-b 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-c 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-d 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-a 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-b 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-c 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-d 1.5s cubic-bezier(.22,.61,.36,1); }
-.creator-ai-prompt-bar.is-chatgpt { --creator-prompt-line-a: #ee9ece; --creator-prompt-line-b: #88baf0; --creator-prompt-line-c: #b197ee; --creator-prompt-line-d: #83d6bb; }
+.creator-ai-prompt-bar { --creator-prompt-line-a: #8fa8ff; --creator-prompt-line-b: #b28dec; --creator-prompt-line-c: #52bde9; --creator-prompt-line-d: #7ed5d5; transition: --creator-prompt-tone-a 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-b 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-c 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-tone-d 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-a 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-b 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-c 1.5s cubic-bezier(.22,.61,.36,1), --creator-prompt-line-d 1.5s cubic-bezier(.22,.61,.36,1); }
+.creator-ai-prompt-bar.is-chatgpt { --creator-prompt-line-a: #ed96c9; --creator-prompt-line-b: #7fb5ef; --creator-prompt-line-c: #aa8cea; --creator-prompt-line-d: #79d3b4; }
 .creator-ai-prompt-bar:focus-within { --creator-prompt-border-duration: 2.8s; }
 .creator-ai-prompt-bar.shake { animation: creator-ai-shake .4s ease, creator-ai-halo-shift 12s cubic-bezier(.45, 0, .55, 1) infinite, creator-prompt-border-rotation var(--creator-prompt-border-duration) linear infinite; }
 .creator-ai-prompt-icon { grid-column: 1; grid-row: 1; width: 20px; height: 20px; margin-top: 1px; color: var(--mb-text-tertiary); }
