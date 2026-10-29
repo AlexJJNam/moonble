@@ -465,9 +465,21 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   </div>;
 }
 
-function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAnnounce }) {
+function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAnnounce, focusComments = false }) {
   const id = useId();
   const [liking, setLiking] = useState(false);
+  const commentsRef = useRef(null);
+  useEffect(() => {
+    if (!focusComments) return undefined;
+    let secondFrame = 0;
+    const frame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+    };
+  }, [focusComments]);
   async function like() {
     if (!viewer?.ready) { onRequireLogin(); return; }
     if (liking) return;
@@ -491,7 +503,7 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
       onAnnounce('링크를 복사했어요.');
     } catch (error) { if (error?.name !== 'AbortError') onAnnounce('링크를 복사하지 못했어요.'); }
   }
-  return <Dialog labelledBy={`${id}-title`} className="is-post-detail" onClose={onClose}>
+  return <Dialog labelledBy={`${id}-title`} className={`is-post-detail${focusComments ? ' is-comments-focused' : ''}`} onClose={onClose}>
     <header className="quiz-community-detail-head">
       <button type="button" className="quiz-community-detail-back" aria-label="커뮤니티로 돌아가기" onClick={onClose}><ChevronLeft size={23} aria-hidden="true" /></button>
       <h2 id={`${id}-title`}>게시글</h2>
@@ -515,7 +527,7 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
         <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
       </div>
     </article>
-    <section className="quiz-community-detail-comments" aria-label="댓글">
+    <section ref={commentsRef} id={`${id}-comments`} className="quiz-community-detail-comments" aria-label="댓글" tabIndex={-1}>
       <CommentThread detail post={post} viewer={viewer} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce} />
     </section>
   </Dialog>;
@@ -604,7 +616,7 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
         <button type="button" className={post.liked ? 'is-liked' : ''} aria-pressed={post.liked} aria-label={`좋아요 ${post.like_count}개`} onClick={like}>
           <Heart size={18} aria-hidden="true" fill={post.liked ? 'currentColor' : 'none'} /><span>{post.like_count}</span>
         </button>
-        <button type="button" aria-expanded={commentsOpen} aria-label={`댓글 ${post.comment_count}개`} onClick={() => setCommentsOpen(open => !open)}>
+        <button type="button" aria-expanded={onAskDetail ? undefined : commentsOpen} aria-label={`댓글 ${post.comment_count}개`} onClick={() => onAskDetail ? onAskDetail(post, { focusComments: true }) : setCommentsOpen(open => !open)}>
           <MessageCircle size={18} aria-hidden="true" /><span>{post.comment_count}</span>
         </button>
         <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
@@ -751,7 +763,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     {state.posts.length > 0 && <ol className="quiz-community-feed">
       {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
         onPatch={patch => patchPost(post.id, patch)} onRequireLogin={requireLogin} onAnnounce={announce}
-        onAskDetail={showBar ? target => setDialog({ type: 'detail', post: target }) : undefined}
+        onAskDetail={showBar ? (target, options = {}) => setDialog({ type: 'detail', post: target, focusComments: options.focusComments === true }) : undefined}
         onAskEdit={target => { setEditDraft({ topic: target.topic || '', title: target.title || '', body: target.body || '', attachment: null, showRecord: false, gif: target.gif || null }); setDialog({ type: 'edit', post: target }); }}
         onAskDelete={target => setDialog({ type: 'delete', post: target })} onAskReport={target => setDialog({ type: 'report', post: target })} />)}
     </ol>}
@@ -771,7 +783,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       try { await reportPost(dialog.post.id, reason); setDialog(null); announce('신고를 접수했어요. 확인 후 조치할게요.'); }
       catch (reportError) { setDialog(null); announce(reportError.message); }
     }} />}
-    {dialog?.type === 'detail' && <PostDetailDialog post={dialog.post} viewer={viewer} onClose={() => setDialog(null)}
+    {dialog?.type === 'detail' && <PostDetailDialog post={dialog.post} viewer={viewer} focusComments={dialog.focusComments} onClose={() => setDialog(null)}
       onPatch={patch => { patchPost(dialog.post.id, patch); setDialog(current => current?.type === 'detail' ? { ...current, post: { ...current.post, ...patch } } : current); }} onRequireLogin={requireLogin} onAnnounce={announce} />}
   </Wrapper>;
 }

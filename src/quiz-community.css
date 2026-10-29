@@ -357,6 +357,10 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 @media (max-width: 767px) {
   .quiz-community-overlay:has(.is-post-detail) { inset: 0; display: flex; align-items: stretch; padding: 0; background: var(--mb-surface); }
   .quiz-community-dialog.is-post-detail { box-sizing: border-box; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
+  .quiz-community-dialog.is-post-detail.is-comments-focused { display: block; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-head { position: sticky; top: 0; z-index: 2; background: var(--mb-surface); }
+  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-comments { min-height: calc(100dvh - 54px); display: flex; flex: 0 0 auto; }
+  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-comments .quiz-community-comments { min-height: calc(100dvh - 110px); flex: 0 0 auto; overflow: visible; }
   .quiz-community-detail-head { padding-top: env(safe-area-inset-top); }
   .quiz-community-detail-comments .quiz-community-comment-form { padding-bottom: calc(var(--mb-space-8) + env(safe-area-inset-bottom)); }
 }
