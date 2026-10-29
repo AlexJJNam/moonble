@@ -87,7 +87,7 @@ export async function listPosts({ scope = 'all', token = null, sort = 'popular',
   };
 }
 
-export async function createPost({ topic, title, body, shareToken = null, showRecord = false }) {
+export async function createPost({ topic, title, body, shareToken = null, showRecord = false, gif = null }) {
   const participantId = shareToken && showRecord ? readQuizShareParticipantId(await communityTokenHash(shareToken)) : null;
   const { data, error } = await requireSupabase().rpc('moonble_create_community_post', {
     p_topic: topic || null,
@@ -96,6 +96,8 @@ export async function createPost({ topic, title, body, shareToken = null, showRe
     p_share_token: shareToken || null,
     p_participant_id: participantId,
     p_show_record: Boolean(participantId),
+    // GIF가 있을 때만 보낸다. 013 적용 전 DB에서도 GIF 없는 글쓰기는 그대로 동작한다.
+    ...(gif ? { p_gif: gif } : {}),
   });
   if (error) throw failure(error, '글을 남기지 못했어요. 잠시 후 다시 시도해주세요.');
   return data;
@@ -118,8 +120,10 @@ export async function listComments(postId) {
   return Array.isArray(data) ? data : [];
 }
 
-export async function createComment(postId, body) {
-  const { data, error } = await requireSupabase().rpc('moonble_create_community_post_comment', { p_post_id: postId, p_body: body.trim() });
+export async function createComment(postId, body, gif = null) {
+  const { data, error } = await requireSupabase().rpc('moonble_create_community_post_comment', {
+    p_post_id: postId, p_body: body.trim(), ...(gif ? { p_gif: gif } : {}),
+  });
   if (error) throw failure(error, '댓글을 남기지 못했어요.');
   return data;
 }

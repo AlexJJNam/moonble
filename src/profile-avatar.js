@@ -258,3 +258,44 @@ export function cachedProfileAvatarUrl(user) {
   const path = ownStoredPath(user);
   return path ? readSignedUrl(path)?.url || '' : '';
 }
+
+// 커뮤니티 작성자 사진: 여러 경로를 한 번에 서명받아 같은 캐시에 둔다.
+// 013 마이그레이션의 저장소 정책이 커뮤니티 작성자의 현재 사진만 읽기를 허용한다. 실패하면 이니셜로 대신한다.
+const COMMUNITY_AVATAR_PATH = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png)$/i;
+const pendingCommunityAvatars = new Map();
+const unavailableCommunityAvatars = new Set();
+let communityAvatarTimer = 0;
+
+async function flushCommunityAvatars() {
+  communityAvatarTimer = 0;
+  const batch = [...pendingCommunityAvatars.entries()];
+  pendingCommunityAvatars.clear();
+  let results = [];
+  try {
+    const { data, error } = await avatarBucket().createSignedUrls(batch.map(([path]) => path), SIGNED_URL_SECONDS);
+    if (!error && Array.isArray(data)) results = data;
+  } catch { /* 연결·정책 문제는 이니셜 아바타로 대신한다. */ }
+  const now = Date.now();
+  for (const [path, resolvers] of batch) {
+    const hit = results.find(item => item?.path === path && !item.error && typeof item.signedUrl === 'string');
+    if (!hit) unavailableCommunityAvatars.add(path);
+    const url = hit ? writeSignedUrl(path, hit.signedUrl, now).url : '';
+    resolvers.forEach(resolve => resolve(url));
+  }
+}
+
+export function cachedCommunityAvatarUrl(path) {
+  return COMMUNITY_AVATAR_PATH.test(path || '') ? readSignedUrl(path)?.url || '' : '';
+}
+
+export function communityAvatarUrl(path) {
+  if (!supabase || !COMMUNITY_AVATAR_PATH.test(path || '') || unavailableCommunityAvatars.has(path)) return Promise.resolve('');
+  const cached = readSignedUrl(path);
+  if (cached && cached.refreshAt > Date.now()) return Promise.resolve(cached.url);
+  return new Promise(resolve => {
+    const resolvers = pendingCommunityAvatars.get(path) || [];
+    resolvers.push(resolve);
+    pendingCommunityAvatars.set(path, resolvers);
+    if (!communityAvatarTimer) communityAvatarTimer = window.setTimeout(flushCommunityAvatars, 40);
+  });
+}

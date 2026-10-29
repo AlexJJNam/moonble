@@ -8,6 +8,8 @@ import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken } from './quiz-share.js';
+import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
+import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import {
   COMMENT_BODY_LIMIT, COMMUNITY_PAGE_SIZE, COMMUNITY_TOPICS, CommunityUnavailableError, POST_BODY_LIMIT, POST_TITLE_LIMIT,
   canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getSolvedShares,
@@ -25,7 +27,7 @@ const REPORT_REASONS = [
   { value: 'other', label: '기타' },
 ];
 const AVATAR_TONES = ['blue', 'green', 'yellow', 'purple', 'pink', 'gray'];
-const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true };
+const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true, gif: null };
 
 function topicLabel(value) {
   return COMMUNITY_TOPICS.find(topic => topic.value === value)?.label || '';
@@ -33,7 +35,7 @@ function topicLabel(value) {
 
 export function toViewer(user) {
   if (!user) return null;
-  return { id: user.id, name: profileOf(user).name, ready: hasProfile(user) };
+  return { id: user.id, name: profileOf(user).name, ready: hasProfile(user), avatarPath: user.user_metadata?.avatarPath || '' };
 }
 
 function useViewer() {
@@ -54,32 +56,34 @@ function InitialAvatar({ name, size = 'md' }) {
   return <span className={`quiz-community-avatar is-${size} is-${tone}`} aria-hidden="true">{[...text][0]}</span>;
 }
 
+// 프로필 사진이 있으면 사진, 없거나 불러오지 못하면 이니셜을 보여준다.
+function CommunityAvatar({ name, path, size = 'md' }) {
+  const [src, setSrc] = useState(() => cachedCommunityAvatarUrl(path));
+  useEffect(() => {
+    let alive = true;
+    setSrc(cachedCommunityAvatarUrl(path));
+    if (path) communityAvatarUrl(path).then(url => { if (alive) setSrc(url); });
+    return () => { alive = false; };
+  }, [path]);
+  if (!src) return <InitialAvatar name={name} size={size} />;
+  return <span className={`quiz-community-avatar is-${size} has-photo`} aria-hidden="true"><img src={src} alt="" decoding="async" onError={() => setSrc('')} /></span>;
+}
+
 function AuthorBadges({ item }) {
   return item.is_share_owner ? <span className="quiz-community-badge is-owner">출제자</span> : null;
 }
 
-// 열린 대화상자 순서. Esc는 맨 위 대화상자만 닫는다.
-const dialogStack = [];
-
 // 대화상자: 데스크톱은 가운데, 모바일은 하단 시트. Esc·바깥 클릭으로 닫고 열기 전 포커스로 돌아간다.
 function Dialog({ labelledBy, describedBy, className = '', onClose, children }) {
   const panelRef = useRef(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  // Esc는 맨 위 층(대화상자 위에 열린 GIF 선택기 등)만 닫는다.
+  useEscapeLayer(onClose);
   useEffect(() => {
-    const token = {};
-    dialogStack.push(token);
     const previous = document.activeElement;
-    const onKey = event => {
-      if (event.key === 'Escape' && dialogStack[dialogStack.length - 1] === token) { event.preventDefault(); closeRef.current(); }
-    };
-    document.addEventListener('keydown', onKey);
     window.moonbleScrollLock?.lock();
     const focusTarget = panelRef.current?.querySelector('[data-autofocus]') || panelRef.current;
     focusTarget?.focus({ preventScroll: true });
     return () => {
-      dialogStack.splice(dialogStack.indexOf(token), 1);
-      document.removeEventListener('keydown', onKey);
       window.moonbleScrollLock?.unlock();
       if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
     };
@@ -231,7 +235,9 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
   const [recordAvailable, setRecordAvailable] = useState(false);
   const attachment = draft.attachment;
   const bodyLength = draft.body.trim().length;
-  const ready = bodyLength > 0 && draft.body.length <= POST_BODY_LIMIT && draft.title.length <= POST_TITLE_LIMIT;
+  const ready = (bodyLength > 0 || Boolean(draft.gif)) && draft.body.length <= POST_BODY_LIMIT && draft.title.length <= POST_TITLE_LIMIT;
+  const [gifOpen, setGifOpen] = useState(false);
+  const gifButtonRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -259,7 +265,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
   return <Dialog labelledBy={`${id}-title`} className="is-compose" onClose={busy ? () => {} : onClose}>
     <form onSubmit={submit}>
       <header className="quiz-community-compose-head">
-        <InitialAvatar name={viewer.name} />
+        <CommunityAvatar name={viewer.name} path={viewer.avatarPath} />
         <strong id={`${id}-title`}>{viewer.name}</strong>
         <label className="quiz-community-topic">
           <span className="mb-sr-only">주제</span>
@@ -276,6 +282,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
       <label className="mb-sr-only" htmlFor={`${id}-body`}>내용</label>
       <textarea id={`${id}-body`} className="quiz-community-compose-body" value={draft.body} maxLength={POST_BODY_LIMIT} placeholder={placeholder} data-autofocus
         onChange={event => onDraftChange({ ...draft, body: event.target.value })} />
+      <GifDraftPreview gif={draft.gif} onRemove={() => onDraftChange({ ...draft, gif: null })} onReplace={() => setGifOpen(true)} />
       {attachment && <div className="quiz-community-compose-attachment">
         <QuizAttachment attachment={attachment} onRemove={() => onDraftChange({ ...draft, attachment: null })} />
         <label className={`quiz-community-record-toggle${recordAvailable ? '' : ' is-disabled'}`}>
@@ -286,16 +293,19 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
           </span>
         </label>
       </div>}
-      <p className="quiz-community-policy">Moonble은 게시글이 운영 정책에 맞는지 확인하고 있어요. 정책에 어긋나는 글은 숨겨지거나 삭제될 수 있어요. 다른 참여자를 위해 정답을 그대로 적는 것은 피해주세요.</p>
+      <p className="quiz-community-policy">글과 댓글에는 계정 이름과 프로필 사진이 함께 표시돼요. Moonble은 게시글이 운영 정책에 맞는지 확인하고 있어요. 정책에 어긋나는 글은 숨겨지거나 삭제될 수 있어요. 다른 참여자를 위해 정답을 그대로 적는 것은 피해주세요.</p>
       {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
       <footer className="quiz-community-compose-foot">
         {attachSource && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
           <Paperclip size={18} aria-hidden="true" /><span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
         </button>}
+        <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => setGifOpen(open => !open)} />
         <span className={`quiz-community-counter${draft.body.length > POST_BODY_LIMIT * .95 ? ' is-near-limit' : ''}`} aria-live="polite">{draft.body.length.toLocaleString('ko-KR')} / {POST_BODY_LIMIT.toLocaleString('ko-KR')}</span>
         <button type="submit" className="is-primary" disabled={!ready || busy}>{busy ? '남기는 중' : '남기기'}</button>
       </footer>
     </form>
+    {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)}
+      onPick={gif => { onDraftChange({ ...draft, gif }); setGifOpen(false); }} />}
   </Dialog>;
 }
 
@@ -303,6 +313,9 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   const [comments, setComments] = useState(null);
   const [error, setError] = useState('');
   const [body, setBody] = useState('');
+  const [gif, setGif] = useState(null);
+  const [gifOpen, setGifOpen] = useState(false);
+  const gifButtonRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const inputId = useId();
   useEffect(() => {
@@ -313,12 +326,13 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   async function submit(event) {
     event.preventDefault();
     if (!viewer?.ready) { onRequireLogin(); return; }
-    if (!body.trim() || busy) return;
+    if ((!body.trim() && !gif) || busy) return;
     setBusy(true); setError('');
     try {
-      const comment = await createComment(post.id, body);
+      const comment = await createComment(post.id, body, gif);
       setComments(current => [...(current || []), comment]);
       setBody('');
+      setGif(null);
       onCountChange(1);
     } catch (submitError) { setError(submitError.message); }
     finally { setBusy(false); }
@@ -335,20 +349,24 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     {comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
         : <ul>{comments.map(comment => <li key={comment.id}>
-          <InitialAvatar name={comment.author_name} size="sm" />
+          <CommunityAvatar name={comment.author_name} path={comment.author_avatar} size="sm" />
           <div>
             <p className="quiz-community-comment-head"><strong>{comment.author_name}</strong><AuthorBadges item={comment} /><time dateTime={comment.created_at}>{formatRelativeDate(comment.created_at)}</time></p>
-            <p className="quiz-community-comment-body">{comment.body}</p>
+            {comment.body && <p className="quiz-community-comment-body">{comment.body}</p>}
+            <CommunityGif gif={comment.gif} size="comment" />
             {comment.can_delete && <button type="button" className="quiz-community-text-button" onClick={() => remove(comment)}>삭제</button>}
           </div>
         </li>)}</ul>}
     {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
+    {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
     <form className="quiz-community-comment-form" onSubmit={submit}>
+      <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
       <label className="mb-sr-only" htmlFor={inputId}>댓글</label>
       <input id={inputId} value={body} maxLength={COMMENT_BODY_LIMIT} placeholder={viewer?.ready ? '댓글을 남겨보세요' : '로그인하고 댓글을 남겨보세요'}
         onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
-      <button type="submit" disabled={viewer?.ready ? !body.trim() || busy : false}>등록</button>
+      <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif) || busy : false}>등록</button>
     </form>
+    {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)} onPick={picked => { setGif(picked); setGifOpen(false); }} />}
   </div>;
 }
 
@@ -405,7 +423,7 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
 
   const topic = topicLabel(post.topic);
   return <li className="quiz-community-post">
-    <InitialAvatar name={post.author_name} />
+    <CommunityAvatar name={post.author_name} path={post.author_avatar} />
     <div className="quiz-community-post-main">
       <header className="quiz-community-post-head">
         <p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p>
@@ -421,8 +439,9 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
         </div>
       </header>
       {post.title && <h4 className="quiz-community-post-title">{post.title}</h4>}
-      <p ref={bodyRef} className={`quiz-community-post-body${expanded ? ' is-expanded' : ''}`}>{post.body}</p>
+      {post.body && <p ref={bodyRef} className={`quiz-community-post-body${expanded ? ' is-expanded' : ''}`}>{post.body}</p>}
       {clamped && !expanded && <button type="button" className="quiz-community-text-button is-more" onClick={() => setExpanded(true)}>더 보기</button>}
+      <CommunityGif gif={post.gif} />
       {post.attachment && <QuizAttachment attachment={post.attachment} record={post.record} />}
       {!post.attachment && post.record && <RecordLine record={post.record} />}
       <div className="quiz-community-actions">
@@ -521,7 +540,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     </header>
 
     <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
-      <InitialAvatar name={canWrite ? viewer.name : ''} />
+      <CommunityAvatar name={canWrite ? viewer.name : ''} path={canWrite ? viewer.avatarPath : ''} />
       <span>{canWrite ? (draft.body.trim() ? '작성 중인 글이 있어요' : placeholder) : '로그인하고 글을 남겨보세요'}</span>
       {attachSource ? <Paperclip size={18} aria-hidden="true" /> : <PenLine size={18} aria-hidden="true" />}
     </button>
