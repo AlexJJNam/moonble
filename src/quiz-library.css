@@ -69,6 +69,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-tabs a[aria-current='page'] { color: var(--mb-text-primary); font-weight: var(--mb-weight-bold); }
 .quiz-library-tabs a[aria-current='page']::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--mb-text-primary); }
 .quiz-library-tabs a:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 767px) { .quiz-library-tabs--desktop { display: none; } }
 .paper-group-bar { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
 .paper-group-strip { min-width: 0; display: contents; }
 .paper-group-tabs { min-width: 0; display: flex; flex: 1 1 auto; align-items: center; gap: 4px; overflow-x: auto; padding: 2px; scrollbar-width: none; }

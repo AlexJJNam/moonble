@@ -50,6 +50,15 @@ const viewSegments = [
   { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
   { value: 'list', label: '1열 목록 보기', ariaLabel: '1열 목록 보기', icon: List },
 ];
+
+function QuizLibraryTabs({ section, className = '' }) {
+  return <nav className={`quiz-library-tabs${className ? ` ${className}` : ''}`} aria-label="문제지 메뉴">
+    <a href="#library" aria-current={section === 'papers' ? 'page' : undefined}>나의 문제지</a>
+    <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>문제 서칭</a>
+    <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
+  </nav>;
+}
+
 const initialSession = cachedAuthSession();
 const initialUser = initialSession && hasProfile(initialSession.user) ? initialSession.user : null;
 const isWorkspaceReturn = (() => {
@@ -992,19 +1001,17 @@ function QuizLibrary() {
   });
   const groupColors = buildGroupColorMap(collection.groups);
   const editingPaperCards = editMode && !mobileSearchOpen;
+  const hasLibrarySection = ['papers', 'public', 'community'].includes(section);
+  const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '문제지';
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
-    <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} />
+    <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : null} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mobileSearchOpen ? ' is-mobile-search' : ''}`} id="paper-library" tabIndex={-1} role={mobileSearchOpen ? 'dialog' : undefined} aria-modal={mobileSearchOpen ? 'true' : undefined} aria-label={mobileSearchOpen ? '문제지 검색' : undefined}>
         {mobileSearchOpen && <div className="quiz-mobile-search-header"><button className="quiz-mobile-search-back" type="button" aria-label="검색 닫기" onClick={closeMobileSearch}><ChevronLeft size={21} aria-hidden="true" /></button><label className="quiz-search quiz-mobile-search-input"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input ref={mobileSearchInputRef} type="search" placeholder="검색" value={query} onFocus={() => setMobileSuggestionsOpen(true)} onChange={event => { setQuery(event.target.value); setMobileSuggestionsOpen(true); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setMobileSuggestionsOpen(false); event.currentTarget.blur(); } }} /></label>{query && <button className="quiz-mobile-search-clear" type="button" aria-label="검색어 지우기" onClick={() => { setQuery(''); setMobileSuggestionsOpen(true); mobileSearchInputRef.current?.focus(); }}><X size={16} aria-hidden="true" /></button>}</div>}
         {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
-        <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
-        <nav className="quiz-library-tabs" aria-label="문제지 메뉴">
-          <a href="#library" aria-current={section === 'papers' ? 'page' : undefined}>나의 문제지</a>
-          <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>문제 서칭</a>
-          <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
-        </nav>
+        <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
+        <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <section className="quiz-empty quiz-public-search-placeholder" aria-labelledby="public-search-title"><Search size={28} aria-hidden="true" /><h2 id="public-search-title" className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>공개된 문제지를 찾아 풀고 의견을 나눌 수 있는 공간이에요.</p></section> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">

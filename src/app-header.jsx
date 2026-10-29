@@ -227,7 +227,7 @@ function useSolverQuestions(enabled) {
   return { activeIndex, goToQuestion, items, navRef };
 }
 
-export function AppHeader({ active, error, hideSolverBack = false, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
+export function AppHeader({ active, error, hideSolverBack = false, mobileSubnav, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
   const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
@@ -729,7 +729,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
   }, [solver]);
 
   return <>
-  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${quizPenMode ? ' is-pen-actions-open' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
+  <aside hidden={sidebarHidden} className={`mb-app-header${solver ? ' mb-solver-sidebar' : ''}${mobileSubnav && !solver ? ' has-mobile-subnav' : ''}${quizPenMode ? ' is-pen-actions-open' : ''}${sharedSolver ? ' is-shared-solver' : ''}${collapsed ? ' is-collapsed' : ''}${mobileHeaderHidden ? ' is-mobile-hidden' : ''} no-print`} aria-label={solver ? '문제풀이 탐색' : 'Moonble 워크스페이스'}>
     <div className="mb-app-header-inner">
       <div className="mb-app-brand-row">
         <a className="mb-app-logo" href="./quiz.html" aria-label="Moonble 홈"><BrandLogo decorative />{user && <UserAvatar user={user} className="mb-app-logo-avatar" />}</a>
@@ -759,6 +759,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           <Settings2 size={16} aria-hidden="true" />
         </a>
       </div>}
+      {!solver && mobileSubnav && <div className="mb-mobile-subnav">{mobileSubnav}</div>}
       {solver ? <nav className={`mb-app-nav mb-solver-nav${solverMemos.length ? ' has-memos' : ''}`} aria-label="문제 목록">
         <div className="mb-solver-heading">
           {!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}
