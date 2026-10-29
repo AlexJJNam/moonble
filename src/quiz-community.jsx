@@ -79,6 +79,15 @@ function Dialog({ labelledBy, describedBy, className = '', onClose, children }) 
   // Esc는 맨 위 층(대화상자 위에 열린 GIF 선택기 등)만 닫는다.
   useEscapeLayer(onClose);
   useEffect(() => {
+    const viewport = window.visualViewport;
+    const panel = panelRef.current;
+    if (!viewport || !panel || !className.includes('is-compose')) return undefined;
+    const fit = () => { panel.style.setProperty('--community-vh', `${Math.round(viewport.height)}px`); window.scrollTo(0, 0); };
+    fit();
+    viewport.addEventListener('resize', fit);
+    return () => viewport.removeEventListener('resize', fit);
+  }, [className]);
+  useEffect(() => {
     const previous = document.activeElement;
     window.moonbleScrollLock?.lock();
     const focusTarget = panelRef.current?.querySelector('[data-autofocus]') || panelRef.current;
@@ -516,6 +525,33 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
   </li>;
 }
 
+// 모바일(독바가 보이는 폭)인지. 커뮤니티 탭은 이 폭에서 독바 자리에 입력 바를 둔다.
+function useDockLayout() {
+  const query = '(max-width: 767px)';
+  const [mobile, setMobile] = useState(() => window.matchMedia?.(query).matches ?? false);
+  useEffect(() => {
+    const list = window.matchMedia?.(query);
+    if (!list) return undefined;
+    const sync = () => setMobile(list.matches);
+    list.addEventListener('change', sync);
+    return () => list.removeEventListener('change', sync);
+  }, []);
+  return mobile;
+}
+
+function MobileComposerBar({ viewer, canWrite, onOpen }) {
+  useEffect(() => {
+    document.body.classList.add('mb-community-composer-bar');
+    return () => document.body.classList.remove('mb-community-composer-bar');
+  }, []);
+  return createPortal(<div className="quiz-community-bar">
+    <CommunityAvatar name={canWrite ? viewer.name : ''} path={canWrite ? viewer.avatarPath : ''} size="sm" />
+    <button type="button" className="quiz-community-bar-input" aria-label="글쓰기" onClick={onOpen}>
+      <span>{canWrite ? '무슨 생각을 하고 있나요?' : '로그인하고 글을 남겨보세요'}</span>
+    </button>
+  </div>, document.body);
+}
+
 // scope='all': 전체 피드(문제지 화면 커뮤니티 탭). scope='share': token 공유 문제가 첨부된 글(순위 카드 아래).
 export function CommunityFeed({ scope = 'all', token = null, viewer, variant = 'page', attachSource = null, fixedAttachment = null, tokenHash = '', onPosted }) {
   // 마이페이지 목록(mine·liked)은 최신순으로만 보여주고 새 글 입력창은 두지 않는다.
@@ -598,6 +634,8 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   const countText = state.status === 'ready' || state.status === 'refreshing' ? `${state.total.toLocaleString('ko-KR')}개` : '';
   const placeholder = scope === 'share' ? '이 문제에 대한 의견을 남겨보세요' : '공부한 이야기나 내 문제지를 나눠보세요';
   const Wrapper = variant === 'card' ? 'section' : 'div';
+  const dockLayout = useDockLayout();
+  const showBar = variant === 'page' && !listOnly && scope === 'all' && dockLayout;
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
     {!listOnly && <header className="quiz-community-head">
       {variant === 'card' && <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>}
@@ -629,6 +667,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       {loadingMore ? '불러오는 중' : `글 더 보기 (${Math.min(COMMUNITY_PAGE_SIZE, state.total - state.posts.length)})`}
     </button>}
     <p className="quiz-community-status" role="status" aria-live="polite">{announcement}</p>
+    {showBar && <MobileComposerBar viewer={viewer} canWrite={canWrite} onOpen={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })} />}
 
     {dialog?.type === 'compose' && canWrite && <ComposeDialog viewer={viewer} draft={draft} onDraftChange={setDraft} onSubmit={submitPost} onClose={() => setDialog(null)}
       attachSource={attachSource} placeholder={placeholder} />}
