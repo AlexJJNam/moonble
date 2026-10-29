@@ -19,6 +19,14 @@ export async function listPublicQuizzes({ query = '', sort = 'popular', offset =
   return { items: Array.isArray(data?.items) ? data.items : [], total: Number.isInteger(data?.total) ? data.total : 0 };
 }
 
+// 검색어 자동완성: 검색어가 들어간 공개 문제 제목을 인기순으로 몇 개 돌려준다.
+export async function suggestPublicQuizTitles(term, limit = 8) {
+  const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', { p_query: term, p_sort: 'popular', p_offset: 0, p_limit: limit });
+  if (error) return [];
+  const items = Array.isArray(data?.items) ? data.items : [];
+  return [...new Set(items.map(item => String(item.title || '').trim()).filter(Boolean))];
+}
+
 // { bankId: 'public' | 'unlisted' }. 016 적용 전이거나 실패하면 null(기존 방식으로 표시).
 export async function getMyShareVisibilities() {
   try {

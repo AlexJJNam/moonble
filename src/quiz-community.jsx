@@ -9,6 +9,7 @@ import { formatRelativeDate } from './date-format.js';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken } from './quiz-share.js';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
+import { lockPageScroll } from './scroll-lock.js';
 import {
   COMMENT_BODY_LIMIT, COMMUNITY_PAGE_SIZE, COMMUNITY_TOPICS, CommunityUnavailableError, POST_BODY_LIMIT, POST_TITLE_LIMIT,
   canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getSolvedShares,
@@ -27,7 +28,7 @@ const REPORT_REASONS = [
 const AVATAR_TONES = ['blue', 'green', 'yellow', 'purple', 'pink', 'gray'];
 const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true, gif: null };
 
-function CommunitySortToggle({ ariaLabel, sort, onChange }) {
+export function CommunitySortToggle({ ariaLabel, sort, onChange }) {
   const label = sort === 'popular' ? '인기순' : '최신순';
   return <button type="button" className="quiz-community-sort-toggle" aria-label={`${ariaLabel} 정렬: ${label}`} onClick={() => onChange(current => current === 'popular' ? 'latest' : 'popular')}>
     {label}<ArrowUpDown size={14} aria-hidden="true" />
@@ -120,11 +121,11 @@ function Dialog({ labelledBy, describedBy, className = '', onClose, children }) 
   }, [className]);
   useEffect(() => {
     const previous = document.activeElement;
-    window.moonbleScrollLock?.lock();
+    const unlockScroll = lockPageScroll();
     const focusTarget = panelRef.current?.querySelector('[data-autofocus]') || panelRef.current;
     focusTarget?.focus({ preventScroll: true });
     return () => {
-      window.moonbleScrollLock?.unlock();
+      unlockScroll();
       if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
     };
   }, []);
@@ -211,6 +212,7 @@ function RecordLine({ record }) {
 
 // 글에 붙은 문제지: 썸네일 + 요약 + 풀어보기(공유 링크). 작성 중에는 미리보기로 쓴다.
 function QuizAttachment({ attachment, record, onRemove }) {
+  const [confirming, setConfirming] = useState(false);
   const questionCount = Number(attachment.question_count ?? attachment.questionCount) || 0;
   const stats = [questionCount ? `${questionCount}문항` : '', Number.isInteger(attachment.participants) && attachment.participants > 0 ? `${attachment.participants.toLocaleString('ko-KR')}명 참여` : '',
     attachment.average_score != null && attachment.participants > 0 ? `평균 ${Number(attachment.average_score)}점` : ''].filter(Boolean).join(' · ');
@@ -231,12 +233,19 @@ function QuizAttachment({ attachment, record, onRemove }) {
       {!attachment.fixed && <button type="button" className="quiz-community-icon-button" aria-label="첨부한 문제지 빼기" onClick={onRemove}><X size={18} aria-hidden="true" /></button>}
     </div>;
   }
-  return active && token
-    ? <a className="quiz-community-attachment" href={solveHref(token)} aria-label={`${attachment.title} 문제 풀어보기`}>
+  if (!active || !token) return <div className="quiz-community-attachment is-inactive">{Body}</div>;
+  // 바로 이동하지 않고 풀지 한 번 묻는다. 대화상자 안의 클릭이 글 상세 열기로 번지지 않게 막는다.
+  return <>
+    <a className="quiz-community-attachment" href={solveHref(token)} aria-label={`${attachment.title} 문제 풀어보기`}
+      onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       {Body}
       <span className="quiz-community-attachment-cta">풀어보기<ChevronRight size={16} aria-hidden="true" /></span>
     </a>
-    : <div className="quiz-community-attachment is-inactive">{Body}</div>;
+    {confirming && <span className="quiz-community-confirm-host" onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
+      <ConfirmDialog title="이 문제를 푸시겠어요?" description={stats ? `${attachment.title} · ${stats}` : attachment.title} confirmLabel="풀어보기"
+        onConfirm={() => { window.location.href = solveHref(token); }} onClose={() => setConfirming(false)} />
+    </span>}
+  </>;
 }
 
 function AttachPicker({ banks, solved, onPick, onBack }) {

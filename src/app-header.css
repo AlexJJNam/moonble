@@ -1,7 +1,7 @@
 body.mb-has-app-sidebar { padding-left: 224px; transition: padding-left 280ms cubic-bezier(.22, 1, .36, 1); }
 body.mb-has-app-sidebar.mb-sidebar-collapsed { padding-left: 68px; }
 body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
-.mb-app-header { position: fixed; inset: 0 auto 0 0; z-index: 50; width: 224px; height: 100vh; height: 100dvh; border-right: 1px solid var(--mb-border); background: rgb(255 255 255 / 96%); backdrop-filter: blur(18px); transition: width 280ms cubic-bezier(.22, 1, .36, 1); }
+.mb-app-header { position: fixed; inset: 0 auto 0 0; z-index: 50; width: 224px; height: 100vh; height: 100dvh; border-right: 1px solid var(--mb-border); background: var(--mb-surface); transition: width 280ms cubic-bezier(.22, 1, .36, 1); }
 .mb-app-header-inner { min-height: 100%; padding: 16px; display: flex; flex-direction: column; }
 .mb-mobile-subnav { display: none; }
 .mb-app-brand-row { position: relative; min-width: 0; display: flex; align-items: center; margin-bottom: 8px; }
