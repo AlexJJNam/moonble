@@ -4,6 +4,7 @@
 .quiz-community-head h3 { margin: 0; font-size: var(--mb-font-22); line-height: 30px; font-weight: var(--mb-weight-semibold); letter-spacing: -.02em; }
 .quiz-community-head p { margin: var(--mb-space-4) 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-variant-numeric: tabular-nums; }
 .quiz-community-sort { flex: 0 0 auto; }
+.quiz-community-page-sort { display: flex; justify-content: flex-start; margin-top: calc(var(--mb-space-8) * -1); }
 
 .quiz-community-avatar { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 50%; font-size: var(--mb-font-16); line-height: 1; font-weight: var(--mb-weight-bold); }
 .quiz-community-avatar.is-sm { width: 28px; height: 28px; flex-basis: 28px; font-size: var(--mb-font-12); }
