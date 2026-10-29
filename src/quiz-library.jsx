@@ -32,15 +32,17 @@ import { formatRelativeDateShortYear } from './date-format.js';
 import { getPaperLastActivityMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
+import { PublicQuizSearch } from './public-quizzes.jsx';
+import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
 
 const paperScopes = [
   { label: '전체', value: 'all' },
-  { label: '개인문제', value: 'personal' },
-  { label: '전체공개', value: 'public' },
-  { label: '일부공개', value: 'partial' },
+  { label: '미공개', value: 'personal' },
+  { label: '일부 공개', value: 'partial' },
+  { label: '공개', value: 'public' },
 ];
 const PAPER_TOUCH_DRAG_DELAY = 1000;
 const paperDragPreviewWidth = cardWidth => Math.max(112, Math.min(176, cardWidth * .52));
@@ -269,6 +271,7 @@ function QuizLibrary() {
   const [shareBusy, setShareBusy] = useState(false);
   const [shareError, setShareError] = useState('');
   const [shareCopied, setShareCopied] = useState(false);
+  const [shareVisibilities, setShareVisibilities] = useState(null);
   const [section, setSection] = useState(sectionFromHash);
   const [sampleVisible, setSampleVisible] = useState(() => sampleIsVisible(initialUser?.id));
   const [editMode, setEditMode] = useState(false);
@@ -522,6 +525,7 @@ function QuizLibrary() {
       if (bankSyncUserRef.current !== session.user.id) {
         setCollectionReady(hasSyncedLibraryCache(session.user.id, cachedCollection));
         bankSyncUserRef.current = session.user.id;
+        getMyShareVisibilities().then(map => { if (alive) setShareVisibilities(map); });
         syncCustomBankCollection(session.user.id).then(result => {
           if (!alive || bankSyncUserRef.current !== session.user.id) return;
           setCollection(result.collection);
@@ -686,28 +690,69 @@ function QuizLibrary() {
       setNotice(moveError.message || '문제지를 옮기지 못했어요.');
     }
   }
+  const visibilityOfBank = bankId => shareVisibilities
+    ? (shareVisibilities[bankId] === 'public' ? 'public' : shareVisibilities[bankId] === 'unlisted' ? 'partial' : 'personal')
+    : (getCachedQuizShareToken(user?.id, bankId) ? 'partial' : 'personal');
+  const rememberVisibility = (bankId, visibility) => setShareVisibilities(current => {
+    const next = { ...(current || {}) };
+    if (visibility === 'personal') delete next[bankId]; else next[bankId] = visibility === 'public' ? 'public' : 'unlisted';
+    return next;
+  });
+  // 저장된 링크가 살아 있으면 쓰고, 없으면 새로 만든다.
+  async function ensureShareLink(bank, meta) {
+    let token = getCachedQuizShareToken(user?.id, bank.id);
+    if (token) {
+      try { await getQuizShare(token); }
+      catch { clearCachedQuizShareToken(user?.id, bank.id); token = null; }
+    }
+    if (!token) token = await createQuizShare(user.id, bank);
+    return { token, url: quizShareUrl(token, meta.tint, meta.groupName) };
+  }
   async function openShareDialog(paper) {
     const bank = collection.banks.find(item => item.id === paper.customBankId);
     if (!bank) return;
     setOpenMenu(null);
-    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '' });
-    setShareBusy(true);
+    const groupName = paper.groupId === DEFAULT_GROUP_ID
+      ? '미분류'
+      : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류';
+    const tint = groupColorStyle(paper.groupId, groupColors)['--paper-group-tint'] || '#e8f3ff';
+    const visibility = visibilityOfBank(bank.id);
+    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '', visibility, meta: { groupName, tint } });
     setShareError('');
     setShareCopied(false);
+    if (visibility === 'personal') return;
+    setShareBusy(true);
     try {
-      let token = getCachedQuizShareToken(user?.id, bank.id);
-      if (token) {
-        try { await getQuizShare(token); }
-        catch { clearCachedQuizShareToken(user?.id, bank.id); token = null; }
-      }
-      if (!token) token = await createQuizShare(user.id, bank);
-      const groupName = paper.groupId === DEFAULT_GROUP_ID
-        ? '미분류'
-        : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류';
-      const tint = groupColorStyle(paper.groupId, groupColors)['--paper-group-tint'] || '#e8f3ff';
-      setShareDialog({ bankId: bank.id, title: bank.title, token, url: quizShareUrl(token, tint, groupName) });
+      const link = await ensureShareLink(bank, { groupName, tint });
+      setShareDialog(current => current && { ...current, ...link });
     } catch (shareFailure) {
       setShareError(shareFailure.message || '공유 링크를 만들지 못했어요.');
+    } finally {
+      setShareBusy(false);
+    }
+  }
+  // 공개 범위 선택: 미공개(공유 중지) / 일부 공개(링크) / 공개(검색 노출)
+  async function chooseVisibility(next) {
+    if (!shareDialog?.bankId || shareBusy || next === shareDialog.visibility) return;
+    const bank = collection.banks.find(item => item.id === shareDialog.bankId);
+    if (!bank) return;
+    setShareBusy(true);
+    setShareError('');
+    try {
+      if (next === 'personal') {
+        await revokeQuizShare(bank.id);
+        clearCachedQuizShareToken(user?.id, bank.id);
+        rememberVisibility(bank.id, 'personal');
+        setShareDialog(current => current && { ...current, visibility: 'personal', token: '', url: '' });
+        setNotice('공유를 중지했어요. 이제 나만 볼 수 있어요.');
+      } else {
+        const link = shareDialog.url ? { token: shareDialog.token, url: shareDialog.url } : await ensureShareLink(bank, shareDialog.meta);
+        await setShareVisibility(bank.id, next === 'public' ? 'public' : 'unlisted', link.token);
+        rememberVisibility(bank.id, next);
+        setShareDialog(current => current && { ...current, ...link, visibility: next });
+      }
+    } catch (shareFailure) {
+      setShareError(shareFailure.message || '공개 범위를 바꾸지 못했어요.');
     } finally {
       setShareBusy(false);
     }
@@ -752,21 +797,6 @@ function QuizLibrary() {
     } catch (shareFailure) {
       if (shareFailure?.name === 'AbortError') return;
       await copyShareLink();
-    }
-  }
-  async function stopShareLink() {
-    if (!shareDialog?.bankId) return;
-    setShareBusy(true);
-    setShareError('');
-    try {
-      await revokeQuizShare(shareDialog.bankId);
-      clearCachedQuizShareToken(user?.id, shareDialog.bankId);
-      setShareDialog(null);
-      setNotice('공유 링크를 중지했어요.');
-    } catch (shareFailure) {
-      setShareError(shareFailure.message || '공유 링크를 중지하지 못했어요.');
-    } finally {
-      setShareBusy(false);
     }
   }
   function beginPaperPress(event, bankId) {
@@ -960,7 +990,7 @@ function QuizLibrary() {
     savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
-    visibility: bank.visibility || (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal'),
+    visibility: bank.visibility || (shareVisibilities ? (shareVisibilities[bank.id] === 'public' ? 'public' : shareVisibilities[bank.id] === 'unlisted' ? 'partial' : 'personal') : (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal')),
     samples: bank.questions.slice(0, 4).map(question => ({ title: question.q, options: question.options })),
   }));
   const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers : [];
@@ -1013,7 +1043,7 @@ function QuizLibrary() {
         {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
         <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
-        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <section className="quiz-empty quiz-public-search-placeholder" aria-labelledby="public-search-title"><Search size={28} aria-hidden="true" /><h2 id="public-search-title" className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>공개된 문제지를 찾아 풀고 의견을 나눌 수 있는 공간이에요.</p></section> : <>
+        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
             <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
@@ -1089,7 +1119,18 @@ function QuizLibrary() {
       </main>}<SiteFooter />
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />
-    {shareDialog && <div className="quiz-manage-overlay quiz-share-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !shareBusy) setShareDialog(null); }}><section className="quiz-manage-dialog quiz-share-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-share-title"><header><h2 id="quiz-share-title">문제지 공유</h2><button type="button" aria-label="닫기" onClick={() => !shareBusy && setShareDialog(null)}><X size={19} /></button></header><p><strong>{shareDialog.title}</strong> 링크를 받은 사람은 로그인 없이 문제를 풀 수 있어요.</p>{shareBusy ? <div className="quiz-share-loading" role="status"><span className="quiz-share-spinner" aria-hidden="true" />공유 링크를 준비하고 있어요.</div> : shareDialog.url ? <><label className="quiz-share-link"><span>공유 링크</span><span className="quiz-share-link-row"><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /><button type="button" aria-label={shareCopied ? '링크 복사됨' : '공유 링크 복사'} title="링크 복사" onClick={copyShareLink}>{shareCopied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}</button></span></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요. 언제든 이 문제지의 공유 링크를 모두 중지할 수 있어요.</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}<footer>{shareDialog.url && <button className="quiz-share-revoke" type="button" disabled={shareBusy} onClick={stopShareLink}>공유 중지</button>}<button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url} onClick={shareQuizLink}><Share2 size={16} aria-hidden="true" />공유하기</button></footer></section></div>}
+    {shareDialog && <div className="quiz-manage-overlay quiz-share-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !shareBusy) setShareDialog(null); }}><section className="quiz-manage-dialog quiz-share-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-share-title"><header><h2 id="quiz-share-title">문제지 공유</h2><button type="button" aria-label="닫기" onClick={() => !shareBusy && setShareDialog(null)}><X size={19} /></button></header>
+      <p><strong>{shareDialog.title}</strong> 문제지를 누구에게 보여줄지 정해요.</p>
+      <fieldset className="quiz-share-visibility" disabled={shareBusy}>
+        <legend className="mb-sr-only">공개 범위</legend>
+        {[{ value: 'personal', label: '미공개', copy: '나만 볼 수 있어요. 공유 링크가 중지돼요.' }, { value: 'partial', label: '일부 공개', copy: '링크를 아는 사람만 풀 수 있어요.' }, { value: 'public', label: '공개', copy: '문제 서칭에 노출되고 누구나 풀 수 있어요.' }].map(option => <label key={option.value} className={shareDialog.visibility === option.value ? 'is-selected' : ''}>
+          <input type="radio" name="quiz-share-visibility" value={option.value} checked={shareDialog.visibility === option.value} onChange={() => chooseVisibility(option.value)} />
+          <span><b>{option.label}</b><small>{option.copy}</small></span>
+        </label>)}
+      </fieldset>
+      {shareBusy ? <div className="quiz-share-loading" role="status"><span className="quiz-share-spinner" aria-hidden="true" />잠시만 기다려주세요.</div>
+        : shareDialog.url && shareDialog.visibility !== 'personal' ? <><label className="quiz-share-link"><span>공유 링크</span><span className="quiz-share-link-row"><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /><button type="button" aria-label={shareCopied ? '링크 복사됨' : '공유 링크 복사'} title="링크 복사" onClick={copyShareLink}>{shareCopied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}</button></span></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요.{shareDialog.visibility === 'public' ? ' 공개한 문제는 제목과 설명이 검색에 보여요.' : ''}</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}
+      <footer><button type="button" disabled={shareBusy} onClick={() => setShareDialog(null)}>닫기</button><button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url || shareDialog.visibility === 'personal'} onClick={shareQuizLink}><Share2 size={16} aria-hidden="true" />공유하기</button></footer></section></div>}
     {notice && <p className="quiz-library-notice" role="status">{notice}</p>}
     {undoablePaperDelete && <div className="quiz-library-undo-toast" role="status" aria-live="polite" aria-atomic="true">
       <div className="quiz-library-undo-copy"><strong>“{undoablePaperDelete.title}” 문제지가 삭제되었습니다.</strong><span>실수로 삭제하셨나요?</span></div>

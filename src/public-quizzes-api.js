@@ -1,0 +1,40 @@
+// 문제지 공개 범위와 공개 문제 검색 RPC(016_public_quizzes.sql).
+import { supabase } from './supabase.js';
+
+export const PUBLIC_PAGE_SIZE = 20;
+const missing = error => error?.code === 'PGRST202' || error?.code === '42883';
+
+function requireSupabase() {
+  if (!supabase) throw new Error('연결할 수 없어요. 잠시 후 다시 시도해주세요.');
+  return supabase;
+}
+
+export async function listPublicQuizzes({ query = '', sort = 'popular', offset = 0 } = {}) {
+  const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', { p_query: query || null, p_sort: sort, p_offset: offset, p_limit: PUBLIC_PAGE_SIZE });
+  if (error) {
+    const result = new Error(missing(error) ? '공개 문제 검색을 준비하고 있어요.' : '잠시 후 다시 시도해주세요.');
+    result.unavailable = missing(error);
+    throw result;
+  }
+  return { items: Array.isArray(data?.items) ? data.items : [], total: Number.isInteger(data?.total) ? data.total : 0 };
+}
+
+// { bankId: 'public' | 'unlisted' }. 016 적용 전이거나 실패하면 null(기존 방식으로 표시).
+export async function getMyShareVisibilities() {
+  try {
+    const { data, error } = await requireSupabase().rpc('moonble_my_quiz_share_visibility');
+    if (error || !data || typeof data !== 'object') return null;
+    return data;
+  } catch { return null; }
+}
+
+// visibility: 'public' | 'unlisted'. 016 적용 전에는 일부 공개(기존 동작)만 조용히 통과한다.
+export async function setShareVisibility(bankId, visibility, token) {
+  const { error } = await requireSupabase().rpc('moonble_set_quiz_share_visibility', { p_bank_id: bankId, p_visibility: visibility, p_token: visibility === 'public' ? token : null });
+  if (!error) return;
+  if (missing(error)) {
+    if (visibility === 'unlisted') return;
+    throw new Error('공개 기능을 준비하고 있어요. 잠시 후 다시 시도해주세요.');
+  }
+  throw new Error('공개 범위를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.');
+}
