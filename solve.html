@@ -973,6 +973,20 @@
 
 
 
+    .quiz-draft-status {
+      color: var(--mb-text-tertiary, #8993a2);
+      font-size: 12px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .quiz-draft-status[hidden] { display: none; }
+    #quiz.has-quiz-draft-status > .section-head { margin-right: 215px; }
+    #quiz.has-quiz-draft-status > .section-head > div { min-width: 0; }
+    #quiz.has-quiz-draft-status > .section-head h2 { max-width: 100%; overflow-wrap: anywhere; }
+    @media (max-width: 559px) {
+      #quiz.has-quiz-draft-status > .section-head { margin-right: 130px; }
+    }
+
     .col-toggle {
       display: none;
       position: relative;
@@ -3373,6 +3387,7 @@
     <section id="quiz">
       <input type="checkbox" id="quizColToggle" class="col-toggle-input" checked />
       <div class="quiz-top-controls">
+        <span id="quizDraftStatus" class="quiz-draft-status" role="status" aria-live="polite" hidden></span>
         <label for="quizColToggle" class="col-toggle" aria-label="문제 목록 1열/2열 보기 전환">
           <span class="col-toggle-thumb" aria-hidden="true"></span>
           <span class="col-toggle-opt" data-opt="1" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 12h18"></path></svg></span>
@@ -3503,8 +3518,8 @@
       if (!el) return;
       const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerH() - 8);
       window.scrollTo({top: y, behavior: 'smooth'});
-      if (replace) history.replaceState(null, '', hash);
-      else history.pushState(null, '', hash);
+      if (replace) history.replaceState(history.state, '', hash);
+      else history.pushState(history.state, '', hash);
     }
     navLinks.forEach(a => a.addEventListener('click', (e) => {
       e.preventDefault();
@@ -3668,6 +3683,158 @@
           selected: card ? $$('.option-card', card).map((option, index) => option.classList.contains('selected') ? index : null).filter(index => index !== null) : [],
         };
       });
+    }
+
+    // Answers are stored on this device, scoped to the account and paper. Question
+    // content is checked before restoring so edits can never attach an old answer
+    // to a different question or choice.
+    let quizDraftKey = null;
+    let quizDraftSavedAt = null;
+    let quizDraftReady = false;
+    let quizDraftLeaving = false;
+    const quizDraftStatus = byId('quizDraftStatus');
+    const quizDraftGuard = 'moonbleQuizDraftGuard';
+
+    function quizQuestionFingerprint(question) {
+      return JSON.stringify([question.q, question.options]);
+    }
+    function quizDraftHasAnswers() {
+      return !isLocked && !!quizEl.querySelector('.option-card.selected');
+    }
+    function showQuizDraftTime(savedAt) {
+      if (!quizDraftStatus) return;
+      const time = new Date(savedAt);
+      if (!savedAt || !Number.isFinite(time.getTime())) {
+        quizDraftStatus.hidden = true;
+        byId('quiz')?.classList.remove('has-quiz-draft-status');
+        return;
+      }
+      quizDraftStatus.textContent = `임시저장 ${String(time.getHours()).padStart(2, '0')}시 ${String(time.getMinutes()).padStart(2, '0')}분`;
+      quizDraftStatus.hidden = false;
+      byId('quiz')?.classList.add('has-quiz-draft-status');
+    }
+    function clearQuizDraft(key = quizDraftKey, onlySavedAt = null) {
+      if (!key) return;
+      try {
+        if (onlySavedAt) {
+          const current = JSON.parse(localStorage.getItem(key) || 'null');
+          if (!current || current.savedAt !== onlySavedAt) return;
+        }
+        localStorage.removeItem(key);
+        if (key === quizDraftKey) {
+          quizDraftSavedAt = null;
+          showQuizDraftTime(null);
+        }
+      } catch { /* Storage may be disabled. */ }
+    }
+    function saveQuizDraft() {
+      if (!quizDraftReady || !quizDraftKey || isLocked) return;
+      if (!quizDraftHasAnswers()) {
+        clearQuizDraft();
+        return;
+      }
+      const cards = $$('.q-card', quizEl);
+      const savedAt = new Date().toISOString();
+      const questions = picked.map((question, index) => ({
+        id: String(question.id),
+        fingerprint: quizQuestionFingerprint(question),
+        selected: cards[index] ? $$('.option-card', cards[index]).map((option, i) => option.classList.contains('selected') ? i : -1).filter(i => i >= 0) : [],
+      }));
+      try {
+        localStorage.setItem(quizDraftKey, JSON.stringify({ version: 1, savedAt, questions, wrongMode }));
+        quizDraftSavedAt = savedAt;
+        showQuizDraftTime(savedAt);
+      } catch {
+        // Do not claim that saving succeeded if the browser rejects storage.
+        showQuizDraftTime(null);
+      }
+    }
+    function installQuizDraftExitGuard() {
+      if (history.state?.[quizDraftGuard]) {
+        const state = { ...history.state };
+        delete state[quizDraftGuard];
+        history.replaceState(state, '', location.href);
+      }
+      const guardState = () => ({ ...(history.state || {}), [quizDraftGuard]: true });
+      history.pushState(guardState(), '', location.href);
+      function confirmLeave(onLeave, onStay) {
+        window.moonbleOpenConfirm({
+          message: '풀던 문제가 있어요.<br>나가시겠어요?',
+          cancelLabel: '계속 풀기', confirmLabel: '나가기', variant: 'primary',
+          cancelOnDismiss: true,
+          onCancel: onStay,
+          onConfirm: () => { quizDraftLeaving = true; onLeave(); },
+        });
+      }
+      window.addEventListener('popstate', event => {
+        if (quizDraftLeaving || event.state?.[quizDraftGuard]) return;
+        if (!quizDraftHasAnswers()) { quizDraftLeaving = true; history.back(); return; }
+        confirmLeave(() => history.back(), () => history.pushState(guardState(), '', location.href));
+      });
+      document.addEventListener('click', event => {
+        if (quizDraftLeaving || !quizDraftHasAnswers() || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const link = event.target.closest('a[href]');
+        if (!link || link.target && link.target !== '_self' || link.hasAttribute('download')) return;
+        const target = new URL(link.href, location.href);
+        if (target.origin !== location.origin || target.pathname === location.pathname && target.search === location.search) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        confirmLeave(() => location.assign(target.href));
+      }, true);
+      window.addEventListener('beforeunload', event => {
+        if (quizDraftLeaving || !quizDraftHasAnswers()) return;
+        event.preventDefault();
+        event.returnValue = '';
+      });
+    }
+    async function initQuizDraft({ sharedToken = '' } = {}) {
+      const params = new URLSearchParams(location.search);
+      let paper = params.get('paper') || 'random';
+      if (paper === 'shared') {
+        // Never persist a share token as part of a localStorage key.
+        if (!sharedToken || !window.crypto?.subtle) return;
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sharedToken));
+        paper += ':' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+      } else if (paper === 'custom') {
+        paper += ':' + (params.get('bank') || '');
+      } else if (paper === 'retry') {
+        try { paper += ':' + (sessionStorage.getItem('moonble:retry-question-ids') || '') + ':' + (sessionStorage.getItem('moonble:retry-meta') || ''); } catch { return; }
+      }
+      quizDraftKey = `moonble:quiz-draft:v1:${window.moonbleUserId || 'guest'}:${paper}`;
+      quizDraftReady = true;
+      let draft;
+      try { draft = JSON.parse(localStorage.getItem(quizDraftKey) || 'null'); } catch { draft = null; }
+      const bank = typeof getActiveBank === 'function' ? getActiveBank() : (getSelectedPaperBank() || BANK);
+      const lookup = new Map(bank.map(question => [String(question.id), question]));
+      const stored = draft?.version === 1 && Array.isArray(draft.questions) ? draft.questions : [];
+      const restored = stored.map(item => lookup.get(item.id));
+      const valid = stored.length > 0 && new Set(stored.map(item => item.id)).size === stored.length && restored.every((question, index) => {
+        const item = stored[index];
+        return question && quizQuestionFingerprint(question) === item.fingerprint && Array.isArray(item.selected) && item.selected.every(choice => Number.isInteger(choice) && choice >= 0 && choice < question.options.length);
+      }) && stored.some(item => item.selected.length);
+      if (valid) {
+        const resume = () => {
+          renderQuiz(restored);
+          wrongMode = !!draft.wrongMode;
+          modePill.style.display = wrongMode ? 'inline-flex' : 'none';
+          $$('.q-card', quizEl).forEach((card, index) => {
+            $$('.option-card', card).forEach((option, choice) => {
+              const selected = stored[index].selected.includes(choice);
+              option.classList.toggle('selected', selected);
+              option.querySelector('input').checked = selected;
+              option.setAttribute('aria-checked', selected ? 'true' : 'false');
+            });
+          });
+          quizDraftSavedAt = draft.savedAt;
+          showQuizDraftTime(draft.savedAt);
+        };
+        window.moonbleOpenConfirm({
+          message: '풀던 문제가 있어요.<br>이어서 풀까요?',
+          cancelLabel: '새로 풀기', confirmLabel: '이어서 풀기', variant: 'primary',
+          onDismiss: resume, onCancel: () => clearQuizDraft(), onConfirm: resume,
+        });
+      } else if (draft) clearQuizDraft();
+      installQuizDraftExitGuard();
     }
 
     function showSharedGuestCompletion(deliveryFailed) {
@@ -4137,6 +4304,7 @@
             lab.classList.toggle('selected', sel);
             input.checked = sel;
             lab.setAttribute('aria-checked', sel ? 'true' : 'false');
+            saveQuizDraft();
           });
 
           lab.addEventListener('keydown', (e) => {
@@ -4233,6 +4401,9 @@
       });
 
       lockQuiz();
+      const gradedDraftKey = quizDraftKey;
+      const gradedDraftSavedAt = quizDraftSavedAt;
+      if (new URLSearchParams(window.location.search).get('paper') !== 'shared') clearQuizDraft(gradedDraftKey);
 
       const total = picked.length;
       const score = Math.round((correctCount / total) * 100);
@@ -4283,7 +4454,10 @@
           }
         }
         if (!deliveryFailed) {
-          Promise.resolve().then(() => window.moonbleSubmitSharedQuiz(readSharedAnswers())).then(showSharedQuizRank).catch(() => {
+          Promise.resolve().then(() => window.moonbleSubmitSharedQuiz(readSharedAnswers())).then(result => {
+            if (gradedDraftSavedAt) clearQuizDraft(gradedDraftKey, gradedDraftSavedAt);
+            showSharedQuizRank(result);
+          }).catch(() => {
             deliveryFailed = true;
             showSharedQuizRank(null, false);
             if (sharedGuestDialog?.open) showSharedGuestCompletion(true);
@@ -5412,6 +5586,8 @@
   var DEFAULT_CONFIRM_ICON_SVG = iconEl.innerHTML;
   var onConfirmCallback = null;
   var onCancelCallback = null;
+  var cancelOnDismiss = false;
+  var onDismissCallback = null;
 
   function openConfirm(options) {
     messageEl.innerHTML = options.message;
@@ -5419,6 +5595,8 @@
     okBtn.textContent = options.confirmLabel;
     onConfirmCallback = options.onConfirm;
     onCancelCallback = options.onCancel || null;
+    cancelOnDismiss = !!options.cancelOnDismiss;
+    onDismissCallback = options.onDismiss || null;
     var isPrimary = options.variant === 'primary';
     iconEl.innerHTML = options.icon || DEFAULT_CONFIRM_ICON_SVG;
     iconEl.classList.toggle('confirm-icon--primary', isPrimary);
@@ -5430,12 +5608,18 @@
     overlay.classList.remove('active');
     onConfirmCallback = null;
     onCancelCallback = null;
+    cancelOnDismiss = false;
+    onDismissCallback = null;
     if (window.moonbleScrollLock) window.moonbleScrollLock.unlock();
   }
   window.moonbleOpenConfirm = openConfirm;
 
   overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) closeConfirm();
+    if (e.target === overlay) {
+      var cb = onDismissCallback || (cancelOnDismiss && onCancelCallback);
+      closeConfirm();
+      if (cb) cb();
+    }
   });
   cancelBtn.addEventListener('click', function () {
     var cb = onCancelCallback;
@@ -5443,7 +5627,11 @@
     if (cb) cb();
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay.classList.contains('active')) closeConfirm();
+    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+      var cb = onDismissCallback || (cancelOnDismiss && onCancelCallback);
+      closeConfirm();
+      if (cb) cb();
+    }
   });
 
   okBtn.addEventListener('click', function () {
@@ -5846,6 +6034,9 @@
     });
   }
   window.addEventListener('resize', scheduleAlign);
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(scheduleAlign).observe(h2);
+  }
 })();
 </script>
 <script type="module">
@@ -5990,6 +6181,7 @@ if (shareToken || requestedPaper === 'shared') {
     if (!shareToken) throw new Error('Shared token missing');
     window.moonbleSubmitSharedQuiz = answers => submitQuizShareAttempt(shareToken, answers);
     prepareSharedQuizPage(await getQuizShare(shareToken));
+    await initQuizDraft({ sharedToken: shareToken });
   } catch (error) {
     showSharedQuizUnavailable(error?.message);
   }
@@ -6071,6 +6263,7 @@ if (shareToken || requestedPaper === 'shared') {
       const questionCount = document.querySelectorAll('#quizContainer .q-card').length;
       setSolvePaperHeading(paperTitle, paperDescription, questionCount, { paperId, bankId: solverBankId, groupId: solverGroupId });
       renderHistory();
+      if (!printExport) await initQuizDraft();
       document.documentElement.removeAttribute('data-auth-pending');
       if (printExport) await openQuizPrintDialog(printBankMeta);
       if (activityKey && !printExport) {

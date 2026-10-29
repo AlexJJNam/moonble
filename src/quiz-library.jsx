@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -28,7 +28,7 @@ import { SegmentedControl } from './segmented-control.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
 import { getPaperLastActivityMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
-import { buildGroupColorMap, defaultGroupColorKey, groupColorPreviewStyle, GROUP_COLOR_OPTIONS, groupColorStyle } from './paper-group-colors.js';
+import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
 import './quiz-library.css';
@@ -95,6 +95,37 @@ function sectionFromHash() {
 
 function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const overlayRef = useRef(null);
+  const [customColorOpen, setCustomColorOpen] = useState(false);
+  const [customColorDraft, setCustomColorDraft] = useState('#1B64DA');
+  const [customColorError, setCustomColorError] = useState('');
+  const colorEditorSession = useRef(0);
+
+  useLayoutEffect(() => {
+    const session = ++colorEditorSession.current;
+    const isGroupEditor = editor?.type === 'group-create' || editor?.type === 'group-edit';
+    setCustomColorOpen(Boolean(isGroupEditor && normalizeGroupHex(editor?.colorKey) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)));
+    setCustomColorDraft(groupColorSwatch(editor?.colorKey));
+    setCustomColorError('');
+    return () => { if (colorEditorSession.current === session) colorEditorSession.current += 1; };
+  }, [editor?.type, editor?.groupId]);
+
+  function applyCustomColor(value) {
+    setCustomColorDraft(value);
+    setCustomColorError('');
+    const color = normalizeGroupHex(value);
+    if (!color) return;
+    onChange(current => current && current.type === editor?.type && current.groupId === editor?.groupId ? { ...current, colorKey: color } : current);
+  }
+
+  async function pickCustomColor() {
+    const session = colorEditorSession.current;
+    try {
+      const result = await new window.EyeDropper().open();
+      if (colorEditorSession.current === session) applyCustomColor(result.sRGBHex);
+    } catch (pickerError) {
+      if (colorEditorSession.current === session && pickerError?.name !== 'AbortError') setCustomColorError('색상을 가져오지 못했어요. 색상 선택기나 HEX 코드를 이용해 주세요.');
+    }
+  }
 
   useEffect(() => {
     if (!editor || !window.matchMedia('(max-width: 540px)').matches) return undefined;
@@ -133,6 +164,8 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
   const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
+  const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['default', 'blue', 'cyan'].includes(editor.colorKey);
+  const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby={isFavoriteDelete ? undefined : 'quiz-manage-title'} aria-label={isFavoriteDelete ? '즐겨찾기 문제지 삭제 확인' : undefined} onSubmit={event => { event.preventDefault(); onSubmit(); }}>
@@ -151,12 +184,21 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
         </div> : <div className="quiz-manage-fields">
           <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength={12} value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value.slice(0, 12) })} /><small className="quiz-group-name-hint">{editor.name.length}/12자</small></label>
-          <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="radiogroup" aria-label="그룹 색상">
-            {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" role="radio" aria-checked={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch }} onClick={() => onChange({ ...editor, colorKey: option.key })}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
-          </div></fieldset>
+          <fieldset className="quiz-group-color-field"><legend>그룹 색상</legend><div className="quiz-group-color-options" role="group" aria-label="그룹 색상">
+            {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" aria-pressed={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch, '--group-color-check': groupColorCheckColor(option.swatch) }} onClick={() => { setCustomColorOpen(false); setCustomColorError(''); onChange({ ...editor, colorKey: option.key }); }}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
+            <button type="button" aria-pressed={customColorSelected} aria-expanded={customColorOpen} aria-label="사용자 지정 색상" aria-controls={customColorOpen ? 'quiz-custom-color-editor' : undefined} title="사용자 지정 색상" className={`quiz-group-color-option is-custom${customColorSelected ? ' is-selected' : ''}`} style={{ '--group-color-swatch': customColorSelected ? groupColorSwatch(editor.colorKey) : '#eef0f3', '--group-color-check': customColorSelected ? groupColorCheckColor(editor.colorKey) : '#6b7684' }} onClick={() => { if (!customColorOpen) setCustomColorDraft(groupColorSwatch(editor.colorKey)); setCustomColorError(''); setCustomColorOpen(!customColorOpen); }}><span /><Plus size={15} aria-hidden="true" /></button>
+          </div>{customColorOpen && <div className="quiz-custom-color-editor" id="quiz-custom-color-editor">
+            <div className="quiz-custom-color-row">
+              <label className="quiz-custom-color-picker"><input type="color" aria-label="색상 선택" value={normalizeGroupHex(customColorDraft) || groupColorSwatch(editor.colorKey)} onChange={event => applyCustomColor(event.target.value)} /></label>
+              <label className="quiz-custom-color-hex"><span>HEX</span><input type="text" aria-label="HEX 색상 코드" aria-invalid={customColorInvalid} aria-describedby={customColorInvalid ? 'quiz-custom-color-error' : undefined} value={customColorDraft} maxLength={7} spellCheck={false} autoCapitalize="characters" placeholder="#RRGGBB" onChange={event => applyCustomColor(event.target.value)} /></label>
+              {typeof window.EyeDropper === 'function' && <button className="quiz-custom-color-eyedropper" type="button" aria-label="화면에서 색상 추출" title="화면에서 색상 추출" onClick={pickCustomColor}><Pipette size={17} aria-hidden="true" /></button>}
+            </div>
+            {customColorInvalid && <small className="quiz-custom-color-error" id="quiz-custom-color-error" role="alert">6자리 HEX 색상 코드를 입력해 주세요.</small>}
+            {customColorError && <small className="quiz-custom-color-error" role="alert">{customColorError}</small>}
+          </div>}</fieldset>
         </div>}
         {editor.error && <p className="quiz-manage-error" role="alert">{editor.error}</p>}
-        <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={!isDelete && !(isBank ? editor.title.trim() : editor.name.trim())}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
+        <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={customColorInvalid || (!isDelete && !(isBank ? editor.title.trim() : editor.name.trim()))}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
       </>}
     </form>
   </div>;
@@ -866,8 +908,8 @@ function QuizLibrary() {
   const activeCustom = collection.banks.find(bank => bank.id === collection.activeBankId) || collection.banks[0] || null;
   const groupTabs = [
     { id: 'all', name: '전체', count: visibleSamples.length + customPapers.length },
-    { id: DEFAULT_GROUP_ID, name: '미분류', count: customPapers.filter(bank => bank.groupId === DEFAULT_GROUP_ID).length },
     ...orderedGroupIds.map(id => collection.groups.find(group => group.id === id)).filter(Boolean).map(group => ({ ...group, count: customPapers.filter(bank => bank.groupId === group.id).length })),
+    { id: DEFAULT_GROUP_ID, name: '미분류', count: customPapers.filter(bank => bank.groupId === DEFAULT_GROUP_ID).length },
   ];
   const managedGroups = [...collection.groups].sort((a, b) => {
     const aIndex = orderedGroupIds.indexOf(a.id);
@@ -905,7 +947,7 @@ function QuizLibrary() {
             <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
             {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
               <strong>그룹 편집</strong>
-              {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><b>{group.name}</b><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+              {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
             </span>}
           </span>}
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>

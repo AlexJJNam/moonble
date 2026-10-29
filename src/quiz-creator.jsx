@@ -118,7 +118,7 @@ function initialCreatorScreen() {
 
 function CreatorProgress({ screen }) {
   const step = screen === 'create' ? 1 : 2;
-  return <div className="creator-progress">
+  return <div className={`creator-progress${screen === 'create' ? ' is-prompt-step' : ''}`}>
     <div className="creator-progress-track" role="progressbar" aria-label="문제지 생성 진행" aria-valuemin={0} aria-valuemax={2} aria-valuenow={step} aria-valuetext={screen === 'result' ? '문제지 등록 완료' : `${step}/2단계: ${step === 1 ? '문제 만들기' : '파일 등록'}`}><span style={{ width: `${step * 50}%` }} /></div>
     <div className="creator-progress-labels"><span className={step === 1 ? 'is-current' : ''} aria-current={step === 1 ? 'step' : undefined}>1. 문제 만들기</span><span className={step === 2 ? 'is-current' : ''} aria-current={step === 2 ? 'step' : undefined}>2. 파일 등록</span></div>
   </div>;
@@ -605,6 +605,7 @@ export function QuizCreator({ custom, onChange }) {
                 <div className={`creator-prompt-example${exampleRevealed ? ' is-revealed' : ''}`} style={{ '--example-total': examplePrompt.length }}>
                   <span className="creator-example-line"><q id="creator-prompt-example" aria-hidden={!exampleRevealed}>{[...examplePrompt].map((character, index) => <span style={{ '--example-index': index }} key={`${exampleIndex}-${character}-${index}`}>{character === ' ' ? '\u00a0' : character}</span>)}</q></span>
                 </div>
+                <div className="creator-prompt-guide-notice"><strong>AI Mode 사용 안내</strong><p>‘이 검색을 계속하시겠습니까?’와 ‘악의적인 질문으로 인해 안전하지 않거나 유해한 작업이 발생할 수 있습니다’ 안내가 나타날 수 있어요. 내용을 아래로 스크롤해 확인한 뒤 ‘예, 계속합니다.’를 눌러 주세요.</p></div>
               </div>
             </details>
           </div>
@@ -666,7 +667,7 @@ export function QuizCreator({ custom, onChange }) {
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
       {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
-    {screen === 'create' ? <button className="creator-step-link" type="button" onClick={() => changeStep('upload')}>이미 파일이 있으신가요?</button> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}><ChevronLeft size={15} aria-hidden="true" />문제 만들기로 돌아가기</button>}
+    {screen === 'create' ? <div className="creator-file-choice"><span>이미 파일이 있으신가요?</span><button type="button" onClick={() => changeStep('upload')}>파일 등록</button></div> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}><ChevronLeft size={15} aria-hidden="true" />문제 만들기로 돌아가기</button>}
     </div>
 
     {message && <p className="creator-message" role="status">{message}</p>}

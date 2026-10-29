@@ -611,8 +611,8 @@ export function QuizAchievement({ userId }) {
       {filteredHistory.length ? <>
       <section className="achievement-performance" aria-labelledby="achievement-performance-title">
         <div className="achievement-section-heading"><div><h2 id="achievement-performance-title" className="mb-section-title">학습 실적</h2></div></div>
-        <div className="achievement-summary" aria-label="성취도 요약">
-          <article><span>최근 풀이</span><strong className="achievement-summary-date">{stats.latestDate.kind === 'calendar' ? <>{stats.latestDate.month}<small>월</small><span className="achievement-date-day">{stats.latestDate.day}<small>일</small></span></> : stats.latestDate.text}</strong><small>{filteredHistory.length}회 완료</small></article>
+        <div className={`achievement-summary${stats.latestDate.kind === 'calendar' ? ' has-calendar-date' : ''}`} aria-label="성취도 요약">
+          <article><span>최근 풀이</span><strong className={`achievement-summary-date${stats.latestDate.kind === 'calendar' ? ' is-calendar' : ''}`}>{stats.latestDate.kind === 'calendar' ? <>{stats.latestDate.month}<small>월</small><span className="achievement-date-day">{stats.latestDate.day}<small>일</small></span></> : stats.latestDate.text}</strong><small>{filteredHistory.length}회 완료</small></article>
           <article><span>최근 점수</span><strong>{stats.latest}<small>점</small></strong></article>
           <article><span>평균 점수</span><strong>{stats.average}<small>점</small></strong></article>
           <article><span>최고 점수</span><strong>{stats.best}<small>점</small></strong></article>

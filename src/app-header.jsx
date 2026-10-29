@@ -205,7 +205,7 @@ function useSolverQuestions(enabled) {
     manualSelectionUntil.current = Date.now() + 800;
     setActiveIndex(index);
     window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
-    window.history.replaceState(null, '', `#question-${index + 1}`);
+    window.history.replaceState(window.history.state, '', `#question-${index + 1}`);
     target.focus({ preventScroll: true });
 
     const badge = target.querySelector('.q-number');
