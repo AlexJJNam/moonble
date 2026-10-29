@@ -10,6 +10,7 @@ import { SiteFooter } from './site-footer.jsx';
 import { AppHeader } from './app-header.jsx';
 import { ProfilePhotoEditor } from './profile-photo-editor.jsx';
 import { clearProfileAvatarFiles } from './profile-avatar.js';
+import { CommunityActivityPage, CommunityActivitySummary, activityHash, readActivityRoute } from './account-community.jsx';
 import { disableBrowserNotifications, enableBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
 import './design-system.css';
 import './prd/shell.css';
@@ -239,6 +240,12 @@ function AccountPage() {
   const [profileEditing, setProfileEditing] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [activity, setActivity] = useState(readActivityRoute);
+  useEffect(() => {
+    const sync = () => { setActivity(readActivityRoute()); window.scrollTo(0, 0); };
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
 
   useEffect(() => {
     if (!supabase) { window.location.replace(loginUrl()); return; }
@@ -272,6 +279,7 @@ function AccountPage() {
   return <>
     <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main mb-page-gutter">
+      {activity ? <CommunityActivityPage user={user} tab={activity.tab} onTabChange={tab => { window.location.hash = tab ? activityHash(tab) : ''; if (!tab) history.replaceState(null, '', location.pathname + location.search); setActivity(readActivityRoute()); }} /> : <>
       <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>
       <section className="account-profile-summary" aria-label="현재 프로필">
         <ProfilePhotoEditor user={user} onSaved={setUser} />
@@ -286,6 +294,7 @@ function AccountPage() {
       }} />
       <AiQuestionPreference user={user} onUserUpdated={setUser} />
       <PushNotificationPreference userId={user.id} />
+      <CommunityActivitySummary />
       <section className="profile-card account-mobile-session">
         <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}
@@ -297,6 +306,7 @@ function AccountPage() {
         </button>
         <AccountDeletion user={user} />
       </section>
+      </>}
     </main>
     <SiteFooter />
   </>;

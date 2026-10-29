@@ -161,3 +161,19 @@ export async function reportPost(postId, reason) {
   const { error } = await requireSupabase().rpc('moonble_report_community_post', { p_post_id: postId, p_reason: reason });
   if (error) throw failure(error, '신고를 접수하지 못했어요.');
 }
+
+// 마이페이지 커뮤니티 활동. 015 적용 전 DB에서는 null을 돌려줘 화면에서 섹션을 숨긴다.
+export async function getMyCommunitySummary() {
+  const { data, error } = await requireSupabase().rpc('moonble_my_community_summary');
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') return null;
+    throw failure(error, '커뮤니티 활동을 불러오지 못했어요.');
+  }
+  return { posts: Number(data?.posts) || 0, comments: Number(data?.comments) || 0, likes: Number(data?.likes) || 0 };
+}
+
+export async function listMyComments(offset = 0) {
+  const { data, error } = await requireSupabase().rpc('moonble_list_my_community_comments', { p_offset: offset, p_limit: COMMUNITY_PAGE_SIZE });
+  if (error) throw failure(error, '내가 쓴 댓글을 불러오지 못했어요.');
+  return { comments: Array.isArray(data?.comments) ? data.comments : [], total: Number.isInteger(data?.total) ? data.total : 0 };
+}

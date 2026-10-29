@@ -518,7 +518,9 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
 
 // scope='all': 전체 피드(문제지 화면 커뮤니티 탭). scope='share': token 공유 문제가 첨부된 글(순위 카드 아래).
 export function CommunityFeed({ scope = 'all', token = null, viewer, variant = 'page', attachSource = null, fixedAttachment = null, tokenHash = '', onPosted }) {
-  const [sort, setSort] = useState('popular');
+  // 마이페이지 목록(mine·liked)은 최신순으로만 보여주고 새 글 입력창은 두지 않는다.
+  const listOnly = scope === 'mine' || scope === 'liked';
+  const [sort, setSort] = useState(listOnly ? 'latest' : 'popular');
   const [state, setState] = useState({ status: 'loading', posts: [], total: 0, error: '' });
   const [loadingMore, setLoadingMore] = useState(false);
   const [draft, setDraft] = useState(() => ({ ...EMPTY_DRAFT, attachment: fixedAttachment }));
@@ -597,16 +599,16 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   const placeholder = scope === 'share' ? '이 문제에 대한 의견을 남겨보세요' : '공부한 이야기나 내 문제지를 나눠보세요';
   const Wrapper = variant === 'card' ? 'section' : 'div';
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
-    <header className="quiz-community-head">
+    {!listOnly && <header className="quiz-community-head">
       {variant === 'card' && <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>}
       <SegmentedControl ariaLabel="글 정렬" className="quiz-community-sort" items={SORT_ITEMS} value={sort} onChange={setSort} />
-    </header>
+    </header>}
 
-    <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
+    {!listOnly && <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
       <CommunityAvatar name={canWrite ? viewer.name : ''} path={canWrite ? viewer.avatarPath : ''} />
       <span>{canWrite ? (draft.body.trim() ? '작성 중인 글이 있어요' : placeholder) : '로그인하고 글을 남겨보세요'}</span>
       <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
-    </button>
+    </button>}
 
     {state.status === 'loading' && <ul className="quiz-community-skeleton" aria-label="글을 불러오는 중">{[0, 1].map(key => <li key={key}><i /><span><b /><b /><b /></span></li>)}</ul>}
     {state.status === 'error' && <div className="quiz-community-error" role="alert">
@@ -614,8 +616,8 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <button type="button" onClick={() => load(sort)}>다시 시도</button>
     </div>}
     {(state.status === 'ready' || state.status === 'refreshing') && state.posts.length === 0 && <div className="quiz-community-empty">
-      <strong>아직 남겨진 글이 없어요</strong>
-      <p>{scope === 'share' ? '풀이 소감이나 궁금한 점을 가장 먼저 남겨보세요.' : '내가 만든 문제지를 첨부하고 첫 글을 남겨보세요.'}</p>
+      <strong>{scope === 'mine' ? '아직 작성한 글이 없어요' : scope === 'liked' ? '아직 좋아요한 글이 없어요' : '아직 남겨진 글이 없어요'}</strong>
+      <p>{scope === 'mine' ? '커뮤니티에서 첫 글을 남겨보세요.' : scope === 'liked' ? '마음에 드는 글에 하트를 눌러보세요.' : scope === 'share' ? '풀이 소감이나 궁금한 점을 가장 먼저 남겨보세요.' : '내가 만든 문제지를 첨부하고 첫 글을 남겨보세요.'}</p>
     </div>}
     {state.posts.length > 0 && <ol className="quiz-community-feed">
       {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
