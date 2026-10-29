@@ -96,7 +96,7 @@ html[data-theme="light"] .btn-primary { background: var(--mb-primary-strong); }
 .quiz-pen-tip { min-width: 0; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; padding: 10px 12px; border: 0; border-radius: 12px; color: var(--mb-primary-strong); background: #e8f3ff; font-size: var(--mb-font-13); line-height: 19px; font-weight: 500; }
 .quiz-pen-tip[hidden] { display: none !important; }
 .quiz-pen-tip > span { min-width: 0; }
-.quiz-pen-tip button { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #5385c2; background: transparent; }
+.quiz-pen-tip button { position: relative; width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #5385c2; background: transparent; }
 .quiz-pen-tip button:hover, .quiz-pen-tip button:focus-visible { color: var(--mb-primary-strong); background: rgb(255 255 255 / 60%); }
 .quiz-pen-tip button svg { width: 16px; height: 16px; }
 .quiz-pen-toast { position: fixed; z-index: 1091; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom) + 12px) + 122px); width: max-content; max-width: calc(100vw - 32px); padding: 10px 14px; border-radius: 12px; color: #fff; background: rgb(33 38 45 / 92%); font-size: var(--mb-font-13); line-height: 19px; font-weight: 600; text-align: center; opacity: 0; pointer-events: none; transform: translate(-50%, 8px); transition: opacity 160ms ease, transform 200ms cubic-bezier(.2,.8,.2,1); }
@@ -294,3 +294,6 @@ body.quiz-pen-ui-hidden .quiz-ink-ui-visibility { opacity: 1 !important; pointer
   body.moonble-paper-print .quiz-print-answer-key td { padding: 2.5mm 3mm; }
   body.moonble-paper-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* 펜 모드 안내 닫기 버튼은 보이는 크기를 유지하고 터치 영역만 44×44px로 넓힌다. */
+.quiz-pen-tip button::after { content: ''; position: absolute; top: 50%; left: 50%; width: max(100%, var(--mb-target-size)); height: max(100%, var(--mb-target-size)); transform: translate(-50%, -50%); }

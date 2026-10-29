@@ -1403,10 +1403,10 @@
       max-width: none;
       max-height: calc(100dvh - 32px);
       margin: auto;
-      padding: 28px 22px 20px;
+      padding: var(--mb-dialog-padding);
       overflow-y: auto;
       border: 0;
-      border-radius: 24px;
+      border-radius: var(--mb-dialog-radius);
       color: var(--text);
       background: var(--surface, #fff);
       animation: shared-guest-dialog-in .2s cubic-bezier(.2,.8,.3,1) both;
@@ -1545,16 +1545,16 @@
 
     .shared-guest-actions button,
     .shared-guest-actions a {
-      min-height: 52px;
+      min-height: var(--mb-control-height);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0 12px;
       border: 0;
-      border-radius: 16px;
+      border-radius: var(--mb-radius-12);
       font: inherit;
       font-size: 16px;
-      font-weight: 650;
+      font-weight: var(--mb-weight-semibold);
       line-height: 24px;
       text-decoration: none;
       cursor: pointer;
@@ -1567,7 +1567,7 @@
 
     .shared-guest-actions .is-create {
       color: #fff;
-      background: #3182f6;
+      background: var(--mb-primary-strong);
     }
 
     .shared-guest-actions button:focus-visible,
@@ -2686,8 +2686,8 @@
 
     .confirm-modal {
       background: var(--card);
-      border-radius: 16px;
-      padding: var(--sp-8) var(--sp-6) var(--sp-6);
+      border-radius: var(--mb-dialog-radius);
+      padding: var(--mb-space-32) var(--mb-dialog-padding) var(--mb-dialog-padding);
       max-width: 320px;
       width: 100%;
       display: flex;
@@ -2735,12 +2735,14 @@
 
     .confirm-btn {
       flex: 1;
+      min-height: var(--mb-control-height);
       border: none;
-      border-radius: 12px;
-      padding: var(--sp-3) 0;
+      border-radius: var(--mb-radius-12);
+      padding: 12px 16px;
       font-family: inherit;
-      font-weight: 700;
-      font-size: var(--text-sm);
+      font-weight: var(--mb-weight-semibold);
+      font-size: var(--mb-font-16);
+      line-height: 24px;
       cursor: pointer;
       transition: filter .2s ease;
     }
@@ -2750,8 +2752,8 @@
     }
 
     .confirm-btn--cancel {
-      background: var(--bg-hover);
-      color: var(--text);
+      background: var(--mb-surface-muted);
+      color: var(--mb-text-secondary);
     }
 
     .confirm-btn--confirm {
@@ -2765,7 +2767,7 @@
     }
 
     .confirm-btn--primary {
-      background: var(--primary);
+      background: var(--mb-primary-strong);
       color: #fff;
     }
 

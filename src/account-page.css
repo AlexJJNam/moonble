@@ -16,7 +16,7 @@ button { font: inherit; cursor: pointer; }
 .account-profile-summary strong { font-size: var(--mb-font-18); line-height: 26px; }
 .account-profile-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .account-profile-name strong { min-width: 0; }
-.account-profile-edit { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
+.account-profile-edit { position: relative; width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
 .account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
 .account-profile-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
 .account-profile-edit:disabled { cursor: wait; opacity: .6; }
@@ -28,21 +28,21 @@ button { font: inherit; cursor: pointer; }
 .profile-readonly dt { color: var(--mb-text-primary); font-weight: 500; }
 .profile-readonly dd { min-width: 0; color: var(--mb-text-secondary); text-align: right; overflow-wrap: anywhere; }
 .account-dialog-overlay { position: fixed; inset: 0; z-index: 1100; background: rgb(25 31 40 / 42%); animation: account-overlay-in 180ms ease-out; }
-.account-dialog { --account-keyboard-offset: 0px; position: fixed; z-index: 1101; top: 50%; left: 50%; width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: 0; padding: 24px; overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 22px; color: var(--mb-text-primary); background: #fff; transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2,.8,.3,1); }
+.account-dialog { --account-keyboard-offset: 0px; position: fixed; z-index: 1101; top: 50%; left: 50%; width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: 0; padding: 24px; overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: var(--mb-dialog-radius); color: var(--mb-text-primary); background: #fff; transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2,.8,.3,1); }
 .account-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .account-dialog-heading h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
-.account-dialog-close { width: 32px; height: 32px; display: grid; flex: 0 0 32px; place-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
+.account-dialog-close { position: relative; width: 32px; height: 32px; display: grid; flex: 0 0 32px; place-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
 .account-dialog-close:hover, .account-dialog-close:focus-visible { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
 .account-dialog-close:disabled { opacity: .45; cursor: wait; }
 .account-profile-edit-dialog fieldset { margin-top: 24px; }
-.account-profile-edit-dialog input { border-color: var(--mb-border); background: #fbfcfd; }
+.account-profile-edit-dialog input { border-color: var(--mb-border-strong); background: #fbfcfd; }
 .account-profile-edit-dialog input:focus { border-color: var(--mb-primary); outline: 3px solid rgb(49 130 246 / 12%); outline-offset: 0; background: var(--mb-surface); }
-.account-profile-edit-dialog .shell-primary { width: 100%; min-height: 50px; border: 0; }
+.account-profile-edit-dialog .shell-primary { width: 100%; min-height: var(--mb-control-height); border: 0; }
 .account-dialog .account-dialog-error { margin: 12px 0 0; color: var(--mb-danger); font-size: var(--mb-font-13); line-height: 20px; }
 .account-dialog-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
-.account-dialog-actions button { min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 10px 16px; border: 0; border-radius: 12px; font-size: var(--mb-font-14); line-height: 22px; font-weight: 600; }
+.account-dialog-actions button { min-height: var(--mb-control-height); display: flex; align-items: center; justify-content: center; padding: 12px 16px; border: 0; border-radius: var(--mb-radius-12); font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; }
 .account-dialog-actions .is-secondary { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
-.account-dialog-actions .is-primary { color: #fff; background: var(--mb-primary); }
+.account-dialog-actions .is-primary { color: #fff; background: var(--mb-primary-strong); }
 .account-dialog-actions button:disabled { cursor: default; opacity: .45; }
 .account-avatar-body { display: grid; justify-items: center; padding-top: 24px; }
 .account-avatar-preview { width: 112px; height: 112px; display: grid; place-content: center; overflow: hidden; border-radius: 50%; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-32); line-height: 1; font-weight: 700; }
@@ -83,7 +83,7 @@ button { font: inherit; cursor: pointer; }
 .account-ai-help [role='tooltip'] { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; width: min(270px, calc(100vw - 48px)); padding: 10px 12px; border-radius: 10px; color: #fff; background: rgb(34 40 49 / 94%); font-size: var(--mb-font-12); line-height: 18px; font-weight: 500; text-align: left; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-3px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms; }
 .account-ai-help:hover [role='tooltip'], .account-ai-help:focus-visible [role='tooltip'] { opacity: 1; visibility: visible; transform: translateY(0); }
 .account-ai-provider { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.account-ai-provider button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
+.account-ai-provider button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
 .account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); }
 .account-ai-provider button.is-selected { color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-weight: var(--mb-weight-semibold); }
 .account-ai-provider-check { width: 16px; height: 16px; flex: 0 0 16px; overflow: visible; animation: account-ai-grade-badge-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
@@ -127,9 +127,9 @@ button { font: inherit; cursor: pointer; }
 .account-delete-action:hover { color: var(--mb-text-primary); }
 .account-delete-icon { width: 36px; height: 36px; display: grid; flex: 0 0 36px; place-content: center; border-radius: 50%; color: #d98999; background: #fff0f3; }
 .account-delete-overlay { position: fixed; inset: 0; z-index: 100; background: rgb(25 31 40 / 48%); animation: account-overlay-in 180ms ease-out; }
-.account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: 28px 24px 22px; border: 0; border-radius: 24px; background: var(--mb-surface); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }
-.account-delete-dialog h2 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; }
-.account-delete-dialog>p { margin: 10px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; }
+.account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: var(--mb-dialog-padding); border: 0; border-radius: var(--mb-dialog-radius); background: var(--mb-surface); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }
+.account-delete-dialog h2 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
+.account-delete-dialog>p { margin: 10px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; }
 .account-delete-dialog ul { margin: 20px 0; padding: 16px 16px 16px 34px; border-radius: 12px; background: var(--mb-surface-muted); color: var(--mb-text-secondary); font-size: var(--mb-font-13, 13px); line-height: 20px; }
 .account-delete-dialog li+li { margin-top: 6px; }
 .account-delete-confirm { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 52px; cursor: pointer; color: var(--mb-text-primary) !important; font-size: var(--mb-font-14) !important; font-weight: 600 !important; line-height: 20px !important; }
@@ -139,7 +139,7 @@ button { font: inherit; cursor: pointer; }
 .account-delete-confirm input:focus-visible+.account-delete-check { outline: 3px solid var(--mb-primary); outline-offset: 3px; }
 .account-delete-confirm input:disabled~span { cursor: wait; opacity: .6; }
 .account-delete-error { margin: 8px 0 0 !important; color: var(--mb-danger) !important; }
-.account-delete-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 22px; }
+.account-delete-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; }
 .account-delete-actions button { min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; padding: 12px 16px; font-size: var(--mb-font-16); font-weight: 600; }
 .account-delete-cancel { border: 0; color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
 .account-delete-submit { border: 0; color: white; background: var(--mb-danger); }
@@ -173,16 +173,16 @@ button { font: inherit; cursor: pointer; }
   .account-main .profile-card label { font-size: var(--mb-font-13); line-height: 20px; }
   .account-main .profile-card input { min-height: 50px; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px; font-size: 16px; }
   .account-main .profile-card #company-hint { margin: -5px 0 14px; font-size: var(--mb-font-12); line-height: 18px; }
-  .account-main .shell-primary { min-height: 50px; border-radius: 12px; }
-  .account-dialog { top: auto; bottom: calc(8px + env(safe-area-inset-bottom) + var(--account-keyboard-offset)); width: min(480px, calc(100% - 16px)); max-height: calc(100dvh - 16px - env(safe-area-inset-bottom) - var(--account-keyboard-offset)); padding: 12px 20px 20px; transform: translateX(-50%); animation: account-dialog-sheet-in 240ms cubic-bezier(.2,.8,.25,1); }
+  .account-main .shell-primary { min-height: var(--mb-control-height); border-radius: var(--mb-radius-12); }
+  .account-dialog { top: auto; bottom: calc(8px + env(safe-area-inset-bottom) + var(--account-keyboard-offset)); width: min(480px, calc(100% - 16px)); max-height: calc(100dvh - 16px - env(safe-area-inset-bottom) - var(--account-keyboard-offset)); padding: 12px 20px 20px; border-radius: var(--mb-sheet-radius); transform: translateX(-50%); animation: account-dialog-sheet-in 240ms cubic-bezier(.2,.8,.25,1); }
   .account-dialog::before { content: ''; width: 36px; height: 4px; display: block; margin: 0 auto 18px; border-radius: 2px; background: var(--mb-border); }
   .account-profile-edit-dialog fieldset { gap: 6px; margin-top: 22px; }
   .account-profile-edit-dialog label { font-size: var(--mb-font-13); line-height: 20px; }
-  .account-profile-edit-dialog input { min-height: 50px; margin-bottom: 12px; padding: 12px 14px; font-size: 16px; }
+  .account-profile-edit-dialog input { min-height: var(--mb-control-height); margin-bottom: 12px; padding: 11px 14px; font-size: 16px; }
   .account-profile-edit-dialog #company-hint { margin: -5px 0 14px; font-size: var(--mb-font-12); line-height: 18px; }
   .account-logout-action { width: 100%; justify-content: flex-start; min-height: 48px; border-radius: 12px; }
   .account-delete-action { min-height: 48px; }
-  .account-delete-dialog { top: auto; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; width: auto; padding: 12px 20px 20px; border-radius: 24px; transform: none; animation: account-sheet-in 240ms cubic-bezier(.2,.8,.25,1); }
+  .account-delete-dialog { top: auto; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; width: auto; padding: 12px 20px 20px; border-radius: var(--mb-sheet-radius); transform: none; animation: account-sheet-in 240ms cubic-bezier(.2,.8,.25,1); }
   .account-delete-dialog::before { content: ''; width: 36px; height: 4px; display: block; margin: 0 auto 16px; border-radius: 2px; background: var(--mb-border); }
 }
 @keyframes account-sheet-in { from { transform: translateY(calc(100% + 16px)); } }
@@ -191,4 +191,9 @@ button { font: inherit; cursor: pointer; }
   .account-delete-overlay, .account-delete-dialog, .account-dialog-overlay, .account-dialog, .account-ai-provider-check, .account-ai-provider-check path { animation: none; }
   .account-profile-update-fx.is-playing, .account-profile-update-fx.is-playing strong, .account-profile-update-fx.is-playing .account-profile-update-badge, .account-profile-update-fx.is-playing .account-profile-update-badge path { animation-duration: 1ms; animation-delay: 0s; }
   .account-push-switch, .account-push-switch>span { transition: none; }
+}
+
+/* 작은 아이콘 버튼은 보이는 크기를 유지하고 터치 영역만 44×44px로 넓힌다. */
+.account-profile-camera::after, .account-profile-edit::after, .account-ai-help::after, .account-dialog-close::after {
+  content: ''; position: absolute; top: 50%; left: 50%; width: max(100%, var(--mb-target-size)); height: max(100%, var(--mb-target-size)); transform: translate(-50%, -50%);
 }

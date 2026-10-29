@@ -57,7 +57,15 @@
   --mb-focus-ring: none;
   --mb-duration: 160ms;
   --mb-control-height: 48px;
+  --mb-control-compact-height: 44px;
   --mb-target-size: 44px;
+  /* 대화상자·시트·레이어 공통 규격 */
+  --mb-dialog-radius: 20px;
+  --mb-dialog-padding: 24px;
+  --mb-sheet-radius: 22px;
+  --mb-z-overlay: 1200;
+  --mb-z-toast: 1300;
+  --mb-floating-gap: 16px;
   /* Pocketfolio mobile hierarchy; preserve layout and compact list roles. */
   --mb-mobile-page-size: var(--mb-font-24);
   --mb-mobile-page-line: 32px;
@@ -74,6 +82,8 @@
   --mb-mobile-dock-height: 73px;
   --mb-mobile-dock-icon-size: 18px;
   --mb-mobile-dock-label-size: 12px;
+  /* 모바일 하단 독바 위에 띄우는 토스트·메뉴의 기준 위치 */
+  --mb-mobile-floating-bottom: calc(var(--mb-mobile-dock-height) + var(--mb-floating-gap) + env(safe-area-inset-bottom, 0px));
 }
 
 html {

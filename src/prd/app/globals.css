@@ -320,7 +320,7 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 50;
+  z-index: var(--mb-z-overlay);
   width: min(420px, calc(100vw - 32px));
   max-width: 420px;
   max-height: calc(100dvh - 32px);
@@ -329,16 +329,21 @@
   gap: 16px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 22px;
+  padding: var(--mb-dialog-padding);
   border: 1px solid var(--mb-border);
-  border-radius: 20px;
+  border-radius: var(--mb-dialog-radius);
   color: var(--mb-text-primary);
   background: rgb(255 255 255 / 98%);
   box-shadow: 0 16px 44px rgb(15 23 42 / 12%);
   transform: translate(-50%, -50%);
   animation: prd-action-dialog-in 180ms cubic-bezier(.2,.82,.24,1) both;
 }
-.prd-action-dialog > button[aria-label="Close"] { top: 16px; right: 16px; }
+.prd-action-dialog > button[aria-label="Close"] { top: 10px; right: 10px; }
+/* 제목·설명·하단 버튼은 퀴즈·계정 대화상자와 같은 규격을 쓴다. 모바일 크기는 아래 767px 규칙이 덮는다. */
+.prd-action-dialog > div > h2[id] { font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
+.prd-action-dialog > div > p[id] { font-size: var(--mb-font-14); line-height: 20px; }
+.prd-action-dialog > .flex-col-reverse > button { min-height: var(--mb-control-height); border-radius: var(--mb-radius-12); font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; }
+.prd-action-dialog > div:first-of-type { padding-right: 40px; }
 @keyframes prd-action-dialog-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(.985); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
 /* Mobile workspace surface guide: preserve the list layout and align visual hierarchy only. */
@@ -402,14 +407,14 @@
     max-width: 480px;
     max-height: calc(100dvh - 16px - env(safe-area-inset-bottom) - var(--prd-keyboard-offset));
     gap: 12px;
-    padding: 12px 18px 18px;
-    border-radius: 22px;
+    padding: 12px 20px 20px;
+    border-radius: var(--mb-sheet-radius);
     transform: translateX(-50%);
     animation: prd-action-sheet-in 280ms cubic-bezier(.2,.8,.25,1) both;
   }
   .prd-action-dialog::before { content: ''; width: 36px; height: 4px; flex: 0 0 auto; display: block; align-self: center; border-radius: 999px; background: var(--mb-border); }
-  .prd-action-dialog > button[aria-label="Close"] { top: 18px; right: 18px; }
-  .prd-action-dialog > div:first-of-type { padding-right: 28px; }
+  .prd-action-dialog > button[aria-label="Close"] { top: 12px; right: 12px; }
+  .prd-action-dialog > div:first-of-type { padding-right: 40px; }
 }
 @keyframes prd-action-sheet-in { from { opacity: .82; transform: translate(-50%, 20px) scale(.99); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 

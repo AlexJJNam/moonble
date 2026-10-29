@@ -1,10 +1,10 @@
-.bank-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 24px; border: 1px solid var(--mb-border); border-radius: 16px; color: var(--mb-text-primary); background: var(--mb-surface); }
+.bank-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: var(--mb-dialog-padding); border: 1px solid var(--mb-border); border-radius: var(--mb-dialog-radius); color: var(--mb-text-primary); background: var(--mb-surface); }
 .bank-dialog::backdrop { background: #191f2866; }
 .bank-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.bank-dialog h2 { margin: 0; font-size: 22px; line-height: 30px; }
-.bank-dialog p { color: var(--mb-text-secondary); font-size: 14px; line-height: 22px; }
+.bank-dialog h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
+.bank-dialog p { color: var(--mb-text-secondary); font-size: 14px; line-height: 20px; }
 .bank-close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--mb-text-secondary); }
-.bank-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: 44px; border: 1px solid var(--mb-border); border-radius: 8px; background: var(--mb-surface); color: var(--mb-text-secondary); font-size: 14px; }
+.bank-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: var(--mb-control-compact-height); border: 1px solid var(--mb-border); border-radius: var(--mb-radius-12); background: var(--mb-surface); color: var(--mb-text-secondary); font-size: 14px; font-weight: 600; }
 .bank-drop { position: relative; display: grid; place-items: center; margin-top: 16px; padding: 24px 16px; min-height: 104px; border: 1px dashed var(--mb-border-strong); border-radius: 12px; text-align: center; font-size: 14px; color: var(--mb-text-secondary); }
 .bank-drop input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .bank-drop:focus-within { outline: 2px solid var(--mb-primary-strong); outline-offset: 3px; }
@@ -13,11 +13,11 @@
 .bank-divider::before, .bank-divider::after { content: ''; height: 1px; flex: 1; background: var(--mb-border); }
 .bank-link { display: flex; gap: 8px; }
 .bank-link input { min-width: 0; flex: 1; min-height: 48px; border: 1px solid var(--mb-border-strong); border-radius: 12px; padding: 12px; font-size: 16px; }
-.bank-link button { min-width: 80px; border: 0; border-radius: 12px; background: var(--mb-primary-strong); color: white; font-size: 14px; }
+.bank-link button { min-width: 80px; border: 0; border-radius: var(--mb-radius-12); background: var(--mb-primary-strong); color: white; font-size: var(--mb-font-16); font-weight: 600; }
 .bank-guide { margin: 16px 0 0; padding: 12px 12px 12px 28px; background: var(--mb-bg); border-radius: 8px; color: var(--mb-text-tertiary); font-size: 12px; line-height: 20px; }
 .bank-active { padding: 16px; border-radius: 12px; background: var(--mb-primary-soft); font-size: 14px; overflow-wrap: anywhere; }
 .bank-active-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.bank-danger { min-height: 44px; padding: 10px 12px; border: 1px solid #ffd4d0; border-radius: 8px; color: var(--mb-danger); background: var(--mb-surface); font-size: 14px; }
+.bank-danger { min-height: var(--mb-control-compact-height); padding: 10px 12px; border: 1px solid #ffd4d0; border-radius: var(--mb-radius-12); color: var(--mb-danger); background: var(--mb-surface); font-size: 14px; font-weight: 600; }
 .bank-active .bank-delete-note { margin-bottom: 0; color: var(--mb-danger); }
 .bank-dialog .bank-error { padding: 12px; color: var(--mb-danger); background: var(--mb-danger-soft); border-radius: 8px; }
 @media(max-width:540px) { .quiz-title { flex-wrap: wrap; gap: 16px; } .bank-dialog { width: calc(100% - 24px); max-height: calc(100dvh - 24px); padding: 16px; } .bank-link { flex-wrap: wrap; } .bank-link button { min-height: 48px; } }
