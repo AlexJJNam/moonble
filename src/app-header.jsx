@@ -5,7 +5,6 @@ import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
-import { buildGroupColorMap, favoriteGroupIconStyle } from './paper-group-colors.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
 import { getNextQuizShareNotification } from './quiz-share.js';
@@ -47,14 +46,13 @@ function getFavoriteSidebarItems(userId) {
   if (!userId) return [];
   const favoriteIds = getFavoritePaperIds(userId);
   const collection = getCustomBankCollection(userId);
-  const groupColors = buildGroupColorMap(collection.groups);
   const banks = collection.banks;
   const builtInPapers = new Map(BUILT_IN_PAPER_PREVIEWS.map(paper => [paper.id, paper]));
   const favoritePapers = favoriteIds.map(id => {
     if (id.startsWith('custom:')) {
       const bank = banks.find(item => item.id === id.slice('custom:'.length));
       const group = bank && collection.groups.find(item => item.id === bank.groupId);
-      return bank ? { id, type: 'paper', label: bank.title, caption: bank.groupId === DEFAULT_GROUP_ID ? '미분류' : (group?.name || '미분류'), href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, iconStyle: favoriteGroupIconStyle(bank.groupId, groupColors) } : null;
+      return bank ? { id, type: 'paper', label: bank.title, caption: bank.groupId === DEFAULT_GROUP_ID ? '미분류' : (group?.name || '미분류'), href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz` } : null;
     }
     const paper = builtInPapers.get(id);
     return paper ? { id, type: 'paper', label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
@@ -82,13 +80,6 @@ function getFavoriteSidebarItems(userId) {
   } catch { /* 저장된 PRD가 없거나 손상되어도 문제지 즐겨찾기는 표시한다. */ }
 
   return [...favoritePapers, ...favoritePrds];
-}
-
-function getSolverPaperIconStyle(userId, paper) {
-  if (!paper) return favoriteGroupIconStyle('ungrouped', new Map());
-  const collection = userId ? getCustomBankCollection(userId) : { groups: [], banks: [] };
-  const bank = paper.bankId ? collection.banks.find(item => item.id === paper.bankId) : null;
-  return favoriteGroupIconStyle(paper.groupId || bank?.groupId || 'ungrouped', buildGroupColorMap(collection.groups));
 }
 
 function useSolverQuestions(enabled) {
@@ -769,7 +760,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
           {!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}
           {sharedSolver && <BrandLogo className="mb-solver-shared-logo" />}
           {solverPaper.title && <div className="mb-solver-paper" title={solverPaper.title}>
-            <span className="mb-favorite-icon mb-solver-paper-icon" style={getSolverPaperIconStyle(user?.id, solverPaper)}><BookOpen size={14} aria-hidden="true" /></span>
+            <span className="mb-favorite-icon mb-solver-paper-icon"><BookOpen size={14} aria-hidden="true" /></span>
             <span className="mb-solver-paper-title">{solverPaper.title}</span>
           </div>}
         </div>
@@ -831,7 +822,7 @@ export function AppHeader({ active, error, hideSolverBack = false, onLogout, pen
                 favoriteSolveTriggerRef.current = event.currentTarget;
                 setFavoriteSolvePaper(paper);
               }}>
-                <span className="mb-favorite-icon" style={paper.iconStyle}>{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
+                <span className="mb-favorite-icon">{paper.type === 'prd' ? <FileText size={14} aria-hidden="true" /> : <BookOpen size={14} aria-hidden="true" />}</span>
                 <span className="mb-favorite-copy">
                   <span className="mb-favorite-title">{paper.label}</span>
                   {paper.type === 'paper' && paper.caption && <span className="mb-favorite-caption">{paper.caption}</span>}

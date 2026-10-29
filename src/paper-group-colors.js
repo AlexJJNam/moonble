@@ -14,12 +14,8 @@ const GROUP_COLOR_PALETTE = [
   { key: 'slate', label: '회색', hue: 215, swatch: '#7b8798' },
 ];
 
-// Newly created groups use the same dark default as the 전체 tab. Existing
-// groups with the old default key retain their original blue color.
-export const GROUP_COLOR_OPTIONS = [
-  { key: '#141414', label: '기본', swatch: '#141414' },
-  ...GROUP_COLOR_PALETTE.filter(option => !['default', 'blue', 'cyan'].includes(option.key)),
-];
+// New groups use the original blue default; legacy colors remain readable.
+export const GROUP_COLOR_OPTIONS = GROUP_COLOR_PALETTE.filter(option => !['blue', 'cyan'].includes(option.key));
 
 export function normalizeGroupHex(value) {
   if (typeof value !== 'string') return null;

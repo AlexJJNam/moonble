@@ -1,6 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pencil, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronLeft, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
@@ -164,7 +166,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
   const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
-  const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['default', 'blue', 'cyan'].includes(editor.colorKey);
+  const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['blue', 'cyan'].includes(editor.colorKey);
   const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
@@ -231,6 +233,11 @@ function QuizLibrary() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(true);
+  const mobileSearchInputRef = useRef(null);
+  const mobileSearchTriggerRef = useRef(null);
+  const mobileSearchScrollRef = useRef(0);
   const [difficulty, setDifficulty] = useState('전체 난이도');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
@@ -268,6 +275,58 @@ function QuizLibrary() {
   const bankSyncUserRef = useRef(null);
   const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
+  const mobileSearchHistoryKey = 'moonbleMobilePaperSearch';
+  function openMobileSearch() {
+    mobileSearchScrollRef.current = window.scrollY;
+    setMobileSuggestionsOpen(true);
+    window.history.pushState({ ...window.history.state, [mobileSearchHistoryKey]: true }, '', window.location.href);
+    // Focus in the original tap gesture so iOS can open the keyboard.
+    flushSync(() => setMobileSearchOpen(true));
+    mobileSearchInputRef.current?.focus({ preventScroll: true });
+  }
+  function closeMobileSearch() {
+    mobileSearchInputRef.current?.blur();
+    setMobileSearchOpen(false);
+    if (window.history.state?.[mobileSearchHistoryKey]) window.history.back();
+  }
+  useEffect(() => {
+    if (!mobileSearchOpen) return undefined;
+    const root = document.documentElement;
+    const previousOverflow = root.style.overflow;
+    root.style.overflow = 'hidden';
+    const onPopState = event => {
+      if (!event.state?.[mobileSearchHistoryKey]) setMobileSearchOpen(false);
+    };
+    const onKeyDown = event => { if (event.key === 'Escape') { event.preventDefault(); closeMobileSearch(); } };
+    const mobileLayout = window.matchMedia('(max-width: 767px)');
+    const onLayoutChange = () => { if (!mobileLayout.matches) closeMobileSearch(); };
+    const onPageHide = () => {
+      if (!window.history.state?.[mobileSearchHistoryKey]) return;
+      const state = { ...window.history.state };
+      delete state[mobileSearchHistoryKey];
+      window.history.replaceState(state, '', window.location.href);
+    };
+    const onPageShow = event => {
+      if (event.persisted && !window.history.state?.[mobileSearchHistoryKey]) setMobileSearchOpen(false);
+    };
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
+    mobileLayout.addEventListener('change', onLayoutChange);
+    return () => {
+      root.style.overflow = previousOverflow;
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
+      mobileLayout.removeEventListener('change', onLayoutChange);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: mobileSearchScrollRef.current, behavior: 'instant' });
+        mobileSearchTriggerRef.current?.focus({ preventScroll: true });
+      });
+    };
+  }, [mobileSearchOpen]);
   useLayoutEffect(() => {
     // The React skeleton has committed, so it can replace the first-paint loader.
     revealPage();
@@ -892,8 +951,8 @@ function QuizLibrary() {
   }));
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
-    const groupMatch = activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
-    const difficultyMatch = difficulty === '전체 난이도' || paper.level === difficulty;
+    const groupMatch = mobileSearchOpen || activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
+    const difficultyMatch = mobileSearchOpen || difficulty === '전체 난이도' || paper.level === difficulty;
     return groupMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
@@ -905,6 +964,9 @@ function QuizLibrary() {
     }
     return new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
   });
+  const mobileSearchSuggestions = search && mobileSuggestionsOpen
+    ? [...new Set(visiblePapers.map(paper => paper.label).filter(title => title.toLocaleLowerCase().includes(search)))].slice(0, 6)
+    : [];
   const activeCustom = collection.banks.find(bank => bank.id === collection.activeBankId) || collection.banks[0] || null;
   const groupTabs = [
     { id: 'all', name: '전체', count: visibleSamples.length + customPapers.length },
@@ -917,11 +979,14 @@ function QuizLibrary() {
     return (aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex);
   });
   const groupColors = buildGroupColorMap(collection.groups);
+  const editingPaperCards = editMode && !mobileSearchOpen;
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mobileSearchOpen ? ' is-mobile-search' : ''}`} id="paper-library" tabIndex={-1} role={mobileSearchOpen ? 'dialog' : undefined} aria-modal={mobileSearchOpen ? 'true' : undefined} aria-label={mobileSearchOpen ? '문제지 검색' : undefined}>
+        {mobileSearchOpen && <div className="quiz-mobile-search-header"><button className="quiz-mobile-search-back" type="button" aria-label="검색 닫기" onClick={closeMobileSearch}><ChevronLeft size={21} aria-hidden="true" /></button><label className="quiz-search quiz-mobile-search-input"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input ref={mobileSearchInputRef} type="search" placeholder="검색" value={query} onFocus={() => setMobileSuggestionsOpen(true)} onChange={event => { setQuery(event.target.value); setMobileSuggestionsOpen(true); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setMobileSuggestionsOpen(false); event.currentTarget.blur(); } }} /></label>{query && <button className="quiz-mobile-search-clear" type="button" aria-label="검색어 지우기" onClick={() => { setQuery(''); setMobileSuggestionsOpen(true); mobileSearchInputRef.current?.focus(); }}><X size={16} aria-hidden="true" /></button>}</div>}
+        {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
@@ -947,7 +1012,7 @@ function QuizLibrary() {
             <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
             {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
               <strong>그룹 편집</strong>
-              {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><Pencil size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
+              {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><EditIcon size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
             </span>}
           </span>}
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>
@@ -955,43 +1020,44 @@ function QuizLibrary() {
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
           <div className="quiz-display-tools">
-            <label className="quiz-search"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            <label className="quiz-search quiz-search--desktop"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            <button ref={mobileSearchTriggerRef} className="quiz-search quiz-mobile-search-trigger" type="button" aria-label="문제지 검색" onClick={openMobileSearch}><Search size={18} aria-hidden="true" /><span>{query || '검색'}</span></button>
             <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
           </div>
         </div>
-        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editMode ? ' is-editing' : ''}`} aria-label="문제지 목록">
+        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             const paperGroupStyle = paper.customBankId ? groupColorStyle(paper.groupId, groupColors) : undefined;
             const isFavorite = favoritePaperIds.includes(paper.id);
-            const CardSurface = editMode ? 'div' : 'a';
+            const CardSurface = editingPaperCards ? 'div' : 'a';
             return <article
-              className={`paper-card${editMode && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
+              className={`paper-card${editingPaperCards && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               data-bank-id={paper.customBankId || undefined}
-              draggable={Boolean(editMode && paper.customBankId && supportsMousePaperDrag())}
-              onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
-              onTouchStart={paper.customBankId ? event => beginPaperTouch(event, paper.customBankId) : undefined}
-              onPointerUp={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
-              onPointerCancel={paper.customBankId ? event => { if (!(editMode && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
-              onContextMenu={editMode ? event => event.preventDefault() : undefined}
-              onDragStart={editMode && paper.customBankId ? event => { if (paperTouchDrag.current) { event.preventDefault(); return; } createPaperDragPreview(event, paper.customBankId); } : undefined}
+              draggable={Boolean(editingPaperCards && paper.customBankId && supportsMousePaperDrag())}
+              onPointerDown={paper.customBankId && !mobileSearchOpen ? event => beginPaperPress(event, paper.customBankId) : undefined}
+              onTouchStart={paper.customBankId && !mobileSearchOpen ? event => beginPaperTouch(event, paper.customBankId) : undefined}
+              onPointerUp={paper.customBankId ? event => { if (!(editingPaperCards && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
+              onPointerCancel={paper.customBankId ? event => { if (!(editingPaperCards && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
+              onContextMenu={editingPaperCards ? event => event.preventDefault() : undefined}
+              onDragStart={editingPaperCards && paper.customBankId ? event => { if (paperTouchDrag.current) { event.preventDefault(); return; } createPaperDragPreview(event, paper.customBankId); } : undefined}
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
               key={paper.id}
             >
-              <CardSurface className="paper-card-link" {...(!editMode ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editMode) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+              <CardSurface className="paper-card-link" {...(!editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); if (mobileSearchOpen && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); window.location.replace(href); } }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editMode && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><Pencil size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
+                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
-              {(paper.customBankId || paper.id === 'basics') && !editMode && <div className="paper-card-actions">
+              {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
-                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><Pencil size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div>}
+                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div>}
               </div>}
             </article>;
           })}
         </section>
-        {!visiblePapers.length && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>}
+        {!visiblePapers.length && (mobileSearchOpen && search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
       </main>}<SiteFooter />
     </div>

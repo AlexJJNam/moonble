@@ -5,7 +5,8 @@ import { useRouter } from '@/navigation';
 import { userStorage } from '@/storage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, LogOut, GitBranchPlus, User as UserIcon, ShieldAlert, Trash2, Info, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FolderPlus, FolderKanban, Pencil, Check, X, MoreVertical, FileText, Search, Star, FileDown } from 'lucide-react';
+import { Plus, LogOut, GitBranchPlus, User as UserIcon, ShieldAlert, Trash2, Info, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, FolderPlus, FolderKanban, Check, X, MoreVertical, FileText, Search, Star, FileDown } from 'lucide-react';
+import { EditIcon } from '../../../edit-icon.jsx';
 import type { PrdDocument, User, Project } from '@/lib/types';
 import { Link } from '@/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -143,7 +144,7 @@ const ProjectManagementDialogContent = React.memo(({
                   ) : (
                       <>
                           <span className="flex-grow p-2">{project.name}</span>
-                          <Button size="icon" variant="ghost" onClick={() => onEditProject(project)}><Pencil className="h-4 w-4"/></Button>
+                          <Button size="icon" variant="ghost" aria-label={`${project.name} 그룹 편집`} onClick={() => onEditProject(project)}><EditIcon className="h-4 w-4"/></Button>
                           {index !== 0 && (
                             <Button size="icon" variant="ghost" onClick={() => onSetProjectToDelete(project)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                           )}

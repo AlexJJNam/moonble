@@ -131,6 +131,27 @@ button, input, textarea, select {
   line-height: var(--mb-line-body);
 }
 
+/* Reusable primary and secondary actions for forms and completion screens. */
+.mb-action {
+  min-height: var(--mb-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mb-space-8);
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--mb-radius-12);
+  font: 600 var(--mb-font-16) / 24px var(--mb-font-sans);
+  text-align: center;
+  cursor: pointer;
+  transition: color var(--mb-duration), background-color var(--mb-duration);
+}
+.mb-action--primary { color: #fff; background: var(--mb-primary-strong); }
+.mb-action--primary:hover:not(:disabled) { background: var(--mb-primary-hover); }
+.mb-action--secondary { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
+.mb-action--secondary:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); }
+.mb-action:disabled { opacity: .45; cursor: not-allowed; }
+
 :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--mb-primary-strong);
   outline-offset: 3px;
