@@ -27,6 +27,7 @@ import { FlowActionButton } from './flow-action-button.jsx';
 import { revealPage } from './page-readiness.js';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
+import { CommunityPage } from './quiz-community.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
 import { getPaperLastActivityMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
@@ -92,6 +93,7 @@ if (initialUser) {
 function sectionFromHash() {
   if (window.location.hash === '#achievement') return 'achievement';
   if (window.location.hash === '#create') return 'create';
+  if (window.location.hash === '#community') return 'community';
   return 'papers';
 }
 
@@ -982,12 +984,17 @@ function QuizLibrary() {
   const editingPaperCards = editMode && !mobileSearchOpen;
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
-    <AppHeader active={section} user={user} pending={pending} error={error} onLogout={logout} />
+    <AppHeader active={section === 'community' ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mobileSearchOpen ? ' is-mobile-search' : ''}`} id="paper-library" tabIndex={-1} role={mobileSearchOpen ? 'dialog' : undefined} aria-modal={mobileSearchOpen ? 'true' : undefined} aria-label={mobileSearchOpen ? '문제지 검색' : undefined}>
         {mobileSearchOpen && <div className="quiz-mobile-search-header"><button className="quiz-mobile-search-back" type="button" aria-label="검색 닫기" onClick={closeMobileSearch}><ChevronLeft size={21} aria-hidden="true" /></button><label className="quiz-search quiz-mobile-search-input"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input ref={mobileSearchInputRef} type="search" placeholder="검색" value={query} onFocus={() => setMobileSuggestionsOpen(true)} onChange={event => { setQuery(event.target.value); setMobileSuggestionsOpen(true); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setMobileSuggestionsOpen(false); event.currentTarget.blur(); } }} /></label>{query && <button className="quiz-mobile-search-clear" type="button" aria-label="검색어 지우기" onClick={() => { setQuery(''); setMobileSuggestionsOpen(true); mobileSearchInputRef.current?.focus(); }}><X size={16} aria-hidden="true" /></button>}</div>}
         {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
+        <nav className="quiz-library-tabs" aria-label="문제지 메뉴">
+          <a href="#library" aria-current={section === 'community' ? undefined : 'page'}>나의 문제지</a>
+          <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
+        </nav>
+        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
             <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
@@ -1059,6 +1066,7 @@ function QuizLibrary() {
         </section>
         {!visiblePapers.length && (mobileSearchOpen && search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
+        </>}
       </main>}<SiteFooter />
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />

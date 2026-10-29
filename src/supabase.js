@@ -66,9 +66,19 @@ export function loginUrl() {
   return new URL('./login.html', window.location.href).href;
 }
 
+const AFTER_LOGIN_KEY = 'moonble:after-login';
+const AFTER_LOGIN_TARGETS = new Set(['./solve.html?paper=shared#quiz']);
+
 let navigatingHome = false;
 export function goHome() {
   if (navigatingHome) return;
   navigatingHome = true;
-  window.location.replace(new URL('./quiz.html', window.location.href).href);
+  // 공유 문제 커뮤니티에서 로그인하러 온 경우에는 그 문제로 돌려보낸다. 한 번만 사용한다.
+  let target = './quiz.html';
+  try {
+    const requested = sessionStorage.getItem(AFTER_LOGIN_KEY);
+    sessionStorage.removeItem(AFTER_LOGIN_KEY);
+    if (AFTER_LOGIN_TARGETS.has(requested)) target = requested;
+  } catch { /* 저장소를 못 읽으면 기본 화면으로 간다. */ }
+  window.location.replace(new URL(target, window.location.href).href);
 }

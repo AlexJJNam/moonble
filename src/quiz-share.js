@@ -158,12 +158,19 @@ export async function submitQuizShareAttempt(token, answers) {
   };
 }
 
+// 이 기기에서 해당 공유 문제를 제출한 적이 있으면 참가자 ID를 돌려준다. 없으면 만들지 않는다.
+export function readQuizShareParticipantId(tokenHash) {
+  try {
+    const existing = localStorage.getItem(`moonble:quiz-share-participant:${tokenHash}`);
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existing || '')) return existing;
+  } catch { /* 저장소 제한 환경에서는 참가 기록이 없는 것으로 본다. */ }
+  return null;
+}
+
 function getQuizShareParticipantId(tokenHash) {
   const key = `moonble:quiz-share-participant:${tokenHash}`;
-  try {
-    const existing = localStorage.getItem(key);
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existing || '')) return existing;
-  } catch { /* 저장소 제한 환경에서는 이번 제출의 참가자로 기록한다. */ }
+  const existing = readQuizShareParticipantId(tokenHash);
+  if (existing) return existing;
   const participantId = typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
     : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {

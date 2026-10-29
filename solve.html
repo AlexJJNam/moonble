@@ -3437,6 +3437,7 @@
         </div>
         <p id="sharedQuizShareStatus" class="shared-quiz-share-status" role="status" aria-live="polite"></p>
       </section>
+      <div id="sharedQuizCommunity"></div>
       <div id="quizContainer" class="quiz-wrap"></div>
 
       <div class="quiz-actions">
@@ -4096,6 +4097,8 @@
     function showSharedQuizRank(result, submissionSaved = true) {
       if (!sharedQuizRank) return;
       sharedQuizRank.hidden = false;
+      // 정답 스포일러를 막기 위해 제출한 뒤에만 커뮤니티를 보여준다.
+      window.dispatchEvent(new CustomEvent('moonble:shared-quiz-submitted'));
       if (!result?.rankAvailable || !Number.isInteger(result.rank) || !Number.isInteger(result.participants)) {
         latestSharedQuizResult = null;
         if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = true;
@@ -4147,6 +4150,7 @@
 
     function resetSharedQuizRank() {
       latestSharedQuizResult = null;
+      window.dispatchEvent(new CustomEvent('moonble:shared-quiz-reset'));
       if (sharedQuizRank) sharedQuizRank.hidden = true;
       if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = true;
       if (sharedQuizAnalytics) sharedQuizAnalytics.hidden = true;
@@ -6044,6 +6048,7 @@ import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js'
 import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
 import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
+import { mountQuizCommunity } from '/src/quiz-community.jsx';
 
 function setSolvePaperHeading(title, description = '', questionCount = null, paperMeta = {}) {
   const headerCopy = document.querySelector('#quiz .section-head > div');
@@ -6181,6 +6186,7 @@ if (shareToken || requestedPaper === 'shared') {
     if (!shareToken) throw new Error('Shared token missing');
     window.moonbleSubmitSharedQuiz = answers => submitQuizShareAttempt(shareToken, answers);
     prepareSharedQuizPage(await getQuizShare(shareToken));
+    mountQuizCommunity(document.getElementById('sharedQuizCommunity'), shareToken);
     await initQuizDraft({ sharedToken: shareToken });
   } catch (error) {
     showSharedQuizUnavailable(error?.message);

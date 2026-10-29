@@ -262,6 +262,7 @@ body.quiz-pen-ui-hidden .quiz-ink-ui-visibility { opacity: 1 !important; pointer
   body.moonble-paper-print #modePill,
   body.moonble-paper-print #resultBox,
   body.moonble-paper-print #sharedQuizRank,
+  body.moonble-paper-print #sharedQuizCommunity,
   body.moonble-paper-print .quiz-actions,
   body.moonble-paper-print #historyBox,
   body.moonble-paper-print #historyChart,
