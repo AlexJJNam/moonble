@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ChevronRight, Ellipsis, Heart, MessageCircle, Paperclip, PenLine, Share2, Trophy, X } from 'lucide-react';
+import { ChevronRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -533,16 +533,14 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   const Wrapper = variant === 'card' ? 'section' : 'div';
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
     <header className="quiz-community-head">
-      {variant === 'card'
-        ? <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>
-        : <p className="quiz-community-total">전체 글{countText ? ` ${countText}` : ''}</p>}
+      {variant === 'card' && <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>}
       <SegmentedControl ariaLabel="글 정렬" className="quiz-community-sort" items={SORT_ITEMS} value={sort} onChange={setSort} />
     </header>
 
     <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
       <CommunityAvatar name={canWrite ? viewer.name : ''} path={canWrite ? viewer.avatarPath : ''} />
       <span>{canWrite ? (draft.body.trim() ? '작성 중인 글이 있어요' : placeholder) : '로그인하고 글을 남겨보세요'}</span>
-      {attachSource ? <Paperclip size={18} aria-hidden="true" /> : <PenLine size={18} aria-hidden="true" />}
+      <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
     </button>
 
     {state.status === 'loading' && <ul className="quiz-community-skeleton" aria-label="글을 불러오는 중">{[0, 1].map(key => <li key={key}><i /><span><b /><b /><b /></span></li>)}</ul>}
