@@ -1034,7 +1034,7 @@ function QuizLibrary() {
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
         <div className="quiz-library-tools">
-          <div className="quiz-filter-groups"><SegmentedControl className="quiz-paper-scopes" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
+          <div className="quiz-filter-groups"><SegmentedControl className="quiz-community-sort" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
           <div className="quiz-display-tools">
             <label className="quiz-search quiz-search--desktop"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
             <button ref={mobileSearchTriggerRef} className="quiz-search quiz-mobile-search-trigger" type="button" aria-label="문제지 검색" onClick={openMobileSearch}><Search size={18} aria-hidden="true" /><span>{query || '검색'}</span></button>
