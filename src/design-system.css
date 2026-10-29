@@ -253,6 +253,8 @@ button, input, textarea, select {
 
 .mb-flow-action:disabled { cursor: wait; opacity: .6; }
 .mb-flow-action svg { flex: 0 0 auto; pointer-events: none; }
+.mb-flow-action--compact { min-height: var(--mb-control-compact-height); gap: 6px; padding: 10px 14px; }
+.mb-flow-action--compact svg { width: 16px; height: 16px; }
 
 .mb-sr-only {
   position: absolute;

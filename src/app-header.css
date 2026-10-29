@@ -234,9 +234,13 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-share-notification-toast.is-solver { bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
   body.mb-creator-prompt-focused .mb-app-nav:not(.mb-solver-nav) { display: none !important; }
   .mb-app-header { position: sticky; inset: 0 auto auto; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--mb-border); backdrop-filter: none; transition: top 220ms cubic-bezier(.2, .8, .3, 1); }
+  .mb-app-header.has-mobile-subnav { border-bottom: 0; }
   .mb-app-header.is-mobile-hidden { top: -62px; }
   .mb-app-header.has-mobile-subnav.is-mobile-hidden { top: -112px; }
   .mb-app-header.mb-solver-sidebar.is-mobile-hidden { top: -60px; }
+  .mb-app-header.is-mobile-hidden,
+  .mb-app-header.has-mobile-subnav.is-mobile-hidden,
+  .mb-app-header.mb-solver-sidebar.is-mobile-hidden { top: 0; }
   .mb-app-header.is-collapsed { width: 100%; }
   .mb-app-header-inner { min-height: auto; padding: 6px max(16px, env(safe-area-inset-right)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
   .mb-app-brand-row { margin: 0; }
@@ -248,7 +252,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-mobile-subnav { grid-column: 1 / -1; grid-row: 2; min-width: 0; display: block; margin-right: calc(-1 * max(16px, env(safe-area-inset-right))); margin-left: calc(-1 * max(16px, env(safe-area-inset-left))); }
   .mb-mobile-subnav .quiz-library-tabs { gap: 24px; margin: 0; padding: 0 max(16px, env(safe-area-inset-left)); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .mb-mobile-subnav .quiz-library-tabs::-webkit-scrollbar { display: none; }
-  .mb-mobile-subnav .quiz-library-tabs a { min-height: 40px; font-size: var(--mb-font-14); }
+  .mb-mobile-subnav .quiz-library-tabs a { min-height: 40px; font-size: var(--mb-font-16); letter-spacing: -.02em; }
   .mb-app-profile-skeleton { display: flex; gap: 8px; }
   .mb-app-profile-skeleton .mb-profile-skeleton-copy, .mb-app-profile-skeleton .mb-profile-skeleton-settings { display: none; }
   .mb-app-profile-skeleton .mb-profile-skeleton-notification { width: 20px; height: 20px; flex: 0 0 20px; border-radius: 50%; }

@@ -872,8 +872,8 @@ export default function PrdListPage() {
               </Button>
             </div>
             <div className="flex items-center gap-4">
-              <FlowActionButton onClick={handleOpenNewPrdDialog}>
-                  <Plus size={18} aria-hidden="true" />
+              <FlowActionButton size="compact" onClick={handleOpenNewPrdDialog}>
+                  <Plus size={16} aria-hidden="true" />
                   PRD 작성하기
               </FlowActionButton>
             </div>

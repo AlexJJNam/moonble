@@ -233,6 +233,7 @@
   font-family: var(--mb-font-sans);
   font-size: var(--mb-font-14);
 }
+.prd-list-toolbar .mb-flow-action--compact { min-height: var(--mb-control-compact-height); padding: 10px 14px; }
 
 .prd-list-toolbar button:not(.mb-flow-action) {
   border-color: var(--mb-border);

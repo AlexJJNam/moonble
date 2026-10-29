@@ -146,6 +146,7 @@ font-family: var(--mb-font-sans);
 | --- | --- | --- |
 | 기본 버튼(폼·대화상자·시트) | 높이 48px, 모서리 12px, 16/24/600 | `--mb-control-height`, `--mb-radius-12` |
 | 보조 크기 버튼(페이지 헤더·도구 막대·팝오버) | 높이 44px, 모서리 12px, 14/20/600 | `--mb-control-compact-height` |
+| 페이지 생성 주요 버튼(문제지·PRD) | 공통 `FlowActionButton` 소형 변형, 높이 44px, 좌우 여백 14px, 간격 6px, 아이콘 16px | `.mb-flow-action--compact` |
 | 흰 글자 주요 버튼 | 배경 `#1b64da`, 호버 `#1554b6` | `--mb-primary-strong`, `--mb-primary-hover` |
 | 보조·위험 버튼 | 보조: 회색 면 + 설명 글자색. 위험: `--mb-danger` 채움 또는 `--mb-danger-soft` | `--mb-surface-muted`, `--mb-text-secondary` |
 | 아이콘 버튼 | 보이는 크기는 화면에 맞추되 터치 영역은 44×44px 이상 | `--mb-target-size` |
@@ -157,6 +158,7 @@ font-family: var(--mb-font-sans);
 
 - 글자 굵기는 400·500·600·700만 쓴다. 550·650은 쓰지 않는다.
 - 브랜드 파랑(`--mb-primary`)은 흰 글자 버튼의 배경으로 쓰지 않는다. 생성 행동의 그라데이션 버튼(`.mb-flow-action`)은 브랜드 표현으로 유지한다.
+- 모바일 상단 탭(나의 문제지·문제 서칭·커뮤니티)은 16px 글자와 `-0.02em` 자간을 사용한다. 탭 아래 구분선 하나만 표시하고, 상위 헤더의 중복 하단선은 제거한다. PC 탭 규격은 별도로 유지한다. 모바일 앱 헤더는 페이지 스크롤 중 숨기지 않고 상단에 고정한다.
 - 고정 위치 시트·툴팁·토스트를 담는 페이지 래퍼에 `animation-fill-mode: both/forwards`로 opacity·transform 애니메이션을 남기지 않는다. 쌓임 맥락이 생겨 안쪽 요소가 헤더·독바 아래로 깔린다. 등장 효과는 `backwards`를 쓴다.
 - 펜 모드 도구 막대, 랜딩 데모, 필터 칩·세그먼트 컨트롤(보조 컨트롤 32~36px)은 이번 기준의 적용 범위에서 제외한다.
 
