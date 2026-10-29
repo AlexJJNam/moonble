@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, Check, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, MessageSquareText, Search, Upload } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronLeft, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
@@ -103,7 +103,6 @@ const providerSegments = [
 ];
 
 const creatorStepIcons = {
-  prompt: MessageSquareText,
   upload: FileUp,
 };
 
@@ -593,7 +592,6 @@ export function QuizCreator({ custom, onChange }) {
     <div className="creator-intake-card">
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title" hidden={screen !== 'create'}>
       <header>
-        <CreatorStepMarker step="prompt" label="1단계" />
         <div className="creator-prompt-heading">
           <div className="creator-prompt-title-row">
             <h2 id="creator-prompt-title">무엇을 공부하고 있나요?</h2>
@@ -644,7 +642,7 @@ export function QuizCreator({ custom, onChange }) {
     </section>
 
     <section className="creator-step" aria-labelledby="creator-upload-title" hidden={screen !== 'upload'}>
-      <header><CreatorStepMarker step="upload" label="2단계" /><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
+      <header><div><h2 id="creator-upload-title">만든 파일을 등록하세요</h2><p>CSV 파일을 등록하거나 Google Sheets 공유 링크를 붙여넣으세요. 20문항부터 등록할 수 있어요.</p></div></header>
       <div
         className={`creator-drop is-revealed${dragging ? ' is-dragging' : ''}${uploadSuccess ? ' is-complete' : ''}`}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
