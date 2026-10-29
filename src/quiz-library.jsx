@@ -1000,7 +1000,7 @@ function QuizLibrary() {
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <nav className="quiz-library-tabs" aria-label="문제지 메뉴">
           <a href="#library" aria-current={section === 'papers' ? 'page' : undefined}>나의 문제지</a>
-          <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>공개된 문제 서칭</a>
+          <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>문제 서칭</a>
           <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
         </nav>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <section className="quiz-empty quiz-public-search-placeholder" aria-labelledby="public-search-title"><Search size={28} aria-hidden="true" /><h2 id="public-search-title" className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>공개된 문제지를 찾아 풀고 의견을 나눌 수 있는 공간이에요.</p></section> : <>
