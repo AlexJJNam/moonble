@@ -6,7 +6,6 @@ import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Hear
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
-import { SegmentedControl } from './segmented-control.jsx';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken } from './quiz-share.js';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
@@ -19,7 +18,6 @@ import './quiz-community.css';
 
 const RETURN_KEY = 'moonble:after-login';
 const COMMUNITY_RETURN_KEY = 'moonble:community-return';
-const SORT_ITEMS = [{ value: 'popular', label: '인기순' }, { value: 'latest', label: '최신순' }];
 const REPORT_REASONS = [
   { value: 'spoiler', label: '정답을 그대로 공개해요' },
   { value: 'spam', label: '스팸·홍보 글이에요' },
@@ -28,6 +26,13 @@ const REPORT_REASONS = [
 ];
 const AVATAR_TONES = ['blue', 'green', 'yellow', 'purple', 'pink', 'gray'];
 const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true, gif: null };
+
+function CommunitySortToggle({ ariaLabel, sort, onChange }) {
+  const label = sort === 'popular' ? '인기순' : '최신순';
+  return <button type="button" className="quiz-community-sort-toggle" aria-label={`${ariaLabel} 정렬: ${label}`} onClick={() => onChange(current => current === 'popular' ? 'latest' : 'popular')}>
+    {label}<ArrowUpDown size={14} aria-hidden="true" />
+  </button>;
+}
 
 function topicLabel(value) {
   return COMMUNITY_TOPICS.find(topic => topic.value === value)?.label || '';
@@ -433,8 +438,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     </form>
     {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
     {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
-    {(detail || (likesEnabled && comments && comments.length > 1)) && <button type="button" className="quiz-community-sort-toggle" aria-label={`댓글 정렬: ${sort === 'popular' ? '인기순' : '최신순'}`}
-      onClick={() => setSort(current => current === 'popular' ? 'latest' : 'popular')}>{sort === 'popular' ? '인기순' : '최신순'}<ArrowUpDown size={14} aria-hidden="true" /></button>}
+    {(detail || (likesEnabled && comments && comments.length > 1)) && <CommunitySortToggle ariaLabel="댓글" sort={sort} onChange={setSort} />}
     {comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
         : <ul>{comments.map(comment => <li key={comment.id}>
@@ -642,7 +646,7 @@ function MobileComposerBar({ viewer, canWrite, onOpen }) {
 export function CommunityFeed({ scope = 'all', token = null, viewer, variant = 'page', attachSource = null, fixedAttachment = null, tokenHash = '', onPosted }) {
   // 마이페이지 목록(mine·liked)은 최신순으로만 보여주고 새 글 입력창은 두지 않는다.
   const listOnly = scope === 'mine' || scope === 'liked';
-  const [sort, setSort] = useState(listOnly ? 'latest' : 'popular');
+  const [sort, setSort] = useState('latest');
   const [state, setState] = useState({ status: 'loading', posts: [], total: 0, error: '' });
   const [loadingMore, setLoadingMore] = useState(false);
   const [draft, setDraft] = useState(() => ({ ...EMPTY_DRAFT, attachment: fixedAttachment }));
@@ -725,7 +729,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
     {!listOnly && variant === 'card' && <header className="quiz-community-head">
       <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>
-      <SegmentedControl ariaLabel="글 정렬" className="quiz-community-sort" items={SORT_ITEMS} value={sort} onChange={setSort} />
+      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} />
     </header>}
 
     {!listOnly && <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
@@ -733,7 +737,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <span>{canWrite ? (draft.body.trim() ? '작성 중인 글이 있어요' : placeholder) : '로그인하고 글을 남겨보세요'}</span>
       <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
     </button>}
-    {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-sort"><SegmentedControl ariaLabel="글 정렬" className="quiz-community-sort" items={SORT_ITEMS} value={sort} onChange={setSort} /></div>}
+    {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-sort"><CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} /></div>}
 
     {state.status === 'loading' && <ul className="quiz-community-skeleton" aria-label="글을 불러오는 중">{[0, 1].map(key => <li key={key}><i /><span><b /><b /><b /></span></li>)}</ul>}
     {state.status === 'error' && <div className="quiz-community-error" role="alert">
