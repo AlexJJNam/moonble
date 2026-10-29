@@ -114,10 +114,34 @@ export async function toggleLike(postId) {
   return { liked: Boolean(data?.liked), likeCount: Number.isInteger(data?.like_count) ? data.like_count : 0 };
 }
 
-export async function listComments(postId) {
-  const { data, error } = await requireSupabase().rpc('moonble_list_community_post_comments', { p_post_id: postId });
+// 014 적용 전 DB(정렬·좋아요 없음)에서는 p_sort 없이 다시 불러오고 likes=false로 돌려준다.
+export async function listComments(postId, sort = 'popular') {
+  const client = requireSupabase();
+  let { data, error } = await client.rpc('moonble_list_community_post_comments', { p_post_id: postId, p_sort: sort });
+  let likes = true;
+  if (error && (error.code === 'PGRST202' || error.code === '42883')) {
+    likes = false;
+    ({ data, error } = await client.rpc('moonble_list_community_post_comments', { p_post_id: postId }));
+  }
   if (error) throw failure(error, '댓글을 불러오지 못했어요.');
-  return Array.isArray(data) ? data : [];
+  return { comments: Array.isArray(data) ? data : [], likes };
+}
+
+export async function toggleCommentLike(commentId) {
+  const { data, error } = await requireSupabase().rpc('moonble_toggle_community_comment_like', { p_comment_id: commentId });
+  if (error) throw failure(error, '좋아요를 반영하지 못했어요.');
+  return { liked: Boolean(data?.liked), likeCount: Number.isInteger(data?.like_count) ? data.like_count : 0 };
+}
+
+export async function updatePost(postId, { topic, title, body, gif = null }) {
+  const { data, error } = await requireSupabase().rpc('moonble_update_community_post', {
+    p_post_id: postId, p_topic: topic || null, p_title: title?.trim() || null, p_body: body.trim(), ...(gif ? { p_gif: gif } : {}),
+  });
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') throw new Error('글 편집 기능을 준비하고 있어요. 잠시 후 다시 시도해주세요.');
+    throw failure(error, '글을 수정하지 못했어요. 잠시 후 다시 시도해주세요.');
+  }
+  return data;
 }
 
 export async function createComment(postId, body, gif = null) {

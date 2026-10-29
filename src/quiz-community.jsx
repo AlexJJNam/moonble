@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ChevronRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -13,7 +13,7 @@ import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLaye
 import {
   COMMENT_BODY_LIMIT, COMMUNITY_PAGE_SIZE, COMMUNITY_TOPICS, CommunityUnavailableError, POST_BODY_LIMIT, POST_TITLE_LIMIT,
   canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getSolvedShares,
-  listComments, listPosts, rememberSolvedShare, reportPost, solveHref, toggleLike,
+  listComments, listPosts, rememberSolvedShare, reportPost, solveHref, toggleCommentLike, toggleLike, updatePost,
 } from './quiz-community-api.js';
 import './quiz-community.css';
 
@@ -227,7 +227,7 @@ function AttachPicker({ banks, solved, onPick, onBack }) {
   </div>;
 }
 
-function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attachSource, placeholder }) {
+function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attachSource, placeholder, editing = false }) {
   const id = useId();
   const [view, setView] = useState('edit');
   const [busy, setBusy] = useState(false);
@@ -283,7 +283,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
       <textarea id={`${id}-body`} className="quiz-community-compose-body" value={draft.body} maxLength={POST_BODY_LIMIT} placeholder={placeholder} data-autofocus
         onChange={event => onDraftChange({ ...draft, body: event.target.value })} />
       <GifDraftPreview gif={draft.gif} onRemove={() => onDraftChange({ ...draft, gif: null })} onReplace={() => setGifOpen(true)} />
-      {attachment && <div className="quiz-community-compose-attachment">
+      {attachment && !editing && <div className="quiz-community-compose-attachment">
         <QuizAttachment attachment={attachment} onRemove={() => onDraftChange({ ...draft, attachment: null })} />
         <label className={`quiz-community-record-toggle${recordAvailable ? '' : ' is-disabled'}`}>
           <input type="checkbox" checked={recordAvailable && draft.showRecord} disabled={!recordAvailable} onChange={event => onDraftChange({ ...draft, showRecord: event.target.checked })} />
@@ -296,12 +296,12 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
       <p className="quiz-community-policy">글과 댓글에는 계정 이름과 프로필 사진이 함께 표시돼요. Moonble은 게시글이 운영 정책에 맞는지 확인하고 있어요. 정책에 어긋나는 글은 숨겨지거나 삭제될 수 있어요. 다른 참여자를 위해 정답을 그대로 적는 것은 피해주세요.</p>
       {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
       <footer className="quiz-community-compose-foot">
-        {attachSource && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
+        {attachSource && !editing && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
           <Paperclip size={18} aria-hidden="true" /><span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
         </button>}
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => setGifOpen(open => !open)} />
         <span className={`quiz-community-counter${draft.body.length > POST_BODY_LIMIT * .95 ? ' is-near-limit' : ''}`} aria-live="polite">{draft.body.length.toLocaleString('ko-KR')} / {POST_BODY_LIMIT.toLocaleString('ko-KR')}</span>
-        <button type="submit" className="is-primary" disabled={!ready || busy}>{busy ? '남기는 중' : '남기기'}</button>
+        <button type="submit" className="is-primary" disabled={!ready || busy}>{editing ? (busy ? '저장 중' : '저장') : (busy ? '남기는 중' : '남기기')}</button>
       </footer>
     </form>
     {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)}
@@ -309,20 +309,44 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
   </Dialog>;
 }
 
+// @이름 멘션은 파란 글씨로 보여준다.
+function MentionText({ text }) {
+  const parts = String(text).split(/(^|\s)(@[^\s@]{1,24})/g);
+  const nodes = [];
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+    if (index % 3 === 2) nodes.push(<span className="quiz-community-mention" key={index}>{part}</span>);
+    else if (part) nodes.push(part);
+  }
+  return <>{nodes}</>;
+}
+
 function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce }) {
   const [comments, setComments] = useState(null);
+  const [likesEnabled, setLikesEnabled] = useState(false);
+  const [sort, setSort] = useState('popular');
   const [error, setError] = useState('');
   const [body, setBody] = useState('');
   const [gif, setGif] = useState(null);
   const [gifOpen, setGifOpen] = useState(false);
-  const gifButtonRef = useRef(null);
+  const [menuId, setMenuId] = useState(null);
   const [busy, setBusy] = useState(false);
+  const gifButtonRef = useRef(null);
+  const inputRef = useRef(null);
   const inputId = useId();
   useEffect(() => {
     let alive = true;
-    listComments(post.id).then(items => { if (alive) setComments(items); }).catch(loadError => { if (alive) { setComments([]); setError(loadError.message); } });
+    listComments(post.id, sort)
+      .then(result => { if (alive) { setComments(result.comments); setLikesEnabled(result.likes); } })
+      .catch(loadError => { if (alive) { setComments(current => current || []); setError(loadError.message); } });
     return () => { alive = false; };
-  }, [post.id]);
+  }, [post.id, sort]);
+  useEffect(() => {
+    if (!menuId) return undefined;
+    const close = event => { if (!event.target.closest?.('.quiz-community-comment-menu')) setMenuId(null); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [menuId]);
   async function submit(event) {
     event.preventDefault();
     if (!viewer?.ready) { onRequireLogin(); return; }
@@ -330,7 +354,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     setBusy(true); setError('');
     try {
       const comment = await createComment(post.id, body, gif);
-      setComments(current => [...(current || []), comment]);
+      setComments(current => [...(current || []), { like_count: 0, liked: false, ...comment }]);
       setBody('');
       setGif(null);
       onCountChange(1);
@@ -338,6 +362,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     finally { setBusy(false); }
   }
   async function remove(comment) {
+    setMenuId(null);
     try {
       await deleteComment(comment.id);
       setComments(current => current.filter(item => item.id !== comment.id));
@@ -345,32 +370,63 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
       onAnnounce('댓글을 삭제했어요.');
     } catch (removeError) { setError(removeError.message); }
   }
+  async function like(comment) {
+    if (!viewer?.ready) { onRequireLogin(); return; }
+    const previous = { liked: comment.liked, like_count: comment.like_count };
+    const patch = patchValue => setComments(current => current.map(item => item.id === comment.id ? { ...item, ...patchValue } : item));
+    patch({ liked: !comment.liked, like_count: Math.max(0, (comment.like_count || 0) + (comment.liked ? -1 : 1)) });
+    try {
+      const result = await toggleCommentLike(comment.id);
+      patch({ liked: result.liked, like_count: result.likeCount });
+    } catch (likeError) { patch(previous); onAnnounce(likeError.message); }
+  }
+  function reply(comment) {
+    if (!viewer?.ready) { onRequireLogin(); return; }
+    setBody(`@${comment.author_name} `);
+    requestAnimationFrame(() => { const input = inputRef.current; if (input) { input.focus({ preventScroll: false }); const end = input.value.length; input.setSelectionRange(end, end); } });
+  }
   return <div className="quiz-community-comments">
+    <form className="quiz-community-comment-form" onSubmit={submit}>
+      <CommunityAvatar name={viewer?.ready ? viewer.name : ''} path={viewer?.ready ? viewer.avatarPath : ''} />
+      <div className="quiz-community-comment-field">
+        <label className="mb-sr-only" htmlFor={inputId}>댓글</label>
+        <input id={inputId} ref={inputRef} value={body} maxLength={COMMENT_BODY_LIMIT} placeholder={viewer?.ready ? '댓글을 남겨보세요' : '로그인하고 댓글을 남겨보세요'}
+          onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
+        <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
+        <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif) || busy : false}>남기기</button>
+      </div>
+    </form>
+    {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
+    {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
+    {likesEnabled && comments && comments.length > 1 && <button type="button" className="quiz-community-sort-toggle" aria-label={`댓글 정렬: ${sort === 'popular' ? '인기순' : '최신순'}`}
+      onClick={() => setSort(current => current === 'popular' ? 'latest' : 'popular')}>{sort === 'popular' ? '인기순' : '최신순'}<ArrowUpDown size={14} aria-hidden="true" /></button>}
     {comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
         : <ul>{comments.map(comment => <li key={comment.id}>
-          <CommunityAvatar name={comment.author_name} path={comment.author_avatar} size="sm" />
-          <div>
+          <CommunityAvatar name={comment.author_name} path={comment.author_avatar} />
+          <div className="quiz-community-comment-main">
             <p className="quiz-community-comment-head"><strong>{comment.author_name}</strong><AuthorBadges item={comment} /><time dateTime={comment.created_at}>{formatRelativeDate(comment.created_at)}</time></p>
-            {comment.body && <p className="quiz-community-comment-body">{comment.body}</p>}
+            {comment.body && <p className="quiz-community-comment-body"><MentionText text={comment.body} /></p>}
             <CommunityGif gif={comment.gif} size="comment" />
-            {comment.can_delete && <button type="button" className="quiz-community-text-button" onClick={() => remove(comment)}>삭제</button>}
+            <div className="quiz-community-comment-actions">
+              {likesEnabled && <button type="button" className={comment.liked ? 'is-liked' : ''} aria-pressed={comment.liked} aria-label={`댓글 좋아요 ${comment.like_count || 0}개`} onClick={() => like(comment)}>
+                <Heart size={16} aria-hidden="true" fill={comment.liked ? 'currentColor' : 'none'} />{comment.like_count > 0 && <span>{comment.like_count}</span>}
+              </button>}
+              <button type="button" onClick={() => reply(comment)}><CornerDownRight size={16} aria-hidden="true" />답글달기</button>
+            </div>
           </div>
+          {comment.can_delete && <div className="quiz-community-comment-menu">
+            <button type="button" className="quiz-community-icon-button" aria-label="댓글 메뉴" aria-haspopup="menu" aria-expanded={menuId === comment.id} onClick={() => setMenuId(current => current === comment.id ? null : comment.id)}>
+              <Ellipsis size={18} aria-hidden="true" />
+            </button>
+            {menuId === comment.id && <div className="quiz-community-menu-list" role="menu"><button type="button" role="menuitem" className="is-danger" onClick={() => remove(comment)}>삭제하기</button></div>}
+          </div>}
         </li>)}</ul>}
-    {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
-    {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
-    <form className="quiz-community-comment-form" onSubmit={submit}>
-      <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
-      <label className="mb-sr-only" htmlFor={inputId}>댓글</label>
-      <input id={inputId} value={body} maxLength={COMMENT_BODY_LIMIT} placeholder={viewer?.ready ? '댓글을 남겨보세요' : '로그인하고 댓글을 남겨보세요'}
-        onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
-      <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif) || busy : false}>등록</button>
-    </form>
     {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)} onPick={picked => { setGif(picked); setGifOpen(false); }} />}
   </div>;
 }
 
-function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport }) {
+function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit }) {
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -427,12 +483,13 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
     <div className="quiz-community-post-main">
       <header className="quiz-community-post-head">
         <p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p>
-        <p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topic && <span>{topic}</span>}</p>
+        <p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topic && <span>{topic}</span>}{post.edited_at && <span>수정됨</span>}</p>
         <div className="quiz-community-menu" ref={menuRef}>
           <button type="button" className="quiz-community-icon-button" aria-label="글 메뉴" aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuId} onClick={() => setMenuOpen(open => !open)}>
             <Ellipsis size={18} aria-hidden="true" />
           </button>
           {menuOpen && <div id={menuId} className="quiz-community-menu-list" role="menu">
+            {post.is_mine && <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onAskEdit(post); }}>수정하기</button>}
             {post.can_delete && <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenuOpen(false); onAskDelete(post); }}>삭제하기</button>}
             {!post.is_mine && <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); if (viewer?.ready) onAskReport(post); else onRequireLogin(); }}>신고하기</button>}
           </div>}
@@ -466,6 +523,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   const [loadingMore, setLoadingMore] = useState(false);
   const [draft, setDraft] = useState(() => ({ ...EMPTY_DRAFT, attachment: fixedAttachment }));
   const [dialog, setDialog] = useState(null);
+  const [editDraft, setEditDraft] = useState(null);
   const [announcement, setAnnouncement] = useState('');
   const requestRef = useRef(0);
 
@@ -512,6 +570,13 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     onPosted?.(post);
   }
 
+  async function saveEdit(nextDraft) {
+    const updated = await updatePost(dialog.post.id, nextDraft);
+    setState(current => ({ ...current, posts: current.posts.map(item => item.id === updated.id ? { ...item, ...updated } : item) }));
+    setDialog(null);
+    announce('글을 수정했어요.');
+  }
+
   async function removePost(post) {
     setDialog(current => ({ ...current, busy: true }));
     try {
@@ -555,6 +620,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     {state.posts.length > 0 && <ol className="quiz-community-feed">
       {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
         onPatch={patch => patchPost(post.id, patch)} onRequireLogin={requireLogin} onAnnounce={announce}
+        onAskEdit={target => { setEditDraft({ topic: target.topic || '', title: target.title || '', body: target.body || '', attachment: null, showRecord: false, gif: target.gif || null }); setDialog({ type: 'edit', post: target }); }}
         onAskDelete={target => setDialog({ type: 'delete', post: target })} onAskReport={target => setDialog({ type: 'report', post: target })} />)}
     </ol>}
     {hasMore && state.status !== 'loading' && <button type="button" className="quiz-community-more" disabled={loadingMore} onClick={() => load(sort, true, state.posts.length)}>
@@ -564,6 +630,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
 
     {dialog?.type === 'compose' && canWrite && <ComposeDialog viewer={viewer} draft={draft} onDraftChange={setDraft} onSubmit={submitPost} onClose={() => setDialog(null)}
       attachSource={attachSource} placeholder={placeholder} />}
+    {dialog?.type === 'edit' && canWrite && editDraft && <ComposeDialog viewer={viewer} draft={editDraft} onDraftChange={setEditDraft} onSubmit={saveEdit} onClose={() => setDialog(null)} placeholder={placeholder} editing />}
     {dialog?.type === 'login' && <LoginPrompt viewer={viewer} tokenHash={tokenHash} onClose={() => setDialog(null)} />}
     {dialog?.type === 'delete' && <ConfirmDialog title="이 글을 삭제할까요?" description="삭제한 글과 댓글은 되돌릴 수 없어요." confirmLabel="삭제하기" danger busy={dialog.busy}
       onConfirm={() => removePost(dialog.post)} onClose={() => setDialog(null)} />}
