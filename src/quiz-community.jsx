@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpDown, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -82,10 +82,20 @@ function Dialog({ labelledBy, describedBy, className = '', onClose, children }) 
     const viewport = window.visualViewport;
     const panel = panelRef.current;
     if (!viewport || !panel || !className.includes('is-compose')) return undefined;
-    const fit = () => { panel.style.setProperty('--community-vh', `${Math.round(viewport.height)}px`); window.scrollTo(0, 0); };
+    const fit = () => {
+      const height = `${Math.round(viewport.height)}px`;
+      const top = `${Math.max(0, Math.round(viewport.offsetTop))}px`;
+      panel.style.setProperty('--community-vh', height);
+      panel.parentElement?.style.setProperty('--community-vh', height);
+      panel.parentElement?.style.setProperty('--community-vv-top', top);
+    };
     fit();
     viewport.addEventListener('resize', fit);
-    return () => viewport.removeEventListener('resize', fit);
+    viewport.addEventListener('scroll', fit);
+    return () => {
+      viewport.removeEventListener('resize', fit);
+      viewport.removeEventListener('scroll', fit);
+    };
   }, [className]);
   useEffect(() => {
     const previous = document.activeElement;
@@ -330,7 +340,7 @@ function MentionText({ text }) {
   return <>{nodes}</>;
 }
 
-function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce }) {
+function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce, detail = false }) {
   const [comments, setComments] = useState(null);
   const [likesEnabled, setLikesEnabled] = useState(false);
   const [sort, setSort] = useState('popular');
@@ -407,7 +417,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     </form>
     {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
     {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
-    {likesEnabled && comments && comments.length > 1 && <button type="button" className="quiz-community-sort-toggle" aria-label={`댓글 정렬: ${sort === 'popular' ? '인기순' : '최신순'}`}
+    {(detail || (likesEnabled && comments && comments.length > 1)) && <button type="button" className="quiz-community-sort-toggle" aria-label={`댓글 정렬: ${sort === 'popular' ? '인기순' : '최신순'}`}
       onClick={() => setSort(current => current === 'popular' ? 'latest' : 'popular')}>{sort === 'popular' ? '인기순' : '최신순'}<ArrowUpDown size={14} aria-hidden="true" /></button>}
     {comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
@@ -435,7 +445,63 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   </div>;
 }
 
-function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit }) {
+function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAnnounce }) {
+  const id = useId();
+  const [liking, setLiking] = useState(false);
+  async function like() {
+    if (!viewer?.ready) { onRequireLogin(); return; }
+    if (liking) return;
+    const previous = { liked: post.liked, like_count: post.like_count };
+    onPatch({ liked: !post.liked, like_count: Math.max(0, post.like_count + (post.liked ? -1 : 1)) });
+    setLiking(true);
+    try {
+      const result = await toggleLike(post.id);
+      onPatch({ liked: result.liked, like_count: result.likeCount });
+    } catch (error) {
+      onPatch(previous);
+      onAnnounce(error.message);
+    } finally { setLiking(false); }
+  }
+  async function share() {
+    const token = post.attachment?.active ? post.attachment.token : null;
+    const url = token ? externalShareUrl(token) : new URL('./quiz.html#community', window.location.href).href;
+    try {
+      if (navigator.share) { await navigator.share({ title: post.title || '[문블] 커뮤니티', text: post.body || '', url }); return; }
+      await navigator.clipboard.writeText(url);
+      onAnnounce('링크를 복사했어요.');
+    } catch (error) { if (error?.name !== 'AbortError') onAnnounce('링크를 복사하지 못했어요.'); }
+  }
+  return <Dialog labelledBy={`${id}-title`} className="is-post-detail" onClose={onClose}>
+    <header className="quiz-community-detail-head">
+      <button type="button" className="quiz-community-detail-back" aria-label="커뮤니티로 돌아가기" onClick={onClose}><ChevronLeft size={23} aria-hidden="true" /></button>
+      <h2 id={`${id}-title`}>게시글</h2>
+      <span aria-hidden="true" />
+    </header>
+    <article className="quiz-community-detail-post">
+      <header className="quiz-community-post-head">
+        <CommunityAvatar name={post.author_name} path={post.author_avatar} />
+        <div className="quiz-community-detail-author"><p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p><p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topicLabel(post.topic) && <span>{topicLabel(post.topic)}</span>}{post.edited_at && <span>수정됨</span>}</p></div>
+      </header>
+      {post.title && <h3 className="quiz-community-post-title">{post.title}</h3>}
+      {post.body && <p className="quiz-community-post-body is-expanded">{post.body}</p>}
+      <CommunityGif gif={post.gif} />
+      {post.attachment && <QuizAttachment attachment={post.attachment} record={post.record} />}
+      {!post.attachment && post.record && <RecordLine record={post.record} />}
+      <div className="quiz-community-actions">
+        <button type="button" className={post.liked ? 'is-liked' : ''} aria-pressed={post.liked} aria-label={`좋아요 ${post.like_count}개`} onClick={like} disabled={liking}>
+          <Heart size={18} aria-hidden="true" fill={post.liked ? 'currentColor' : 'none'} /><span>{post.like_count}</span>
+        </button>
+        <span className="quiz-community-detail-comment-count"><MessageCircle size={18} aria-hidden="true" /><span>{post.comment_count}</span></span>
+        <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
+      </div>
+    </article>
+    <section className="quiz-community-detail-comments" aria-label="댓글">
+      <CommentThread detail post={post} viewer={viewer} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce} />
+    </section>
+  </Dialog>;
+}
+
+function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit, onAskDetail }) {
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -444,6 +510,10 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
   const bodyRef = useRef(null);
   const menuRef = useRef(null);
   const menuId = useId();
+  function openDetail(event) {
+    if (!onAskDetail || event.target.closest?.('button, a, input, textarea, select, [role="button"]')) return;
+    onAskDetail(post);
+  }
 
   useLayoutEffect(() => {
     const node = bodyRef.current;
@@ -489,7 +559,7 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
   const topic = topicLabel(post.topic);
   return <li className="quiz-community-post">
     <CommunityAvatar name={post.author_name} path={post.author_avatar} />
-    <div className="quiz-community-post-main">
+    <div className={`quiz-community-post-main${onAskDetail ? ' is-detail-trigger' : ''}`} onClick={openDetail} onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); onAskDetail?.(post); } }} tabIndex={onAskDetail ? 0 : undefined} aria-label={onAskDetail ? '게시글 상세 보기' : undefined}>
       <header className="quiz-community-post-head">
         <p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p>
         <p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topic && <span>{topic}</span>}{post.edited_at && <span>수정됨</span>}</p>
@@ -660,6 +730,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     {state.posts.length > 0 && <ol className="quiz-community-feed">
       {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
         onPatch={patch => patchPost(post.id, patch)} onRequireLogin={requireLogin} onAnnounce={announce}
+        onAskDetail={showBar ? target => setDialog({ type: 'detail', post: target }) : undefined}
         onAskEdit={target => { setEditDraft({ topic: target.topic || '', title: target.title || '', body: target.body || '', attachment: null, showRecord: false, gif: target.gif || null }); setDialog({ type: 'edit', post: target }); }}
         onAskDelete={target => setDialog({ type: 'delete', post: target })} onAskReport={target => setDialog({ type: 'report', post: target })} />)}
     </ol>}
@@ -679,6 +750,8 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       try { await reportPost(dialog.post.id, reason); setDialog(null); announce('신고를 접수했어요. 확인 후 조치할게요.'); }
       catch (reportError) { setDialog(null); announce(reportError.message); }
     }} />}
+    {dialog?.type === 'detail' && <PostDetailDialog post={dialog.post} viewer={viewer} onClose={() => setDialog(null)}
+      onPatch={patch => { patchPost(dialog.post.id, patch); setDialog(current => current?.type === 'detail' ? { ...current, post: { ...current.post, ...patch } } : current); }} onRequireLogin={requireLogin} onAnnounce={announce} />}
   </Wrapper>;
 }
 

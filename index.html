@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/moonble-app-icon-180.png" />
+    <link rel="preload" as="image" href="./assets/moonble-wordmark.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="application-name" content="Moonble" />
     <meta name="apple-mobile-web-app-title" content="Moonble" />
@@ -41,10 +42,15 @@
       #moonble-startup-splash { position: fixed; inset: 0; z-index: 100001; display: grid; place-items: center; overflow: hidden; background: #fff; opacity: 1; }
       #moonble-startup-splash.is-leaving { animation: moonble-startup-fade 200ms ease-out forwards; }
       #moonble-startup-splash svg { display: block; width: min(52vw, 220px); height: auto; overflow: visible; }
-      #moonble-startup-splash image { opacity: 1; }
+      #moonble-startup-splash image { opacity: 0; }
       #moonble-startup-splash path { fill: none; stroke: #fff; stroke-width: 29px; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
-      #moonble-startup-splash.is-writing path { animation: moonble-startup-write 820ms cubic-bezier(.2,.8,.24,1) both; }
+      #moonble-startup-splash .moonble-startup-trace { fill: none; stroke: #4385f5; stroke-width: 5.5px; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+      #moonble-startup-splash.is-writing path { animation: moonble-startup-write 1250ms cubic-bezier(.2,.8,.24,1) both; }
+      #moonble-startup-splash.is-writing .moonble-startup-trace { animation: moonble-startup-trace 1250ms cubic-bezier(.2,.8,.24,1) both; }
+      #moonble-startup-splash.is-writing image { animation: moonble-startup-logo-reveal 380ms ease-out 820ms both; }
       @keyframes moonble-startup-write { 0% { stroke-dashoffset: 1; opacity: 0; } 12% { opacity: .92; } 76% { stroke-dashoffset: 0; opacity: .9; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+      @keyframes moonble-startup-trace { 0% { stroke-dashoffset: 1; opacity: 0; } 8% { opacity: .92; } 82% { stroke-dashoffset: 0; opacity: .82; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+      @keyframes moonble-startup-logo-reveal { from { opacity: 0; } to { opacity: 1; } }
       @keyframes moonble-startup-fade { to { opacity: 0; visibility: hidden; } }
       #moonble-entry-skeleton { display: none; }
       html[data-page-pending]:not([data-auth-pending]) #moonble-entry-skeleton { display: block; }
@@ -96,7 +102,7 @@
         .entry-skeleton-paper i:nth-child(5) { height: 38px; margin-top: 5px; }
         .entry-skeleton-paper i:nth-child(6) { height: 24px; }
       }
-      @media (prefers-reduced-motion: reduce) { .entry-skeleton-shimmer, #moonble-entry-spinner .moonble-spinner { animation: none; } #moonble-startup-splash.is-writing path { animation: none; stroke-dashoffset: 0; opacity: 1; } #moonble-startup-splash.is-leaving { animation-duration: 120ms; } }
+      @media (prefers-reduced-motion: reduce) { .entry-skeleton-shimmer, #moonble-entry-spinner .moonble-spinner { animation: none; } #moonble-startup-splash.is-writing path { animation: none; stroke-dashoffset: 0; opacity: 1; } #moonble-startup-splash.is-writing .moonble-startup-trace { opacity: 0; } #moonble-startup-splash.is-writing image { animation: none; opacity: 1; } #moonble-startup-splash.is-leaving { animation-duration: 120ms; } }
     </style>
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebSite","name":"Moonble","alternateName":"문블","url":"https://moonble.com/","description":"문제지 등록부터 풀이, 채점, 실력 기록, PRD 작성까지 이어가는 개인 학습·기획 워크스페이스"}
@@ -108,6 +114,7 @@
       <svg viewBox="0 0 240 96" fill="none" aria-hidden="true">
         <defs><mask id="moonbleStartupLogoMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="240" height="96"><rect width="240" height="96" fill="#000" /><path pathLength="1" d="M8 57 C17 55 24 46 29 40 C33 35 36 36 34 43 C31 52 24 62 28 64 C32 66 41 47 47 43 C52 39 53 46 49 55 C46 62 48 65 53 61 C60 55 61 40 70 36 C79 32 87 39 85 49 C83 58 71 63 64 58 C57 53 61 40 71 36 C81 32 91 38 92 48 C93 58 82 63 76 58 C70 53 74 40 85 36 C95 32 103 38 103 48 C103 56 98 62 101 64 C104 65 110 48 117 42 C122 37 125 38 123 47 C121 55 119 63 123 64 C127 65 134 48 142 43 C148 39 151 42 149 50 C147 58 146 64 150 64 C156 64 163 54 166 48 C171 39 171 25 177 17 C181 12 188 12 191 18 C195 26 187 39 181 47 C175 55 170 61 175 64 C181 68 189 60 193 51 C198 41 198 27 204 18 C208 12 215 12 218 18 C222 26 214 39 208 48 C202 56 199 62 204 64 C210 67 218 58 223 49 C228 41 233 39 236 43 C239 47 231 56 228 59 C232 61 237 58 240 55" /></mask></defs>
         <image href="./assets/moonble-wordmark.png" x="0" y="8" width="240" height="80" preserveAspectRatio="none" mask="url(#moonbleStartupLogoMask)" />
+        <path class="moonble-startup-trace" pathLength="1" d="M8 57 C17 55 24 46 29 40 C33 35 36 36 34 43 C31 52 24 62 28 64 C32 66 41 47 47 43 C52 39 53 46 49 55 C46 62 48 65 53 61 C60 55 61 40 70 36 C79 32 87 39 85 49 C83 58 71 63 64 58 C57 53 61 40 71 36 C81 32 91 38 92 48 C93 58 82 63 76 58 C70 53 74 40 85 36 C95 32 103 38 103 48 C103 56 98 62 101 64 C104 65 110 48 117 42 C122 37 125 38 123 47 C121 55 119 63 123 64 C127 65 134 48 142 43 C148 39 151 42 149 50 C147 58 146 64 150 64 C156 64 163 54 166 48 C171 39 171 25 177 17 C181 12 188 12 191 18 C195 26 187 39 181 47 C175 55 170 61 175 64 C181 68 189 60 193 51 C198 41 198 27 204 18 C208 12 215 12 218 18 C222 26 214 39 208 48 C202 56 199 62 204 64 C210 67 218 58 223 49 C228 41 233 39 236 43 C239 47 231 56 228 59 C232 61 237 58 240 55" />
       </svg>
     </div>
     <div id="moonble-entry-skeleton" role="status" aria-label="Moonble 여는 중" aria-busy="true">
@@ -124,7 +131,7 @@
           splash.classList.remove('is-writing');
           splash.classList.add('is-leaving');
           window.setTimeout(() => splash.remove(), reducedMotion ? 130 : 210);
-        }, reducedMotion ? 180 : 900);
+        }, reducedMotion ? 250 : 1450);
       })();
     </script>
     <div id="root"></div>

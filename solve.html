@@ -4502,10 +4502,20 @@
     function getHistory() {try {const key = historyKey(); return key ? JSON.parse(localStorage.getItem(key) || '[]') : [];} catch {return [];} }
     function setHistory(arr) {try {const key = historyKey(); if (key) localStorage.setItem(key, JSON.stringify(arr));} catch { } }
     function pushHistory(item) {
+      const id = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+          const random = Math.random() * 16 | 0;
+          return (character === 'x' ? random : (random & 0x3 | 0x8)).toString(16);
+        });
+      const record = { ...item, id };
       const hist = getHistory();
-      hist.unshift(item);
+      hist.unshift(record);
       const trimmed = hist.slice(0, 200);
       setHistory(trimmed);
+      if (window.moonbleUserId && typeof window.moonbleAchievementHistory?.save === 'function') {
+        window.moonbleAchievementHistory.save(window.moonbleUserId, record).catch(() => {});
+      }
     }
     function renderHistory() {
       const hist = getHistory().slice(0, 10);

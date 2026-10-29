@@ -4,8 +4,8 @@ import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { BUILT_IN_PAPER_PREVIEWS, PaperPreview } from './paper-preview.jsx';
 import { formatRelativeDate } from './date-format.js';
+import { readAchievementHistory, replaceAchievementHistory, syncAchievementHistory, writeAchievementHistoryCache } from './achievement-history.js';
 
-const HISTORY_KEY_PREFIX = 'moonble:user:';
 const PERIOD_OPTIONS = [['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['all', '전체'], ['custom', '직접 선택']];
 
 function dateInputValue(date) {
@@ -18,27 +18,6 @@ function defaultCustomRange() {
   const from = new Date(to);
   from.setMonth(from.getMonth() - 1);
   return [dateInputValue(from), dateInputValue(to)];
-}
-
-function historyKey(userId) {
-  return userId ? `${HISTORY_KEY_PREFIX}${userId}:history-v3` : null;
-}
-
-function readHistory(userId) {
-  try {
-    const key = historyKey(userId);
-    const value = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
-    return Array.isArray(value) ? value.slice(0, 200) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeHistory(userId, history) {
-  try {
-    const key = historyKey(userId);
-    if (key) localStorage.setItem(key, JSON.stringify(history.slice(0, 200)));
-  } catch { /* 저장소가 제한된 환경에서는 현재 화면만 갱신한다. */ }
 }
 
 function formatDate(value) {
@@ -287,7 +266,7 @@ function ScoreChart({ history }) {
 }
 
 export function QuizAchievement({ userId }) {
-  const [history, setHistory] = useState(() => readHistory(userId));
+  const [history, setHistory] = useState(() => readAchievementHistory(userId));
   const requestedPaperKey = new URLSearchParams(window.location.search).get('achievementPaper');
   const requestedPaperEntry = requestedPaperKey ? history.find(item => historyPaperKey(item) === requestedPaperKey) : null;
   const [confirming, setConfirming] = useState(null);
@@ -311,16 +290,26 @@ export function QuizAchievement({ userId }) {
   const periodCloseTimerRef = useRef(0);
 
   useEffect(() => {
-    const refresh = () => {
-      setHistory(readHistory(userId));
+    let alive = true;
+    const refresh = async () => {
+      const remoteHistory = await syncAchievementHistory(userId);
+      if (!alive) return;
+      setHistory(remoteHistory);
+      setCollection(getCustomBankCollection(userId));
+    };
+    const refreshLocal = () => {
+      setHistory(readAchievementHistory(userId));
       setCollection(getCustomBankCollection(userId));
     };
     refresh();
-    window.addEventListener('storage', refresh);
+    window.addEventListener('storage', refreshLocal);
     window.addEventListener('pageshow', refresh);
+    window.addEventListener('moonble:achievement-history-updated', refreshLocal);
     return () => {
-      window.removeEventListener('storage', refresh);
+      alive = false;
+      window.removeEventListener('storage', refreshLocal);
       window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('moonble:achievement-history-updated', refreshLocal);
     };
   }, [userId]);
 
@@ -464,7 +453,8 @@ export function QuizAchievement({ userId }) {
 
   function update(next) {
     setHistory(next);
-    writeHistory(userId, next);
+    writeAchievementHistoryCache(userId, next);
+    replaceAchievementHistory(userId, next).catch(() => {});
     setConfirming(null);
   }
 

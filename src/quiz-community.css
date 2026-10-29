@@ -29,6 +29,8 @@
 .quiz-community-post { display: flex; gap: var(--mb-space-12); padding: var(--mb-space-16) 0; border-top: 1px solid var(--mb-border); }
 .quiz-community-feed>.quiz-community-post:first-child { border-top: 0; padding-top: var(--mb-space-8); }
 .quiz-community-post-main { min-width: 0; flex: 1; }
+.quiz-community-post-main.is-detail-trigger { cursor: pointer; }
+.quiz-community-post-main.is-detail-trigger:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 4px; border-radius: var(--mb-radius-8); }
 .quiz-community-post-head { position: relative; padding-right: var(--mb-target-size); }
 .quiz-community-post-head>p:first-child { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--mb-space-4) 6px; font-size: var(--mb-font-14); line-height: 20px; }
 .quiz-community-post-head strong { overflow-wrap: anywhere; font-weight: var(--mb-weight-semibold); }
@@ -308,22 +310,50 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 .quiz-community-comment-field:focus-within { border-color: var(--mb-border-strong); }
 .quiz-community-gif-panel .GifPickerReact { --gpr-search-border-color-active: var(--mb-border-strong); }
 
+/* 모바일에서는 글을 눌렀을 때 피드 안의 확장이 아니라 게시글 단독 화면으로 연다. */
+.quiz-community-dialog.is-post-detail { width: min(640px, 100%); height: min(82dvh, 820px); max-height: 82dvh; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.quiz-community-dialog.is-post-detail::before { display: none; }
+.quiz-community-detail-head { flex: 0 0 auto; min-height: 54px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; padding: 0 var(--mb-space-12); border-bottom: 1px solid var(--mb-border); }
+.quiz-community-detail-head h2 { overflow: hidden; font-size: var(--mb-font-16); line-height: 24px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.quiz-community-detail-back { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: transparent; }
+.quiz-community-detail-back:hover { background: var(--mb-surface-muted); }
+.quiz-community-detail-post { flex: 0 0 auto; padding: var(--mb-space-16) var(--mb-space-20) var(--mb-space-8); }
+.quiz-community-detail-post .quiz-community-post-head { display: flex; align-items: center; gap: var(--mb-space-12); padding: 0; }
+.quiz-community-detail-author { min-width: 0; flex: 1; }
+.quiz-community-detail-author>p:first-child { margin: 0; display: flex; align-items: center; gap: var(--mb-space-4); font-size: var(--mb-font-14); line-height: 20px; }
+.quiz-community-detail-post .quiz-community-post-body { display: block; -webkit-line-clamp: unset; line-clamp: unset; }
+.quiz-community-detail-post .quiz-community-actions { margin-top: var(--mb-space-8); }
+.quiz-community-detail-comment-count { min-width: var(--mb-target-size); min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); font-variant-numeric: tabular-nums; }
+.quiz-community-detail-comments { min-height: 0; flex: 1; display: flex; flex-direction: column; border-top: 8px solid var(--mb-surface-muted); }
+.quiz-community-detail-comments .quiz-community-comments { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; margin: 0; padding: 0 var(--mb-space-16); }
+.quiz-community-detail-comments .quiz-community-sort-toggle { order: 0; align-self: flex-start; flex: 0 0 auto; margin: var(--mb-space-8) 0; }
+.quiz-community-detail-comments .quiz-community-comments>ul { min-height: 0; flex: 1; order: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; margin: 0; }
+.quiz-community-detail-comments .quiz-community-comments>.quiz-community-muted { flex: 1; order: 1; display: grid; place-items: center; }
+.quiz-community-detail-comments .quiz-community-comment-form { flex: 0 0 auto; order: 2; margin: 0 calc(var(--mb-space-16) * -1); padding: var(--mb-space-12) var(--mb-space-16) calc(var(--mb-space-8) + env(safe-area-inset-bottom)); border-top: 1px solid var(--mb-border); background: var(--mb-surface); }
+
 /* 모바일 커뮤니티 탭: 정렬·글쓰기 줄은 숨기고, 독바 자리에 입력 바를 둔다. */
 .quiz-community-bar { display: none; }
 @media (max-width: 767px) {
-  .quiz-community-page > .quiz-community-head, .quiz-community-page > .quiz-community-composer { display: none; }
+  .quiz-community-page > .quiz-community-head { display: flex; justify-content: flex-end; margin-bottom: 0; }
+  .quiz-community-page > .quiz-community-composer { display: none; }
   body.mb-community-composer-bar .mb-app-nav:not(.mb-solver-nav) { display: none !important; }
-  .quiz-community-bar { position: fixed; z-index: 70; right: 0; bottom: 0; left: 0; min-height: var(--mb-mobile-dock-height); display: flex; align-items: center; gap: var(--mb-space-12); padding: 0 max(var(--mb-space-16), env(safe-area-inset-right)) env(safe-area-inset-bottom) max(var(--mb-space-16), env(safe-area-inset-left)); border-top: 1px solid var(--mb-border); background: var(--mb-surface); }
+  .quiz-community-bar { box-sizing: border-box; position: fixed; z-index: 70; right: 0; bottom: 0; left: 0; height: calc(var(--mb-mobile-dock-height) + env(safe-area-inset-bottom)); min-height: calc(var(--mb-mobile-dock-height) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--mb-space-12); padding: var(--mb-space-12) max(var(--mb-space-16), env(safe-area-inset-right)) env(safe-area-inset-bottom) max(var(--mb-space-16), env(safe-area-inset-left)); border-top: 1px solid var(--mb-border); background: var(--mb-surface); }
   .quiz-community-bar .quiz-community-avatar { width: 36px; height: 36px; flex-basis: 36px; font-size: var(--mb-font-14); }
   .quiz-community-bar-input { min-width: 0; flex: 1; min-height: var(--mb-control-height); display: flex; align-items: center; padding: 0 var(--mb-space-16); border: 0; border-radius: 999px; color: var(--mb-text-tertiary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; text-align: left; cursor: pointer; }
   .quiz-community-bar-input span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .quiz-community-bar-input:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 
   /* 글쓰기·글 수정은 모바일에서 팝업 대신 한 페이지로 연다(검색 화면과 같은 방식). */
-  .quiz-community-overlay:has(.is-compose) { padding: 0; background: var(--mb-surface); }
-  .quiz-community-dialog.is-compose { width: 100%; max-width: none; height: var(--community-vh, 100dvh); max-height: none; display: flex; flex-direction: column; padding: calc(8px + env(safe-area-inset-top)) var(--mb-space-16) calc(12px + env(safe-area-inset-bottom)); border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
+  .quiz-community-overlay:has(.is-compose) { inset: auto 0 0; height: var(--community-vh, 100dvh); top: var(--community-vv-top, 0px); padding: 0; background: var(--mb-surface); }
+  .quiz-community-dialog.is-compose { box-sizing: border-box; width: 100%; max-width: none; height: 100%; max-height: none; display: flex; flex-direction: column; padding: calc(8px + env(safe-area-inset-top)) var(--mb-space-16) calc(12px + env(safe-area-inset-bottom)); border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
   .quiz-community-dialog.is-compose::before { display: none; }
   .quiz-community-dialog.is-compose > form { min-height: 0; flex: 1; display: flex; flex-direction: column; }
   .quiz-community-dialog.is-compose .quiz-community-compose-body { min-height: 120px; flex: 1; resize: none; }
   .quiz-community-dialog.is-compose .quiz-community-compose-foot { margin-top: var(--mb-space-8); padding-top: var(--mb-space-12); }
+}
+@media (max-width: 767px) {
+  .quiz-community-overlay:has(.is-post-detail) { inset: 0; display: flex; align-items: stretch; padding: 0; background: var(--mb-surface); }
+  .quiz-community-dialog.is-post-detail { box-sizing: border-box; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
+  .quiz-community-detail-head { padding-top: env(safe-area-inset-top); }
+  .quiz-community-detail-comments .quiz-community-comment-form { padding-bottom: calc(var(--mb-space-8) + env(safe-area-inset-bottom)); }
 }

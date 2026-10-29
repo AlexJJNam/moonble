@@ -1,6 +1,6 @@
 // 마이페이지 커뮤니티 활동: 요약 섹션과 상세(작성한 글 / 작성한 댓글 / 좋아요한 글).
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart, MessageCircle, PenLine } from 'lucide-react';
+import { ChevronLeft, Heart, MessageCircle, PenLine } from 'lucide-react';
 import { CommunityFeed, toViewer } from './quiz-community.jsx';
 import { formatRelativeDate } from './date-format.js';
 import { COMMUNITY_PAGE_SIZE, getMyCommunitySummary, listMyComments } from './quiz-community-api.js';
@@ -35,7 +35,6 @@ export function CommunityActivitySummary() {
   return <section className="account-community" aria-labelledby="account-community-title">
     <div className="account-community-head">
       <h2 id="account-community-title" className="mb-section-title">커뮤니티 활동</h2>
-      <a className="account-community-more" href={activityHash()}>전체 보기<ChevronRight size={16} aria-hidden="true" /></a>
     </div>
     <ul className="account-community-stats">
       {ACTIVITY_TABS.map(tab => <li key={tab.value}>
