@@ -105,7 +105,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-subject { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; background: var(--mb-surface); border: 1px solid var(--mb-border); border-radius: 8px; padding: 8px 12px; white-space: nowrap; }
 .quiz-library-tools { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
 .quiz-filter-groups { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
-.quiz-difficulties { margin-left: 0; }
+.quiz-paper-scopes { margin-left: 0; }
 .quiz-display-tools { min-width: 0; display: flex; gap: 12px; align-items: center; }
 .quiz-search { min-width: 0; width: 220px; min-height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid transparent; border-radius: 8px; color: var(--mb-text-tertiary); background: var(--mb-surface-muted); }
 .quiz-search:focus-within { border-color: var(--mb-primary); outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
@@ -710,9 +710,9 @@ button:disabled { cursor: wait; opacity: .6; }
   .quiz-display-tools { gap: 6px; }
   .quiz-search { min-height: 38px; padding: 0 10px; }
   .quiz-search input { height: 36px; }
-  .quiz-difficulties, .quiz-view-toggle { padding: 2px; border-radius: 9px; }
-  .quiz-difficulties .mb-segmented-indicator, .quiz-view-toggle .mb-segmented-indicator { inset-block: 2px; left: 2px; width: calc((100% - 4px) / var(--segment-count)); border-radius: 7px; }
-  .quiz-difficulties button { min-height: 32px; padding: 5px 10px; }
+  .quiz-paper-scopes, .quiz-view-toggle { padding: 2px; border-radius: 9px; }
+  .quiz-paper-scopes .mb-segmented-indicator, .quiz-view-toggle .mb-segmented-indicator { inset-block: 2px; left: 2px; width: calc((100% - 4px) / var(--segment-count)); border-radius: 7px; }
+  .quiz-paper-scopes button { min-height: 32px; padding: 5px 10px; }
   .quiz-view-toggle button { width: 34px; min-width: 34px; min-height: 34px; }
   .paper-grid:not(.paper-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .paper-card { border-radius: 16px; }

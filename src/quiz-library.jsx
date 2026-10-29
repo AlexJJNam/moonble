@@ -36,13 +36,16 @@ import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCac
 import './design-system.css';
 import './quiz-library.css';
 
-const difficulties = ['전체 난이도', '기본', '심화'];
+const paperScopes = [
+  { label: '전체', value: 'all' },
+  { label: '개인문제', value: 'personal' },
+  { label: '공개문제', value: 'public' },
+];
 const PAPER_TOUCH_DRAG_DELAY = 1000;
 const paperDragPreviewWidth = cardWidth => Math.max(112, Math.min(176, cardWidth * .52));
 const supportsMousePaperDrag = () => typeof window === 'undefined'
   || !window.matchMedia
   || window.matchMedia('(pointer: fine) and (hover: hover)').matches;
-const difficultySegments = difficulties.map(item => ({ label: item, value: item }));
 const viewSegments = [
   { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
   { value: 'list', label: '1열 목록 보기', ariaLabel: '1열 목록 보기', icon: List },
@@ -94,6 +97,7 @@ function sectionFromHash() {
   if (window.location.hash === '#achievement') return 'achievement';
   if (window.location.hash === '#create') return 'create';
   if (window.location.hash === '#community') return 'community';
+  if (window.location.hash === '#public') return 'public';
   return 'papers';
 }
 
@@ -240,7 +244,7 @@ function QuizLibrary() {
   const mobileSearchInputRef = useRef(null);
   const mobileSearchTriggerRef = useRef(null);
   const mobileSearchScrollRef = useRef(0);
-  const [difficulty, setDifficulty] = useState('전체 난이도');
+  const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
@@ -441,7 +445,9 @@ function QuizLibrary() {
   }, []);
   useEffect(() => {
     const syncSection = () => {
-      setSection(sectionFromHash());
+      const nextSection = sectionFromHash();
+      setSection(nextSection);
+      if (nextSection !== 'papers') setMobileSearchOpen(false);
       setEditMode(false);
       finishPaperDrag(paperTouchDrag.current);
       paperTouchDrag.current = null;
@@ -954,8 +960,10 @@ function QuizLibrary() {
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = mobileSearchOpen || activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
-    const difficultyMatch = mobileSearchOpen || difficulty === '전체 난이도' || paper.level === difficulty;
-    return groupMatch && difficultyMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
+    const scopeMatch = mobileSearchOpen || paperScope === 'all'
+      || (paperScope === 'personal' && paper.kind === 'custom')
+      || (paperScope === 'public' && paper.kind !== 'custom');
+    return groupMatch && scopeMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
     const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
@@ -984,17 +992,18 @@ function QuizLibrary() {
   const editingPaperCards = editMode && !mobileSearchOpen;
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
-    <AppHeader active={section === 'community' ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} />
+    <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} />
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mobileSearchOpen ? ' is-mobile-search' : ''}`} id="paper-library" tabIndex={-1} role={mobileSearchOpen ? 'dialog' : undefined} aria-modal={mobileSearchOpen ? 'true' : undefined} aria-label={mobileSearchOpen ? '문제지 검색' : undefined}>
         {mobileSearchOpen && <div className="quiz-mobile-search-header"><button className="quiz-mobile-search-back" type="button" aria-label="검색 닫기" onClick={closeMobileSearch}><ChevronLeft size={21} aria-hidden="true" /></button><label className="quiz-search quiz-mobile-search-input"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input ref={mobileSearchInputRef} type="search" placeholder="검색" value={query} onFocus={() => setMobileSuggestionsOpen(true)} onChange={event => { setQuery(event.target.value); setMobileSuggestionsOpen(true); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setMobileSuggestionsOpen(false); event.currentTarget.blur(); } }} /></label>{query && <button className="quiz-mobile-search-clear" type="button" aria-label="검색어 지우기" onClick={() => { setQuery(''); setMobileSuggestionsOpen(true); mobileSearchInputRef.current?.focus(); }}><X size={16} aria-hidden="true" /></button>}</div>}
         {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
         <div className="quiz-title"><div><h1 className="mb-page-title">문제지</h1></div><FlowActionButton className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={18} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>
         <nav className="quiz-library-tabs" aria-label="문제지 메뉴">
-          <a href="#library" aria-current={section === 'community' ? undefined : 'page'}>나의 문제지</a>
+          <a href="#library" aria-current={section === 'papers' ? 'page' : undefined}>나의 문제지</a>
+          <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>공개된 문제 서칭</a>
           <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
         </nav>
-        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : <>
+        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <section className="quiz-empty quiz-public-search-placeholder" aria-labelledby="public-search-title"><Search size={28} aria-hidden="true" /><h2 id="public-search-title" className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>공개된 문제지를 찾아 풀고 의견을 나눌 수 있는 공간이에요.</p></section> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
             <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
@@ -1025,7 +1034,7 @@ function QuizLibrary() {
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
         <div className="quiz-library-tools">
-          <div className="quiz-filter-groups"><SegmentedControl className="quiz-difficulties" ariaLabel="난이도" items={difficultySegments} value={difficulty} onChange={setDifficulty} /></div>
+          <div className="quiz-filter-groups"><SegmentedControl className="quiz-paper-scopes" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
           <div className="quiz-display-tools">
             <label className="quiz-search quiz-search--desktop"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
             <button ref={mobileSearchTriggerRef} className="quiz-search quiz-mobile-search-trigger" type="button" aria-label="문제지 검색" onClick={openMobileSearch}><Search size={18} aria-hidden="true" /><span>{query || '검색'}</span></button>
