@@ -37,6 +37,7 @@ import './design-system.css';
 import './quiz-library.css';
 
 const paperScopes = [
+  { label: '전체', value: 'all' },
   { label: '개인문제', value: 'personal' },
   { label: '전체공개', value: 'public' },
   { label: '일부공개', value: 'partial' },
@@ -253,7 +254,7 @@ function QuizLibrary() {
   const mobileSearchInputRef = useRef(null);
   const mobileSearchTriggerRef = useRef(null);
   const mobileSearchScrollRef = useRef(0);
-  const [paperScope, setPaperScope] = useState('personal');
+  const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
@@ -970,7 +971,7 @@ function QuizLibrary() {
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = mobileSearchOpen || activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
-    const scopeMatch = mobileSearchOpen
+    const scopeMatch = mobileSearchOpen || paperScope === 'all'
       || (paperScope === 'personal' && paper.kind === 'custom' && paper.visibility === 'personal')
       || (paperScope === 'public' && (paper.kind !== 'custom' || paper.visibility === 'public'))
       || (paperScope === 'partial' && paper.kind === 'custom' && paper.visibility === 'partial');
