@@ -1440,107 +1440,93 @@
     }
 
     .shared-quiz-rank {
-      margin: 12px 0 0;
-      padding: var(--mb-space-16);
+      display: grid;
+      gap: var(--mb-space-24);
+      margin: var(--mb-space-12) 0 0;
+      padding: var(--mb-space-24);
+      border: 1px solid var(--mb-border);
       border-radius: var(--mb-radius-16);
       color: var(--mb-text-primary);
-      background: #f8f9fb;
+      background: var(--mb-surface);
       font-family: var(--mb-font-sans);
-    }
-
-    .shared-quiz-rank[hidden], .shared-quiz-rank-grid[hidden], .shared-quiz-rank-status[hidden], .shared-quiz-analytics[hidden], .shared-quiz-share-actions[hidden] { display: none; }
-
-    .shared-quiz-rank h3 {
-      margin: 0 0 var(--mb-space-12);
-      font-size: var(--mb-font-22);
-      line-height: 30px;
-      font-weight: var(--mb-weight-semibold);
       text-align: left;
     }
 
-    .shared-quiz-rank-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--mb-space-8);
-    }
+    .shared-quiz-rank[hidden], .shared-quiz-rank [hidden] { display: none; }
 
-    .shared-quiz-rank-grid article {
-      min-width: 0;
-      display: grid;
-      justify-items: center;
-      gap: var(--mb-space-4);
-      padding: var(--mb-space-4);
-      text-align: center;
-    }
+    .shared-quiz-rank-head { display: grid; gap: var(--mb-space-8); }
+    .shared-quiz-rank h3 { margin: 0; font-size: var(--mb-font-22); line-height: 30px; font-weight: var(--mb-weight-semibold); letter-spacing: -.02em; }
+    .shared-quiz-rank h4 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
+    .shared-quiz-rank-note, .shared-quiz-rank-status { margin: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-regular); }
 
-    .shared-quiz-rank-grid span {
-      color: var(--mb-text-tertiary);
-      font-size: var(--mb-font-13);
-      line-height: 20px;
-      white-space: nowrap;
-    }
+    /* 요약 지표: 성취도 화면의 요약 줄과 같은 크기 체계를 쓴다. */
+    .shared-quiz-rank-stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: var(--mb-radius-12); background: var(--mb-surface-muted); }
+    .shared-quiz-rank-stats article { position: relative; min-width: 0; display: grid; align-content: start; gap: var(--mb-space-4); padding: var(--mb-space-16) 20px; }
+    .shared-quiz-rank-stats article + article::before { content: ''; position: absolute; top: var(--mb-space-16); bottom: var(--mb-space-16); left: 0; width: 1px; background: var(--mb-border); }
+    .shared-quiz-rank-stats span { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-medium); white-space: nowrap; }
+    .shared-quiz-rank-stats strong { color: var(--mb-text-primary); font-size: var(--mb-font-24); line-height: 32px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .shared-quiz-rank-stats .is-rank strong { color: var(--mb-primary-strong); }
+    .shared-quiz-rank-stats b { font-weight: inherit; }
+    .shared-quiz-rank-stats small { margin-left: 2px; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); letter-spacing: 0; }
+    .shared-quiz-rank-stats .is-rank small { color: inherit; }
+    .shared-quiz-rank-stats p { margin: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-medium); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
 
-    .shared-quiz-rank-grid strong {
-      color: var(--mb-text-primary);
-      font-size: var(--mb-font-24);
-      line-height: 32px;
-      font-weight: var(--mb-weight-bold);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-
-    .shared-quiz-rank-grid article:nth-child(2) strong { color: var(--mb-primary-strong); }
-
-    .shared-quiz-rank-grid small { margin-left: var(--mb-space-4); color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
-
-    .shared-quiz-rank-note, .shared-quiz-rank-status {
-      margin: var(--mb-space-8) 0 0;
-      color: var(--mb-text-tertiary);
-      font-size: var(--mb-font-13);
-      line-height: 20px;
-      font-weight: var(--mb-weight-medium);
-      text-align: left;
-    }
-
-    .shared-quiz-analytics { margin-top: var(--mb-space-16); }
-    .shared-quiz-podium { display: grid; gap: var(--mb-space-4); margin-top: var(--mb-space-8); }
-    .shared-quiz-podium[hidden] { display: none; }
-    .shared-quiz-podium-title { margin: 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); }
-    .shared-quiz-podium-row { min-height: 36px; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: var(--mb-space-8); color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; }
-    .shared-quiz-podium-medal { font-size: 18px; line-height: 24px; text-align: center; }
-    .shared-quiz-podium-row strong { color: var(--mb-text-secondary); font-weight: var(--mb-weight-semibold); }
-    .shared-quiz-podium-row b { color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; }
-    .shared-quiz-analytics-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mb-space-8); }
-    .shared-quiz-analytics-summary article { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: var(--mb-space-8); padding: var(--mb-space-12); border-radius: var(--mb-radius-12); background: rgb(255 255 255 / 78%); }
-    .shared-quiz-analytics-summary span { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
-    .shared-quiz-analytics-summary strong { color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .shared-quiz-analytics-summary small { margin-left: var(--mb-space-4); color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; }
-    .shared-quiz-chart-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--mb-space-8); margin: var(--mb-space-16) 0 var(--mb-space-8); }
-    .shared-quiz-chart-heading h4 { margin: 0; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
-    .shared-quiz-chart-heading span { color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); white-space: nowrap; }
-    .shared-quiz-chart-wrap { overflow: hidden; border-radius: var(--mb-radius-12); background: rgb(255 255 255 / 78%); }
+    /* 점수 분포와 상위 참여자 */
+    .shared-quiz-analytics { display: grid; gap: var(--mb-space-24); }
+    .shared-quiz-block-head { min-height: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--mb-space-8) var(--mb-space-16); margin-bottom: var(--mb-space-12); }
+    .shared-quiz-legend { display: flex; align-items: center; gap: var(--mb-space-12); color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+    .shared-quiz-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .shared-quiz-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--mb-primary); }
+    .shared-quiz-legend i.is-average { width: 0; height: 12px; border-left: 2px dashed var(--mb-text-secondary); border-radius: 0; background: none; }
+    .shared-quiz-chart-wrap { min-width: 0; }
     .shared-quiz-score-chart { display: block; width: 100%; height: auto; overflow: visible; }
-    .shared-quiz-score-chart text { fill: var(--mb-text-tertiary); font: var(--mb-font-12)/1.5 var(--mb-font-sans); }
-    .shared-quiz-score-chart .shared-chart-grid { stroke: #e8edf3; stroke-width: 1; stroke-dasharray: 3 4; }
-    .shared-quiz-score-chart .shared-chart-bar { fill: #8bbdff; fill-opacity: .72; transition: y 380ms cubic-bezier(.2,.7,.2,1), height 380ms cubic-bezier(.2,.7,.2,1); }
-    .shared-quiz-score-chart .shared-chart-average { stroke: var(--mb-primary-strong); stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .shared-quiz-score-chart .shared-chart-average-label { fill: var(--mb-primary-strong); font-weight: var(--mb-weight-bold); }
-    .shared-quiz-chart-note { margin: var(--mb-space-8) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
-    .shared-quiz-share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mb-space-8); margin-top: var(--mb-space-16); }
-    .shared-quiz-share-actions button { min-width: 0; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 10px 8px; border: 0; border-radius: var(--mb-radius-12); background: var(--mb-surface); color: var(--mb-text-secondary); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); text-align: center; cursor: pointer; transition: color var(--mb-duration), background-color var(--mb-duration); }
-    .shared-quiz-share-actions button:hover { background: var(--mb-primary-soft); color: var(--mb-primary-strong); }
+    .shared-quiz-score-chart text { fill: var(--mb-text-tertiary); font-family: var(--mb-font-sans); font-size: var(--mb-font-12); font-weight: var(--mb-weight-medium); font-variant-numeric: tabular-nums; }
+    .shared-quiz-score-chart .shared-chart-baseline { stroke: var(--mb-border); stroke-width: 1; }
+    .shared-quiz-score-chart .shared-chart-bar { fill: #8bbdff; fill-opacity: .68; transition: y 380ms cubic-bezier(.2,.7,.2,1), height 380ms cubic-bezier(.2,.7,.2,1); }
+    .shared-quiz-score-chart .shared-chart-bar.is-mine { fill: var(--mb-primary); fill-opacity: 1; }
+    .shared-quiz-score-chart .shared-chart-count { fill: var(--mb-text-secondary); font-weight: var(--mb-weight-semibold); paint-order: stroke; stroke: var(--mb-surface); stroke-width: 3px; stroke-linejoin: round; transition: opacity 380ms ease-out; }
+    .shared-quiz-score-chart .shared-chart-count.is-mine, .shared-quiz-score-chart .shared-chart-axis.is-mine { fill: var(--mb-primary-strong); font-weight: var(--mb-weight-bold); }
+    .shared-quiz-score-chart .shared-chart-average { stroke: var(--mb-text-secondary); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .shared-quiz-score-chart .shared-chart-average-label { fill: var(--mb-text-secondary); font-weight: var(--mb-weight-semibold); }
+    .shared-quiz-podium ol { margin: 0; padding: 0; list-style: none; }
+    .shared-quiz-podium-row { min-height: 44px; display: flex; align-items: center; gap: var(--mb-space-12); border-top: 1px solid var(--mb-border); font-size: var(--mb-font-14); line-height: 20px; }
+    .shared-quiz-podium-rank { min-width: 40px; display: inline-flex; justify-content: center; padding: 1px var(--mb-space-8); border-radius: 999px; background: var(--mb-surface-muted); color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; }
+    .shared-quiz-podium-rank.is-rank-1 { background: #fff4d6; color: var(--mb-warning); }
+    .shared-quiz-podium-rank.is-rank-3 { background: #fbeee6; color: #8a4b22; }
+    .shared-quiz-podium-score { flex: 1; min-width: 0; color: var(--mb-text-primary); font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; }
+    .shared-quiz-podium-me { padding: 1px var(--mb-space-8); border-radius: 999px; background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
+
+    .shared-quiz-share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mb-space-8); }
+    .shared-quiz-share-actions button { min-width: 0; min-height: var(--mb-control-height); display: inline-flex; align-items: center; justify-content: center; padding: 12px var(--mb-space-16); border: 0; border-radius: var(--mb-radius-12); background: var(--mb-surface-muted); color: var(--mb-text-secondary); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); text-align: center; white-space: nowrap; cursor: pointer; transition: color var(--mb-duration), background-color var(--mb-duration); }
+    .shared-quiz-share-actions button:hover { background: var(--mb-border); color: var(--mb-text-primary); }
+    .shared-quiz-share-actions button.is-primary { background: var(--mb-primary-strong); color: #fff; }
+    .shared-quiz-share-actions button.is-primary:hover { background: var(--mb-primary-hover); color: #fff; }
     .shared-quiz-share-actions button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
-    .shared-quiz-share-status { margin: var(--mb-space-8) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; text-align: center; }
+    .shared-quiz-share-status { margin: calc(var(--mb-space-16) * -1) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; text-align: center; }
     .shared-quiz-share-status:empty { display: none; }
 
-    @media (prefers-reduced-motion: reduce) { .shared-quiz-score-chart .shared-chart-bar { transition: none; } }
-    @media (max-width: 480px) {
-      .shared-quiz-rank h3 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); }
-      .shared-quiz-rank-grid { gap: var(--mb-space-4); }
-      .shared-quiz-rank-grid article { padding: var(--mb-space-4) 0; }
-      .shared-quiz-rank-grid strong { font-size: var(--mb-font-20); line-height: 25px; }
-      .shared-quiz-rank-grid small { font-size: var(--mb-font-13); }
-      .shared-quiz-analytics-summary article { padding: var(--mb-space-8); }
+    @media (prefers-reduced-motion: reduce) { .shared-quiz-score-chart .shared-chart-bar, .shared-quiz-score-chart .shared-chart-count { transition: none; } }
+    @media (min-width: 768px) {
+      .shared-quiz-analytics.has-podium { grid-template-columns: minmax(0, 1fr) 240px; gap: var(--mb-space-32); }
+      .shared-quiz-share-actions { display: flex; justify-content: flex-end; }
+      .shared-quiz-share-actions button { min-width: 160px; }
+      .shared-quiz-share-status { text-align: right; }
+    }
+    @media (max-width: 767px) {
+      .shared-quiz-rank h3 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); font-weight: var(--mb-weight-bold); }
+      .shared-quiz-rank-note, .shared-quiz-rank-status { font-size: var(--mb-font-13); }
+    }
+    @media (max-width: 640px) {
+      .shared-quiz-rank { gap: var(--mb-space-16); padding: var(--mb-space-16); }
+      .shared-quiz-rank-head { gap: var(--mb-space-4); }
+      .shared-quiz-rank-stats article { justify-items: center; padding: var(--mb-space-12) var(--mb-space-4); text-align: center; }
+      .shared-quiz-rank-stats article + article::before { top: var(--mb-space-12); bottom: var(--mb-space-12); }
+      .shared-quiz-rank-stats span { font-size: var(--mb-font-12); line-height: 18px; }
+      .shared-quiz-rank-stats strong { font-size: var(--mb-font-20); line-height: 28px; }
+      .shared-quiz-rank-stats small { font-size: var(--mb-font-13); }
+      .shared-quiz-rank-stats p { max-width: 100%; overflow: visible; white-space: normal; word-break: keep-all; }
+      .shared-quiz-analytics { gap: var(--mb-space-16); }
+      .shared-quiz-share-status { margin-top: calc(var(--mb-space-8) * -1); }
     }
 
     .shared-guest-complete .shared-guest-delivery-error {
@@ -3405,29 +3391,31 @@
       <div id="modePill" class="pill" style="display:none;">오답 재도전 모드</div>
       <div id="resultBox" class="result" aria-live="polite"></div>
       <section id="sharedQuizRank" class="shared-quiz-rank" aria-labelledby="sharedQuizRankTitle" aria-live="polite" hidden>
-        <h3 id="sharedQuizRankTitle">공유 문제 순위</h3>
-        <div id="sharedQuizRankGrid" class="shared-quiz-rank-grid" hidden>
-          <article><span>내 최고 점수</span><strong><b id="sharedQuizBestScore">—</b><small>점</small></strong></article>
-          <article><span>내 순위</span><strong><b id="sharedQuizRankValue">—</b><small>위</small></strong></article>
-          <article><span>참여자</span><strong><b id="sharedQuizParticipants">—</b><small>명</small></strong></article>
+        <div class="shared-quiz-rank-head">
+          <h3 id="sharedQuizRankTitle">공유 문제 순위</h3>
+          <p id="sharedQuizRankNote" class="shared-quiz-rank-note" hidden>참여자별 최고 점수로 집계하고, 같은 점수는 공동 순위로 표시해요.</p>
+          <p id="sharedQuizRankStatus" class="shared-quiz-rank-status" role="status" hidden></p>
+        </div>
+        <div id="sharedQuizRankGrid" class="shared-quiz-rank-stats" hidden>
+          <article class="is-rank"><span>내 순위</span><strong><b id="sharedQuizRankValue">—</b><small>위</small></strong><p><b id="sharedQuizParticipants">—</b>명 중</p></article>
+          <article><span>내 최고 점수</span><strong><b id="sharedQuizBestScore">—</b><small>점</small></strong><p id="sharedQuizScoreGap" hidden></p></article>
+          <article id="sharedQuizAverageStat" hidden><span>참여자 평균</span><strong><b id="sharedQuizAverage">—</b><small>점</small></strong><p>표준편차 <b id="sharedQuizStdDev">—</b>점</p></article>
         </div>
         <div id="sharedQuizAnalytics" class="shared-quiz-analytics" hidden>
-          <div class="shared-quiz-analytics-summary">
-            <article><span>참여자 평균</span><strong><b id="sharedQuizAverage">—</b><small>점</small></strong></article>
-            <article><span>점수 표준편차</span><strong><b id="sharedQuizStdDev">—</b><small>점</small></strong></article>
+          <div class="shared-quiz-chart">
+            <div class="shared-quiz-block-head">
+              <h4>점수 분포</h4>
+              <span class="shared-quiz-legend" aria-hidden="true"><span><i></i>내 점수 구간</span><span><i class="is-average"></i>평균</span></span>
+            </div>
+            <div class="shared-quiz-chart-wrap"><svg id="sharedQuizScoreChart" class="shared-quiz-score-chart" role="img" aria-label="참여자별 최고 점수 분포"></svg></div>
           </div>
           <div id="sharedQuizPodium" class="shared-quiz-podium" hidden>
-            <p class="shared-quiz-podium-title">상위 참여자</p>
-            <div id="sharedQuizPodiumRows"></div>
+            <div class="shared-quiz-block-head"><h4>상위 참여자</h4></div>
+            <ol id="sharedQuizPodiumRows"></ol>
           </div>
-          <div class="shared-quiz-chart-heading"><h4>참여자 점수 분포</h4><span id="sharedQuizAverageLabel"></span></div>
-          <div class="shared-quiz-chart-wrap"><svg id="sharedQuizScoreChart" class="shared-quiz-score-chart" viewBox="0 0 480 164" role="img" aria-label="참여자별 최고 점수 분포"></svg></div>
-          <p class="shared-quiz-chart-note">참여자별 최고 점수를 기준으로 집계했어요.</p>
         </div>
-        <p id="sharedQuizRankNote" class="shared-quiz-rank-note" hidden>같은 점수는 공동 순위로 표시해요.</p>
-        <p id="sharedQuizRankStatus" class="shared-quiz-rank-status" role="status" hidden></p>
         <div id="sharedQuizShareActions" class="shared-quiz-share-actions" hidden>
-          <button id="shareMyQuizScore" type="button">내 점수 공유하기</button>
+          <button id="shareMyQuizScore" class="is-primary" type="button">내 점수 공유하기</button>
           <button id="shareQuizPaper" type="button">문제 공유하기</button>
         </div>
         <p id="sharedQuizShareStatus" class="shared-quiz-share-status" role="status" aria-live="polite"></p>
@@ -3688,20 +3676,49 @@
 
     function renderSharedQuizScoreChart(result) {
       const svg = byId('sharedQuizScoreChart');
-      const distribution = Array.isArray(result.scoreDistribution) ? result.scoreDistribution : [];
+      const distribution = Array.isArray(result?.scoreDistribution) ? result.scoreDistribution : [];
       if (!svg || !distribution.length || result.averageScore == null) return false;
+      const state = sharedQuizChartState.get(svg) || { width: 0 };
+      state.result = result;
+      if (!state.observer && typeof ResizeObserver === 'function' && svg.parentElement) {
+        // 화면 폭이 바뀌면 실제 픽셀 폭으로 다시 그려 글자·막대 크기를 일정하게 유지한다.
+        state.observer = new ResizeObserver(() => {
+          const width = Math.floor(svg.parentElement.getBoundingClientRect().width);
+          if (state.result && width && width !== state.width) drawSharedQuizScoreChart(svg, state.result, false);
+        });
+        state.observer.observe(svg.parentElement);
+      }
+      sharedQuizChartState.set(svg, state);
+      drawSharedQuizScoreChart(svg, result, true);
+      return true;
+    }
+
+    const sharedQuizChartState = new WeakMap();
+
+    function formatSharedScore(value) {
+      const rounded = Math.round(Number(value) * 10) / 10;
+      return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    }
+
+    function drawSharedQuizScoreChart(svg, result, animate) {
+      const width = Math.floor(svg.parentElement?.getBoundingClientRect().width || 0);
+      if (!width) return;
+      const state = sharedQuizChartState.get(svg);
+      if (state) state.width = width;
       const ns = 'http://www.w3.org/2000/svg';
-      const width = 480;
-      const height = 164;
-      const margin = { top: 22, right: 15, bottom: 26, left: 30 };
-      const plotWidth = width - margin.left - margin.right;
-      const plotHeight = height - margin.top - margin.bottom;
-      const bottom = margin.top + plotHeight;
-      const maxCount = Math.max(1, ...distribution.map(item => item.count));
-      const barStep = plotWidth / 11;
-      svg.replaceChildren();
-      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      svg.setAttribute('aria-label', `참여자 ${result.participants}명의 최고 점수 분포. 평균 ${result.averageScore}점.`);
+      const height = width < 480 ? 152 : 168;
+      const top = 40;
+      const bottom = height - 24;
+      const plotHeight = bottom - top;
+      // 0~90점은 10점 구간, 100점은 단독 구간이므로 11칸을 같은 폭으로 나눈다.
+      const band = width / 11;
+      const barWidth = Math.min(28, Math.max(8, band * .6));
+      const distribution = result.scoreDistribution;
+      const maxCount = Math.max(1, ...distribution.map(item => Number(item.count) || 0));
+      const myScore = Number(result.bestScore ?? result.score);
+      const myBucket = Number.isFinite(myScore) ? Math.min(10, Math.max(0, Math.floor(myScore / 10))) : -1;
+      const average = Number(result.averageScore);
+      const motion = animate && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       const add = (tag, attrs, textValue) => {
         const node = document.createElementNS(ns, tag);
         Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
@@ -3709,46 +3726,79 @@
         svg.appendChild(node);
         return node;
       };
-      const tickValues = [...new Set([0, Math.ceil(maxCount / 2), maxCount])];
-      tickValues.forEach(value => {
-        const y = bottom - (value / maxCount) * plotHeight;
-        add('line', { class: 'shared-chart-grid', x1: margin.left, x2: width - margin.right, y1: y, y2: y });
-        add('text', { x: margin.left - 7, y: y + 3, 'text-anchor': 'end' }, String(value));
+      svg.replaceChildren();
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      const bucketLabel = myBucket === 10 ? '100점' : `${myBucket * 10}–${myBucket * 10 + 9}점`;
+      svg.setAttribute('aria-label', `참여자 ${result.participants}명의 최고 점수 분포. 평균 ${formatSharedScore(average)}점${myBucket >= 0 ? `, 내 점수는 ${bucketLabel} 구간` : ''}.`);
+      add('line', { class: 'shared-chart-baseline', x1: 0, x2: width, y1: bottom + .5, y2: bottom + .5 });
+      const columns = distribution.map(item => {
+        const index = Math.min(10, Math.max(0, Math.round(Number(item.score) / 10)));
+        const count = Number(item.count) || 0;
+        return { index, count, center: (index + .5) * band, height: count ? Math.max(3, (count / maxCount) * plotHeight) : 0, mine: index === myBucket };
       });
-      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      const bars = distribution.map(item => {
-        const start = Number(item.score);
-        const count = Number(item.count);
-        const centerScore = start === 100 ? 100 : start + 5;
-        const x = margin.left + (centerScore / 100) * plotWidth;
-        const barHeight = (count / maxCount) * plotHeight;
+      const bars = columns.filter(column => column.count).map(column => {
         const rect = add('rect', {
-          class: 'shared-chart-bar',
-          x: x - barStep * .29,
-          y: reducedMotion ? bottom - barHeight : bottom,
-          width: barStep * .58,
-          height: reducedMotion ? barHeight : 0,
-          rx: 3,
-          'aria-label': `${start === 100 ? '100' : `${start}–${start + 9}`}점 구간 ${count}명`,
+          class: `shared-chart-bar${column.mine ? ' is-mine' : ''}`,
+          x: column.center - barWidth / 2,
+          y: motion ? bottom : bottom - column.height,
+          width: barWidth,
+          height: motion ? 0 : column.height,
+          rx: Math.min(4, barWidth / 4),
         });
-        rect.dataset.targetY = String(bottom - barHeight);
-        rect.dataset.targetHeight = String(barHeight);
-        return rect;
+        return [rect, column];
       });
-      const avgX = margin.left + (Number(result.averageScore) / 100) * plotWidth;
-      add('line', { class: 'shared-chart-average', x1: avgX, x2: avgX, y1: margin.top, y2: bottom });
-      const averageAnchor = avgX > width - 75 ? 'end' : 'start';
-      const averageLabelX = avgX > width - 75 ? avgX - 4 : avgX + 4;
-      add('text', { class: 'shared-chart-average-label', x: averageLabelX, y: 13, 'text-anchor': averageAnchor }, `평균 ${result.averageScore}점`);
-      [0, 20, 40, 60, 80, 100].forEach(score => {
-        const x = margin.left + (score / 100) * plotWidth;
-        add('text', { x, y: height - 7, 'text-anchor': score === 0 ? 'start' : score === 100 ? 'end' : 'middle' }, String(score));
+      const averageX = Math.min(width - 1, Math.max(1, (average >= 100 ? 10.5 : average / 10) * band));
+      add('line', { class: 'shared-chart-average', x1: averageX, x2: averageX, y1: 20, y2: bottom });
+      const averageLabel = add('text', { class: 'shared-chart-average-label', x: averageX, y: 14, 'text-anchor': 'middle' }, `평균 ${formatSharedScore(average)}점`);
+      const labelWidth = averageLabel.getComputedTextLength?.() || 0;
+      if (labelWidth) averageLabel.setAttribute('x', String(Math.min(width - labelWidth / 2, Math.max(labelWidth / 2, averageX))));
+      const counts = bars.map(([, column]) => {
+        const label = add('text', { class: `shared-chart-count${column.mine ? ' is-mine' : ''}`, x: column.center, y: bottom - column.height - 6, 'text-anchor': 'middle' }, String(column.count));
+        if (motion) label.style.opacity = '0';
+        return label;
       });
-      if (!reducedMotion) requestAnimationFrame(() => bars.forEach(rect => {
-        rect.setAttribute('y', rect.dataset.targetY);
-        rect.setAttribute('height', rect.dataset.targetHeight);
+      columns.forEach(column => {
+        if (band >= 36 || column.index % 2 === 0) add('text', { class: `shared-chart-axis${column.mine ? ' is-mine' : ''}`, x: column.center, y: height - 6, 'text-anchor': 'middle' }, String(column.index * 10));
+      });
+      if (motion) requestAnimationFrame(() => requestAnimationFrame(() => {
+        bars.forEach(([rect, column]) => {
+          rect.setAttribute('y', String(bottom - column.height));
+          rect.setAttribute('height', String(column.height));
+        });
+        counts.forEach(label => { label.style.opacity = '1'; });
       }));
-      return true;
+    }
+
+    function renderSharedQuizPodium(result) {
+      const podium = Array.isArray(result.topThree) ? result.topThree : [];
+      if (!sharedQuizPodiumRows) return 0;
+      sharedQuizPodiumRows.replaceChildren();
+      const myScore = result.bestScore ?? result.score;
+      let mineMarked = false;
+      podium.forEach(item => {
+        const row = document.createElement('li');
+        row.className = 'shared-quiz-podium-row';
+        const rank = document.createElement('span');
+        rank.className = `shared-quiz-podium-rank is-rank-${item.rank}`;
+        rank.textContent = `${item.rank}위`;
+        const score = document.createElement('span');
+        score.className = 'shared-quiz-podium-score';
+        score.textContent = `${item.score}점`;
+        row.append(rank, score);
+        // 같은 점수의 공동 순위가 여럿이면 첫 줄에만 내 표시를 붙인다.
+        if (!mineMarked && item.rank === result.rank && item.score === myScore) {
+          mineMarked = true;
+          const me = document.createElement('span');
+          me.className = 'shared-quiz-podium-me';
+          me.textContent = '나';
+          row.append(me);
+        }
+        sharedQuizPodiumRows.appendChild(row);
+      });
+      if (sharedQuizPodium) sharedQuizPodium.hidden = podium.length === 0;
+      return podium.length;
     }
 
     function sharedQuizUrl() {
@@ -3890,37 +3940,32 @@
         return;
       }
       latestSharedQuizResult = result;
-      byId('sharedQuizBestScore').textContent = String(result.bestScore ?? result.score);
+      const myScore = result.bestScore ?? result.score;
+      byId('sharedQuizBestScore').textContent = String(myScore);
       byId('sharedQuizRankValue').textContent = String(result.rank);
       byId('sharedQuizParticipants').textContent = String(result.participants);
-      if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = false;
-      const analyticsReady = result.averageScore != null && result.standardDeviation != null && renderSharedQuizScoreChart(result);
-      if (sharedQuizAnalytics) sharedQuizAnalytics.hidden = !analyticsReady;
-      if (analyticsReady) {
-        byId('sharedQuizAverage').textContent = String(result.averageScore);
-        byId('sharedQuizStdDev').textContent = String(result.standardDeviation);
-        byId('sharedQuizAverageLabel').textContent = `평균 ${result.averageScore}점`;
-        const podium = Array.isArray(result.topThree) ? result.topThree : [];
-        if (sharedQuizPodiumRows) {
-          sharedQuizPodiumRows.replaceChildren();
-          podium.forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'shared-quiz-podium-row';
-            const medal = document.createElement('span');
-            medal.className = 'shared-quiz-podium-medal';
-            medal.setAttribute('aria-label', `${item.rank}위 메달`);
-            medal.textContent = ['🥇', '🥈', '🥉'][item.rank - 1];
-            const label = document.createElement('strong');
-            const currentUser = item.rank === result.rank && item.score === (result.bestScore ?? result.score);
-            label.textContent = `${item.rank}위${currentUser ? ' · 내 점수' : ''}`;
-            const score = document.createElement('b');
-            score.textContent = `${item.score}점`;
-            row.append(medal, label, score);
-            sharedQuizPodiumRows.appendChild(row);
-          });
-          if (sharedQuizPodium) sharedQuizPodium.hidden = podium.length === 0;
-        }
+      const analyticsReady = result.averageScore != null && result.standardDeviation != null
+        && Array.isArray(result.scoreDistribution) && result.scoreDistribution.length > 0;
+      const averageStat = byId('sharedQuizAverageStat');
+      if (averageStat) averageStat.hidden = !analyticsReady;
+      const scoreGap = byId('sharedQuizScoreGap');
+      if (scoreGap) {
+        const gap = analyticsReady ? Math.round((Number(myScore) - Number(result.averageScore)) * 10) / 10 : null;
+        scoreGap.textContent = gap == null ? '' : gap === 0 ? '평균과 같아요' : `평균 ${gap > 0 ? '+' : '−'}${formatSharedScore(Math.abs(gap))}점`;
+        scoreGap.hidden = gap == null;
       }
+      if (analyticsReady) {
+        byId('sharedQuizAverage').textContent = formatSharedScore(result.averageScore);
+        byId('sharedQuizStdDev').textContent = formatSharedScore(result.standardDeviation);
+      }
+      if (sharedQuizRankGrid) sharedQuizRankGrid.hidden = false;
+      if (sharedQuizAnalytics) {
+        const podiumCount = analyticsReady ? renderSharedQuizPodium(result) : 0;
+        sharedQuizAnalytics.classList.toggle('has-podium', podiumCount > 0);
+        sharedQuizAnalytics.hidden = !analyticsReady;
+      }
+      // 영역을 먼저 보이게 한 뒤 그려야 실제 폭을 잴 수 있다.
+      if (analyticsReady) renderSharedQuizScoreChart(result);
       if (sharedQuizRankStatus) sharedQuizRankStatus.hidden = true;
       if (sharedQuizRankNote) sharedQuizRankNote.hidden = false;
       if (sharedQuizShareActions) sharedQuizShareActions.hidden = false;
