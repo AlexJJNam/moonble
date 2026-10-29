@@ -102,7 +102,7 @@ function Dialog({ labelledBy, describedBy, className = '', onClose, children }) 
   useEffect(() => {
     const viewport = window.visualViewport;
     const panel = panelRef.current;
-    if (!viewport || !panel || !className.includes('is-compose')) return undefined;
+    if (!viewport || !panel || !/\bis-(compose|post-detail)\b/.test(className)) return undefined;
     const fit = () => {
       const height = `${Math.round(viewport.height)}px`;
       const top = `${Math.max(0, Math.round(viewport.offsetTop))}px`;
@@ -361,7 +361,7 @@ function MentionText({ text }) {
   return <>{nodes}</>;
 }
 
-function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce, detail = false }) {
+function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce, detail = false, scrollRef = null, commentsRef = null, children = null }) {
   const [comments, setComments] = useState(null);
   const [likesEnabled, setLikesEnabled] = useState(false);
   const [sort, setSort] = useState('popular');
@@ -398,6 +398,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
       setBody('');
       setGif(null);
       onCountChange(1);
+      if (detail) requestAnimationFrame(() => { const scroller = scrollRef?.current; if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }); });
     } catch (submitError) { setError(submitError.message); }
     finally { setBusy(false); }
   }
@@ -425,8 +426,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     setBody(`@${comment.author_name} `);
     requestAnimationFrame(() => { const input = inputRef.current; if (input) { input.focus({ preventScroll: false }); const end = input.value.length; input.setSelectionRange(end, end); } });
   }
-  return <div className="quiz-community-comments">
-    <form className="quiz-community-comment-form" onSubmit={submit}>
+  const form = <form className="quiz-community-comment-form" onSubmit={submit}>
       <CommunityAvatar name={viewer?.ready ? viewer.name : ''} path={viewer?.ready ? viewer.avatarPath : ''} />
       <div className="quiz-community-comment-field">
         <label className="mb-sr-only" htmlFor={inputId}>댓글</label>
@@ -435,11 +435,13 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
         <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif) || busy : false}>남기기</button>
       </div>
-    </form>
+    </form>;
+  const draftArea = <>
     {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
     {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
-    {(detail || (likesEnabled && comments && comments.length > 1)) && <CommunitySortToggle ariaLabel="댓글" sort={sort} onChange={setSort} />}
-    {comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
+  </>;
+  const sortToggle = (detail || (likesEnabled && comments && comments.length > 1)) && <CommunitySortToggle ariaLabel="댓글" sort={sort} onChange={setSort} />;
+  const list = comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
         : <ul>{comments.map(comment => <li key={comment.id}>
           <CommunityAvatar name={comment.author_name} path={comment.author_avatar} />
@@ -460,8 +462,31 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
             </button>
             {menuId === comment.id && <div className="quiz-community-menu-list" role="menu"><button type="button" role="menuitem" className="is-danger" onClick={() => remove(comment)}>삭제하기</button></div>}
           </div>}
-        </li>)}</ul>}
-    {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)} onPick={picked => { setGif(picked); setGifOpen(false); }} />}
+        </li>)}</ul>;
+  const gifPicker = gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)} onPick={picked => { setGif(picked); setGifOpen(false); }} />;
+  // 상세 화면: 글과 댓글은 함께 스크롤하고, 댓글 입력은 아래에 고정한다.
+  if (detail) {
+    return <>
+      <div ref={scrollRef} className="quiz-community-detail-scroll">
+        {children}
+        <section ref={commentsRef} className="quiz-community-detail-comments quiz-community-comments" aria-label="댓글" tabIndex={-1}>
+          {sortToggle}
+          {list}
+        </section>
+      </div>
+      <div className="quiz-community-detail-compose">
+        {draftArea}
+        {form}
+      </div>
+      {gifPicker}
+    </>;
+  }
+  return <div className="quiz-community-comments">
+    {form}
+    {draftArea}
+    {sortToggle}
+    {list}
+    {gifPicker}
   </div>;
 }
 
@@ -469,11 +494,16 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
   const id = useId();
   const [liking, setLiking] = useState(false);
   const commentsRef = useRef(null);
+  const scrollRef = useRef(null);
   useEffect(() => {
     if (!focusComments) return undefined;
     let secondFrame = 0;
     const frame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      secondFrame = requestAnimationFrame(() => {
+        const scroller = scrollRef.current, comments = commentsRef.current;
+        if (!scroller || !comments) return;
+        scroller.scrollTo({ top: scroller.scrollTop + comments.getBoundingClientRect().top - scroller.getBoundingClientRect().top, behavior: 'smooth' });
+      });
     });
     return () => {
       cancelAnimationFrame(frame);
@@ -503,33 +533,32 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
       onAnnounce('링크를 복사했어요.');
     } catch (error) { if (error?.name !== 'AbortError') onAnnounce('링크를 복사하지 못했어요.'); }
   }
-  return <Dialog labelledBy={`${id}-title`} className={`is-post-detail${focusComments ? ' is-comments-focused' : ''}`} onClose={onClose}>
+  return <Dialog labelledBy={`${id}-title`} className="is-post-detail" onClose={onClose}>
     <header className="quiz-community-detail-head">
       <button type="button" className="quiz-community-detail-back" aria-label="커뮤니티로 돌아가기" onClick={onClose}><ChevronLeft size={23} aria-hidden="true" /></button>
       <h2 id={`${id}-title`}>게시글</h2>
       <span aria-hidden="true" />
     </header>
-    <article className="quiz-community-detail-post">
-      <header className="quiz-community-post-head">
-        <CommunityAvatar name={post.author_name} path={post.author_avatar} />
-        <div className="quiz-community-detail-author"><p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p><p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topicLabel(post.topic) && <span>{topicLabel(post.topic)}</span>}{post.edited_at && <span>수정됨</span>}</p></div>
-      </header>
-      {post.title && <h3 className="quiz-community-post-title">{post.title}</h3>}
-      {post.body && <p className="quiz-community-post-body is-expanded">{post.body}</p>}
-      <CommunityGif gif={post.gif} />
-      {post.attachment && <QuizAttachment attachment={post.attachment} record={post.record} />}
-      {!post.attachment && post.record && <RecordLine record={post.record} />}
-      <div className="quiz-community-actions">
-        <button type="button" className={post.liked ? 'is-liked' : ''} aria-pressed={post.liked} aria-label={`좋아요 ${post.like_count}개`} onClick={like} disabled={liking}>
-          <Heart size={18} aria-hidden="true" fill={post.liked ? 'currentColor' : 'none'} /><span>{post.like_count}</span>
-        </button>
-        <span className="quiz-community-detail-comment-count"><MessageCircle size={18} aria-hidden="true" /><span>{post.comment_count}</span></span>
-        <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
-      </div>
-    </article>
-    <section ref={commentsRef} id={`${id}-comments`} className="quiz-community-detail-comments" aria-label="댓글" tabIndex={-1}>
-      <CommentThread detail post={post} viewer={viewer} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce} />
-    </section>
+    <CommentThread detail post={post} viewer={viewer} scrollRef={scrollRef} commentsRef={commentsRef} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce}>
+      <article className="quiz-community-detail-post">
+        <header className="quiz-community-post-head">
+          <CommunityAvatar name={post.author_name} path={post.author_avatar} />
+          <div className="quiz-community-detail-author"><p><strong>{post.author_name}</strong><AuthorBadges item={post} /></p><p className="quiz-community-meta"><time dateTime={post.created_at}>{formatRelativeDate(post.created_at)}</time>{topicLabel(post.topic) && <span>{topicLabel(post.topic)}</span>}{post.edited_at && <span>수정됨</span>}</p></div>
+        </header>
+        {post.title && <h3 className="quiz-community-post-title">{post.title}</h3>}
+        {post.body && <p className="quiz-community-post-body is-expanded">{post.body}</p>}
+        <CommunityGif gif={post.gif} />
+        {post.attachment && <QuizAttachment attachment={post.attachment} record={post.record} />}
+        {!post.attachment && post.record && <RecordLine record={post.record} />}
+        <div className="quiz-community-actions">
+          <button type="button" className={post.liked ? 'is-liked' : ''} aria-pressed={post.liked} aria-label={`좋아요 ${post.like_count}개`} onClick={like} disabled={liking}>
+            <Heart size={18} aria-hidden="true" fill={post.liked ? 'currentColor' : 'none'} /><span>{post.like_count}</span>
+          </button>
+          <span className="quiz-community-detail-comment-count"><MessageCircle size={18} aria-hidden="true" /><span>{post.comment_count}</span></span>
+          <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
+        </div>
+      </article>
+    </CommentThread>
   </Dialog>;
 }
 

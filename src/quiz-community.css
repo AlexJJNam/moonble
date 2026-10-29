@@ -316,23 +316,30 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 /* 모바일에서는 글을 눌렀을 때 피드 안의 확장이 아니라 게시글 단독 화면으로 연다. */
 .quiz-community-dialog.is-post-detail { width: min(640px, 100%); height: min(82dvh, 820px); max-height: 82dvh; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
 .quiz-community-dialog.is-post-detail::before { display: none; }
-.quiz-community-detail-head { flex: 0 0 auto; min-height: 54px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; padding: 0 var(--mb-space-12); border-bottom: 1px solid var(--mb-border); }
-.quiz-community-detail-head h2 { overflow: hidden; font-size: var(--mb-font-16); line-height: 24px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.quiz-community-detail-back { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: transparent; }
+.quiz-community-detail-head { flex: 0 0 auto; min-height: 54px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; padding: 0 var(--mb-space-8); border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
+.quiz-community-detail-head h2 { overflow: hidden; font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.quiz-community-detail-back { width: var(--mb-target-size); height: var(--mb-target-size); display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-primary); background: transparent; cursor: pointer; }
 .quiz-community-detail-back:hover { background: var(--mb-surface-muted); }
-.quiz-community-detail-post { flex: 0 0 auto; padding: var(--mb-space-16) var(--mb-space-20) var(--mb-space-8); }
+.quiz-community-detail-back:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: -2px; }
+/* 글과 댓글은 한 영역에서 함께 스크롤하고, 댓글 입력만 아래에 고정한다. */
+.quiz-community-detail-scroll { min-height: 0; flex: 1 1 auto; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.quiz-community-detail-post { padding: var(--mb-space-16) var(--mb-space-24) var(--mb-space-8); }
 .quiz-community-detail-post .quiz-community-post-head { display: flex; align-items: center; gap: var(--mb-space-12); padding: 0; }
 .quiz-community-detail-author { min-width: 0; flex: 1; }
-.quiz-community-detail-author>p:first-child { margin: 0; display: flex; align-items: center; gap: var(--mb-space-4); font-size: var(--mb-font-14); line-height: 20px; }
+.quiz-community-detail-author>p:first-child { margin: 0; display: flex; align-items: center; gap: var(--mb-space-4); min-width: 0; font-size: var(--mb-font-14); line-height: 20px; }
+.quiz-community-detail-author>p:first-child strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quiz-community-detail-post .quiz-community-post-title { margin-top: var(--mb-space-12); }
 .quiz-community-detail-post .quiz-community-post-body { display: block; -webkit-line-clamp: unset; line-clamp: unset; }
-.quiz-community-detail-post .quiz-community-actions { margin-top: var(--mb-space-8); }
+.quiz-community-detail-post .quiz-community-attachment { margin-top: var(--mb-space-12); }
+.quiz-community-detail-post .quiz-community-actions { margin: var(--mb-space-8) 0 0 -10px; }
 .quiz-community-detail-comment-count { min-width: var(--mb-target-size); min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); font-variant-numeric: tabular-nums; }
-.quiz-community-detail-comments { min-height: 0; flex: 1; display: flex; flex-direction: column; border-top: 8px solid var(--mb-surface-muted); }
-.quiz-community-detail-comments .quiz-community-comments { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; margin: 0; padding: 0 var(--mb-space-16); }
-.quiz-community-detail-comments .quiz-community-sort-toggle { order: 0; align-self: flex-start; flex: 0 0 auto; margin: var(--mb-space-8) 0; }
-.quiz-community-detail-comments .quiz-community-comments>ul { min-height: 0; flex: 1; order: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; margin: 0; }
-.quiz-community-detail-comments .quiz-community-comments>.quiz-community-muted { flex: 1; order: 1; display: grid; place-items: center; }
-.quiz-community-detail-comments .quiz-community-comment-form { flex: 0 0 auto; order: 2; margin: 0 calc(var(--mb-space-16) * -1); padding: var(--mb-space-12) var(--mb-space-16) calc(var(--mb-space-8) + env(safe-area-inset-bottom)); border-top: 1px solid var(--mb-border); background: var(--mb-surface); }
+.quiz-community-detail-comments.quiz-community-comments { margin: 0; padding: var(--mb-space-4) var(--mb-space-24) var(--mb-space-16); border-top: 8px solid var(--mb-surface-muted); }
+.quiz-community-detail-comments:focus { outline: 0; }
+.quiz-community-detail-comments .quiz-community-sort-toggle { margin: var(--mb-space-12) 0 var(--mb-space-4); }
+.quiz-community-detail-comments>ul { margin: 0; }
+.quiz-community-detail-comments>.quiz-community-muted { margin: 0; padding: var(--mb-space-32) 0; text-align: center; }
+.quiz-community-detail-compose { flex: 0 0 auto; padding: var(--mb-space-8) var(--mb-space-16) calc(var(--mb-space-8) + env(safe-area-inset-bottom)); border-top: 1px solid var(--mb-border); background: var(--mb-surface); }
+.quiz-community-detail-compose .quiz-community-gif-draft.is-compact, .quiz-community-detail-compose .quiz-community-form-error { margin: 0 0 var(--mb-space-8); }
 
 /* 모바일 커뮤니티 탭: 정렬·글쓰기 줄은 숨기고, 독바 자리에 입력 바를 둔다. */
 .quiz-community-bar { display: none; }
@@ -355,12 +362,11 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
   .quiz-community-dialog.is-compose .quiz-community-compose-foot { margin-top: var(--mb-space-8); padding-top: var(--mb-space-12); }
 }
 @media (max-width: 767px) {
-  .quiz-community-overlay:has(.is-post-detail) { inset: 0; display: flex; align-items: stretch; padding: 0; background: var(--mb-surface); }
-  .quiz-community-dialog.is-post-detail { box-sizing: border-box; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
-  .quiz-community-dialog.is-post-detail.is-comments-focused { display: block; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-head { position: sticky; top: 0; z-index: 2; background: var(--mb-surface); }
-  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-comments { min-height: calc(100dvh - 54px); display: flex; flex: 0 0 auto; }
-  .quiz-community-dialog.is-post-detail.is-comments-focused .quiz-community-detail-comments .quiz-community-comments { min-height: calc(100dvh - 110px); flex: 0 0 auto; overflow: visible; }
+  /* 모바일 상세는 전체 화면. 키보드가 올라오면 보이는 영역 높이에 맞춰 입력이 가려지지 않게 한다. */
+  .quiz-community-overlay:has(.is-post-detail) { inset: auto 0 0; top: var(--community-vv-top, 0px); height: var(--community-vh, 100dvh); display: flex; align-items: stretch; padding: 0; background: var(--mb-surface); }
+  .quiz-community-dialog.is-post-detail { box-sizing: border-box; width: 100%; height: 100%; max-height: none; border-radius: 0; box-shadow: none; animation: quiz-community-fade 160ms ease both; }
   .quiz-community-detail-head { padding-top: env(safe-area-inset-top); }
-  .quiz-community-detail-comments .quiz-community-comment-form { padding-bottom: calc(var(--mb-space-8) + env(safe-area-inset-bottom)); }
+  .quiz-community-detail-post { padding: var(--mb-space-16) var(--mb-space-16) var(--mb-space-8); }
+  .quiz-community-detail-post .quiz-community-actions { margin-left: -10px; }
+  .quiz-community-detail-comments.quiz-community-comments { margin: 0; padding: var(--mb-space-4) var(--mb-space-16) var(--mb-space-16); }
 }
