@@ -121,7 +121,10 @@ body {
 
 .mb-brand-wordmark { display: block; width: 112px; max-width: 100%; height: auto; aspect-ratio: 2048 / 682; object-fit: contain; }
 .mb-user-avatar { position: relative; overflow: hidden; }
+.mb-user-avatar.is-loading { color: transparent; background: linear-gradient(105deg, #edf0f3 22%, #f7f8fa 43%, #edf0f3 64%); background-size: 220% 100%; animation: mb-user-avatar-shimmer 1.2s ease-in-out infinite; }
 .mb-user-avatar>img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
+@keyframes mb-user-avatar-shimmer { to { background-position-x: -220%; } }
+@media (prefers-reduced-motion: reduce) { .mb-user-avatar.is-loading { animation: none; } }
 
 button, input, textarea, select, svg text {
   font-family: var(--mb-font-sans);

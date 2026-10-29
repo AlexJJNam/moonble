@@ -58,15 +58,31 @@ function InitialAvatar({ name, size = 'md' }) {
 
 // 프로필 사진이 있으면 사진, 없거나 불러오지 못하면 이니셜을 보여준다.
 function CommunityAvatar({ name, path, size = 'md' }) {
-  const [src, setSrc] = useState(() => cachedCommunityAvatarUrl(path));
+  const [image, setImage] = useState(() => ({ path, src: cachedCommunityAvatarUrl(path), loaded: false, failed: false }));
   useEffect(() => {
     let alive = true;
-    setSrc(cachedCommunityAvatarUrl(path));
-    if (path) communityAvatarUrl(path).then(url => { if (alive) setSrc(url); });
+    if (!path) {
+      setImage({ path: '', src: '', loaded: false, failed: false });
+      return () => { alive = false; };
+    }
+    setImage({ path, src: cachedCommunityAvatarUrl(path), loaded: false, failed: false });
+    communityAvatarUrl(path).then(url => {
+      if (!alive) return;
+      if (!url) { setImage({ path, src: '', loaded: false, failed: true }); return; }
+      setImage({ path, src: url, loaded: false, failed: false });
+      const preview = new Image();
+      preview.onload = () => { if (alive) setImage({ path, src: url, loaded: true, failed: false }); };
+      preview.onerror = () => { if (alive) setImage({ path, src: '', loaded: false, failed: true }); };
+      preview.src = url;
+    }).catch(() => { if (alive) setImage({ path, src: '', loaded: false, failed: true }); });
     return () => { alive = false; };
   }, [path]);
+  const matchesPath = image.path === path;
+  const src = matchesPath && image.loaded ? image.src : '';
+  const loading = Boolean(path) && !src && !(matchesPath && image.failed);
+  if (loading) return <span className={`quiz-community-avatar is-${size} is-photo-loading`} aria-hidden="true" />;
   if (!src) return <InitialAvatar name={name} size={size} />;
-  return <span className={`quiz-community-avatar is-${size} has-photo`} aria-hidden="true"><img src={src} alt="" decoding="async" onError={() => setSrc('')} /></span>;
+  return <span className={`quiz-community-avatar is-${size} has-photo`} aria-hidden="true"><img src={src} alt="" decoding="async" onError={() => setImage({ path, src: '', loaded: false, failed: true })} /></span>;
 }
 
 function AuthorBadges({ item }) {

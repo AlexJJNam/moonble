@@ -13,6 +13,7 @@
 .quiz-community-avatar.is-purple { color: #6b4fd8; background: #f2eefe; }
 .quiz-community-avatar.is-pink { color: #b4236c; background: #fdeef5; }
 .quiz-community-avatar.is-gray { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
+.quiz-community-avatar.is-photo-loading { color: transparent; background: linear-gradient(105deg, #edf0f3 22%, #f7f8fa 43%, #edf0f3 64%); background-size: 220% 100%; animation: mb-user-avatar-shimmer 1.2s ease-in-out infinite; }
 
 .quiz-community-badge { display: inline-flex; align-items: center; padding: 0 var(--mb-space-8); border-radius: 999px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-12); line-height: 20px; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .quiz-community-badge.is-owner { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }

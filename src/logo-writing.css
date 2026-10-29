@@ -1,0 +1,37 @@
+.quiz-pen-logo-image,
+.moonble-startup-logo-image { opacity: 1; }
+
+.quiz-pen-logo-reveal,
+.moonble-startup-logo-reveal {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 29px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+
+.quiz-pen-mode-effect.is-active .quiz-pen-logo-reveal,
+#moonble-startup-splash.is-writing .moonble-startup-logo-reveal {
+  animation: moonble-logo-write 820ms cubic-bezier(.2,.8,.24,1) both;
+}
+
+@keyframes moonble-logo-write {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  12% { opacity: .92; }
+  76% { stroke-dashoffset: 0; opacity: .9; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-pen-mode-effect.is-active .quiz-pen-logo-image,
+  #moonble-startup-splash.is-writing .moonble-startup-logo-image { mask: none; }
+  .quiz-pen-mode-effect.is-active .quiz-pen-logo-reveal,
+  #moonble-startup-splash.is-writing .moonble-startup-logo-reveal {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
