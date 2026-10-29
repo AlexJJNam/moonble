@@ -100,7 +100,7 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 @keyframes mb-favorite-solve-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mb-favorite-solve-open { from { opacity: 0; transform: translateY(5px) scale(.98); } to { opacity: 1; transform: none; } }
 .mb-solver-nav { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; }
-.mb-app-header.mb-solver-sidebar .mb-app-brand-row, .mb-app-header.mb-solver-sidebar .mb-app-profile-row { display: none; }
+.mb-app-header.mb-solver-sidebar .mb-app-brand-row, .mb-app-header.mb-solver-sidebar .mb-app-profile-row { display: none !important; }
 .mb-solver-heading { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 0 4px; }
 .mb-solver-heading a { width: 100%; min-height: 40px; gap: 8px; padding: 8px; border-radius: 10px; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
 .mb-solver-question-list { min-width: 0; min-height: 0; display: flex; flex: 1 1 0; flex-direction: column; gap: 10px; overflow: hidden; }
@@ -276,8 +276,6 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { display: flex; align-items: center; padding-right: 8px; border-right: 1px solid var(--mb-border); }
   .mb-app-header.mb-solver-sidebar.is-shared-solver .mb-solver-heading { padding-bottom: 0; }
   .mb-app-header.mb-solver-sidebar .mb-app-header-inner { display: block; padding: 4px max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); }
-  .mb-app-header.mb-solver-sidebar .mb-app-profile-row { display: flex; min-height: 36px; justify-content: flex-end; gap: 6px; margin: 0 0 2px; }
-  .mb-app-header.mb-solver-sidebar .mb-app-profile-skeleton { display: flex; }
   .mb-app-header.mb-solver-sidebar .mb-app-nav.mb-solver-nav { grid-row: 1; padding: 0; }
   .mb-solver-questions { min-width: 0; min-height: 44px; height: 44px; max-height: 44px; display: flex; flex: 1 1 0; align-self: center; gap: 6px; padding: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x proximity; }
   .mb-solver-nav.has-memos .mb-solver-questions { width: 100%; min-height: 44px; height: 44px; max-height: 44px; flex: 1 1 100%; order: 1; }

@@ -37,9 +37,9 @@ import './design-system.css';
 import './quiz-library.css';
 
 const paperScopes = [
-  { label: '전체', value: 'all' },
   { label: '개인문제', value: 'personal' },
-  { label: '공개문제', value: 'public' },
+  { label: '전체공개', value: 'public' },
+  { label: '일부공개', value: 'partial' },
 ];
 const PAPER_TOUCH_DRAG_DELAY = 1000;
 const paperDragPreviewWidth = cardWidth => Math.max(112, Math.min(176, cardWidth * .52));
@@ -244,7 +244,7 @@ function QuizLibrary() {
   const mobileSearchInputRef = useRef(null);
   const mobileSearchTriggerRef = useRef(null);
   const mobileSearchScrollRef = useRef(0);
-  const [paperScope, setPaperScope] = useState('all');
+  const [paperScope, setPaperScope] = useState('personal');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
@@ -950,6 +950,7 @@ function QuizLibrary() {
     savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
+    visibility: bank.visibility || (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal'),
     samples: bank.questions.slice(0, 4).map(question => ({ title: question.q, options: question.options })),
   }));
   const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers : [];
@@ -960,9 +961,10 @@ function QuizLibrary() {
   const search = query.trim().toLocaleLowerCase();
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = mobileSearchOpen || activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
-    const scopeMatch = mobileSearchOpen || paperScope === 'all'
-      || (paperScope === 'personal' && paper.kind === 'custom')
-      || (paperScope === 'public' && paper.kind !== 'custom');
+    const scopeMatch = mobileSearchOpen
+      || (paperScope === 'personal' && paper.kind === 'custom' && paper.visibility === 'personal')
+      || (paperScope === 'public' && (paper.kind !== 'custom' || paper.visibility === 'public'))
+      || (paperScope === 'partial' && paper.kind === 'custom' && paper.visibility === 'partial');
     return groupMatch && scopeMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
