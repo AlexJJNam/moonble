@@ -640,34 +640,11 @@ button:disabled { cursor: wait; opacity: .6; }
   .quiz-filter-groups::-webkit-scrollbar { display: none; }
   .quiz-filter-groups>.mb-segmented { flex: 0 0 auto; scroll-snap-align: start; }
   .quiz-library-tools { gap: 8px; }
-  .paper-grid:not(.paper-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  /* 모바일 카드 보기: 유튜브 모바일처럼 한 줄에 하나씩, 썸네일을 화면 폭에 맞춘다. */
+  .paper-grid:not(.paper-list) { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .paper-card { border-radius: 16px; }
   .paper-favorite-toggle { top: 6px; left: 6px; width: 27px; height: 27px; border-radius: 7px; }
   .paper-favorite-toggle svg { width: 15px; height: 15px; }
-  .paper-grid:not(.paper-list) .paper-info { min-height: 76px; grid-template-columns: minmax(0, 1fr); padding: 11px 13px 12px; }
-  .paper-grid:not(.paper-list) .paper-info.has-activity-caption { min-height: 82px; }
-  .paper-grid:not(.paper-list) .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }
-  .paper-grid:not(.paper-list) .paper-copy>p { margin-top: 2px; font-size: var(--mb-font-12); line-height: 18px; }
-  .paper-grid:not(.paper-list) .paper-preview { padding: 8px 8px 0; }
-  .paper-grid:not(.paper-list) .preview-sheet { width: 98%; height: 184%; padding: 16px; }
-  .paper-grid:not(.paper-list) .preview-solver-sheet { padding: 16px; }
-  .paper-grid:not(.paper-list) .preview-sheet-brand .mb-brand-wordmark { width: 29px; }
-  .paper-grid:not(.paper-list) .preview-solver-title { margin-top: 5px; font-size: 8px; line-height: 11px; }
-  .paper-grid:not(.paper-list) .preview-solver-description { margin-top: 2px; font-size: 6px; line-height: 8px; }
-  .paper-grid:not(.paper-list) .preview-solver-grid { gap: 4px; margin-top: 5px; }
-  .paper-grid:not(.paper-list) .preview-solver-card { padding: 4px; border-radius: 6px; }
-  .paper-grid:not(.paper-list) .preview-solver-number { min-height: 10px; padding: 1px 4px; font-size: 5px; line-height: 7px; }
-  .paper-grid:not(.paper-list) .preview-solver-question { gap: 2px; }
-  .paper-grid:not(.paper-list) .preview-solver-question strong { max-height: 16px; font-size: 5px; line-height: 8px; }
-  .paper-grid:not(.paper-list) .preview-solver-options { gap: 2px; margin-top: 3px; }
-  .paper-grid:not(.paper-list) .preview-solver-option { min-height: 11px; gap: 3px; padding: 1px 3px; font-size: 4px; line-height: 6px; }
-  .paper-grid:not(.paper-list) .preview-solver-option i { width: 5px; height: 5px; flex-basis: 5px; }
-  .paper-grid:not(.paper-list) .preview-sheet-title { margin-top: 6px; font-size: 9px; line-height: 13px; }
-  .paper-grid:not(.paper-list) .preview-sheet-subtitle { margin-top: 2px; font-size: 7px; line-height: 10px; }
-  .paper-grid:not(.paper-list) .preview-question { margin-top: 6px; padding-top: 5px; }
-  .paper-grid:not(.paper-list) .preview-question>div { margin-bottom: 4px; font-size: 6px; line-height: 9px; }
-  .paper-grid:not(.paper-list) .preview-option { margin-top: 2px; margin-left: 8px; font-size: 6px; line-height: 8px; }
-  .paper-grid:not(.paper-list) .preview-count { right: 6px; bottom: 6px; }
   .paper-list { gap: 7px; }
   .paper-list .paper-preview { width: 96px; height: 70px; padding: 7px 6px 0; }
   .paper-list .preview-sheet { width: 98%; height: 196%; padding: 16px; transform-origin: top center; }
@@ -913,10 +890,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-list .paper-preview { border-right: 0; }
 .paper-list .paper-info, .paper-list .paper-info.has-activity-caption { min-height: 0; padding: 2px 44px 0 0; }
 @media (max-width: 767px) {
-  .paper-grid:not(.paper-list) { gap: 16px 10px; }
-  .paper-grid:not(.paper-list) .paper-info, .paper-grid:not(.paper-list) .paper-info.has-activity-caption { min-height: 0; padding: 8px 2px 0; }
-  .paper-grid:not(.paper-list) .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }
-  .paper-grid:not(.paper-list) .paper-copy > p { font-size: var(--mb-font-12); line-height: 18px; }
+  .paper-grid:not(.paper-list) .paper-info, .paper-grid:not(.paper-list) .paper-info.has-activity-caption { min-height: 0; padding: 10px 2px 0; }
   .paper-card .paper-card-actions { top: 4px; right: 4px; }
   .paper-list .paper-preview { width: 144px; height: 81px; }
 }
