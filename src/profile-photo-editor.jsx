@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, RotateCcw, Upload } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { AccountDialog } from './account-dialog.jsx';
 import { ProfileUpdateEffect } from './profile-update-effect.jsx';
 import { UserAvatar } from './user-avatar.jsx';
@@ -80,9 +80,9 @@ export function ProfilePhotoEditor({ user, onSaved }) {
       <div className="account-avatar-body" aria-busy={busy}>
         {preview ? <span className="account-avatar-preview"><img src={preview} alt="선택한 프로필 사진 미리보기" /></span> : <UserAvatar user={user} className="account-avatar-preview" />}
         <input ref={inputRef} className="mb-sr-only" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" tabIndex={-1} disabled={busy} aria-label="프로필 이미지 파일" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; selectFile(file); }} />
-        <button className="account-avatar-select" type="button" disabled={busy} onClick={() => inputRef.current?.click()}>{preparing ? <span className="moonble-spinner" aria-hidden="true" /> : <Upload size={16} aria-hidden="true" />}{preparing ? '사진 준비 중' : hasPhoto || draft ? '다른 사진 선택' : '사진 선택'}</button>
+        <button className="account-avatar-select" type="button" disabled={busy} onClick={() => inputRef.current?.click()}>{preparing ? <span className="moonble-spinner" aria-hidden="true" /> : null}{preparing ? '사진 준비 중' : hasPhoto || draft ? '다른 사진 선택' : '사진 선택'}</button>
         <p className="account-avatar-file-help">JPG 또는 PNG · 최대 20MB</p>
-        {hasPhoto && <button className="account-avatar-reset" type="button" disabled={busy} onClick={reset}>{action === 'reset' ? <span className="moonble-spinner" aria-hidden="true" /> : <RotateCcw size={15} aria-hidden="true" />}기본 프로필로 초기화</button>}
+        {hasPhoto && <button className="account-avatar-reset" type="button" disabled={busy} onClick={reset}>{action === 'reset' ? <span className="moonble-spinner" aria-hidden="true" /> : null}기본 프로필로 초기화</button>}
         {error && <p className="account-dialog-error" role="alert">{error}</p>}
       </div>
       <footer className="account-dialog-actions"><button className="is-secondary" type="button" disabled={busy} onClick={() => changeOpen(false)}>취소</button><button className="is-primary" type="button" disabled={!draft || busy} aria-label={action === 'save' ? '프로필 사진 저장 중' : undefined} onClick={save}>{action === 'save' ? <span className="moonble-spinner" aria-hidden="true" /> : '저장'}</button></footer>

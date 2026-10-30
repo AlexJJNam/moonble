@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
@@ -184,11 +184,11 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby={isFavoriteDelete ? undefined : 'quiz-manage-title'} aria-label={isFavoriteDelete ? '즐겨찾기 문제지 삭제 확인' : undefined} onSubmit={event => { event.preventDefault(); onSubmit(); }}>
+    <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
       {isFavoriteDelete ? <>
-        <div className="quiz-favorite-delete-icon" aria-hidden="true"><AlertTriangle size={25} /></div>
-        <p><strong>{editor.title}</strong><br />즐겨찾기한 문제지예요.<br />그래도 삭제할까요?</p>
-        <footer><button type="button" onClick={onClose}>취소할래요.</button><button className="is-danger" type="submit">삭제할래요.</button></footer>
+        <header><h2 id="quiz-manage-title">즐겨찾기한 문제지를 삭제할까요?</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+        <p><strong>{editor.title}</strong> 문제지는 즐겨찾기에 있어요. 삭제하면 되돌릴 수 없어요.</p>
+        <footer><button type="button" onClick={onClose}>취소</button><button className="is-danger" type="submit">삭제하기</button></footer>
       </> : <>
         <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
         {isDelete ? <>
@@ -1063,8 +1063,8 @@ function QuizLibrary() {
         </label>)}
       </fieldset>
       {shareBusy ? <div className="quiz-share-loading" role="status"><span className="quiz-share-spinner" aria-hidden="true" />잠시만 기다려주세요.</div>
-        : shareDialog.url && shareDialog.visibility !== 'personal' ? <><label className="quiz-share-link"><span>공유 링크</span><span className="quiz-share-link-row"><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /><button type="button" aria-label={shareCopied ? '링크 복사됨' : '공유 링크 복사'} title="링크 복사" onClick={copyShareLink}>{shareCopied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}</button></span></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요.{shareDialog.visibility === 'public' ? ' 공개한 문제는 제목과 설명이 검색에 보여요.' : ''}</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}
-      <footer><button type="button" disabled={shareBusy} onClick={() => setShareDialog(null)}>닫기</button><button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url || shareDialog.visibility === 'personal'} onClick={shareQuizLink}><Share2 size={16} aria-hidden="true" />공유하기</button></footer></section></div>}
+        : shareDialog.url && shareDialog.visibility !== 'personal' ? <><label className="quiz-share-link"><span>공유 링크</span><span className="quiz-share-link-row"><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /><button type="button" aria-label={shareCopied ? '링크 복사됨' : '공유 링크 복사'} onClick={copyShareLink}>{shareCopied ? '복사됨' : '복사'}</button></span></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요.{shareDialog.visibility === 'public' ? ' 공개한 문제는 제목과 설명이 검색에 보여요.' : ''}</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}
+      <footer><button type="button" disabled={shareBusy} onClick={() => setShareDialog(null)}>닫기</button><button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url || shareDialog.visibility === 'personal'} onClick={shareQuizLink}>공유하기</button></footer></section></div>}
     {notice && <p className="quiz-library-notice" role="status">{notice}</p>}
     {undoablePaperDelete && <div className="quiz-library-undo-toast" role="status" aria-live="polite" aria-atomic="true">
       <div className="quiz-library-undo-copy"><strong>“{undoablePaperDelete.title}” 문제지가 삭제되었습니다.</strong><span>실수로 삭제하셨나요?</span></div>

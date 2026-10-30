@@ -857,11 +857,11 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
   </aside>
   {favoriteSolvePaper && <div className="mb-favorite-solve-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setFavoriteSolvePaper(null); }}>
     <section className="mb-favorite-solve-dialog" role="dialog" aria-modal="true" aria-labelledby="mb-favorite-solve-title" aria-describedby="mb-favorite-solve-copy">
-      <h2 id="mb-favorite-solve-title">{favoriteSolvePaper.label}</h2>
-      <p id="mb-favorite-solve-copy">이 문제지를 풀어볼까요?</p>
+      <h2 id="mb-favorite-solve-title">이 문제를 푸시겠어요?</h2>
+      <p id="mb-favorite-solve-copy">{favoriteSolvePaper.label}</p>
       <footer>
         <button type="button" className="mb-favorite-solve-cancel" onClick={() => setFavoriteSolvePaper(null)}>취소</button>
-        <a ref={favoriteSolveConfirmRef} className="mb-favorite-solve-confirm" href={favoriteSolvePaper.href}>문제 풀기</a>
+        <a ref={favoriteSolveConfirmRef} className="mb-favorite-solve-confirm" href={favoriteSolvePaper.href}>풀어보기</a>
       </footer>
     </section>
   </div>}
