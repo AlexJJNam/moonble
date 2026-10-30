@@ -1,7 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { AlertTriangle, Check, ChevronLeft, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Share2, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
@@ -33,6 +32,7 @@ import { getPaperLastActivityMap } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
+import { SearchField } from './search-field.jsx';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
@@ -49,10 +49,6 @@ const paperDragPreviewWidth = cardWidth => Math.max(112, Math.min(176, cardWidth
 const supportsMousePaperDrag = () => typeof window === 'undefined'
   || !window.matchMedia
   || window.matchMedia('(pointer: fine) and (hover: hover)').matches;
-const viewSegments = [
-  { value: 'grid', label: '2열 카드 보기', ariaLabel: '2열 카드 보기', icon: LayoutGrid },
-  { value: 'list', label: '1열 목록 보기', ariaLabel: '1열 목록 보기', icon: List },
-];
 
 function QuizLibraryTabs({ section, className = '' }) {
   return <nav className={`quiz-library-tabs${className ? ` ${className}` : ''}`} aria-label="문제지 메뉴">
@@ -251,11 +247,6 @@ function QuizLibrary() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(true);
-  const mobileSearchInputRef = useRef(null);
-  const mobileSearchTriggerRef = useRef(null);
-  const mobileSearchScrollRef = useRef(0);
   const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
@@ -294,58 +285,6 @@ function QuizLibrary() {
   const bankSyncUserRef = useRef(null);
   const suppressGroupClick = useRef(false);
   const refreshCollection = () => setCollection(getCustomBankCollection());
-  const mobileSearchHistoryKey = 'moonbleMobilePaperSearch';
-  function openMobileSearch() {
-    mobileSearchScrollRef.current = window.scrollY;
-    setMobileSuggestionsOpen(true);
-    window.history.pushState({ ...window.history.state, [mobileSearchHistoryKey]: true }, '', window.location.href);
-    // Focus in the original tap gesture so iOS can open the keyboard.
-    flushSync(() => setMobileSearchOpen(true));
-    mobileSearchInputRef.current?.focus({ preventScroll: true });
-  }
-  function closeMobileSearch() {
-    mobileSearchInputRef.current?.blur();
-    setMobileSearchOpen(false);
-    if (window.history.state?.[mobileSearchHistoryKey]) window.history.back();
-  }
-  useEffect(() => {
-    if (!mobileSearchOpen) return undefined;
-    const root = document.documentElement;
-    const previousOverflow = root.style.overflow;
-    root.style.overflow = 'hidden';
-    const onPopState = event => {
-      if (!event.state?.[mobileSearchHistoryKey]) setMobileSearchOpen(false);
-    };
-    const onKeyDown = event => { if (event.key === 'Escape') { event.preventDefault(); closeMobileSearch(); } };
-    const mobileLayout = window.matchMedia('(max-width: 767px)');
-    const onLayoutChange = () => { if (!mobileLayout.matches) closeMobileSearch(); };
-    const onPageHide = () => {
-      if (!window.history.state?.[mobileSearchHistoryKey]) return;
-      const state = { ...window.history.state };
-      delete state[mobileSearchHistoryKey];
-      window.history.replaceState(state, '', window.location.href);
-    };
-    const onPageShow = event => {
-      if (event.persisted && !window.history.state?.[mobileSearchHistoryKey]) setMobileSearchOpen(false);
-    };
-    window.addEventListener('popstate', onPopState);
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('pageshow', onPageShow);
-    mobileLayout.addEventListener('change', onLayoutChange);
-    return () => {
-      root.style.overflow = previousOverflow;
-      window.removeEventListener('popstate', onPopState);
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('pagehide', onPageHide);
-      window.removeEventListener('pageshow', onPageShow);
-      mobileLayout.removeEventListener('change', onLayoutChange);
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: mobileSearchScrollRef.current, behavior: 'instant' });
-        mobileSearchTriggerRef.current?.focus({ preventScroll: true });
-      });
-    };
-  }, [mobileSearchOpen]);
   useLayoutEffect(() => {
     // The React skeleton has committed, so it can replace the first-paint loader.
     revealPage();
@@ -460,7 +399,6 @@ function QuizLibrary() {
     const syncSection = () => {
       const nextSection = sectionFromHash();
       setSection(nextSection);
-      if (nextSection !== 'papers') setMobileSearchOpen(false);
       setEditMode(false);
       finishPaperDrag(paperTouchDrag.current);
       paperTouchDrag.current = null;
@@ -999,9 +937,11 @@ function QuizLibrary() {
     lastOpenedAt: paperAccess[paper.id] || null,
   }));
   const search = query.trim().toLocaleLowerCase();
+  // 검색어 자동완성: 내 문제지(샘플 포함) 제목 중 검색어가 들어간 것.
+  const suggestPaperTitles = term => { const needle = term.toLocaleLowerCase(); return [...new Set(allPapers.map(paper => paper.label).filter(title => title && title.toLocaleLowerCase().includes(needle)))].slice(0, 8); };
   const visiblePapers = allPapers.filter(paper => {
-    const groupMatch = mobileSearchOpen || activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
-    const scopeMatch = mobileSearchOpen || paperScope === 'all'
+    const groupMatch = activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
+    const scopeMatch = paperScope === 'all'
       || (paperScope === 'personal' && paper.kind === 'custom' && paper.visibility === 'personal')
       || (paperScope === 'public' && (paper.kind !== 'custom' || paper.visibility === 'public'))
       || (paperScope === 'partial' && paper.kind === 'custom' && paper.visibility === 'partial');
@@ -1016,9 +956,6 @@ function QuizLibrary() {
     }
     return new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
   });
-  const mobileSearchSuggestions = search && mobileSuggestionsOpen
-    ? [...new Set(visiblePapers.map(paper => paper.label).filter(title => title.toLocaleLowerCase().includes(search)))].slice(0, 6)
-    : [];
   const activeCustom = collection.banks.find(bank => bank.id === collection.activeBankId) || collection.banks[0] || null;
   const groupTabs = [
     { id: 'all', name: '전체', count: visibleSamples.length + customPapers.length },
@@ -1031,16 +968,14 @@ function QuizLibrary() {
     return (aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex);
   });
   const groupColors = buildGroupColorMap(collection.groups);
-  const editingPaperCards = editMode && !mobileSearchOpen;
+  const editingPaperCards = editMode;
   const hasLibrarySection = ['papers', 'public', 'community'].includes(section);
   const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '문제지';
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : null} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mobileSearchOpen ? ' is-mobile-search' : ''}`} id="paper-library" tabIndex={-1} role={mobileSearchOpen ? 'dialog' : undefined} aria-modal={mobileSearchOpen ? 'true' : undefined} aria-label={mobileSearchOpen ? '문제지 검색' : undefined}>
-        {mobileSearchOpen && <div className="quiz-mobile-search-header"><button className="quiz-mobile-search-back" type="button" aria-label="검색 닫기" onClick={closeMobileSearch}><ChevronLeft size={21} aria-hidden="true" /></button><label className="quiz-search quiz-mobile-search-input"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input ref={mobileSearchInputRef} type="search" placeholder="검색" value={query} onFocus={() => setMobileSuggestionsOpen(true)} onChange={event => { setQuery(event.target.value); setMobileSuggestionsOpen(true); }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setMobileSuggestionsOpen(false); event.currentTarget.blur(); } }} /></label>{query && <button className="quiz-mobile-search-clear" type="button" aria-label="검색어 지우기" onClick={() => { setQuery(''); setMobileSuggestionsOpen(true); mobileSearchInputRef.current?.focus(); }}><X size={16} aria-hidden="true" /></button>}</div>}
-        {mobileSearchOpen && mobileSearchSuggestions.length > 0 && <ul className="quiz-mobile-search-suggestions" aria-label="검색어 제안">{mobileSearchSuggestions.map(title => <li key={title}><button type="button" onClick={() => { setQuery(title); setMobileSuggestionsOpen(false); mobileSearchInputRef.current?.blur(); }}><Search size={16} aria-hidden="true" /><span>{title}</span></button></li>)}</ul>}
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
         <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch /> : <>
@@ -1075,11 +1010,10 @@ function QuizLibrary() {
         </div>
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><SegmentedControl className="quiz-community-sort" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
-          <div className="quiz-display-tools">
-            <label className="quiz-search quiz-search--desktop"><Search size={18} aria-hidden="true" /><span className="mb-sr-only">문제지 검색</span><input type="search" placeholder="검색" value={query} onChange={event => setQuery(event.target.value)} /></label>
-            <button ref={mobileSearchTriggerRef} className="quiz-search quiz-mobile-search-trigger" type="button" aria-label="문제지 검색" onClick={openMobileSearch}><Search size={18} aria-hidden="true" /><span>{query || '검색'}</span></button>
-            <SegmentedControl className="quiz-view-toggle" ariaLabel="보기 방식" iconOnly items={viewSegments} value={view} onChange={setView} />
-          </div>
+          <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
+            onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
+          <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}
+            suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent" />
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
@@ -1092,8 +1026,8 @@ function QuizLibrary() {
               className={`paper-card${editingPaperCards && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
               data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(editingPaperCards && paper.customBankId && supportsMousePaperDrag())}
-              onPointerDown={paper.customBankId && !mobileSearchOpen ? event => beginPaperPress(event, paper.customBankId) : undefined}
-              onTouchStart={paper.customBankId && !mobileSearchOpen ? event => beginPaperTouch(event, paper.customBankId) : undefined}
+              onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
+              onTouchStart={paper.customBankId ? event => beginPaperTouch(event, paper.customBankId) : undefined}
               onPointerUp={paper.customBankId ? event => { if (!(editingPaperCards && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onPointerCancel={paper.customBankId ? event => { if (!(editingPaperCards && event.pointerType !== 'mouse')) endPaperPress(); } : undefined}
               onContextMenu={editingPaperCards ? event => event.preventDefault() : undefined}
@@ -1113,7 +1047,7 @@ function QuizLibrary() {
             </article>;
           })}
         </section>
-        {!visiblePapers.length && (mobileSearchOpen && search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
+        {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
         </>}
       </main>}<SiteFooter />
