@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -352,7 +352,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
       {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
       <footer className="quiz-community-compose-foot">
         {attachSource && !editing && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
-          <Paperclip size={18} aria-hidden="true" /><span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
+          <span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
         </button>}
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => setGifOpen(open => !open)} />
         <span className={`quiz-community-counter${draft.body.length > POST_BODY_LIMIT * .95 ? ' is-near-limit' : ''}`} aria-live="polite">{draft.body.length.toLocaleString('ko-KR')} / {POST_BODY_LIMIT.toLocaleString('ko-KR')}</span>

@@ -297,8 +297,6 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
   .quiz-community-compose-body { min-height: 160px; }
   .quiz-community-attachment { padding: var(--mb-space-8) var(--mb-space-12) var(--mb-space-8) var(--mb-space-8); }
   .quiz-community-attachment-cta { padding: 0 6px 0 10px; }
-  .quiz-community-attach-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-  .quiz-community-attach-button { width: var(--mb-control-compact-height); justify-content: center; padding: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .quiz-community-overlay, .quiz-community-dialog, .quiz-community-skeleton i, .quiz-community-skeleton b { animation: none; }

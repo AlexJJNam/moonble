@@ -2698,16 +2698,18 @@
       pointer-events: auto;
     }
 
+    /* 공통 확인 대화상자 규격: 아이콘 없이 제목(18/26/700) · 설명(14/20) · 아래 두 버튼. */
     .confirm-modal {
       background: var(--card);
       border-radius: var(--mb-dialog-radius);
-      padding: var(--mb-space-32) var(--mb-dialog-padding) var(--mb-dialog-padding);
-      max-width: 320px;
+      padding: var(--mb-dialog-padding);
+      max-width: 360px;
       width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: var(--sp-6);
+      align-items: stretch;
+      gap: 0;
+      text-align: left;
       transform: translateY(20px);
       transition: transform .25s ease;
       box-shadow: var(--shadow-strong);
@@ -2717,7 +2719,17 @@
       transform: translateY(0);
     }
 
-    .confirm-icon {
+    .confirm-icon { display: none !important; }
+    .confirm-title {
+      margin: 0;
+      color: var(--mb-text-primary);
+      font-size: var(--mb-font-18);
+      line-height: 26px;
+      font-weight: var(--mb-weight-bold);
+      letter-spacing: -.02em;
+      overflow-wrap: anywhere;
+    }
+    .confirm-icon-unused {
       width: 52px;
       height: 52px;
       border-radius: 50%;
@@ -2734,17 +2746,20 @@
     }
 
     .confirm-message {
-      font-weight: 700;
-      font-size: var(--text-md);
-      color: var(--text);
-      text-align: center;
-      line-height: 1.5;
+      margin: var(--mb-space-8) 0 0;
+      color: var(--mb-text-secondary);
+      font-size: var(--mb-font-14);
+      line-height: 20px;
+      font-weight: 400;
+      text-align: left;
     }
+    .confirm-message[hidden] { display: none; }
 
     .confirm-buttons {
       display: flex;
-      gap: var(--sp-3);
+      gap: var(--mb-space-8);
       width: 100%;
+      margin-top: var(--mb-space-24);
     }
 
     .confirm-btn {
@@ -5598,6 +5613,7 @@
     <div class="confirm-icon">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"></path></svg>
     </div>
+    <h2 class="confirm-title" id="confirmTitle"></h2>
     <p class="confirm-message" id="confirmMessage"></p>
     <div class="confirm-buttons">
       <button class="confirm-btn confirm-btn--cancel" id="confirmCancel" type="button"></button>
@@ -5622,7 +5638,16 @@
   var onDismissCallback = null;
 
   function openConfirm(options) {
-    messageEl.innerHTML = options.message;
+    // 메시지 첫 줄은 제목, 나머지 줄은 설명으로 나눈다(메시지는 코드 안의 고정 문구).
+    var messageParts = String(options.message || '').split(/<br\s*\/?>/i);
+    var titleEl = document.getElementById('confirmTitle');
+    if (titleEl) {
+      titleEl.innerHTML = messageParts[0];
+      messageEl.innerHTML = messageParts.slice(1).join('<br>');
+      messageEl.hidden = messageParts.length < 2;
+    } else {
+      messageEl.innerHTML = options.message;
+    }
     cancelBtn.textContent = options.cancelLabel;
     okBtn.textContent = options.confirmLabel;
     onConfirmCallback = options.onConfirm;
