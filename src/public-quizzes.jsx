@@ -280,16 +280,16 @@ export function PublicQuizSearch({ userId = null }) {
       screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
     {likeWarning && <p className="public-quiz-like-warning" role="status">{likeWarning} <button type="button" onClick={() => { if (likeMode === 'local') setLikeRetry(value => value + 1); else load(false, 0); }}>다시 시도</button></p>}
     <div className="quiz-community-page-sort public-quiz-sort">
-      <div className="public-quiz-sort-left">
-        <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} />
+      <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} />
+      <div className="public-quiz-sort-right">
         <label className="mb-switch">
           <input type="checkbox" role="switch" checked={scrapOnly} aria-checked={scrapOnly} onChange={event => setScrapOnly(event.target.checked)} />
           <span className="mb-switch-track" aria-hidden="true"><span /></span>
           <span className="mb-switch-label">스크랩 문제지</span>
         </label>
-      </div>
       <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
         onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
+      </div>
     </div>
     {state.status === 'loading' && <p className="public-quiz-muted" role="status">공개 문제를 불러오고 있어요.</p>}
     {state.status === 'unavailable' && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>곧 공개된 문제지를 찾아 풀 수 있어요.</p></div>}

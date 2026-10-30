@@ -5,8 +5,6 @@
 .quiz-community-head p { margin: var(--mb-space-4) 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; font-variant-numeric: tabular-nums; }
 .quiz-community-sort { flex: 0 0 auto; }
 .quiz-community-page-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--mb-space-12); margin-top: calc(var(--mb-space-8) * -1); }
-.quiz-community-sort-toggle { margin: 0; padding: 0 var(--mb-space-8); color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
-@media (hover: hover) { .quiz-community-sort-toggle:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); } }
 .quiz-community-category-filter { position: relative; min-width: 0; display: inline-flex; align-items: center; color: var(--mb-text-secondary); }
 .quiz-community-category-filter select, .quiz-community-category-trigger { min-height: 32px; max-width: min(240px, 55vw); padding: 0 28px 0 var(--mb-space-8); border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); appearance: none; cursor: pointer; }
 .quiz-community-category-filter svg { position: absolute; right: 8px; pointer-events: none; }
@@ -390,8 +388,9 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 
 
 /* 전체 커뮤니티 피드 필터: 회색 선택 버튼과 인기순·최신순 컨트롤을 한 줄에 둔다. */
-.quiz-community-page-controls .quiz-community-sort-toggle { margin: 0; padding: 0 var(--mb-space-8); color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
-@media (hover: hover) { .quiz-community-page-controls .quiz-community-sort-toggle:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); } }
+/* 정렬 버튼은 면 없이 글자만(왼쪽), 카테고리 드롭다운은 오른쪽 */
+.quiz-community-page-controls .quiz-community-sort-toggle { margin: 0; padding: 0 2px; color: var(--mb-text-secondary); background: transparent; }
+@media (hover: hover) { .quiz-community-page-controls .quiz-community-sort-toggle:hover { color: var(--mb-text-primary); background: transparent; } }
 .quiz-community-page-controls .quiz-community-category-filter select { min-width: 112px; }
 @media (max-width: 767px) {
   .quiz-community-page-controls { display: flex; align-items: center; justify-content: space-between; }

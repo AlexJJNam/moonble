@@ -850,8 +850,8 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
     </button>}
     {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-controls">
-      <CommunityCategoryFilter value={category} onChange={value => { setCategory(value); }} />
       <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} />
+      <CommunityCategoryFilter value={category} onChange={value => { setCategory(value); }} />
     </div>}
 
     {state.status === 'loading' && <ul className="quiz-community-skeleton" aria-label="글을 불러오는 중">{[0, 1].map(key => <li key={key}><i /><span><b /><b /><b /></span></li>)}</ul>}
