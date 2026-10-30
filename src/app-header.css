@@ -235,6 +235,10 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
   body.mb-creator-prompt-focused .mb-app-nav:not(.mb-solver-nav) { display: none !important; }
   .mb-app-header { position: sticky; inset: 0 auto auto; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--mb-border); backdrop-filter: none; transition: top 220ms cubic-bezier(.2, .8, .3, 1); }
   .mb-app-header.has-mobile-subnav { border-bottom: 0; }
+  /* 마이페이지처럼 상단 바를 숨기는 화면: 로고·프로필 줄만 숨기고 하단 독바는 남긴다. */
+  .mb-app-header.is-mobile-top-hidden { position: static; border-bottom: 0; }
+  .mb-app-header.is-mobile-top-hidden .mb-app-header-inner { min-height: 0; padding: 0; }
+  .mb-app-header.is-mobile-top-hidden .mb-app-brand-row, .mb-app-header.is-mobile-top-hidden .mb-app-profile-row { display: none; }
   .mb-app-header.is-mobile-hidden { top: -62px; }
   .mb-app-header.has-mobile-subnav.is-mobile-hidden { top: -112px; }
   .mb-app-header.mb-solver-sidebar.is-mobile-hidden { top: -60px; }

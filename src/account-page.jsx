@@ -277,7 +277,7 @@ function AccountPage() {
   if (!user) return <div className="workspace-check" role="status" aria-label="계정 정보 여는 중"><span className="moonble-spinner" aria-hidden="true" /></div>;
   const profile = profileOf(user);
   return <>
-    <AppHeader active="account" user={user} pending={pending} error={error} onLogout={logout} />
+    <AppHeader active="account" hideMobileTop user={user} pending={pending} error={error} onLogout={logout} />
     <main className="account-main mb-page-gutter">
       {activity ? <CommunityActivityPage user={user} tab={activity.tab} onTabChange={tab => { window.location.hash = tab ? activityHash(tab) : ''; if (!tab) history.replaceState(null, '', location.pathname + location.search); setActivity(readActivityRoute()); }} /> : <>
       <div className="account-heading"><h1 className="mb-page-title">내 정보</h1></div>

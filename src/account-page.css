@@ -197,3 +197,6 @@ button { font: inherit; cursor: pointer; }
 .account-profile-camera::after, .account-profile-edit::after, .account-ai-help::after, .account-dialog-close::after {
   content: ''; position: absolute; top: 50%; left: 50%; width: max(100%, var(--mb-target-size)); height: max(100%, var(--mb-target-size)); transform: translate(-50%, -50%);
 }
+
+/* 마이페이지는 모바일 상단 바가 없으므로 기기 상단 안전 영역만큼 띄운다. */
+@media (max-width: 767px) { .account-main.mb-page-gutter { padding-top: calc(var(--mb-page-pad-top) + env(safe-area-inset-top)); } }

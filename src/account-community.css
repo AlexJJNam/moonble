@@ -58,7 +58,7 @@
 
 /* 모바일 상세: 게시글 보기 화면처럼 상단 바(뒤로 · 가운데 제목)를 쓴다. */
 @media (max-width: 767px) {
-  .account-community-heading { box-sizing: border-box; max-width: none; min-height: 54px; display: grid; grid-template-columns: var(--mb-target-size) minmax(0, 1fr) var(--mb-target-size); align-items: center; gap: 0; margin: calc(var(--mb-page-pad-top) * -1) calc(var(--mb-page-pad-inline) * -1) var(--mb-space-8); padding: 0 var(--mb-space-8); border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
+  .account-community-heading { box-sizing: border-box; max-width: none; min-height: 54px; display: grid; grid-template-columns: var(--mb-target-size) minmax(0, 1fr) var(--mb-target-size); align-items: center; gap: 0; position: sticky; z-index: 20; top: 0; margin: calc((var(--mb-page-pad-top) + env(safe-area-inset-top)) * -1) calc(var(--mb-page-pad-inline) * -1) var(--mb-space-8); padding: env(safe-area-inset-top) var(--mb-space-8) 0; border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
   .account-community-heading > span:last-child { display: block; }
   .account-community-heading h1.mb-page-title { overflow: hidden; margin: 0; font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); letter-spacing: -.01em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .account-community-back { width: var(--mb-target-size); height: var(--mb-target-size); margin: 0; color: var(--mb-text-primary); }
