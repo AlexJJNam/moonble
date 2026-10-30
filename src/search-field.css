@@ -1,4 +1,4 @@
-/* 검색창 공통: 높이 44px, 모서리 12px, 글자 16px(모바일 확대 방지). PC는 아래 제안 목록, 모바일은 전체 화면 검색. */
+/* 검색창 공통: PC 모달과 모바일 전체 화면에서 같은 검색 내용을 사용한다. */
 .mb-search-field { box-sizing: border-box; min-width: 0; width: 100%; min-height: var(--mb-control-compact-height); display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 14px; border: 1px solid transparent; border-radius: var(--mb-radius-12); color: var(--mb-text-tertiary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); }
 /* 눌러도 테두리 선을 그리지 않는다(앱처럼). */
 .mb-search-field:focus-within { border-color: transparent; }
@@ -15,7 +15,6 @@
 .mb-search-trigger { width: 100%; font-family: var(--mb-font-sans); text-align: left; cursor: pointer; }
 .mb-search-trigger span { min-width: 0; flex: 1; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 24px; text-overflow: ellipsis; white-space: nowrap; }
 .mb-search-trigger:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
-.mb-search-dropdown { position: absolute; z-index: 40; top: calc(100% + 6px); right: 0; left: 0; max-height: min(400px, 60vh); overflow-y: auto; padding: var(--mb-space-8); border: 1px solid var(--mb-border); border-radius: var(--mb-radius-12); background: var(--mb-surface); box-shadow: 0 12px 32px rgb(15 23 42 / 12%); }
 .mb-search-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--mb-space-8); padding: 0 var(--mb-space-4) 0 var(--mb-space-8); }
 .mb-search-section-head h3 { margin: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); }
 .mb-search-section-head button { min-height: 36px; padding: 0 var(--mb-space-4); border: 0; color: var(--mb-text-tertiary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; cursor: pointer; }
@@ -31,13 +30,23 @@
 .mb-search-remove { width: var(--mb-target-size); height: var(--mb-target-size); flex: 0 0 auto; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-tertiary); background: transparent; cursor: pointer; }
 @media (hover: hover) { .mb-search-remove:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); } }
 .mb-search-empty { margin: 0; padding: var(--mb-space-24) var(--mb-space-8); color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; text-align: center; }
-.mb-search-screen { position: fixed; z-index: var(--mb-z-overlay); inset: 0; display: flex; flex-direction: column; overscroll-behavior: none; color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); }
+.mb-search-overlay { position: fixed; z-index: var(--mb-z-overlay); inset: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgb(25 31 40 / 40%); }
+.mb-search-screen { position: relative; box-sizing: border-box; width: min(704px, 100%); height: min(660px, calc(100dvh - 48px)); display: flex; flex-direction: column; overflow: hidden; border-radius: 20px; overscroll-behavior: none; color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 20px 48px rgb(15 23 42 / 18%); font-family: var(--mb-font-sans); }
 .mb-search-screen-head { flex: 0 0 auto; display: flex; align-items: center; gap: var(--mb-space-4); margin: 0; padding: calc(var(--mb-space-8) + env(safe-area-inset-top)) var(--mb-space-16) var(--mb-space-8) var(--mb-space-4); }
 .mb-search-screen-head .mb-search-field { width: auto; flex: 1; }
 .mb-search-back { width: var(--mb-target-size); height: var(--mb-target-size); flex: 0 0 auto; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-primary); background: transparent; cursor: pointer; }
 .mb-search-back:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: -2px; }
 .mb-search-screen-body { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: var(--mb-space-4) var(--mb-space-8) calc(var(--mb-space-16) + env(safe-area-inset-bottom)); }
-@media (max-width: 767px) { .mb-search-box { width: 100%; } }
+@media (min-width: 768px) {
+  .mb-search-screen-head { gap: 8px; padding: 16px 16px 12px; }
+  .mb-search-screen-body { padding: 4px 16px 20px; }
+  .mb-search-screen-filter .mb-category-chips { flex-wrap: wrap; overflow: visible; }
+}
+@media (max-width: 767px) {
+  .mb-search-box { width: 100%; }
+  .mb-search-overlay { display: block; padding: 0; background: var(--mb-surface); }
+  .mb-search-screen { position: fixed; inset: 0; width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+}
 
 /* 모바일 검색창: 조회 조건 태그(검색어 앞, 쿠팡처럼) · 검색 화면 입력창 바로 아래 조회 조건 */
 .mb-search-trigger-field { gap: 6px; padding-right: 10px; }

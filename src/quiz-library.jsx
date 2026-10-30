@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, MoreVertical, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
+import { Check, FileDown, FolderInput, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, MoreVertical, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
@@ -988,14 +988,10 @@ function QuizLibrary() {
     const visibility = paper.visibility || visibilityOfBank(paper.customBankId);
     return { type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null, visibility, initialVisibility: visibility };
   }
-  // ⋮ → 편집: 모바일은 연필 단계 없이 바로 편집 시트, PC는 끌어서 옮기는 편집 모드.
+  // ⋮ → 편집은 PC와 모바일 모두 해당 문제지의 편집 창을 바로 연다.
   function editFromMenu(paper) {
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      setOpenMenu(null);
-      setEditor(bankEditorFor(paper));
-      return;
-    }
-    enterEditMode();
+    setOpenMenu(null);
+    setEditor(bankEditorFor(paper));
   }
   function enterEditMode() {
     setEditMode(true);
@@ -1111,7 +1107,6 @@ function QuizLibrary() {
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent"
             tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
             screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
-          <CategoryChips className="quiz-library-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
@@ -1152,7 +1147,7 @@ function QuizLibrary() {
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && !mixSelecting && <div className="paper-card-actions">
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreVertical size={18} /></button>
-                  {openMenu === menuKey && <SheetLayer active={mobileSheet} label="문제지 메뉴" onClose={() => setOpenMenu(null)}><div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => editFromMenu(paper)}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div></SheetLayer>}
+                  {openMenu === menuKey && <SheetLayer active={mobileSheet} label="문제지 메뉴" onClose={() => setOpenMenu(null)}><div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => editFromMenu(paper)}><EditIcon size={15} />편집</button>{!mobileSheet && <button type="button" role="menuitem" onClick={enterEditMode}><FolderInput size={15} />그룹 이동</button>}<button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div></SheetLayer>}
               </div>}
             </article>;
           })}

@@ -874,9 +874,7 @@ button:disabled { cursor: wait; opacity: .6; }
 /* 문제 생성 결과 · 문제지 편집: 카테고리 고르기 */
 .creator-bank-category, .quiz-manage-category { grid-column: 1 / -1; min-width: 0; display: grid; gap: 6px; }
 .creator-bank-category > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 650; }
-.quiz-library-categories { order: 4; flex: 0 0 100%; }
 .quiz-manage-category > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
-.public-quiz-categories { margin-top: calc(var(--mb-space-8) * -1); }
 
 /* 문제지 카드: 유튜브 모바일 썸네일처럼 테두리·카드 면 없이, 둥근 썸네일 아래에 제목(최대 2줄)·설명(1줄)을 둔다.
    문항 수는 썸네일 오른쪽 아래에 항상 보이는 배지(영상 길이 배지처럼)로 둔다. */
@@ -930,6 +928,13 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-grid:not(.paper-list) .paper-favorite-toggle { top: 10px; left: 10px; width: 40px; height: 40px; border-radius: 10px; }
   .paper-grid:not(.paper-list) .paper-favorite-toggle svg { width: 22px; height: 22px; }
 }
+/* 공개 문제의 좋아요 수는 하트와 같은 흰 영역에서 항상 볼 수 있다. */
+.public-quiz-card .paper-favorite-toggle.is-heart { width: auto; min-width: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; opacity: 1; pointer-events: auto; }
+.public-quiz-card .paper-favorite-toggle.is-heart:disabled { cursor: wait; }
+.public-quiz-like-count { color: var(--mb-text-secondary); font-family: var(--mb-font-sans); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) { .paper-grid:not(.paper-list) .public-quiz-card .paper-favorite-toggle.is-heart { width: auto; min-width: 40px; padding: 0 9px; } }
+.public-quiz-like-warning { margin: 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.public-quiz-like-warning button { padding: 2px 4px; border: 0; color: var(--mb-primary-strong); background: transparent; font: inherit; cursor: pointer; }
 
 /* 문제 서칭 정렬 줄: 인기순 · 스크랩 문제지 스위치(왼쪽), 보기 전환(오른쪽) */
 .public-quiz-sort-left { min-width: 0; display: flex; align-items: center; gap: var(--mb-space-12); }
@@ -1010,6 +1015,3 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-main.is-mix-selecting .paper-card.is-mix-disabled { opacity: .55; }
 @media (max-width: 767px) { .quiz-mix-bar { bottom: calc(16px + env(safe-area-inset-bottom)); } }
 @media (prefers-reduced-motion: reduce) { .quiz-mix-backdrop { animation: none; } }
-
-/* 모바일: 카테고리 칩 줄은 숨기고 검색 화면 아래쪽에서 고른다(고른 조건은 검색창 태그로 보인다). */
-@media (max-width: 767px) { .quiz-library-categories, .public-quiz-categories { display: none; } }

@@ -1,5 +1,5 @@
-// 검색창 공통 컴포넌트: PC는 입력 아래 제안 목록, 모바일은 누르면 전체 화면 검색(최근 검색어 · 자동완성).
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+// 검색창 공통 컴포넌트: PC 모달과 모바일 전체 화면에서 같은 검색 기능을 제공한다.
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { ChevronLeft, Clock, Search, X } from 'lucide-react';
 import { lockPageScroll } from './scroll-lock.js';
@@ -87,25 +87,39 @@ function SearchInput({ inputRef, label, placeholder, value, onChange, onClear, .
   </label>;
 }
 
-// 모바일 전체 화면 검색. 뒤로가기 버튼·기기 뒤로가기·Esc로 닫힌다.
-function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, extra, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
+// 모바일 전체 화면과 PC 모달이 같은 검색 내용과 상태를 사용한다.
+function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, extra, mobile, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
   const screenRef = useRef(null);
   const [draft, setDraft] = useState(initial);
   const closedRef = useRef(false);
+  const openedOnMobile = useRef(mobile).current;
+  const historyEntryRef = useRef(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const finish = useCallback(after => {
     if (closedRef.current) return;
     closedRef.current = true;
-    if (window.history.state?.[HISTORY_KEY]) window.history.back();
+    if (historyEntryRef.current && window.history.state?.[HISTORY_KEY]) window.history.back();
     after();
   }, []);
   useEffect(() => {
     const unlock = lockPageScroll();
     if (document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true });
-    window.history.pushState({ ...(window.history.state || {}), [HISTORY_KEY]: true }, '', window.location.href);
+    if (openedOnMobile) {
+      window.history.pushState({ ...(window.history.state || {}), [HISTORY_KEY]: true }, '', window.location.href);
+      historyEntryRef.current = true;
+    }
     const onPop = () => { if (!closedRef.current) { closedRef.current = true; onCloseRef.current(); } };
-    const onKey = event => { if (event.key === 'Escape') { event.preventDefault(); finish(() => onCloseRef.current()); } };
+    const onKey = event => {
+      if (event.key === 'Escape') { event.preventDefault(); finish(() => onCloseRef.current()); return; }
+      if (event.key !== 'Tab' || !screenRef.current) return;
+      const focusable = Array.from(screenRef.current.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])')).filter(element => element.getClientRects().length);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !screenRef.current.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !screenRef.current.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
     // 페이지를 떠났다 돌아왔을 때(bfcache) 검색 기록이 남지 않게 한다.
     const onPageHide = () => {
       if (!window.history.state?.[HISTORY_KEY]) return;
@@ -113,16 +127,25 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
       delete state[HISTORY_KEY];
       window.history.replaceState(state, '', window.location.href);
     };
-    window.addEventListener('popstate', onPop);
-    window.addEventListener('pagehide', onPageHide);
+    if (openedOnMobile) { window.addEventListener('popstate', onPop); window.addEventListener('pagehide', onPageHide); }
     document.addEventListener('keydown', onKey);
-    return () => { unlock(); window.removeEventListener('popstate', onPop); window.removeEventListener('pagehide', onPageHide); document.removeEventListener('keydown', onKey); };
-  }, [finish, inputRef]);
+    return () => {
+      unlock();
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('pagehide', onPageHide);
+      document.removeEventListener('keydown', onKey);
+      if (historyEntryRef.current && !closedRef.current && window.history.state?.[HISTORY_KEY]) {
+        const state = { ...window.history.state };
+        delete state[HISTORY_KEY];
+        window.history.replaceState(state, '', window.location.href);
+      }
+    };
+  }, [finish, inputRef, openedOnMobile]);
   // 키보드가 올라오면 화면 높이를 보이는 영역에 맞춰 아래쪽 조회 조건이 가려지지 않게 한다.
   useEffect(() => {
     const viewport = window.visualViewport;
     const screen = screenRef.current;
-    if (!viewport || !screen) return undefined;
+    if (!mobile || !viewport || !screen) return undefined;
     const fit = () => {
       screen.style.height = `${Math.round(viewport.height)}px`;
       screen.style.top = `${Math.max(0, Math.round(viewport.offsetTop))}px`;
@@ -130,43 +153,37 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
     fit();
     viewport.addEventListener('resize', fit);
     viewport.addEventListener('scroll', fit);
-    return () => { viewport.removeEventListener('resize', fit); viewport.removeEventListener('scroll', fit); };
-  }, []);
+    return () => { viewport.removeEventListener('resize', fit); viewport.removeEventListener('scroll', fit); screen.style.height = ''; screen.style.top = ''; };
+  }, [mobile]);
   const submit = term => finish(() => onSubmit(term));
-  return createPortal(<div ref={screenRef} className="mb-search-screen" role="dialog" aria-modal="true" aria-label={label}>
-    <form className="mb-search-screen-head" role="search" onSubmit={event => { event.preventDefault(); submit(draft); }}>
-      <button type="button" className="mb-search-back" aria-label="검색 닫기" onClick={() => finish(() => onCloseRef.current())}><ChevronLeft size={22} aria-hidden="true" /></button>
-      <SearchInput inputRef={inputRef} label={label} placeholder={placeholder} value={draft} onChange={setDraft} onClear={() => { setDraft(''); inputRef.current?.focus(); }} />
-    </form>
-    {extra && <div className="mb-search-screen-filter"
-      // 조회 조건을 눌러도 입력창 포커스를 지켜 자판이 내려가지 않게 한다(눌린 버튼이 포커스를 가져가지 않게 하고, 빠졌으면 같은 탭 안에서 다시 포커스).
-      onMouseDown={event => event.preventDefault()}
-      onClick={() => { if (document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true }); }}>{extra}</div>}
-    <div className="mb-search-screen-body">
-      <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={submit} onRemoveRecent={onRemoveRecent} onClearRecent={onClearRecent} />
+  return createPortal(<div className="mb-search-overlay" onMouseDown={event => { if (!mobile && event.target === event.currentTarget) finish(() => onCloseRef.current()); }}>
+    <div ref={screenRef} className="mb-search-screen" role="dialog" aria-modal="true" aria-label={label}>
+      <form className="mb-search-screen-head" role="search" onSubmit={event => { event.preventDefault(); submit(draft); }}>
+        {mobile && <button type="button" className="mb-search-back" aria-label="검색 닫기" onClick={() => finish(() => onCloseRef.current())}><ChevronLeft size={22} aria-hidden="true" /></button>}
+        <SearchInput inputRef={inputRef} label={label} placeholder={placeholder} value={draft} onChange={setDraft} onClear={() => { setDraft(''); inputRef.current?.focus(); }} />
+        {!mobile && <button type="button" className="mb-search-back" aria-label="검색 닫기" onClick={() => finish(() => onCloseRef.current())}><X size={20} aria-hidden="true" /></button>}
+      </form>
+      {extra && <div className="mb-search-screen-filter"
+        onMouseDown={event => { if (mobile) event.preventDefault(); }}
+        onClick={() => { if (mobile && document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true }); }}>{extra}</div>}
+      <div className="mb-search-screen-body">
+        <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={submit} onRemoveRecent={onRemoveRecent} onClearRecent={onClearRecent} />
+      </div>
     </div>
   </div>, document.body);
 }
 
-// tags: 검색창 안 검색어 앞에 보이는 조회 조건 [{ key, label, onRemove }]. screenExtra: 모바일 검색 화면 입력창 바로 아래 조회 조건(예: 카테고리).
+// tags: 검색어 앞에 보이는 조회 조건. screenExtra: 검색 화면의 조회 조건(예: 카테고리).
 export function SearchField({ label, placeholder, value, onSearch, suggest, recentKey, className = '', tags = [], screenExtra = null }) {
   const mobile = useMediaQuery(MOBILE_QUERY);
-  const [draft, setDraft] = useState(value);
   const [recent, setRecent] = useState(() => readRecent(recentKey));
   const [screenOpen, setScreenOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const inputRef = useRef(null);
   const screenInputRef = useRef(null);
   const triggerRef = useRef(null);
-  const dropdownId = useId();
-  useEffect(() => { setDraft(value); }, [value]);
-  useEffect(() => { if (!mobile) setScreenOpen(false); else setDropdownOpen(false); }, [mobile]);
 
   function saveRecent(next) { setRecent(next); writeRecent(recentKey, next); }
   function apply(term) {
     const next = term.trim().slice(0, QUERY_LIMIT);
-    setDraft(next);
-    setDropdownOpen(false);
     onSearch(next);
     if (next) saveRecent([next, ...recent.filter(item => item !== next)].slice(0, RECENT_LIMIT));
   }
@@ -179,29 +196,16 @@ export function SearchField({ label, placeholder, value, onSearch, suggest, rece
     screenInputRef.current?.focus({ preventScroll: true });
   }
 
-  if (mobile) {
-    return <div className={`mb-search-box ${className}`}>
+  return <div className={`mb-search-box ${className}`}>
       <div className={`mb-search-field mb-search-trigger-field${value ? ' has-value' : ''}`}>
         <Search size={18} aria-hidden="true" />
         {tags.map(tag => <span key={tag.key} className="mb-search-tag"><span>{tag.label}</span><button type="button" aria-label={`${tag.label} 조건 지우기`} onClick={tag.onRemove}><X size={12} aria-hidden="true" /></button></span>)}
-        <button ref={triggerRef} type="button" className="mb-search-trigger" aria-label={value ? `${label}: ${value}` : label} onClick={openScreen}><span>{value || (tags.length ? '' : placeholder)}</span></button>
+        <button ref={triggerRef} type="button" className="mb-search-trigger" aria-label={value ? `${label}: ${value}` : label} aria-haspopup="dialog" aria-expanded={screenOpen} onClick={openScreen}><span>{value || (tags.length ? '' : placeholder)}</span></button>
         {value && <button type="button" className="mb-search-clear" aria-label="검색어 지우기" onClick={() => onSearch('')}><X size={14} aria-hidden="true" /></button>}
       </div>
-      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest} extra={screenExtra}
+      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest} extra={screenExtra} mobile={mobile}
         onRemoveRecent={removeRecent} onClearRecent={clearRecent}
         onSubmit={term => { apply(term); setScreenOpen(false); refocusTrigger(); }}
         onClose={() => { setScreenOpen(false); refocusTrigger(); }} />}
-    </div>;
-  }
-  return <div className={`mb-search-box ${className}`} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropdownOpen(false); }}>
-    <form role="search" onSubmit={event => { event.preventDefault(); apply(draft); inputRef.current?.blur(); }}>
-      <SearchInput inputRef={inputRef} label={label} placeholder={placeholder} value={draft} aria-expanded={dropdownOpen} aria-controls={dropdownId}
-        onChange={next => { setDraft(next); setDropdownOpen(true); if (!next.trim() && value) onSearch(''); }}
-        onClear={() => { setDraft(''); if (value) onSearch(''); setDropdownOpen(true); inputRef.current?.focus(); }}
-        onFocus={() => setDropdownOpen(true)} onKeyDown={event => { if (event.key === 'Escape') setDropdownOpen(false); }} />
-    </form>
-    {dropdownOpen && (draft.trim() || recent.length > 0) && <div id={dropdownId} className="mb-search-dropdown" onMouseDown={event => event.preventDefault()}>
-      <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={term => { apply(term); inputRef.current?.blur(); }} onRemoveRecent={removeRecent} onClearRecent={clearRecent} />
-    </div>}
   </div>;
 }

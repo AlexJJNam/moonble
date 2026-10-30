@@ -1,8 +1,12 @@
 // 문제지 미리보기: 문제지 카드 썸네일과 앞 문항 몇 개를 보여주고, 바로 풀러 갈 수 있다.
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import { PaperPreview } from './paper-preview.jsx';
+import { normalizeGif } from './community-gif.jsx';
+import { formatRelativeDate } from './date-format.js';
+import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
+import { getQuizPreviewComment } from './quiz-preview-comments.js';
 import { lockPageScroll } from './scroll-lock.js';
 import './quiz-preview-dialog.css';
 
@@ -17,6 +21,48 @@ export function previewPaperFromQuestions({ title, description = '', questions =
   };
 }
 
+function PreviewCommentAvatar({ name, path }) {
+  const [image, setImage] = useState(() => ({ path, src: cachedCommunityAvatarUrl(path), loaded: false, failed: false }));
+  useEffect(() => {
+    let alive = true;
+    if (!path) { setImage({ path: '', src: '', loaded: false, failed: false }); return () => { alive = false; }; }
+    setImage({ path, src: cachedCommunityAvatarUrl(path), loaded: false, failed: false });
+    communityAvatarUrl(path).then(url => {
+      if (!alive) return;
+      if (!url) { setImage({ path, src: '', loaded: false, failed: true }); return; }
+      const preview = new Image();
+      preview.onload = () => { if (alive) setImage({ path, src: url, loaded: true, failed: false }); };
+      preview.onerror = () => { if (alive) setImage({ path, src: '', loaded: false, failed: true }); };
+      preview.src = url;
+    }).catch(() => { if (alive) setImage({ path, src: '', loaded: false, failed: true }); });
+    return () => { alive = false; };
+  }, [path]);
+  const samePath = image.path === path;
+  const src = samePath && image.loaded ? image.src : '';
+  const loading = Boolean(path) && !src && !(samePath && image.failed);
+  return <span className={`mb-preview-comment-avatar${loading ? ' is-loading' : ''}`} aria-hidden="true">{src ? <img src={src} alt="" decoding="async" onError={() => setImage({ path, src: '', loaded: false, failed: true })} /> : !loading ? [...(name || '문블')][0] : null}</span>;
+}
+
+function PreviewComment({ comment }) {
+  const gif = normalizeGif(comment.gif);
+  if (!comment.body && !gif) return null;
+  const author = typeof comment.author_name === 'string' && comment.author_name.trim() ? comment.author_name : '문블 사용자';
+  const likes = Number.isInteger(comment.like_count) && comment.like_count > 0 ? comment.like_count : 0;
+  const date = comment.created_at ? formatRelativeDate(comment.created_at) : '';
+  return <section className="mb-preview-comment" aria-label="대표 댓글">
+    <h3>댓글</h3>
+    <div className="mb-preview-comment-row">
+      <PreviewCommentAvatar name={author} path={comment.author_avatar} />
+      <div className="mb-preview-comment-content">
+        <p className="mb-preview-comment-meta"><strong>{author}</strong>{date && <time dateTime={comment.created_at}>{date}</time>}</p>
+        {comment.body && <p className="mb-preview-comment-body">{comment.body}</p>}
+        {gif && <img className="mb-preview-comment-gif" src={gif.preview_url || gif.url} alt={gif.title ? `GIF: ${gif.title}` : 'GIF'} loading="lazy" decoding="async" />}
+        {likes > 0 && <span className="mb-preview-comment-likes"><Heart size={13} aria-hidden="true" />{likes.toLocaleString('ko-KR')}</span>}
+      </div>
+    </div>
+  </section>;
+}
+
 // load(): 위 모양의 문제지(또는 그 Promise). 대화상자 위에 다시 뜨므로 Esc는 이 창만 닫는다.
 export function QuizPreviewDialog({ load, solveHref, onClose }) {
   const titleId = useId();
@@ -25,6 +71,7 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const [state, setState] = useState({ status: 'loading', paper: null, error: '' });
+  const [comment, setComment] = useState(null);
   useEffect(() => {
     let alive = true;
     Promise.resolve().then(() => loadRef.current())
@@ -32,6 +79,11 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
       .catch(error => { if (alive) setState({ status: 'error', paper: null, error: error?.message || '미리보기를 불러오지 못했어요.' }); });
     return () => { alive = false; };
   }, []);
+  useEffect(() => {
+    let alive = true;
+    getQuizPreviewComment(solveHref).then(value => { if (alive) setComment(value); }).catch(() => {});
+    return () => { alive = false; };
+  }, [solveHref]);
   useEffect(() => {
     const unlock = lockPageScroll();
     const previous = document.activeElement;
@@ -71,6 +123,7 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
         {paper.samples.length > 0 && <ol className="mb-preview-questions" aria-label="앞 문항">
           {paper.samples.slice(0, 3).map((sample, index) => <li key={`${sample.title}-${index}`}><b>Q{index + 1}</b><span>{sample.title}</span></li>)}
         </ol>}
+        {comment && <PreviewComment comment={comment} />}
       </>}
       <footer className="mb-preview-actions">
         <button type="button" onClick={onClose}>닫기</button>
