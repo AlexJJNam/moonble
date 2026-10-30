@@ -944,3 +944,12 @@ button:disabled { cursor: wait; opacity: .6; }
 }
 @keyframes paper-card-sheet-in { from { opacity: .6; transform: translateY(24px); } }
 @media (prefers-reduced-motion: reduce) { .paper-action-menu.paper-card-action-menu { animation: none; } }
+
+/* 문제 서칭 하트: 즐겨찾기 별과 같은 자리·모양, 누르면 빨간 하트 */
+.paper-favorite-toggle.is-heart.is-active { color: #f04452; }
+@media (hover: hover) { .paper-favorite-toggle.is-heart:hover { color: #f04452; } }
+/* 모바일 카드 보기: 썸네일이 화면 폭으로 커진 만큼 별·하트 버튼도 키운다(목록 보기는 그대로). */
+@media (max-width: 767px) {
+  .paper-grid:not(.paper-list) .paper-favorite-toggle { top: 10px; left: 10px; width: 40px; height: 40px; border-radius: 10px; }
+  .paper-grid:not(.paper-list) .paper-favorite-toggle svg { width: 22px; height: 22px; }
+}

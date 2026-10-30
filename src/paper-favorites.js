@@ -42,3 +42,31 @@ export function removeFavoritePaper(userId, paperId) {
   }
   return next;
 }
+
+// 문제 서칭(공개 문제) 하트: 즐겨찾기처럼 이 기기에 저장한다. 공유 토큰과 제목을 함께 남긴다.
+function likeStorageKey(userId) {
+  return userId ? `moonble:user:${userId}:public-quiz-likes-v1` : null;
+}
+
+export function getLikedPublicQuizzes(userId) {
+  try {
+    const key = likeStorageKey(userId);
+    const saved = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+    return Array.isArray(saved) ? saved.filter(item => item && typeof item.token === 'string' && item.token) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function toggleLikedPublicQuiz(userId, item) {
+  const current = getLikedPublicQuizzes(userId);
+  const liked = current.some(saved => saved.token === item.token);
+  const next = liked ? current.filter(saved => saved.token !== item.token) : [{ token: item.token, title: item.title || '', likedAt: new Date().toISOString() }, ...current];
+  const key = likeStorageKey(userId);
+  try {
+    if (key) localStorage.setItem(key, JSON.stringify(next.slice(0, 300)));
+  } catch {
+    // 저장이 막혀도 현재 화면의 표시는 바꾼다.
+  }
+  return !liked;
+}

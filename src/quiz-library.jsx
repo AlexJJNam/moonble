@@ -993,7 +993,7 @@ function QuizLibrary() {
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
         <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
-        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch /> : <>
+        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch userId={user.id} /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
             <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
