@@ -28,7 +28,7 @@ import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview
 import { SegmentedControl } from './segmented-control.jsx';
 import { CommunityPage } from './quiz-community.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
-import { getPaperLastActivityMap } from './paper-activity.js';
+import { getPaperLastActivityMap, getPaperSolveStatus, paperSolveStatusLabel } from './paper-activity.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
@@ -984,7 +984,8 @@ function QuizLibrary() {
   const groupColors = buildGroupColorMap(collection.groups);
   const editingPaperCards = editMode;
   const hasLibrarySection = ['papers', 'public', 'community'].includes(section);
-  const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '문제지';
+  // 페이지 제목은 선택한 탭 이름과 같게 둔다(대메뉴 이름은 '문제지').
+  const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '나의 문제지';
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : section === 'create' ? <CreatorTabs current={creatorScreen === 'create' ? 'create' : 'upload'} onSelect={next => creatorStepRef.current?.(next)} /> : null} />
@@ -1066,7 +1067,16 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); if (mobileSearchOpen && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); window.location.replace(href); } }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
+                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{(() => {
+                  // 풀이 상태(진행률 · 아직 풀이 전)와 시간(마지막 조회, 없으면 만든 때)을 나눠 한 줄 회색 캡션으로 보여준다.
+                  const status = getPaperSolveStatus(user.id, paper.id);
+                  const shownAt = paper.lastOpenedAt || paper.savedAt || null;
+                  if (!status && !shownAt) return null;
+                  return <div className="paper-added-at">
+                    {status && <span className={`paper-status is-${status.kind}`}>{paperSolveStatusLabel(status)}</span>}
+                    {shownAt && <time dateTime={shownAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(shownAt))}>{formatRelativeDateShortYear(shownAt)}</time>}
+                  </div>;
+                })()}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">

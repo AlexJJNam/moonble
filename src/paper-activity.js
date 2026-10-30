@@ -52,3 +52,29 @@ export function recordPaperAccess(userId, paperKey, accessedAt = new Date().toIS
   }
   return next;
 }
+
+// 카드에 보일 풀이 상태(시간과 별개).
+// - 저장된 풀이(문제풀이 화면의 임시 저장)에 답한 문항이 있으면: 풀이 중 진행률
+// - 풀이 기록이 한 번도 없으면: 아직 풀이 전
+// - 그 밖(풀이를 마친 문제지)은 상태 없음
+export function getPaperSolveStatus(userId, paperKey) {
+  if (!userId || !paperKey) return null;
+  try {
+    const draft = JSON.parse(localStorage.getItem(`moonble:quiz-draft:v1:${userId}:${paperKey}`) || 'null');
+    const questions = Array.isArray(draft?.questions) ? draft.questions : [];
+    const answered = questions.filter(question => Array.isArray(question?.selected) && question.selected.length > 0).length;
+    if (questions.length && answered) return { kind: 'progress', answered, total: questions.length, percent: Math.round((answered / questions.length) * 100) };
+  } catch { /* 손상된 임시 저장은 상태에 쓰지 않는다. */ }
+  try {
+    const history = JSON.parse(localStorage.getItem(`moonble:user:${userId}:history-v3`) || '[]');
+    const solved = Array.isArray(history) && history.some(item => (item?.bankId ? `custom:${item.bankId}` : item?.paperId) === paperKey);
+    return solved ? null : { kind: 'unplayed' };
+  } catch {
+    return { kind: 'unplayed' };
+  }
+}
+
+export function paperSolveStatusLabel(status) {
+  if (!status) return '';
+  return status.kind === 'progress' ? `풀이 중 ${status.percent}% (${status.answered}/${status.total})` : '아직 풀이 전';
+}
