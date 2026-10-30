@@ -1138,9 +1138,11 @@ function QuizLibrary() {
                   // 풀이 상태(진행률 · 아직 풀이 전)와 시간(마지막 조회, 없으면 만든 때)을 나눠 한 줄 회색 캡션으로 보여준다.
                   const status = getPaperSolveStatus(user.id, paper.id);
                   const shownAt = paper.lastOpenedAt || paper.savedAt || null;
-                  if (!status && !shownAt) return null;
+                  const visibilityLabel = paper.kind === 'custom' ? VISIBILITY_LABELS[paper.visibility] : '';
+                  if (!status && !shownAt && !visibilityLabel) return null;
                   return <div className="paper-added-at">
                     {status && <span className={`paper-status is-${status.kind}`}>{paperSolveStatusLabel(status)}</span>}
+                    {visibilityLabel && <span className="paper-visibility">{visibilityLabel}</span>}
                     {shownAt && <time dateTime={shownAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(shownAt))}>{formatRelativeDateShortYear(shownAt)}</time>}
                   </div>;
                 })()}</div></div>
