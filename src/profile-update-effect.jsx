@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import './profile-update-effect.css';
 
 export function ProfileUpdateEffect({ message, onComplete }) {
   return createPortal(<div className="account-profile-update-fx is-playing" role="status" aria-live="assertive" onAnimationEnd={event => {

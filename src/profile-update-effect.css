@@ -1,0 +1,19 @@
+/* 완료 효과(채점 완료와 같은 모양): 파란 원 체크가 튀어나오고 문구가 나온 뒤 사라진다. 내 정보 저장·Mix 생성 등에서 쓴다. */
+.account-profile-update-fx[hidden] { display: none; }
+.account-profile-update-fx { position: fixed; inset: 0; z-index: 1200; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--mb-text-primary); background: rgb(255 255 255 / 97%); pointer-events: none; }
+.account-profile-update-fx.is-playing { animation: account-profile-update-out .42s ease 1.12s both; }
+.account-profile-update-fx strong { max-width: calc(100vw - 48px); margin-top: 8px; font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; text-align: center; opacity: 0; }
+.account-profile-update-fx.is-playing strong { animation: account-profile-update-copy-in .32s ease-out .34s forwards; }
+.account-profile-update-badge { width: 76px; height: 76px; display: grid; place-content: center; border-radius: 50%; color: #fff; background: var(--mb-primary); box-shadow: 0 14px 30px -12px rgb(49 130 246 / 60%); }
+.account-profile-update-fx.is-playing .account-profile-update-badge { animation: account-profile-update-badge-pop .5s cubic-bezier(.34,1.56,.64,1) both, account-profile-update-badge-grow .42s ease 1.08s forwards; }
+.account-profile-update-badge svg { width: 42px; height: 42px; overflow: visible; }
+.account-profile-update-badge path { fill: none; stroke: #fff; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 34; stroke-dashoffset: 34; }
+.account-profile-update-fx.is-playing .account-profile-update-badge path { animation: account-profile-update-check-draw .32s ease-out .2s forwards; }
+@keyframes account-profile-update-copy-in { to { opacity: 1; } }
+@keyframes account-profile-update-badge-pop { 0% { opacity: 0; transform: scale(.3); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes account-profile-update-check-draw { to { stroke-dashoffset: 0; } }
+@keyframes account-profile-update-badge-grow { to { transform: scale(1.1); } }
+@keyframes account-profile-update-out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .account-profile-update-fx.is-playing, .account-profile-update-fx.is-playing strong, .account-profile-update-fx.is-playing .account-profile-update-badge, .account-profile-update-fx.is-playing .account-profile-update-badge path { animation-duration: 1ms; animation-delay: 0s; }
+}
