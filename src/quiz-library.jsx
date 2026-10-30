@@ -191,11 +191,13 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
   const isShareConfirm = editor.type === 'share-unlisted-confirm';
   const isMixTrim = editor.type === 'mix-trim-confirm';
+  // 문제지 편집은 모바일에서 아래에서 올라와 화면을 꽉 채우는 한 페이지 편집 화면으로 연다.
+  const isPage = editor.type === 'bank-edit';
   const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['blue', 'cyan'].includes(editor.colorKey);
   const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
-  return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
+  return <div ref={overlayRef} className={`quiz-manage-overlay${isPage ? ' is-page' : ''}`} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}${isPage ? ' is-page' : ''}`} role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
       {isMixTrim ? <>
         <header><h2 id="quiz-manage-title">Mix는 최대 {MIX_QUESTION_LIMIT}문항이에요</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
         <p>고른 문제지는 모두 {editor.total.toLocaleString('ko-KR')}문항이에요. 이 중 {MIX_QUESTION_LIMIT}문항을 무작위로 골라 섞을게요.</p>
@@ -209,7 +211,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
         <p><strong>{editor.title}</strong> 문제지는 즐겨찾기에 있어요. 삭제하면 되돌릴 수 없어요.</p>
         <footer><button type="button" onClick={onClose}>취소</button><button className="is-danger" type="submit">삭제하기</button></footer>
       </> : <>
-        <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+        <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button>{isPage && <button type="submit" className="quiz-manage-header-save" disabled={!editor.title.trim()}>저장</button>}</header>
         {isDelete ? <>
           <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
           {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}

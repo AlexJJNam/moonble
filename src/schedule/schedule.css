@@ -75,7 +75,7 @@
 .mb-schedule-field input[type='text'], .mb-schedule-field input[type='time'], .mb-schedule-field textarea, .mb-schedule-field select { box-sizing: border-box; width: 100%; min-height: var(--mb-control-height); padding: 0 14px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; }
 .mb-schedule-field textarea { min-height: 64px; padding: 10px 14px; resize: vertical; }
 .mb-schedule-field small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
-/* 시간: [시작 → 끝] 줄 + 누른 쪽 아래에 펼쳐지는 시·분 휠 */
+/* 시간: [시작 ~ 끝] 줄. 누르면 시·분 휠 시트가 열린다 */
 .mb-schedule-time-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .mb-schedule-time-row > span { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
 .mb-schedule-time-row button { min-height: var(--mb-control-height); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 14px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); cursor: pointer; }
@@ -89,6 +89,15 @@
 .mb-time-wheel-wrapper [data-rwp] { flex: 1; }
 .mb-time-wheel-option { color: var(--mb-text-tertiary); font-family: var(--mb-font-sans); font-size: var(--mb-font-17); font-variant-numeric: tabular-nums; }
 .mb-time-wheel-highlight { border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 1px 3px rgb(15 23 42 / 8%); font-family: var(--mb-font-sans); font-size: 1.25rem; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; }
+/* 시간 고르기 시트: 모바일은 바텀시트, PC는 가운데 작은 창 */
+.mb-time-sheet-layer { position: fixed; z-index: calc(var(--mb-z-overlay) + 1); inset: 0; display: grid; place-items: center; padding: 16px; background: rgb(15 23 42 / 42%); font-family: var(--mb-font-sans); animation: mb-schedule-fade 160ms ease backwards; }
+.mb-time-sheet { box-sizing: border-box; width: min(360px, 100%); display: grid; gap: 16px; padding: 24px 20px 20px; border-radius: var(--mb-dialog-radius); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 24px 72px rgb(15 23 42 / 22%); }
+.mb-time-sheet:focus { outline: none; }
+.mb-time-sheet h3 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
+.mb-time-sheet .mb-time-wheel { margin-top: 0; }
+.mb-time-sheet-error { margin: -8px 0 0; color: var(--mb-danger); font-size: var(--mb-font-13); line-height: 20px; text-align: center; }
+.mb-time-sheet-confirm { min-height: var(--mb-control-height); padding: 0 16px; border: 0; border-radius: var(--mb-radius-12); color: #fff; background: var(--mb-primary-strong); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.mb-time-sheet-confirm:disabled { cursor: default; opacity: .5; }
 .mb-time-wheel-colon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -54%); color: var(--mb-text-primary); font-size: 1.25rem; font-weight: var(--mb-weight-semibold); pointer-events: none; }
 .mb-schedule-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .mb-schedule-days button, .mb-schedule-chips button { min-height: 40px; padding: 0 4px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
@@ -137,5 +146,12 @@
   .mb-schedule-dialog footer > button:not(.mb-schedule-delete) { display: none; }
   .mb-schedule-dialog footer .mb-schedule-delete, .mb-schedule-dialog footer .mb-schedule-delete.is-confirming { flex: 1; min-height: var(--mb-control-height); }
 }
+@media (max-width: 767px) {
+  .mb-time-sheet-layer { align-items: end; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
+  .mb-time-sheet { width: 100%; padding: 12px 20px 20px; border-radius: var(--mb-sheet-radius); box-shadow: 0 -8px 40px rgb(0 0 0 / 18%); animation: mb-time-sheet-in 260ms cubic-bezier(.2, .8, .25, 1) backwards; }
+  .mb-time-sheet::before { content: ''; display: block; width: 36px; height: 4px; margin: 0 auto -4px; border-radius: 999px; background: var(--mb-border); }
+  .mb-time-sheet h3 { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); }
+}
 @keyframes mb-schedule-page-in { from { transform: translateY(100%); } }
-@media (prefers-reduced-motion: reduce) { .mb-schedule-overlay, .mb-schedule-dialog { animation: none; } .mb-schedule-switch > span, .mb-schedule-switch > span i { transition: none; } }
+@keyframes mb-time-sheet-in { from { transform: translateY(calc(100% + 24px)); } }
+@media (prefers-reduced-motion: reduce) { .mb-schedule-overlay, .mb-schedule-dialog, .mb-time-sheet-layer, .mb-time-sheet { animation: none; } .mb-schedule-switch > span, .mb-schedule-switch > span i { transition: none; } }

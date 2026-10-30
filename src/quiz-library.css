@@ -1028,3 +1028,19 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-main.is-mix-selecting .paper-card.is-mix-disabled { opacity: .55; }
 @media (max-width: 767px) { .quiz-mix-bar { bottom: calc(16px + env(safe-area-inset-bottom)); } }
 @media (prefers-reduced-motion: reduce) { .quiz-mix-backdrop { animation: none; } }
+
+/* 문제지 편집: PC는 가운데 창, 모바일은 아래에서 올라와 화면을 꽉 채우는 한 페이지 편집 화면(위쪽 줄에 닫기 · 제목 · 저장). */
+.quiz-manage-dialog > header button.quiz-manage-header-save { display: none; }
+@media (max-width: 767px) {
+  .quiz-manage-overlay.is-page { align-items: stretch; padding: 0; backdrop-filter: none; }
+  .quiz-manage-dialog.is-page { box-sizing: border-box; width: 100%; height: 100%; max-height: none; padding: 0 16px calc(24px + env(safe-area-inset-bottom) + var(--quiz-keyboard-offset, 0px)); border: 0; border-radius: 0; background: var(--mb-surface); box-shadow: none; animation: quiz-manage-page-in 280ms cubic-bezier(.2, .8, .25, 1) backwards; }
+  .quiz-manage-dialog.is-page::before { display: none; }
+  .quiz-manage-dialog.is-page > header { position: sticky; z-index: 2; top: 0; min-height: 56px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 4px; margin: 0 -16px 16px; padding: env(safe-area-inset-top) 8px 0; border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
+  .quiz-manage-dialog.is-page > header h2 { grid-column: 2; grid-row: 1; overflow: hidden; font-size: var(--mb-font-17); line-height: 24px; font-weight: var(--mb-weight-semibold); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .quiz-manage-dialog.is-page > header button[aria-label='닫기'] { grid-column: 1; grid-row: 1; width: var(--mb-target-size); height: var(--mb-target-size); color: var(--mb-text-primary); background: transparent; }
+  .quiz-manage-dialog.is-page > header button.quiz-manage-header-save { grid-column: 3; grid-row: 1; width: auto; height: auto; min-width: var(--mb-target-size); min-height: var(--mb-target-size); display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: var(--mb-radius-8); color: var(--mb-primary-strong); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-bold); }
+  .quiz-manage-dialog.is-page > header button.quiz-manage-header-save:disabled { opacity: .45; }
+  .quiz-manage-dialog.is-page > footer { display: none; }
+}
+@keyframes quiz-manage-page-in { from { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .quiz-manage-dialog.is-page { animation: none; } }

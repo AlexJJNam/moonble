@@ -40,6 +40,27 @@ function TimeWheel({ value, onChange, label }) {
   </div>;
 }
 
+// 시간 고르기 시트: 모바일은 아래에서 올라오는 바텀시트, PC는 가운데 작은 창. 확인을 눌러야 반영된다.
+function TimeSheet({ label, value, problem, opener, onConfirm, onClose }) {
+  const titleId = useId();
+  const sheetRef = useRef(null);
+  const [draft, setDraft] = useState(value);
+  const error = problem ? problem(draft) : '';
+  // 열면 시트로 포커스를 옮겨(입력 중이던 키보드는 내려간다) 닫으면 눌렀던 시간 버튼으로 돌려준다.
+  useEffect(() => {
+    sheetRef.current?.focus({ preventScroll: true });
+    return () => { if (opener?.isConnected) opener.focus({ preventScroll: true }); };
+  }, [opener]);
+  return createPortal(<div className="mb-time-sheet-layer" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div ref={sheetRef} className="mb-time-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <h3 id={titleId}>{label}</h3>
+      <TimeWheel label={label} value={draft} onChange={setDraft} />
+      {error && <p className="mb-time-sheet-error" role="alert">{error}</p>}
+      <button type="button" className="mb-time-sheet-confirm" disabled={Boolean(error)} onClick={() => onConfirm(draft)}>확인</button>
+    </div>
+  </div>, document.body);
+}
+
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
@@ -221,10 +242,18 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const timeEditRef = useRef(timeEdit);
+  timeEditRef.current = timeEdit;
+  const timeButtonsRef = useRef({});
   useEffect(() => {
     const unlock = lockPageScroll();
     dialogRef.current?.querySelector('input')?.focus({ preventScroll: true });
-    const onKey = event => { if (event.key === 'Escape') { event.preventDefault(); onCloseRef.current(); } };
+    const onKey = event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      if (timeEditRef.current) setTimeEdit(null);
+      else onCloseRef.current();
+    };
     document.addEventListener('keydown', onKey);
     return () => { unlock(); document.removeEventListener('keydown', onKey); };
   }, []);
@@ -272,12 +301,14 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
       <div className="mb-schedule-field">
         <span>시간</span>
         <div className="mb-schedule-time-row">
-          <button type="button" aria-expanded={timeEdit === 'start'} className={timeEdit === 'start' ? 'is-open' : ''} onClick={() => setTimeEdit(current => current === 'start' ? null : 'start')}><small>시작</small><b>{draft.start}</b></button>
-          <span aria-hidden="true">→</span>
-          <button type="button" aria-expanded={timeEdit === 'end'} className={`${timeEdit === 'end' ? 'is-open' : ''}${timeInvalid ? ' is-invalid' : ''}`} onClick={() => setTimeEdit(current => current === 'end' ? null : 'end')}><small>끝</small><b>{draft.end}</b></button>
+          <button ref={node => { timeButtonsRef.current.start = node; }} type="button" aria-haspopup="dialog" aria-expanded={timeEdit === 'start'} className={timeEdit === 'start' ? 'is-open' : ''} onClick={() => setTimeEdit('start')}><small>시작</small><b>{draft.start}</b></button>
+          <span aria-hidden="true">~</span>
+          <button ref={node => { timeButtonsRef.current.end = node; }} type="button" aria-haspopup="dialog" aria-expanded={timeEdit === 'end'} className={`${timeEdit === 'end' ? 'is-open' : ''}${timeInvalid ? ' is-invalid' : ''}`} onClick={() => setTimeEdit('end')}><small>끝</small><b>{draft.end}</b></button>
         </div>
-        {timeEdit && <TimeWheel key={timeEdit} label={timeEdit === 'start' ? '시작' : '끝'} value={timeEdit === 'start' ? draft.start : draft.end}
-          onChange={next => (timeEdit === 'start' ? changeStart(next) : set({ end: next }))} />}
+        {timeEdit && <TimeSheet key={timeEdit} opener={timeButtonsRef.current[timeEdit]} label={timeEdit === 'start' ? '시작 시간' : '끝나는 시간'} value={timeEdit === 'start' ? draft.start : draft.end}
+          problem={timeEdit === 'end' ? next => (toMinutes(next) <= toMinutes(draft.start) ? `시작 시간(${draft.start})보다 늦게 골라주세요.` : '') : undefined}
+          onClose={() => setTimeEdit(null)}
+          onConfirm={next => { if (timeEdit === 'start') changeStart(next); else set({ end: next }); setTimeEdit(null); }} />}
         {timeInvalid && <small className="mb-schedule-time-error">끝나는 시간은 시작 시간보다 늦어야 해요.</small>}
       </div>
       <div className="mb-schedule-field"><span>문제지 연결</span>
