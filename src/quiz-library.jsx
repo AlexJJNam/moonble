@@ -939,7 +939,7 @@ function QuizLibrary() {
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
     visibility: bank.visibility || (shareVisibilities ? (shareVisibilities[bank.id] === 'public' ? 'public' : shareVisibilities[bank.id] === 'unlisted' ? 'partial' : 'personal') : (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal')),
-    samples: bank.questions.slice(0, 4).map(question => ({ title: question.q, options: question.options })),
+    samples: bank.questions.slice(0, 6).map(question => ({ title: question.q, options: question.options })),
   }));
   const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers.map(paper => ({ ...paper, category: paper.category || 'marketing' })) : [];
   const allPapers = [...customPapers, ...visibleSamples].map(paper => ({

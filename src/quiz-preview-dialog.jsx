@@ -13,7 +13,7 @@ export function previewPaperFromQuestions({ title, description = '', questions =
     label: title || '문제지',
     description,
     count: questions.length,
-    samples: questions.slice(0, 4).map(question => ({ title: String(question.q || question.title || ''), options: Array.isArray(question.options) ? question.options.map(String) : [] })),
+    samples: questions.slice(0, 6).map(question => ({ title: String(question.q || question.title || ''), options: Array.isArray(question.options) ? question.options.map(String) : [] })),
   };
 }
 

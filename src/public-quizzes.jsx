@@ -16,7 +16,9 @@ function PublicQuizCard({ item, userId }) {
   const [liked, setLiked] = useState(() => getLikedPublicQuizzes(userId).some(saved => saved.token === item.token));
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : '', item.average_score != null && item.participants > 0 ? `평균 ${Number(item.average_score)}점` : ''].filter(Boolean).join(' · ');
-  const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples: item.preview ? [{ title: item.preview, options: [] }] : [] };
+  // 썸네일에는 앞 문항 최대 6개(019의 samples). 019 적용 전에는 첫 문항(preview)만 쓴다.
+  const samples = Array.isArray(item.samples) && item.samples.length ? item.samples.map(sample => ({ title: String(sample?.q || ''), options: Array.isArray(sample?.options) ? sample.options.map(String) : [] })) : item.preview ? [{ title: item.preview, options: [] }] : [];
+  const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples };
   return <article className="paper-card public-quiz-card">
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
