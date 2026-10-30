@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
-import worker from './worker.js';
+import worker, { scheduleIcs } from './worker.js';
 
 const token = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFG';
 const env = {
@@ -144,4 +144,38 @@ test('HEAD crawler requests return metadata headers without an HTML body', async
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+function calendarParam(event) {
+  return Buffer.from(JSON.stringify(event)).toString('base64url');
+}
+
+test('calendar.ics returns a weekly repeating event with alarm, memo and paper link', async () => {
+  const event = { t: 'GA4 공부, 복습; 정리', m: '이벤트 파트\n매개변수', d: [1, 3], s: '19:00', e: '20:30', n: 10, u: 'https://moonble.com/solve.html?paper=custom&bank=bank-1#quiz', p: 'GA4 이벤트 복습', z: 'Asia/Seoul', i: '6f9b2c1e-1111-4222-8333-444455556666' };
+  const response = await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${calendarParam(event)}`), env);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /^text\/calendar/);
+  const body = await response.text();
+  assert.match(body, /RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=MO,WE\r\n/);
+  assert.match(body, /DTSTART:\d{8}T190000\r\n/);
+  assert.match(body, /DTEND:\d{8}T203000\r\n/);
+  assert.match(body, /SUMMARY:GA4 공부\\, 복습\; 정리\r\n/);
+  assert.match(body, /TRIGGER:-PT10M/);
+  assert.match(body, /UID:6f9b2c1e-1111-4222-8333-444455556666@moonble\.com/);
+  assert.match(body, /URL:https:\/\/moonble\.com\/solve\.html\?paper=custom&bank=bank-1#quiz/);
+  assert.ok(body.split('\r\n').every(line => new TextEncoder().encode(line).length <= 75), 'lines are folded at 75 octets');
+});
+
+test('calendar.ics starts on the first matching weekday and drops foreign links', () => {
+  const body = scheduleIcs({ title: '토요일 공부', memo: '', days: [6], start: '09:00', end: '10:00', timeZone: 'Asia/Seoul', url: '', notify: null, paperTitle: '', uid: 'u1' }, new Date('2026-10-28T01:00:00Z'));
+  assert.match(body, /DTSTART:20261031T090000/);
+  assert.doesNotMatch(body, /VALARM/);
+});
+
+test('calendar.ics rejects invalid schedules', async () => {
+  const bad = await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${calendarParam({ t: '역순', d: [1], s: '10:00', e: '09:00' })}`), env);
+  assert.equal(bad.status, 400);
+  const foreign = calendarParam({ t: '링크', d: [2], s: '10:00', e: '11:00', u: 'https://evil.example/x' });
+  const ok = await (await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${foreign}`), env)).text();
+  assert.doesNotMatch(ok, /evil/);
 });

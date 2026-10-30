@@ -3,7 +3,7 @@
 // 일정에 문제지를 검색해 연결하면 알림을 눌렀을 때 그 문제지 풀이로 이동한다(MyStudyLife).
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, BellOff, BookOpen, Plus, Search, X } from 'lucide-react';
+import { Bell, BellOff, BookOpen, CalendarPlus, Plus, Search, X } from 'lucide-react';
 import { FlowActionButton } from '../flow-action-button.jsx';
 import { getCustomBankCollection } from '../custom-bank.js';
 import { getLikedPublicQuizzes } from '../paper-favorites.js';
@@ -12,6 +12,7 @@ import { enableBrowserNotifications, getBrowserNotificationSettings } from '../b
 import { lockPageScroll } from '../scroll-lock.js';
 import { listPublicQuizzes } from '../public-quizzes-api.js';
 import { deleteSchedule, listSchedules, saveSchedule } from './schedule-api.js';
+import { calendarFileUrl, googleCalendarUrl } from './schedule-calendar.js';
 import {
   MEMO_LIMIT, NOTIFY_OPTIONS, SCHEDULE_COLORS, TITLE_LIMIT, WEEKDAYS,
   currentWeek, formatMinutes, localTimezone, sortByStart, toMinutes,
@@ -229,6 +230,7 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
       <header>
         <h2 id={titleId}>{draft.id ? '일정 편집' : '일정 추가'}</h2>
         <button type="button" className="mb-schedule-close" aria-label="닫기" onClick={onClose} disabled={busy}><X size={19} aria-hidden="true" /></button>
+        <button type="submit" className="mb-schedule-header-save" disabled={busy}>{busy ? '저장 중' : '저장'}</button>
       </header>
       <label className="mb-schedule-field"><span>제목</span>
         <input type="text" value={draft.title} maxLength={TITLE_LIMIT} placeholder="예: GA4 이벤트 복습" onChange={event => set({ title: event.target.value })} />
@@ -270,6 +272,13 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
           {SCHEDULE_COLORS.map(color => <button key={color} type="button" className={`is-${color}`} aria-pressed={draft.color === color} aria-label={`${color} 색상`} onClick={() => set({ color })} />)}
         </div>
       </fieldset>
+      {draft.id && <div className="mb-schedule-field"><span>내 캘린더에 저장</span>
+        <div className="mb-schedule-calendar-actions">
+          <a href={calendarFileUrl(draft)}><CalendarPlus size={16} aria-hidden="true" />iPhone·기본 캘린더</a>
+          <a href={googleCalendarUrl(draft)} target="_blank" rel="noopener noreferrer"><CalendarPlus size={16} aria-hidden="true" />Google 캘린더</a>
+        </div>
+        <small>반복 요일과 미리 알림이 함께 저장돼요. 문블에서 일정을 바꾸면 다시 저장해주세요.</small>
+      </div>}
       {error && <p className="mb-schedule-error" role="alert">{error}</p>}
       <footer>
         {draft.id && <button type="button" className={`mb-schedule-delete${confirmDelete ? ' is-confirming' : ''}`} disabled={busy} onClick={remove}>{confirmDelete ? '정말 삭제' : '삭제'}</button>}

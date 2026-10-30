@@ -269,9 +269,114 @@ function htmlResponse(body, status = 200) {
   });
 }
 
+// 내 캘린더에 저장(.ics): 앱이 일정 정보를 e 파라미터(base64url JSON)로 보내면 매주 반복 일정 파일을 만든다.
+// text/calendar로 바로 내려 주면 iPhone은 '캘린더에 추가' 화면을, PC는 파일 저장을 띄운다. 서버에 저장하지 않는다.
+const ICS_DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const ICS_NOTIFY = new Set([0, 5, 10, 15, 30, 60]);
+
+function decodeCalendarParam(value) {
+  if (!value || value.length > 4000 || !/^[A-Za-z0-9_-]+$/.test(value)) return null;
+  try {
+    const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(binary, char => char.charCodeAt(0))));
+  } catch { return null; }
+}
+
+function calendarEvent(input) {
+  if (!input || typeof input !== 'object') return null;
+  const title = String(input.t || '').trim().slice(0, 40);
+  const memo = String(input.m || '').slice(0, 500);
+  const days = [...new Set((Array.isArray(input.d) ? input.d : []).map(Number))].filter(day => Number.isInteger(day) && day >= 0 && day <= 6);
+  const start = String(input.s || '');
+  const end = String(input.e || '');
+  const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!title || !days.length || !timePattern.test(start) || !timePattern.test(end) || end <= start) return null;
+  let timeZone = 'Asia/Seoul';
+  try { new Intl.DateTimeFormat('en-US', { timeZone: String(input.z || '') }); timeZone = String(input.z || 'Asia/Seoul') || 'Asia/Seoul'; } catch { timeZone = 'Asia/Seoul'; }
+  const notify = input.n === null || input.n === undefined ? null : Number(input.n);
+  let url = '';
+  try { const parsed = new URL(String(input.u || '')); if (parsed.protocol === 'https:' && parsed.hostname === 'moonble.com') url = parsed.href; } catch { url = ''; }
+  return {
+    title, memo, days, start, end, timeZone, url,
+    notify: ICS_NOTIFY.has(notify) ? notify : null,
+    paperTitle: String(input.p || '').slice(0, 100),
+    uid: /^[A-Za-z0-9-]{1,80}$/.test(String(input.i || '')) ? String(input.i) : crypto.randomUUID(),
+  };
+}
+
+function icsText(value) {
+  return String(value).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+// 한 줄 75바이트 넘으면 접는다(RFC 5545).
+function foldIcsLine(line) {
+  const encoder = new TextEncoder();
+  let output = '';
+  let current = '';
+  let size = 0;
+  for (const char of line) {
+    const width = encoder.encode(char).length;
+    if (size + width > 74) { output += `${current}\r\n `; current = ''; size = 1; }
+    current += char;
+    size += width;
+  }
+  return output + current;
+}
+
+// 일정 시간대의 오늘부터 처음 오는 반복 요일을 시작일로 쓴다. 시간은 기기 시간대 기준(floating)으로 둔다.
+function firstOccurrence(days, timeZone, now) {
+  const [year, month, day] = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).split('-').map(Number);
+  const base = new Date(Date.UTC(year, month - 1, day));
+  for (let offset = 0; offset < 7; offset += 1) {
+    const candidate = new Date(base.getTime() + offset * 86400000);
+    if (days.includes(candidate.getUTCDay())) return candidate;
+  }
+  return base;
+}
+
+export function scheduleIcs(event, now = new Date()) {
+  const date = firstOccurrence(event.days, event.timeZone, now);
+  const ymd = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const description = [
+    event.memo,
+    event.paperTitle && `예약한 문제지: ${event.paperTitle}`,
+    event.url,
+    '문블 시간표에서 만든 일정이에요.',
+  ].filter(Boolean).join('\n');
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Moonble//Study Timetable//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${event.uid}@moonble.com`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${ymd}T${event.start.replace(':', '')}00`,
+    `DTEND:${ymd}T${event.end.replace(':', '')}00`,
+    `RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=${event.days.map(day => ICS_DAYS[day]).join(',')}`,
+    `SUMMARY:${icsText(event.title)}`,
+    `DESCRIPTION:${icsText(description)}`,
+    ...(event.url ? [`URL:${event.url}`] : []),
+    ...(event.notify === null ? [] : ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsText(event.title)}`, `TRIGGER:${event.notify ? `-PT${event.notify}M` : 'PT0M'}`, 'END:VALARM']),
+    'END:VEVENT', 'END:VCALENDAR',
+  ];
+  return `${lines.map(foldIcsLine).join('\r\n')}\r\n`;
+}
+
+function calendarResponse(request, url) {
+  const event = calendarEvent(decodeCalendarParam(url.searchParams.get('e')));
+  if (!event) return htmlResponse('일정 정보를 읽지 못했어요.', 400);
+  return new Response(request.method === 'HEAD' ? null : scheduleIcs(event), { headers: {
+    'Content-Type': 'text/calendar; charset=utf-8',
+    'Content-Disposition': 'inline; filename="moonble-schedule.ics"',
+    'Cache-Control': 'private, no-store, max-age=0',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+  } });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/calendar.ics') return calendarResponse(request, url);
     const thumbnailMatch = url.pathname.match(/^\/([A-Za-z0-9_-]{40,50})\/thumbnail\.(png|svg)$/);
     if (thumbnailMatch) {
       try {
