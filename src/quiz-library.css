@@ -849,7 +849,9 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-share-visibility:disabled { opacity: .6; }
 .quiz-share-visibility label:has(input:focus-visible) { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 .public-quiz-search { display: grid; gap: var(--mb-space-16); }
-.public-quiz-sort { margin-top: calc(var(--mb-space-8) * -1); }
+/* 문제 서칭: 인기순 전환 왼쪽, 보기 전환 버튼 오른쪽 끝. */
+.public-quiz-sort { align-items: center; justify-content: space-between; margin-top: calc(var(--mb-space-4) * -1); }
+.public-quiz-sort .quiz-community-sort-toggle { margin: 0; }
 .public-quiz-muted { margin: var(--mb-space-24) 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; text-align: center; }
 .public-quiz-card .paper-copy p { margin: 2px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .public-quiz-more { width: 100%; min-height: var(--mb-control-compact-height); border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
