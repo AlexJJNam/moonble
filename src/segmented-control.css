@@ -9,3 +9,10 @@
 @media (prefers-reduced-motion: reduce) {
   .mb-segmented-indicator { transition: none; }
 }
+
+/* 글자 버튼 탭(토스형): 바탕·움직이는 표시 없이 글자 폭만큼, 고른 탭만 옅은 회색 둥근 면과 굵은 글자. */
+.mb-segmented.is-text-tabs { display: flex; gap: 2px; min-width: 0; padding: 0; border-radius: 0; background: transparent; }
+.mb-segmented.is-text-tabs .mb-segmented-indicator { display: none; }
+.mb-segmented.is-text-tabs button { min-width: 0; min-height: 32px; padding: 0 10px; border-radius: var(--mb-radius-8); color: var(--mb-text-tertiary); background: transparent; font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-medium); white-space: nowrap; }
+@media (hover: hover) { .mb-segmented.is-text-tabs button:hover { color: var(--mb-text-secondary); } }
+.mb-segmented.is-text-tabs button[aria-pressed='true'] { color: var(--mb-text-primary); background: var(--mb-surface-muted); font-weight: var(--mb-weight-bold); }

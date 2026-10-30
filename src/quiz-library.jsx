@@ -1023,7 +1023,7 @@ function QuizLibrary() {
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
         <div className="quiz-library-tools">
-          <div className="quiz-filter-groups"><SegmentedControl className="quiz-community-sort" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
+          <div className="quiz-filter-groups"><SegmentedControl className="quiz-community-sort is-text-tabs" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
           <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
             onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
           <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}

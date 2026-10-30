@@ -858,9 +858,9 @@ button:disabled { cursor: wait; opacity: .6; }
 @media (hover: hover) { .public-quiz-more:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); } }
 
 /* 문제지 도구 줄: PC는 종류 탭 · 검색 · 보기 전환, 모바일은 종류 탭 + 보기 전환 한 줄 아래 검색창 전체 폭. */
-.quiz-view-toggle-button { position: relative; order: 3; flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); background: var(--mb-surface-muted); cursor: pointer; transition: background-color var(--mb-duration), color var(--mb-duration); }
+.quiz-view-toggle-button { position: relative; order: 3; flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); background: transparent; cursor: pointer; transition: color var(--mb-duration); }
 .quiz-view-toggle-button::after { content: ''; position: absolute; top: 50%; left: 50%; width: var(--mb-target-size); height: var(--mb-target-size); transform: translate(-50%, -50%); }
-@media (hover: hover) { .quiz-view-toggle-button:hover { color: var(--mb-text-primary); background: var(--mb-border); } }
+@media (hover: hover) { .quiz-view-toggle-button:hover { color: var(--mb-text-primary); background: transparent; } }
 .quiz-view-toggle-button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 .quiz-library-search { order: 2; width: 300px; margin-left: auto; }
 @media (max-width: 767px) {
