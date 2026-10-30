@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, MoreVertical, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
@@ -32,7 +33,7 @@ import { getPaperLastActivityMap, getPaperSolveStatus, paperSolveStatusLabel } f
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
-import { SearchField } from './search-field.jsx';
+import { SearchField, useMediaQuery } from './search-field.jsx';
 import { CreatorTabs, SectionTabs } from './section-tabs.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
@@ -113,6 +114,23 @@ function sectionFromHash() {
   return 'papers';
 }
 
+// 모바일에서는 메뉴를 페이지 맨 위(독바 위)에 바텀시트로 띄운다. PC는 버튼 옆 팝오버 그대로.
+function SheetLayer({ active, onClose, label, children }) {
+  if (!active) return children;
+  return createPortal(<div className="paper-sheet-layer" role="presentation" onClick={event => event.stopPropagation()}>
+    <button type="button" className="paper-sheet-backdrop" aria-label={`${label} 닫기`} onClick={onClose} />
+    {children}
+  </div>, document.body);
+}
+
+// 문제지 공개 범위: 문제지 편집 시트에서 고른다.
+const VISIBILITY_OPTIONS = [
+  { value: 'personal', label: '미공개', copy: '나만 볼 수 있어요. 공유 링크가 중지돼요.' },
+  { value: 'partial', label: '일부 공개', copy: '링크를 아는 사람만 풀 수 있어요.' },
+  { value: 'public', label: '공개', copy: '문제 서칭에 노출되고 누구나 풀 수 있어요.' },
+];
+const VISIBILITY_LABELS = { personal: '미공개', partial: '일부 공개', public: '공개' };
+
 function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const overlayRef = useRef(null);
   const [customColorOpen, setCustomColorOpen] = useState(false);
@@ -184,12 +202,17 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isDelete = editor.type.endsWith('delete');
   const isSample = editor.type === 'sample-delete';
   const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
+  const isShareConfirm = editor.type === 'share-unlisted-confirm';
   const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['blue', 'cyan'].includes(editor.colorKey);
   const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
-      {isFavoriteDelete ? <>
+      {isShareConfirm ? <>
+        <header><h2 id="quiz-manage-title">공개 상태 변경 및 공유</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+        <p>문제지를 공유하려면 공개 상태가 일부 공개로 변경되어야 해요.</p>
+        <footer><button type="button" onClick={onClose}>취소</button><button className="is-primary" type="submit">일부 공개로 설정</button></footer>
+      </> : isFavoriteDelete ? <>
         <header><h2 id="quiz-manage-title">즐겨찾기한 문제지를 삭제할까요?</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
         <p><strong>{editor.title}</strong> 문제지는 즐겨찾기에 있어요. 삭제하면 되돌릴 수 없어요.</p>
         <footer><button type="button" onClick={onClose}>취소</button><button className="is-danger" type="submit">삭제하기</button></footer>
@@ -200,9 +223,13 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
         </> : isBank ? <div className="quiz-manage-fields">
           <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
-          <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
+          <label><span>문제지 설명</span><textarea rows="2" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
-          <div className="quiz-manage-category"><span>카테고리</span><CategoryChips wrap label="카테고리" value={editor.category || null} onChange={next => onChange({ ...editor, category: next })} /></div>
+          {editor.visibility && <div className="quiz-manage-visibility"><span>공개 범위</span>
+            <SegmentedControl className="quiz-manage-visibility-tabs" ariaLabel="공개 범위" items={VISIBILITY_OPTIONS.map(option => ({ value: option.value, label: option.label }))} value={editor.visibility} onChange={next => onChange({ ...editor, visibility: next })} />
+            <small>{VISIBILITY_OPTIONS.find(option => option.value === editor.visibility)?.copy}</small>
+          </div>}
+          <div className="quiz-manage-category"><span>카테고리</span><CategoryChips label="카테고리" value={editor.category || null} onChange={next => onChange({ ...editor, category: next })} /></div>
         </div> : <div className="quiz-manage-fields">
           <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength={12} value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value.slice(0, 12) })} /><small className="quiz-group-name-hint">{editor.name.length}/12자</small></label>
           <fieldset className="quiz-group-color-field"><legend>배경 색상</legend><div className="quiz-group-color-options" role="group" aria-label="배경 색상">
@@ -253,6 +280,7 @@ function QuizLibrary() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(null);
+  const mobileSheet = useMediaQuery('(max-width: 767px)');
   // 문제 생성하기 화면의 단계(헤더 탭 표시용)와 단계를 바꾸는 함수.
   const [creatorScreen, setCreatorScreen] = useState('create');
   const creatorStepRef = useRef(null);
@@ -570,12 +598,25 @@ function QuizLibrary() {
     if (pendingDelete) finishPaperDeletion(pendingDelete.token, false);
   }
   function submitEditor() {
+    if (editor.type === 'share-unlisted-confirm') {
+      const paper = editor.paper;
+      setEditor(null);
+      setOpenMenu(null);
+      makePartialAndShare(paper);
+      return;
+    }
     try {
       if (editor.type === 'favorite-delete-confirm') {
         queuePaperDeletion(editor.paper);
       } else if (editor.type === 'bank-edit') {
         updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId, editor.category || null);
         setNotice('문제지 정보를 저장했어요.');
+        if (editor.visibility && editor.visibility !== editor.initialVisibility) {
+          const bank = collection.banks.find(item => item.id === editor.bankId);
+          if (bank) changeBankVisibility(bank, editor.visibility)
+            .then(() => setNotice(`공개 범위를 ${VISIBILITY_LABELS[editor.visibility]}로 바꿨어요.`))
+            .catch(visibilityError => setNotice(visibilityError.message || '공개 범위를 바꾸지 못했어요.'));
+        }
       } else if (editor.type === 'bank-delete') {
         const bank = collection.banks.find(item => item.id === editor.bankId);
         if (bank) queuePaperDeletion({ id: `custom:${bank.id}`, customBankId: bank.id, label: bank.title });
@@ -655,22 +696,42 @@ function QuizLibrary() {
     if (!token) token = await createQuizShare(user.id, bank);
     return { token, url: quizShareUrl(token, meta.tint, meta.groupName) };
   }
+  function shareMetaOf(bank) {
+    const groupName = bank.groupId === DEFAULT_GROUP_ID
+      ? '미분류'
+      : collection.groups.find(group => group.id === bank.groupId)?.name || '미분류';
+    const tint = groupColorStyle(bank.groupId, groupColors)['--paper-group-tint'] || '#e8f3ff';
+    return { groupName, tint };
+  }
+  // 공개 범위 바꾸기: 미공개(공유 중지) / 일부 공개(링크) / 공개(검색 노출). 편집 시트와 공유 흐름이 함께 쓴다.
+  async function changeBankVisibility(bank, next) {
+    if (next === 'personal') {
+      await revokeQuizShare(bank.id);
+      clearCachedQuizShareToken(user?.id, bank.id);
+      rememberVisibility(bank.id, 'personal');
+      return { token: '', url: '' };
+    }
+    const link = await ensureShareLink(bank, shareMetaOf(bank));
+    await setShareVisibility(bank.id, next === 'public' ? 'public' : 'unlisted', link.token);
+    rememberVisibility(bank.id, next);
+    return link;
+  }
+  // 공유: 미공개 문제지는 먼저 "일부 공개로 바꿀까요?"를 묻고(유튜브처럼), 공개·일부 공개는 바로 링크를 보여준다.
   async function openShareDialog(paper) {
     const bank = collection.banks.find(item => item.id === paper.customBankId);
     if (!bank) return;
     setOpenMenu(null);
-    const groupName = paper.groupId === DEFAULT_GROUP_ID
-      ? '미분류'
-      : collection.groups.find(group => group.id === paper.groupId)?.name || '미분류';
-    const tint = groupColorStyle(paper.groupId, groupColors)['--paper-group-tint'] || '#e8f3ff';
     const visibility = visibilityOfBank(bank.id);
-    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '', visibility, meta: { groupName, tint } });
+    if (visibility === 'personal') {
+      setEditor({ type: 'share-unlisted-confirm', paper, title: bank.title });
+      return;
+    }
+    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '', visibility, meta: shareMetaOf(bank) });
     setShareError('');
     setShareCopied(false);
-    if (visibility === 'personal') return;
     setShareBusy(true);
     try {
-      const link = await ensureShareLink(bank, { groupName, tint });
+      const link = await ensureShareLink(bank, shareMetaOf(bank));
       setShareDialog(current => current && { ...current, ...link });
     } catch (shareFailure) {
       setShareError(shareFailure.message || '공유 링크를 만들지 못했어요.');
@@ -678,26 +739,16 @@ function QuizLibrary() {
       setShareBusy(false);
     }
   }
-  // 공개 범위 선택: 미공개(공유 중지) / 일부 공개(링크) / 공개(검색 노출)
-  async function chooseVisibility(next) {
-    if (!shareDialog?.bankId || shareBusy || next === shareDialog.visibility) return;
-    const bank = collection.banks.find(item => item.id === shareDialog.bankId);
+  async function makePartialAndShare(paper) {
+    const bank = collection.banks.find(item => item.id === paper.customBankId);
     if (!bank) return;
-    setShareBusy(true);
+    setShareDialog({ bankId: bank.id, title: bank.title, token: '', url: '', visibility: 'partial', meta: shareMetaOf(bank) });
     setShareError('');
+    setShareCopied(false);
+    setShareBusy(true);
     try {
-      if (next === 'personal') {
-        await revokeQuizShare(bank.id);
-        clearCachedQuizShareToken(user?.id, bank.id);
-        rememberVisibility(bank.id, 'personal');
-        setShareDialog(current => current && { ...current, visibility: 'personal', token: '', url: '' });
-        setNotice('공유를 중지했어요. 이제 나만 볼 수 있어요.');
-      } else {
-        const link = shareDialog.url ? { token: shareDialog.token, url: shareDialog.url } : await ensureShareLink(bank, shareDialog.meta);
-        await setShareVisibility(bank.id, next === 'public' ? 'public' : 'unlisted', link.token);
-        rememberVisibility(bank.id, next);
-        setShareDialog(current => current && { ...current, ...link, visibility: next });
-      }
+      const link = await changeBankVisibility(bank, 'partial');
+      setShareDialog(current => current && { ...current, ...link });
     } catch (shareFailure) {
       setShareError(shareFailure.message || '공개 범위를 바꾸지 못했어요.');
     } finally {
@@ -915,6 +966,20 @@ function QuizLibrary() {
     setEditMode(false);
     setOpenMenu(null);
   }
+  // 문제지 편집 시트(이름·설명·그룹·공개 범위·카테고리)를 여는 값.
+  function bankEditorFor(paper) {
+    const visibility = paper.visibility || visibilityOfBank(paper.customBankId);
+    return { type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null, visibility, initialVisibility: visibility };
+  }
+  // ⋮ → 편집: 모바일은 연필 단계 없이 바로 편집 시트, PC는 끌어서 옮기는 편집 모드.
+  function editFromMenu(paper) {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setOpenMenu(null);
+      setEditor(bankEditorFor(paper));
+      return;
+    }
+    enterEditMode();
+  }
   function enterEditMode() {
     setEditMode(true);
     setOpenMenu(null);
@@ -1016,10 +1081,10 @@ function QuizLibrary() {
           </div>
           {!!collection.groups.length && <span className="paper-group-manage" role="presentation">
             <button type="button" aria-label="그룹 편집" aria-haspopup="menu" aria-expanded={openMenu === 'groups:manage'} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === 'groups:manage' ? null : 'groups:manage'); }}><MoreHorizontal size={18} /></button>
-            {openMenu === 'groups:manage' && <span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
+            {openMenu === 'groups:manage' && <SheetLayer active={mobileSheet} label="그룹 편집" onClose={() => setOpenMenu(null)}><span className="paper-action-menu paper-group-manage-menu" role="menu" onClick={event => event.stopPropagation()}>
               <strong>그룹 편집</strong>
               {managedGroups.map(group => <span className={`paper-group-manage-row${reorderingGroupId === group.id ? ' is-reordering' : ''}`} data-reorder-group={group.id} key={group.id}><button className="paper-group-reorder-handle" type="button" aria-label={`${group.name} 그룹 순서 변경`} title="드래그해서 순서 변경" onPointerDown={event => beginGroupHandleDrag(event, group.id)}><GripVertical size={16} aria-hidden="true" /></button><b>{group.name}</b><button type="button" aria-label={`${group.name} 그룹 편집`} onClick={() => setEditor({ type: 'group-edit', groupId: group.id, name: group.name, colorKey: group.colorKey || defaultGroupColorKey(group.id) })}><EditIcon size={15} /></button><button className="is-danger" type="button" aria-label={`${group.name} 삭제하기`} onClick={() => setEditor({ type: 'group-delete', groupId: group.id, name: group.name })}><Trash2 size={15} /></button></span>)}
-            </span>}
+            </span></SheetLayer>}
           </span>}
           <button className="paper-group-add paper-group-add--desktop" type="button" onClick={event => { event.stopPropagation(); setEditor({ type: 'group-create', name: '', colorKey: GROUP_COLOR_OPTIONS[0].key }); }}><FolderPlus size={16} />그룹 추가</button>
         </div>
@@ -1067,7 +1132,7 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); if (mobileSearchOpen && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); window.location.replace(href); } }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{(() => {
+                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor(bankEditorFor(paper)); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{(() => {
                   // 풀이 상태(진행률 · 아직 풀이 전)와 시간(마지막 조회, 없으면 만든 때)을 나눠 한 줄 회색 캡션으로 보여준다.
                   const status = getPaperSolveStatus(user.id, paper.id);
                   const shownAt = paper.lastOpenedAt || paper.savedAt || null;
@@ -1081,7 +1146,7 @@ function QuizLibrary() {
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreVertical size={18} /></button>
-                  {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div>}
+                  {openMenu === menuKey && <SheetLayer active={mobileSheet} label="문제지 메뉴" onClose={() => setOpenMenu(null)}><div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => editFromMenu(paper)}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div></SheetLayer>}
               </div>}
             </article>;
           })}
@@ -1093,14 +1158,8 @@ function QuizLibrary() {
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />
     {shareDialog && <div className="quiz-manage-overlay quiz-share-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !shareBusy) setShareDialog(null); }}><section className="quiz-manage-dialog quiz-share-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-share-title"><header><h2 id="quiz-share-title">문제지 공유</h2><button type="button" aria-label="닫기" onClick={() => !shareBusy && setShareDialog(null)}><X size={19} /></button></header>
-      <p><strong>{shareDialog.title}</strong> 문제지를 누구에게 보여줄지 정해요.</p>
-      <fieldset className="quiz-share-visibility" disabled={shareBusy}>
-        <legend className="mb-sr-only">공개 범위</legend>
-        {[{ value: 'personal', label: '미공개', copy: '나만 볼 수 있어요. 공유 링크가 중지돼요.' }, { value: 'partial', label: '일부 공개', copy: '링크를 아는 사람만 풀 수 있어요.' }, { value: 'public', label: '공개', copy: '문제 서칭에 노출되고 누구나 풀 수 있어요.' }].map(option => <label key={option.value} className={shareDialog.visibility === option.value ? 'is-selected' : ''}>
-          <input type="radio" name="quiz-share-visibility" value={option.value} checked={shareDialog.visibility === option.value} onChange={() => chooseVisibility(option.value)} />
-          <span><b>{option.label}</b><small>{option.copy}</small></span>
-        </label>)}
-      </fieldset>
+      <p><strong>{shareDialog.title}</strong> 문제지를 링크로 공유해요.</p>
+      <p className="quiz-share-status">{VISIBILITY_LABELS[shareDialog.visibility]} · {VISIBILITY_OPTIONS.find(option => option.value === shareDialog.visibility)?.copy} 공개 범위는 문제지 편집에서 바꿀 수 있어요.</p>
       {shareBusy ? <div className="quiz-share-loading" role="status"><span className="quiz-share-spinner" aria-hidden="true" />잠시만 기다려주세요.</div>
         : shareDialog.url && shareDialog.visibility !== 'personal' ? <><label className="quiz-share-link"><span>공유 링크</span><span className="quiz-share-link-row"><input readOnly value={shareDialog.url} onFocus={event => event.currentTarget.select()} /><button type="button" aria-label={shareCopied ? '링크 복사됨' : '공유 링크 복사'} onClick={copyShareLink}>{shareCopied ? '복사됨' : '복사'}</button></span></label><div className="quiz-share-note">문제와 정답은 링크 생성 시점의 내용으로 공유돼요.{shareDialog.visibility === 'public' ? ' 공개한 문제는 제목과 설명이 검색에 보여요.' : ''}</div></> : null}{shareError && <p className="quiz-manage-error" role="alert">{shareError}</p>}
       <footer><button type="button" disabled={shareBusy} onClick={() => setShareDialog(null)}>닫기</button><button className="is-primary" type="button" disabled={shareBusy || !shareDialog.url || shareDialog.visibility === 'personal'} onClick={shareQuizLink}>공유하기</button></footer></section></div>}

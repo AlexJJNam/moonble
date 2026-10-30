@@ -55,7 +55,7 @@ export function recordPaperAccess(userId, paperKey, accessedAt = new Date().toIS
 
 // 카드에 보일 풀이 상태(시간과 별개).
 // - 저장된 풀이(문제풀이 화면의 임시 저장)에 답한 문항이 있으면: 풀이 중 진행률
-// - 풀이 기록이 한 번도 없으면: 아직 풀이 전
+// - 풀이 기록이 한 번도 없으면: 풀이 전
 // - 그 밖(풀이를 마친 문제지)은 상태 없음
 export function getPaperSolveStatus(userId, paperKey) {
   if (!userId || !paperKey) return null;
@@ -76,5 +76,5 @@ export function getPaperSolveStatus(userId, paperKey) {
 
 export function paperSolveStatusLabel(status) {
   if (!status) return '';
-  return status.kind === 'progress' ? `풀이 중 ${status.percent}% (${status.answered}/${status.total})` : '아직 풀이 전';
+  return status.kind === 'progress' ? `풀이 중 ${status.percent}% (${status.answered}/${status.total})` : '풀이 전';
 }

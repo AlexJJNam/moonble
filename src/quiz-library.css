@@ -965,3 +965,28 @@ button:disabled { cursor: wait; opacity: .6; }
 .mb-switch input:checked ~ .mb-switch-label { color: var(--mb-text-primary); }
 .mb-switch input:focus-visible + .mb-switch-track { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .mb-switch-track, .mb-switch-track > span { transition: none; } }
+
+/* 문제지 편집 시트의 공개 범위 · 공유 팝업의 현재 공개 범위 안내 */
+.quiz-share-status { margin: var(--mb-space-8) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+
+/* 모바일 바텀시트 메뉴(문제지 ⋮ · 그룹 ...): 독바 위에 뜨고 뒤를 어둡게 덮는다. */
+.paper-sheet-layer { position: fixed; z-index: var(--mb-z-overlay); inset: 0; }
+.paper-sheet-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgb(15 23 42 / 42%); cursor: default; animation: quiz-overlay-in 160ms ease backwards; }
+@media (max-width: 767px) {
+  .paper-sheet-layer .paper-action-menu { position: fixed; z-index: 1; top: auto; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; width: auto; min-width: 0; max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: var(--mb-sheet-radius); background: var(--mb-surface); box-shadow: 0 -8px 40px rgb(0 0 0 / 18%); animation: paper-card-sheet-in 220ms cubic-bezier(.2, .8, .25, 1) backwards; }
+  .paper-sheet-layer .paper-action-menu::before { content: ''; display: block; width: 36px; height: 4px; margin: 4px auto 8px; border-radius: 999px; background: var(--mb-border); }
+  /* 그룹 편집 시트: 핸들을 잡고 순서를 바꾸기 쉽게 줄을 넉넉하게 */
+  .paper-sheet-layer .paper-group-manage-menu { display: grid; gap: 0; padding: 8px 8px calc(12px + env(safe-area-inset-bottom) * 0); }
+  .paper-sheet-layer .paper-group-manage-menu > strong { padding: 4px 12px 8px; color: var(--mb-text-primary); font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); font-weight: var(--mb-weight-bold); }
+  .paper-sheet-layer .paper-group-manage-row { min-height: 56px; grid-template-columns: 48px minmax(0, 1fr) 44px 44px; gap: 4px; padding: 0 4px; border-radius: 12px; }
+  .paper-sheet-layer .paper-group-manage-row > b { padding: 0 4px; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); }
+  .paper-sheet-layer .paper-group-manage-row > button { width: 44px; min-height: 44px; border-radius: 10px; }
+  .paper-sheet-layer .paper-group-manage-row > .paper-group-reorder-handle { width: 48px; min-height: 48px; }
+  .paper-sheet-layer .paper-group-manage-row svg { width: 20px; height: 20px; }
+  .paper-sheet-layer .paper-group-manage-row > .paper-group-reorder-handle svg { width: 22px; height: 22px; }
+}
+/* 문제지 편집 시트: 공개 범위는 세 칸 전환 + 한 줄 설명, 카테고리는 한 줄 가로 스크롤 */
+.quiz-manage-visibility { min-width: 0; display: grid; gap: 6px; }
+.quiz-manage-visibility > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
+.quiz-manage-visibility-tabs { width: 100%; min-width: 0; }
+.quiz-manage-visibility > small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
