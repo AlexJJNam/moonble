@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrandLogo } from './brand-logo.jsx';
+import { useQuizThumbnailUrl } from './quiz-thumbnail-picker.jsx';
 import './paper-preview.css';
 
 export const BUILT_IN_PAPER_PREVIEWS = [
@@ -17,9 +18,10 @@ export function PaperPreview({ paper, compact = false, style, badge = null }) {
   const samples = Array.isArray(paper?.samples) ? paper.samples : [];
   const label = paper?.label || '문제지';
   const count = Number(paper?.count) || 0;
+  const customThumbnailUrl = useQuizThumbnailUrl(paper?.thumbnailPath);
 
   return <div className={`paper-preview preview-${paper?.kind || 'custom'}${compact ? ' paper-preview--compact' : ''}`} style={style} aria-hidden="true">
-    <div className={`preview-sheet${compact ? ' preview-sheet--compact' : ' preview-solver-sheet'}`}>
+    {customThumbnailUrl ? <img className="paper-preview-custom-image" src={customThumbnailUrl} alt="" /> : <div className={`preview-sheet${compact ? ' preview-sheet--compact' : ' preview-solver-sheet'}`}>
       {compact ? <>
         <div className="preview-sheet-brand"><BrandLogo decorative /></div>
         <div className="preview-sheet-title">{label}</div>
@@ -44,7 +46,7 @@ export function PaperPreview({ paper, compact = false, style, badge = null }) {
           </article>)}
         </div>
       </>}
-    </div>
+    </div>}
     {badge || <span className="preview-count">{count}문항</span>}
   </div>;
 }

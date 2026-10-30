@@ -9,6 +9,8 @@ import { CreatorTabs } from './section-tabs.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
 import { TooltipIcon } from './tooltip-icon.jsx';
+import { deleteQuizThumbnail, uploadQuizThumbnail } from './quiz-thumbnail.js';
+import { QuizThumbnailPicker } from './quiz-thumbnail-picker.jsx';
 
 function generationPrompt(query, provider) {
   const format = `시트와 CSV의 맨 위에 다음 문제지 정보 2개 행을 반드시 먼저 넣어주세요.
@@ -186,6 +188,11 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
   const [bankTitle, setBankTitle] = useState(custom?.title || '');
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
   const [bankCategory, setBankCategory] = useState(custom?.category || null);
+  const [thumbnailPath, setThumbnailPath] = useState(custom?.thumbnailPath || null);
+  const [originalThumbnailPath, setOriginalThumbnailPath] = useState(custom?.thumbnailPath || null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [thumbnailCleared, setThumbnailCleared] = useState(false);
+  const [thumbnailSaving, setThumbnailSaving] = useState(false);
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
   const promptDockOriginRef = useRef(null);
@@ -242,7 +249,11 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     setBankTitle(custom?.title || '');
     setBankDescription(custom?.description || '');
     setBankCategory(custom?.category || null);
-  }, [custom?.title, custom?.description, custom?.category, custom?.savedAt]);
+    setThumbnailPath(custom?.thumbnailPath || null);
+    setOriginalThumbnailPath(custom?.thumbnailPath || null);
+    setThumbnailFile(null);
+    setThumbnailCleared(false);
+  }, [custom?.id, custom?.title, custom?.description, custom?.category, custom?.thumbnailPath, custom?.savedAt]);
 
   useEffect(() => () => {
     window.clearTimeout(examplePromptRevealTimerRef.current);
@@ -505,6 +516,33 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     }
   }
 
+  async function persistThumbnail() {
+    if (!displayBank || thumbnailSaving) return;
+    setThumbnailSaving(true);
+    setError('');
+    try {
+      let nextPath = thumbnailPath;
+      if (thumbnailFile) nextPath = await uploadQuizThumbnail(thumbnailFile, displayBank.id);
+      else if (thumbnailCleared && originalThumbnailPath) {
+        await deleteQuizThumbnail(originalThumbnailPath, displayBank.id);
+        nextPath = null;
+      }
+      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, displayBank.id, undefined, bankCategory, nextPath);
+      if (!next) throw new Error('문제지를 찾지 못했어요.');
+      setResultBank(next);
+      onChange(next);
+      setThumbnailPath(nextPath);
+      setOriginalThumbnailPath(nextPath);
+      setThumbnailFile(null);
+      setThumbnailCleared(false);
+      setMessage('썸네일을 저장했어요.');
+    } catch (thumbnailError) {
+      setError(thumbnailError.message || '썸네일을 저장하지 못했어요.');
+    } finally {
+      setThumbnailSaving(false);
+    }
+  }
+
   async function upload(file) {
     if (!file || pending || sheetPending) return;
     setDragging(false);
@@ -590,6 +628,9 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
           <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={() => persistBankMeta()} /></label>
           <div className="creator-bank-category"><span id="creator-bank-category-label">카테고리</span>
             <CategoryChips wrap label="카테고리" value={bankCategory} onChange={next => { setBankCategory(next); persistBankMeta(next); }} /></div>
+          <div className="creator-bank-thumbnail"><QuizThumbnailPicker path={thumbnailCleared ? null : thumbnailPath} file={thumbnailFile} disabled={thumbnailSaving} onFileChange={file => { setThumbnailFile(file); setThumbnailCleared(false); }} onClear={() => { setThumbnailFile(null); setThumbnailPath(null); setThumbnailCleared(true); }} />
+            {(thumbnailFile || thumbnailCleared) && <button type="button" className="creator-thumbnail-save" disabled={thumbnailSaving} onClick={persistThumbnail}>{thumbnailSaving ? '저장 중' : '썸네일 저장'}</button>}
+          </div>
         </div>
         <nav className="creator-result-actions" aria-label="문제지 등록 후 이동">
           <a className="creator-result-action-library" href="./quiz.html#paper-library"><BookOpen size={16} aria-hidden="true" />문제지 목록으로 가기</a>
@@ -685,7 +726,7 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
         <button type="button" disabled={sheetPending || pending || !sheetLink.trim()} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
       </div>
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
-      {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setBankCategory(custom.category || null); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
+      {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setBankCategory(custom.category || null); setThumbnailPath(custom.thumbnailPath || null); setOriginalThumbnailPath(custom.thumbnailPath || null); setThumbnailFile(null); setThumbnailCleared(false); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
     {screen === 'create' ? <div className="creator-file-choice"><span>이미 파일이 있으신가요?</span><button type="button" onClick={() => changeStep('upload')}>파일 등록</button></div> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}>문제 만들기로 돌아가기</button>}
     </div>

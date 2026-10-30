@@ -27,6 +27,8 @@ import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
+import { deleteQuizThumbnail, uploadQuizThumbnail } from './quiz-thumbnail.js';
+import { QuizThumbnailPicker } from './quiz-thumbnail-picker.jsx';
 import './design-system.css';
 import './quiz-library.css';
 
@@ -46,6 +48,10 @@ const LIBRARY_TABS = [
   { value: 'papers', href: '#library', label: '나의 문제지' },
   { value: 'public', href: '#public', label: '문제 찾기' },
   { value: 'community', href: '#community', label: '커뮤니티' },
+];
+const LIBRARY_SORT_OPTIONS = [
+  { value: 'registered', label: '등록순' },
+  { value: 'solved', label: '풀이순' },
 ];
 function QuizLibraryTabs({ section, className = '' }) {
   return <SectionTabs label="문제지 메뉴" items={LIBRARY_TABS} current={section} className={className} />;
@@ -212,7 +218,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
         <p><strong>{editor.title}</strong> 문제지는 즐겨찾기에 있어요. 삭제하면 되돌릴 수 없어요.</p>
         <footer><button type="button" onClick={onClose}>취소</button><button className="is-danger" type="submit">삭제하기</button></footer>
       </> : <>
-        <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button>{isPage && <button type="submit" className="quiz-manage-header-save" disabled={!editor.title.trim()}>저장</button>}</header>
+        <header><h2 id="quiz-manage-title">{title}</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button>{isPage && <button type="submit" className="quiz-manage-header-save" disabled={!editor.title.trim() || editor.saving}>{editor.saving ? '저장 중' : '저장'}</button>}</header>
         {isDelete ? <>
           <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
           {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
@@ -220,6 +226,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
           <label><span>문제지 설명</span><textarea rows="2" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
+          <QuizThumbnailPicker path={editor.thumbnailCleared ? null : editor.thumbnailPath} file={editor.thumbnailFile} disabled={Boolean(editor.saving)} onFileChange={file => onChange({ ...editor, thumbnailFile: file, thumbnailCleared: false })} onClear={() => onChange({ ...editor, thumbnailFile: null, thumbnailPath: null, thumbnailCleared: true })} />
           {editor.visibility && <div className="quiz-manage-visibility"><span>공개 범위</span>
             <SegmentedControl className="quiz-manage-visibility-tabs" ariaLabel="공개 범위" items={VISIBILITY_OPTIONS.map(option => ({ value: option.value, label: option.label }))} value={editor.visibility} onChange={next => onChange({ ...editor, visibility: next })} />
             <small>{VISIBILITY_OPTIONS.find(option => option.value === editor.visibility)?.copy}</small>
@@ -241,7 +248,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           </div>}</fieldset>
         </div>}
         {editor.error && <p className="quiz-manage-error" role="alert">{editor.error}</p>}
-        <footer><button type="button" onClick={onClose}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={customColorInvalid || (!isDelete && !(isBank ? editor.title.trim() : editor.name.trim()))}>{isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
+        <footer><button type="button" onClick={onClose} disabled={editor.saving}>취소</button><button className={isDelete ? 'is-danger' : 'is-primary'} type="submit" disabled={Boolean(editor.saving) || customColorInvalid || (!isDelete && !(isBank ? editor.title.trim() : editor.name.trim()))}>{editor.saving ? '저장 중' : isDelete ? '삭제하기' : editor.type === 'group-create' ? '만들기' : '저장하기'}</button></footer>
       </>}
     </form>
   </div>;
@@ -334,7 +341,7 @@ function QuizLibrary() {
   const creatorStepRef = useRef(null);
   const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
-  const [librarySort, setLibrarySort] = useState('latest');
+  const [librarySort, setLibrarySort] = useState('registered');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
@@ -647,7 +654,7 @@ function QuizLibrary() {
     const pendingDelete = undoablePaperDeleteRef.current;
     if (pendingDelete) finishPaperDeletion(pendingDelete.token, false);
   }
-  function submitEditor() {
+  async function submitEditor() {
     if (editor.type === 'mix-trim-confirm') {
       setEditor(null);
       createMix(true);
@@ -664,7 +671,11 @@ function QuizLibrary() {
       if (editor.type === 'favorite-delete-confirm') {
         queuePaperDeletion(editor.paper);
       } else if (editor.type === 'bank-edit') {
-        updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId, editor.category || null);
+        setEditor(current => ({ ...current, saving: true, error: '' }));
+        let thumbnailPath = editor.thumbnailPath || null;
+        if (editor.thumbnailFile) thumbnailPath = await uploadQuizThumbnail(editor.thumbnailFile, editor.bankId, user.id);
+        else if (editor.thumbnailCleared && editor.originalThumbnailPath) await deleteQuizThumbnail(editor.originalThumbnailPath, editor.bankId, user.id);
+        updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId, editor.category || null, thumbnailPath);
         setNotice('문제지 정보를 저장했어요.');
         if (editor.visibility && editor.visibility !== editor.initialVisibility) {
           const bank = collection.banks.find(item => item.id === editor.bankId);
@@ -694,7 +705,7 @@ function QuizLibrary() {
       setEditor(null);
       setOpenMenu(null);
     } catch (submitError) {
-      setEditor(current => ({ ...current, error: submitError.message || '저장하지 못했습니다.' }));
+      setEditor(current => ({ ...current, saving: false, error: submitError.message || '저장하지 못했습니다.' }));
     }
   }
   function beginGroupLongPress(event, groupId) {
@@ -1056,7 +1067,9 @@ function QuizLibrary() {
   // 문제지 편집 시트(이름·설명·그룹·공개 범위·카테고리)를 여는 값.
   function bankEditorFor(paper) {
     const visibility = paper.visibility || visibilityOfBank(paper.customBankId);
-    return { type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null, visibility, initialVisibility: visibility };
+    const bank = collection.banks.find(item => item.id === paper.customBankId);
+    const thumbnailPath = bank?.thumbnailPath || paper.thumbnailPath || null;
+    return { type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null, thumbnailPath, originalThumbnailPath: thumbnailPath, visibility, initialVisibility: visibility };
   }
   // ⋮ → 편집은 PC와 모바일 모두 해당 문제지의 편집 창을 바로 연다.
   function editFromMenu(paper) {
@@ -1085,6 +1098,7 @@ function QuizLibrary() {
     category: bank.category || null,
     source: bank.source,
     savedAt: bank.savedAt,
+    thumbnailPath: bank.thumbnailPath || null,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
     visibility: bank.visibility || (shareVisibilities ? (shareVisibilities[bank.id] === 'public' ? 'public' : shareVisibilities[bank.id] === 'unlisted' ? 'partial' : 'personal') : (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal')),
@@ -1115,9 +1129,15 @@ function QuizLibrary() {
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
     const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
-    if (librarySort === 'popular') {
+    if (librarySort === 'solved') {
       const attemptDifference = (attemptCounts.get(b.id) || 0) - (attemptCounts.get(a.id) || 0);
       if (attemptDifference) return attemptDifference;
+    }
+    if (librarySort === 'registered') {
+      const aRegistered = new Date(a.savedAt || 0).getTime();
+      const bRegistered = new Date(b.savedAt || 0).getTime();
+      if (aRegistered !== bRegistered) return bRegistered - aRegistered;
+      return 0;
     }
     if (aOpened || bOpened) {
       if (!aOpened) return 1;
@@ -1188,7 +1208,7 @@ function QuizLibrary() {
             screenExtra={(draft, setDraft) => <div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={draft} onChange={setDraft} /></div>} />
         </div>
         <div className="quiz-community-page-sort public-quiz-sort quiz-library-sort-row">
-          <CommunitySortToggle ariaLabel="나의 문제지" sort={librarySort} onChange={setLibrarySort} />
+          <CommunitySortToggle ariaLabel="나의 문제지" sort={librarySort} onChange={setLibrarySort} options={LIBRARY_SORT_OPTIONS} />
           <div className="public-quiz-sort-right">
             <label className="mb-switch">
               <input type="checkbox" role="switch" checked={favoritesOnly} aria-checked={favoritesOnly} onChange={event => setFavoritesOnly(event.target.checked)} />

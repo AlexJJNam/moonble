@@ -30,9 +30,13 @@ const REPORT_REASONS = [
 const AVATAR_TONES = ['blue', 'green', 'yellow', 'purple', 'pink', 'gray'];
 const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true, gif: null };
 
-export function CommunitySortToggle({ ariaLabel, sort, onChange }) {
-  const label = sort === 'popular' ? '인기순' : '최신순';
-  return <button type="button" className="quiz-community-sort-toggle" aria-label={`${ariaLabel} 정렬: ${label}`} onClick={() => onChange(current => current === 'popular' ? 'latest' : 'popular')}>
+export function CommunitySortToggle({ ariaLabel, sort, onChange, options = [{ value: 'popular', label: '인기순' }, { value: 'latest', label: '최신순' }] }) {
+  const currentIndex = Math.max(0, options.findIndex(option => option.value === sort));
+  const label = options[currentIndex]?.label || '';
+  return <button type="button" className="quiz-community-sort-toggle" aria-label={`${ariaLabel} 정렬: ${label}`} onClick={() => onChange(current => {
+    const index = options.findIndex(option => option.value === current);
+    return options[((index < 0 ? currentIndex : index) + 1) % options.length]?.value || current;
+  })}>
     {label}<ArrowUpDown size={14} aria-hidden="true" />
   </button>;
 }

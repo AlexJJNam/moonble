@@ -40,7 +40,8 @@ import { normalizeCategory } from './quiz-categories.js';
       title: typeof bank.title === 'string' && bank.title.trim() ? bank.title.trim() : defaultTitle(source),
       description: typeof bank.description === 'string' && bank.description.trim() ? bank.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
       savedAt: typeof bank.savedAt === 'string' ? bank.savedAt : new Date().toISOString(),
-      category: normalizeCategory(bank.category)
+      category: normalizeCategory(bank.category),
+      thumbnailPath: typeof bank.thumbnailPath === 'string' && bank.thumbnailPath ? bank.thumbnailPath : null
     };
   }
   function emptyCollection() {
@@ -105,6 +106,26 @@ import { normalizeCategory } from './quiz-categories.js';
       p_deleted_bank_ids: deletedBankIds || []
     });
     if (result.error) throw result.error;
+    if (deletedBankIds?.length) {
+      var removedThumbnailRows = await supabase.from('quiz_bank_thumbnails').select('object_path').eq('owner_id', userId).in('bank_id', deletedBankIds);
+      if (removedThumbnailRows.error) throw removedThumbnailRows.error;
+      var removedPaths = (removedThumbnailRows.data || []).map(function (row) { return row.object_path; }).filter(Boolean);
+      if (removedPaths.length) await supabase.storage.from('quiz-thumbnails').remove(removedPaths);
+      var removedThumbnailResult = await supabase.from('quiz_bank_thumbnails').delete().eq('owner_id', userId).in('bank_id', deletedBankIds);
+      if (removedThumbnailResult.error) throw removedThumbnailResult.error;
+    }
+    var thumbnailRows = collection.banks.filter(function (bank) { return bank.thumbnailPath; }).map(function (bank) {
+      return { bank_id: bank.id, owner_id: userId, object_path: bank.thumbnailPath, updated_at: bank.updatedAt || new Date().toISOString() };
+    });
+    if (thumbnailRows.length) {
+      var thumbnailResult = await supabase.from('quiz_bank_thumbnails').upsert(thumbnailRows, { onConflict: 'bank_id' });
+      if (thumbnailResult.error) throw thumbnailResult.error;
+    }
+    var withoutThumbnailIds = collection.banks.filter(function (bank) { return !bank.thumbnailPath; }).map(function (bank) { return bank.id; });
+    if (withoutThumbnailIds.length) {
+      var clearThumbnailResult = await supabase.from('quiz_bank_thumbnails').delete().eq('owner_id', userId).in('bank_id', withoutThumbnailIds);
+      if (clearThumbnailResult.error) throw clearThumbnailResult.error;
+    }
     for (var group of groups) {
       if (!group.color_key) continue;
       var colorResult = await supabase.rpc('moonble_set_quiz_group_color', {
@@ -135,7 +156,7 @@ import { normalizeCategory } from './quiz-categories.js';
       }
     });
   }
-  function mergeRemoteCollection(remoteGroupRows, remoteBankRows, userId) {
+  function mergeRemoteCollection(remoteGroupRows, remoteBankRows, remoteThumbnailRows, userId) {
     var local = readCollection(userId);
     var remoteGroupRecords = remoteGroupRows || [];
     var remoteBankRecords = remoteBankRows || [];
@@ -143,6 +164,7 @@ import { normalizeCategory } from './quiz-categories.js';
     var deletedBankIds = new Set(remoteBankRecords.filter(function (row) { return row.deleted_at; }).map(function (row) { return row.id; }));
     var localGroups = new Map(local.groups.map(function (group) { return [group.id, group]; }));
     var localBanks = new Map(local.banks.map(function (bank) { return [bank.id, bank]; }));
+    var remoteThumbnailPaths = new Map((remoteThumbnailRows || []).map(function (row) { return [row.bank_id, row.object_path]; }));
     var mergedGroups = [];
     var seenGroupIds = new Set();
     remoteGroupRecords.filter(function (row) { return !row.deleted_at; }).forEach(function (row) {
@@ -168,6 +190,7 @@ import { normalizeCategory } from './quiz-categories.js';
         questions: row.questions,
         savedAt: row.saved_at,
         updatedAt: row.updated_at,
+        thumbnailPath: remoteThumbnailPaths.get(row.id) || null,
         // 018 적용 전 응답에는 category가 없으므로 기기에 있는 값을 유지한다.
         category: 'category' in row ? row.category : localBanks.get(row.id)?.category
       });
@@ -210,11 +233,13 @@ import { normalizeCategory } from './quiz-categories.js';
     if (pendingWrite) await pendingWrite.catch(function () {});
     var results = await Promise.all([
       supabase.from('quiz_groups').select('id,owner_id,name,color_key,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
-      loadRemoteBanks(id)
+      loadRemoteBanks(id),
+      supabase.from('quiz_bank_thumbnails').select('bank_id,owner_id,object_path,updated_at').eq('owner_id', id)
     ]);
     if (results[0].error) throw results[0].error;
     if (results[1].error) throw results[1].error;
-    var merged = mergeRemoteCollection(results[0].data, results[1].data, id);
+    if (results[2].error) throw results[2].error;
+    var merged = mergeRemoteCollection(results[0].data, results[1].data, results[2].data, id);
     // mergeRemoteCollection은 현재 localStorage를 다시 읽어, 서버 응답을 기다리는 동안의 변경도 포함한다.
     writeCollection(merged.collection, id, { sync: false });
     await saveRemoteCollection(merged.collection, id, [], []);
@@ -357,7 +382,7 @@ import { normalizeCategory } from './quiz-categories.js';
     return setCustomBank(questions, MIX_SOURCE, userId, { create: true, title: title, description: description, groupId: groupId });
   }
   // category: undefined면 기존 값을 유지한다.
-  export function updateCustomBankMeta(title, description, userId, bankId, groupId, category) {
+  export function updateCustomBankMeta(title, description, userId, bankId, groupId, category, thumbnailPath) {
     try {
       var collection = readCollection(userId);
       var id = bankId || collection.activeBankId;
@@ -370,6 +395,7 @@ import { normalizeCategory } from './quiz-categories.js';
         description: typeof description === 'string' && description.trim() ? description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
         groupId: validGroup ? groupId : bank.groupId,
         category: category === undefined ? normalizeCategory(bank.category) : normalizeCategory(category),
+        thumbnailPath: thumbnailPath === undefined ? bank.thumbnailPath || null : (typeof thumbnailPath === 'string' && thumbnailPath ? thumbnailPath : null),
         updatedAt: new Date().toISOString()
       };
       collection.banks = collection.banks.map(item => item.id === id ? next : item);
