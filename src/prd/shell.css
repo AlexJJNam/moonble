@@ -13,7 +13,7 @@
 .profile-card .profile-name-feedback.is-checking { color:var(--mb-text-tertiary); }
 .profile-card #company-hint { margin:-8px 0 var(--mb-space-16); font-size:var(--mb-font-14); line-height:20px; color:var(--mb-text-tertiary); }
 .shell-primary { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--mb-radius-12); background:var(--mb-primary-strong); color:white; padding:var(--mb-space-12) var(--mb-space-16); font-size:var(--mb-font-16); line-height:24px; font-weight:600; }
-.shell-primary:hover:not(:disabled) { background:var(--mb-primary-hover); }
+@media (hover: hover) { .shell-primary:hover:not(:disabled) { background:var(--mb-primary-hover); } }
 .profile-card fieldset:disabled { opacity:.6; }
 .moonble-spinner { display:inline-block; width:18px; height:18px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; vertical-align:middle; animation:moonble-spin .7s linear infinite; }
 @keyframes moonble-spin { to { transform:rotate(360deg); } }

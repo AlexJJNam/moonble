@@ -24,26 +24,26 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .floating-field input:not(:placeholder-shown) + label,
 .floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
 .floating-field input:focus + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
-.floating-field input:focus { border-color: var(--mb-primary); }
+.floating-field input:focus { border-color: var(--mb-text-secondary); }
 .password-field { position: relative; }
 .password-field input { padding-right: 64px; }
 .password-field label { max-width: calc(100% - 96px); }
 .auth-card .visibility { position: absolute; right: 6px; top: 50%; display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--mb-text-secondary); cursor: pointer; opacity: 0; padding: 0; pointer-events: none; transform: translateY(-50%); transition: background-color var(--mb-duration), color var(--mb-duration), opacity var(--mb-duration); }
 .password-field:focus-within .visibility { opacity: 1; pointer-events: auto; }
-.auth-card .visibility:hover { background: var(--mb-bg); color: var(--mb-text-primary); }
+@media (hover: hover) { .auth-card .visibility:hover { background: var(--mb-bg); color: var(--mb-text-primary); } }
 .auth-card .visibility svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .auth-card .auth-submit { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 0; border-radius: var(--mb-radius-12); padding: var(--mb-space-12) var(--mb-space-16); background: var(--mb-primary-strong); color: white; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; cursor: pointer; transition: background-color .15s ease; }
-.auth-submit:hover:not(:disabled) { background: var(--mb-primary-hover); }
+@media (hover: hover) { .auth-submit:hover:not(:disabled) { background: var(--mb-primary-hover); } }
 .moonble-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: middle; animation: moonble-spin .7s linear infinite; }
 @keyframes moonble-spin { to { transform: rotate(360deg); } }
 .auth-card button:disabled, .auth-card fieldset:disabled { opacity: .6; }
 .auth-card button:disabled { cursor: default; }
 .auth-hint { margin: -8px 0 0; font-size: var(--mb-font-12); line-height: 18px; color: var(--mb-text-tertiary); }
 .auth-card .auth-link { display: block; min-height: 44px; margin: var(--mb-space-16) auto 0; padding: var(--mb-space-12) 0; border: 0; background: transparent; text-align: center; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; cursor: pointer; text-decoration: none; }
-.auth-link:hover { text-decoration: underline; }
+@media (hover: hover) { .auth-link:hover { text-decoration: underline; } }
 .auth-separator { height: 1px; margin: var(--mb-space-24) 0; background: var(--mb-border); }
 .auth-create { display: block; min-height: 48px; padding: 11px var(--mb-space-16); border: 1px solid var(--mb-primary); border-radius: 999px; color: var(--mb-primary-strong); font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; text-align: center; text-decoration: none; }
-.auth-create:hover { background: var(--mb-primary-soft); }
+@media (hover: hover) { .auth-create:hover { background: var(--mb-primary-soft); } }
 .auth-message, .auth-error { margin: var(--mb-space-16) 0 0; font-size: var(--mb-font-14); line-height: 20px; padding: var(--mb-space-12) var(--mb-space-16); border-radius: var(--mb-radius-12); overflow-wrap: anywhere; }
 .auth-message { background: var(--mb-primary-soft); color: var(--mb-primary-strong); }
 .auth-error { background: var(--mb-danger-soft); color: var(--mb-danger); }
@@ -55,7 +55,7 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .auth-complete strong { color: var(--mb-text-primary); font-size: var(--mb-font-22); line-height: 30px; letter-spacing: -.02em; animation: auth-complete-in .35s ease-out .35s both; }
 .auth-complete p { max-width: 320px; margin: var(--mb-space-12) 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 22px; animation: auth-complete-in .35s ease-out .45s both; }
 .auth-complete-action { min-height: 48px; margin-top: var(--mb-space-24); border: 0; border-radius: var(--mb-radius-12); padding: var(--mb-space-12) var(--mb-space-24); background: var(--mb-primary-strong); color: white; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; cursor: pointer; animation: auth-complete-in .35s ease-out .55s both; }
-.auth-complete-action:hover { background: var(--mb-primary-hover); }
+@media (hover: hover) { .auth-complete-action:hover { background: var(--mb-primary-hover); } }
 @keyframes auth-complete-pop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
 @keyframes auth-complete-draw { to { stroke-dashoffset: 0; } }
 @keyframes auth-complete-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

@@ -9,7 +9,8 @@ button { font: inherit; cursor: pointer; }
 .account-profile-avatar { width: 56px; height: 56px; display: grid; place-content: center; border-radius: 50%; color: var(--mb-primary-strong); background: linear-gradient(145deg, #e8f3ff, #f2f7ff); font-size: var(--mb-font-20); line-height: 1; font-weight: 750; }
 .account-profile-photo { position: relative; width: 56px; height: 56px; }
 .account-profile-camera { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; display: grid; place-content: center; padding: 0; border: 2px solid #fafafa; border-radius: 50%; color: var(--mb-text-secondary); background: #e9ecef; }
-.account-profile-camera:hover, .account-profile-camera:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-profile-camera:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+@media (hover: hover) { .account-profile-camera:hover { color: var(--mb-primary-strong); background: var(--mb-primary-soft); } }
 .account-profile-camera:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 2px; }
 .account-profile-summary div { min-width: 0; }
 .account-profile-summary strong, .account-profile-summary p, .account-profile-summary small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -17,7 +18,8 @@ button { font: inherit; cursor: pointer; }
 .account-profile-name { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .account-profile-name strong { min-width: 0; }
 .account-profile-edit { position: relative; width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
-.account-profile-edit:hover, .account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-profile-edit:focus-visible, .account-profile-edit[aria-expanded="true"] { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+@media (hover: hover) { .account-profile-edit:hover { color: var(--mb-primary-strong); background: var(--mb-primary-soft); } }
 .account-profile-edit:focus-visible { outline: 2px solid rgb(49 130 246 / 24%); outline-offset: 2px; }
 .account-profile-edit:disabled { cursor: wait; opacity: .6; }
 .profile-form-heading { display: flex; align-items: center; gap: 6px; }
@@ -32,11 +34,12 @@ button { font: inherit; cursor: pointer; }
 .account-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .account-dialog-heading h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; letter-spacing: -.02em; }
 .account-dialog-close { position: relative; width: 32px; height: 32px; display: grid; flex: 0 0 32px; place-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 8px; color: var(--mb-text-tertiary); background: transparent; }
-.account-dialog-close:hover, .account-dialog-close:focus-visible { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
+.account-dialog-close:focus-visible { color: var(--mb-text-primary); background: var(--mb-surface-muted); }
+@media (hover: hover) { .account-dialog-close:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); } }
 .account-dialog-close:disabled { opacity: .45; cursor: wait; }
 .account-profile-edit-dialog fieldset { margin-top: 24px; }
 .account-profile-edit-dialog input { border-color: var(--mb-border-strong); background: #fbfcfd; }
-.account-profile-edit-dialog input:focus { border-color: var(--mb-primary); outline: 3px solid rgb(49 130 246 / 12%); outline-offset: 0; background: var(--mb-surface); }
+.account-profile-edit-dialog input:focus { border-color: var(--mb-text-secondary); outline: none; background: var(--mb-surface); }
 .account-profile-edit-dialog .shell-primary { width: 100%; min-height: var(--mb-control-height); border: 0; }
 .account-dialog .account-dialog-error { margin: 12px 0 0; color: var(--mb-danger); font-size: var(--mb-font-13); line-height: 20px; }
 .account-dialog-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
@@ -50,7 +53,7 @@ button { font: inherit; cursor: pointer; }
 .account-avatar-select { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; margin-top: 20px; padding: 10px 16px; border: 0; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: 600; }
 .account-avatar-file-help { margin: 10px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .account-avatar-reset { min-height: 36px; display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 5px 8px; border: 0; border-radius: 8px; color: var(--mb-text-secondary); background: transparent; font-size: var(--mb-font-13); line-height: 20px; }
-.account-avatar-reset:hover { background: var(--mb-surface-muted); }
+@media (hover: hover) { .account-avatar-reset:hover { background: var(--mb-surface-muted); } }
 .account-avatar-select:disabled, .account-avatar-reset:disabled { cursor: wait; opacity: .55; }
 .account-profile-update-fx[hidden] { display: none; }
 .account-profile-update-fx { position: fixed; inset: 0; z-index: 1200; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--mb-text-primary); background: rgb(255 255 255 / 97%); pointer-events: none; }
@@ -78,13 +81,15 @@ button { font: inherit; cursor: pointer; }
 .account-ai-title { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
 .account-ai-preference h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: 700; }
 .account-ai-help { position: relative; width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-content: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; }
-.account-ai-help:hover, .account-ai-help:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.account-ai-help:focus-visible { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+@media (hover: hover) { .account-ai-help:hover { color: var(--mb-primary-strong); background: var(--mb-primary-soft); } }
 .account-ai-help:focus-visible { outline: 2px solid rgb(49 130 246 / 28%); outline-offset: 2px; }
 .account-ai-help [role='tooltip'] { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; width: min(270px, calc(100vw - 48px)); padding: 10px 12px; border-radius: 10px; color: #fff; background: rgb(34 40 49 / 94%); font-size: var(--mb-font-12); line-height: 18px; font-weight: 500; text-align: left; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-3px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms; }
-.account-ai-help:hover [role='tooltip'], .account-ai-help:focus-visible [role='tooltip'] { opacity: 1; visibility: visible; transform: translateY(0); }
+.account-ai-help:focus-visible [role='tooltip'] { opacity: 1; visibility: visible; transform: translateY(0); }
+@media (hover: hover) { .account-ai-help:hover [role='tooltip'] { opacity: 1; visibility: visible; transform: translateY(0); } }
 .account-ai-provider { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .account-ai-provider button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 22px; font-weight: var(--mb-weight-medium); transition: color var(--mb-duration), background-color var(--mb-duration); }
-.account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); }
+@media (hover: hover) { .account-ai-provider button:hover:not(:disabled) { color: var(--mb-text-primary); } }
 .account-ai-provider button.is-selected { color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-weight: var(--mb-weight-semibold); }
 .account-ai-provider-check { width: 16px; height: 16px; flex: 0 0 16px; overflow: visible; animation: account-ai-grade-badge-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
 .account-ai-provider-check circle { fill: var(--mb-primary); }
@@ -114,17 +119,17 @@ button { font: inherit; cursor: pointer; }
 .account-main .profile-form-card>p { margin-top: 6px; font-size: var(--mb-font-14); line-height: 22px; }
 .account-main .profile-card fieldset { margin-top: 24px; }
 .account-main .profile-card input { border-color: var(--mb-border); background: #fbfcfd; }
-.account-main .profile-card input:focus { border-color: var(--mb-primary); outline: 3px solid rgb(49 130 246 / 12%); outline-offset: 0; background: var(--mb-surface); }
+.account-main .profile-card input:focus { border-color: var(--mb-text-secondary); outline: none; background: var(--mb-surface); }
 .account-main .shell-primary { width: 100%; min-height: 50px; border: 0; }
 .account-mobile-session { display: block; }
 .account-logout-action { min-height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; margin-top: 16px; padding: 4px 0; border: 0; color: var(--mb-text-secondary); background: transparent; font-weight: 600; text-align: left; }
-.account-logout-action:hover:not(:disabled) { color: var(--mb-text-primary); }
+@media (hover: hover) { .account-logout-action:hover:not(:disabled) { color: var(--mb-text-primary); } }
 .account-logout-action:disabled { cursor: default; opacity: .6; }
 .account-logout-icon { width: 36px; height: 36px; display: grid; flex: 0 0 36px; place-content: center; border-radius: 50%; color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
 .account-logout-label { line-height: 22px; }
 .account-session-error { margin: 14px 0 0 !important; padding: 10px 12px; border-radius: 8px; color: var(--mb-danger) !important; background: var(--mb-danger-soft); font-size: var(--mb-font-13, 13px); line-height: 20px; }
 .account-delete-action { min-height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; margin-top: 4px; padding: 4px 0; border: 0; color: var(--mb-text-secondary); background: transparent; font-weight: 600; text-align: left; }
-.account-delete-action:hover { color: var(--mb-text-primary); }
+@media (hover: hover) { .account-delete-action:hover { color: var(--mb-text-primary); } }
 .account-delete-icon { width: 36px; height: 36px; display: grid; flex: 0 0 36px; place-content: center; border-radius: 50%; color: #d98999; background: #fff0f3; }
 .account-delete-overlay { position: fixed; inset: 0; z-index: 100; background: rgb(25 31 40 / 48%); animation: account-overlay-in 180ms ease-out; }
 .account-delete-dialog { position: fixed; top: 50%; left: 50%; z-index: 101; width: min(400px, calc(100% - 32px)); padding: var(--mb-dialog-padding); border: 0; border-radius: var(--mb-dialog-radius); background: var(--mb-surface); transform: translate(-50%, -50%); animation: account-dialog-in 220ms cubic-bezier(.2, .8, .3, 1); }

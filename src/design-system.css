@@ -150,14 +150,30 @@ button, input, textarea, select {
   transition: color var(--mb-duration), background-color var(--mb-duration);
 }
 .mb-action--primary { color: #fff; background: var(--mb-primary-strong); }
-.mb-action--primary:hover:not(:disabled) { background: var(--mb-primary-hover); }
+@media (hover: hover) { .mb-action--primary:hover:not(:disabled) { background: var(--mb-primary-hover); } }
 .mb-action--secondary { color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
-.mb-action--secondary:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); }
+@media (hover: hover) { .mb-action--secondary:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); } }
 .mb-action:disabled { opacity: .45; cursor: not-allowed; }
 
 :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--mb-primary-strong);
   outline-offset: 3px;
+}
+
+/* 앱처럼 보이게: 탭 하이라이트·길게 누르기 메뉴·더블탭 확대·클릭 후 남는 포커스 테두리를 없앤다.
+   PC에서 키보드로 이동할 때(:focus-visible)의 표시는 접근성을 위해 유지하고, 입력창은 테두리 색으로만 구분한다. */
+html { -webkit-tap-highlight-color: transparent; }
+:where(a, button, label, summary, select, [role="button"], [role="tab"], [role="link"], [role="menuitem"]) { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+:where(a, button, img, [role="button"], [role="link"]) { -webkit-touch-callout: none; }
+:where(button, [role="button"], [role="tab"], [role="menuitem"]) { -webkit-user-select: none; user-select: none; }
+img { -webkit-user-drag: none; }
+:focus:not(:focus-visible) { outline: none; }
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select):focus-visible { outline: none; }
+/* 터치 기기: 누르거나 입력할 때 파란 테두리·링을 그리지 않는다. */
+@media (hover: none), (pointer: coarse) {
+  :focus, :focus-visible { outline: none !important; }
+  :focus-visible { --tw-ring-color: transparent !important; --tw-ring-offset-width: 0px !important; }
+  :where(input, textarea, select):focus { box-shadow: none !important; }
 }
 
 .mb-display {
