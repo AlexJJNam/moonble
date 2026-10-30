@@ -1,6 +1,7 @@
 /* 검색창 공통: 높이 44px, 모서리 12px, 글자 16px(모바일 확대 방지). PC는 아래 제안 목록, 모바일은 전체 화면 검색. */
 .mb-search-field { box-sizing: border-box; min-width: 0; width: 100%; min-height: var(--mb-control-compact-height); display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 14px; border: 1px solid transparent; border-radius: var(--mb-radius-12); color: var(--mb-text-tertiary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); }
-.mb-search-field:focus-within { border-color: var(--mb-border-strong); }
+/* 눌러도 테두리 선을 그리지 않는다(앱처럼). */
+.mb-search-field:focus-within { border-color: transparent; }
 .mb-search-field svg { flex: 0 0 auto; }
 .mb-search-field input { min-width: 0; width: 100%; height: 42px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--mb-text-primary); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; }
 .mb-search-field input::placeholder { color: var(--mb-text-tertiary); }
