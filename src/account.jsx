@@ -87,9 +87,22 @@ function Account() {
 }
 
 const isSharedSolve = Boolean(window.__moonbleSharedQuizToken || new URLSearchParams(window.location.search).get('paper') === 'shared');
+// 공유 풀이: 문블 안의 다른 화면에서 왔으면 그 화면으로, 로그인 상태면 문제지로 가는 뒤로가기(<)를 보여준다.
+// 링크만 받아 바로 연(돌아갈 곳이 없는) 경우에만 로고를 둔다.
+function sharedSolveBack() {
+  let fromApp = false;
+  try {
+    const referrer = document.referrer ? new URL(document.referrer) : null;
+    fromApp = Boolean(referrer && referrer.origin === window.location.origin && !referrer.pathname.endsWith('/solve.html'));
+  } catch { fromApp = false; }
+  if (fromApp) return { label: '뒤로', ariaLabel: '이전 화면으로', onClick: event => { event.preventDefault(); window.history.back(); } };
+  if (cachedAuthSession()?.user) return { label: '문제지', href: './quiz.html#paper-library' };
+  return null;
+}
 const headerRoot = createRoot(document.getElementById('moonble-app-header'));
 if (isSharedSolve) {
-  headerRoot.render(<AppHeader active="papers" hideSolverBack user={null} variant="solver" />);
+  const back = sharedSolveBack();
+  headerRoot.render(<AppHeader active="papers" hideSolverBack={!back} solverBack={back} user={null} variant="solver" />);
 } else {
   headerRoot.render(<Account />);
 }

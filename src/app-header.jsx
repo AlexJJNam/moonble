@@ -228,7 +228,7 @@ function useSolverQuestions(enabled) {
   return { activeIndex, goToQuestion, items, navRef };
 }
 
-export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack = false, mobileSubnav, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
+export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack = false, solverBack = null, mobileSubnav, onLogout, pending = false, profileSkeleton = false, user, variant = 'default' }) {
   const activeDockIndex = Math.max(0, ['papers', 'create', 'achievement', 'prd', 'account'].indexOf(active));
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('moonble:sidebar-collapsed') === 'true'; }
@@ -765,7 +765,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
       {!solver && mobileSubnav && <div className="mb-mobile-subnav">{mobileSubnav}</div>}
       {solver ? <nav className={`mb-app-nav mb-solver-nav${solverMemos.length ? ' has-memos' : ''}`} aria-label="문제 목록">
         <div className="mb-solver-heading">
-          {!hideSolverBack && <a href="./quiz.html#paper-library"><ChevronLeft size={18} aria-hidden="true" /><span>문제지</span></a>}
+          {!hideSolverBack && <a href={solverBack?.href || './quiz.html#paper-library'} onClick={solverBack?.onClick} aria-label={solverBack?.ariaLabel}><ChevronLeft size={18} aria-hidden="true" /><span>{solverBack?.label || '문제지'}</span></a>}
           {sharedSolver && <BrandLogo className="mb-solver-shared-logo" />}
           {solverPaper.title && <div className="mb-solver-paper" title={solverPaper.title}>
             <span className="mb-favorite-icon mb-solver-paper-icon"><BookOpen size={14} aria-hidden="true" /></span>
