@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
+import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, MoreVertical, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
@@ -1035,11 +1035,11 @@ function QuizLibrary() {
           <a className="paper-mix-card" href={`./solve.html?paper=mix&group=${encodeURIComponent(activeGroup)}#quiz`} aria-label={`${mixGroupName} Mix · ${mixPapers.length}개 문제지를 섞어서 풀기`}>
             <div className="paper-mix-thumb">
               <PaperPreview paper={mixPapers[0]} />
-              <span className="paper-mix-overlay" aria-hidden="true"><Shuffle size={18} /><b>Mix</b><small>{mixPapers.length}개</small></span>
+              <span className="paper-mix-overlay" aria-hidden="true"><Shuffle size={13} /><b>Mix</b></span>
             </div>
             <div className="paper-mix-info">
-              <strong>{mixGroupName} Mix</strong>
-              <p>{mixPapers.map(paper => paper.label).slice(0, 3).join(' · ')}{mixPapers.length > 3 ? ` 외 ${mixPapers.length - 3}개` : ''}</p>
+              <strong>Mix - {mixGroupName}</strong>
+              <p>{mixPapers.map(paper => paper.label).slice(0, 2).join(', ')}{mixPapers.length > 2 ? ` 외 ${mixPapers.length - 2}개` : ''}<span>문제지 {mixPapers.length}개</span></p>
               <small>{mixPapers.reduce((sum, paper) => sum + paper.count, 0).toLocaleString('ko-KR')}문항 중 매회 20문항을 섞어서 풀어요</small>
             </div>
           </a>
@@ -1070,7 +1070,7 @@ function QuizLibrary() {
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">
-                  <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreHorizontal size={18} /></button>
+                  <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreVertical size={18} /></button>
                   {openMenu === menuKey && <div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={enterEditMode}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div>}
               </div>}
             </article>;
