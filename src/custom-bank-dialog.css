@@ -7,7 +7,6 @@
 .bank-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: var(--mb-control-compact-height); border: 1px solid var(--mb-border); border-radius: var(--mb-radius-12); background: var(--mb-surface); color: var(--mb-text-secondary); font-size: 14px; font-weight: 600; }
 .bank-drop { position: relative; display: grid; place-items: center; margin-top: 16px; padding: 24px 16px; min-height: 104px; border: 1px dashed var(--mb-border-strong); border-radius: 12px; text-align: center; font-size: 14px; color: var(--mb-text-secondary); }
 .bank-drop input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.bank-drop:focus-within { border-color: var(--mb-text-secondary); }
 @media (hover: hover) { .bank-drop:hover { background: var(--mb-primary-soft); } }
 .bank-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--mb-text-tertiary); font-size: 12px; }
 .bank-divider::before, .bank-divider::after { content: ''; height: 1px; flex: 1; background: var(--mb-border); }

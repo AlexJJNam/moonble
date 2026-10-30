@@ -6,7 +6,7 @@ import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
-import { DEFAULT_GROUP_ID, clearCustomBank, createCustomGroup, exportCustomBankPDF, deleteCustomGroup, getCustomBankCollection, reorderCustomGroups, setActiveCustomBank, setCustomBankUser, syncCustomBankCollection, updateCustomBankMeta, updateCustomGroup, createMixBank, MIX_SOURCE } from './custom-bank.js';
+import { DEFAULT_GROUP_ID, clearCustomBank, createCustomGroup, exportCustomBankPDF, deleteCustomGroup, getCustomBankCollection, reorderCustomGroups, setActiveCustomBank, setCustomBankUser, syncCustomBankCollection, updateCustomBankMeta, updateCustomGroup, createMixBank, MIX_SOURCE, MIX_QUESTION_LIMIT } from './custom-bank.js';
 import { QuizAchievement } from './quiz-achievement.jsx';
 import { CREATOR_REVEAL_BANK_KEY, QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
@@ -190,12 +190,17 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   const isSample = editor.type === 'sample-delete';
   const isFavoriteDelete = editor.type === 'favorite-delete-confirm';
   const isShareConfirm = editor.type === 'share-unlisted-confirm';
+  const isMixTrim = editor.type === 'mix-trim-confirm';
   const customColorSelected = (Boolean(normalizeGroupHex(editor.colorKey)) && !GROUP_COLOR_OPTIONS.some(option => option.key === editor.colorKey)) || ['blue', 'cyan'].includes(editor.colorKey);
   const customColorInvalid = !isDelete && !isBank && customColorOpen && !normalizeGroupHex(customColorDraft);
   const title = editor.type === 'bank-edit' ? '문제지 편집' : editor.type === 'bank-delete' || isSample ? '문제지를 삭제할까요?' : editor.type === 'group-create' ? '새 그룹 만들기' : editor.type === 'group-edit' ? '그룹 편집' : '그룹을 삭제할까요?';
   return <div ref={overlayRef} className="quiz-manage-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <form className={`quiz-manage-dialog${isFavoriteDelete ? ' quiz-favorite-delete-dialog' : ''}`} role="dialog" aria-modal="true" aria-labelledby="quiz-manage-title" onSubmit={event => { event.preventDefault(); onSubmit(); }}>
-      {isShareConfirm ? <>
+      {isMixTrim ? <>
+        <header><h2 id="quiz-manage-title">Mix는 최대 {MIX_QUESTION_LIMIT}문항이에요</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+        <p>고른 문제지는 모두 {editor.total.toLocaleString('ko-KR')}문항이에요. 이 중 {MIX_QUESTION_LIMIT}문항을 무작위로 골라 섞을게요.</p>
+        <footer><button type="button" onClick={onClose}>취소</button><button className="is-primary" type="submit">섞어서 만들기</button></footer>
+      </> : isShareConfirm ? <>
         <header><h2 id="quiz-manage-title">공개 상태 변경 및 공유</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
         <p>문제지를 공유하려면 공개 상태가 일부 공개로 변경되어야 해요.</p>
         <footer><button type="button" onClick={onClose}>취소</button><button className="is-primary" type="submit">일부 공개로 설정</button></footer>
@@ -638,6 +643,11 @@ function QuizLibrary() {
     if (pendingDelete) finishPaperDeletion(pendingDelete.token, false);
   }
   function submitEditor() {
+    if (editor.type === 'mix-trim-confirm') {
+      setEditor(null);
+      createMix(true);
+      return;
+    }
     if (editor.type === 'share-unlisted-confirm') {
       const paper = editor.paper;
       setEditor(null);
@@ -1021,7 +1031,12 @@ function QuizLibrary() {
     if (!paper.customBankId) return;
     setMixSelected(current => current.includes(paper.customBankId) ? current.filter(id => id !== paper.customBankId) : [...current, paper.customBankId]);
   }
-  function createMix() {
+  function createMix(confirmed = false) {
+    const total = mixSelected.reduce((sum, id) => sum + (collection.banks.find(bank => bank.id === id)?.questions.length || 0), 0);
+    if (!confirmed && total > MIX_QUESTION_LIMIT) {
+      setEditor({ type: 'mix-trim-confirm', total });
+      return;
+    }
     try {
       const bank = createMixBank(user.id, mixSelected, { groupId: activeGroup !== 'all' ? activeGroup : DEFAULT_GROUP_ID });
       refreshCollection();
@@ -1156,7 +1171,8 @@ function QuizLibrary() {
           <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent"
             tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
-            screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
+            filterValue={category} onFilterApply={setCategory}
+            screenExtra={(draft, setDraft) => <div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={draft} onChange={setDraft} /></div>} />
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
@@ -1207,7 +1223,7 @@ function QuizLibrary() {
         {mixSelecting && <div className="quiz-mix-bar" role="region" aria-label="Mix 만들기">
           <div className="quiz-mix-bar-copy"><strong>{mixSelected.length ? `${mixSelected.length}개 선택됨` : '문제지를 선택해주세요'}</strong><small>복수 문제지를 선택해서 Mix 생성</small></div>
           <button type="button" onClick={cancelMix}>취소</button>
-          <button type="button" className="is-primary" disabled={mixSelected.length < 2} onClick={createMix}>생성</button>
+          <button type="button" className="is-primary" disabled={mixSelected.length < 2} onClick={() => createMix()}>생성</button>
         </div>}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
         </>}

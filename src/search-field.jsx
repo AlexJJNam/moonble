@@ -88,7 +88,9 @@ function SearchInput({ inputRef, label, placeholder, value, onChange, onClear, .
 }
 
 // 모바일 전체 화면과 PC 모달이 같은 검색 내용과 상태를 사용한다.
-function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, extra, mobile, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
+function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, extra, filterValue, mobile, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
+  // 검색 화면의 조회 조건은 바로 적용하지 않고, 검색할 때 검색어와 함께 적용한다.
+  const [filterDraft, setFilterDraft] = useState(filterValue ?? null);
   const screenRef = useRef(null);
   const [draft, setDraft] = useState(initial);
   const closedRef = useRef(false);
@@ -155,7 +157,7 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
     viewport.addEventListener('scroll', fit);
     return () => { viewport.removeEventListener('resize', fit); viewport.removeEventListener('scroll', fit); screen.style.height = ''; screen.style.top = ''; };
   }, [mobile]);
-  const submit = term => finish(() => onSubmit(term));
+  const submit = term => finish(() => onSubmit(term, filterDraft));
   return createPortal(<div className="mb-search-overlay" onMouseDown={event => { if (!mobile && event.target === event.currentTarget) finish(() => onCloseRef.current()); }}>
     <div ref={screenRef} className="mb-search-screen" role="dialog" aria-modal="true" aria-label={label}>
       <form className="mb-search-screen-head" role="search" onSubmit={event => { event.preventDefault(); submit(draft); }}>
@@ -165,7 +167,7 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
       </form>
       {extra && <div className="mb-search-screen-filter"
         onMouseDown={event => { if (mobile) event.preventDefault(); }}
-        onClick={() => { if (mobile && document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true }); }}>{extra}</div>}
+        onClick={() => { if (mobile && document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true }); }}>{typeof extra === 'function' ? extra(filterDraft, setFilterDraft) : extra}</div>}
       <div className="mb-search-screen-body">
         <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={submit} onRemoveRecent={onRemoveRecent} onClearRecent={onClearRecent} />
       </div>
@@ -173,8 +175,8 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
   </div>, document.body);
 }
 
-// tags: 검색어 앞에 보이는 조회 조건. screenExtra: 검색 화면의 조회 조건(예: 카테고리).
-export function SearchField({ label, placeholder, value, onSearch, suggest, recentKey, className = '', tags = [], screenExtra = null }) {
+// tags: 검색어 앞에 보이는 조회 조건. screenExtra(draft, setDraft): 검색 화면의 조회 조건(예: 카테고리). 고른 값은 검색할 때 onFilterApply로 적용한다.
+export function SearchField({ label, placeholder, value, onSearch, suggest, recentKey, className = '', tags = [], screenExtra = null, filterValue = null, onFilterApply = null }) {
   const mobile = useMediaQuery(MOBILE_QUERY);
   const [recent, setRecent] = useState(() => readRecent(recentKey));
   const [screenOpen, setScreenOpen] = useState(false);
@@ -203,9 +205,9 @@ export function SearchField({ label, placeholder, value, onSearch, suggest, rece
         <button ref={triggerRef} type="button" className="mb-search-trigger" aria-label={value ? `${label}: ${value}` : label} aria-haspopup="dialog" aria-expanded={screenOpen} onClick={openScreen}><span>{value || (tags.length ? '' : placeholder)}</span></button>
         {value && <button type="button" className="mb-search-clear" aria-label="검색어 지우기" onClick={() => onSearch('')}><X size={14} aria-hidden="true" /></button>}
       </div>
-      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest} extra={screenExtra} mobile={mobile}
+      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest} extra={screenExtra} filterValue={filterValue} mobile={mobile}
         onRemoveRecent={removeRecent} onClearRecent={clearRecent}
-        onSubmit={term => { apply(term); setScreenOpen(false); refocusTrigger(); }}
+        onSubmit={(term, filterDraft) => { apply(term); onFilterApply?.(filterDraft); setScreenOpen(false); refocusTrigger(); }}
         onClose={() => { setScreenOpen(false); refocusTrigger(); }} />}
   </div>;
 }

@@ -277,7 +277,8 @@ export function PublicQuizSearch({ userId = null }) {
     <SearchField label="공개 문제 검색" placeholder="제목이나 설명으로 찾아보세요" value={query} onSearch={setQuery}
       suggest={suggestPublicQuizTitles} recentKey="moonble:public-search-recent"
       tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
-      screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
+      filterValue={category} onFilterApply={setCategory}
+            screenExtra={(draft, setDraft) => <div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={draft} onChange={setDraft} /></div>} />
     {likeWarning && <p className="public-quiz-like-warning" role="status">{likeWarning} <button type="button" onClick={() => { if (likeMode === 'local') setLikeRetry(value => value + 1); else load(false, 0); }}>다시 시도</button></p>}
     <div className="quiz-community-page-sort public-quiz-sort">
       <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} />

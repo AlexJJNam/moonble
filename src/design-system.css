@@ -169,6 +169,9 @@ html { -webkit-tap-highlight-color: transparent; }
 img { -webkit-user-drag: none; }
 :focus:not(:focus-visible) { outline: none; }
 :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select):focus-visible { outline: none; }
+/* 입력 칸은 PC·모바일 모두 눌러도 테두리·외곽선·링을 새로 그리지 않는다(평소 모양 그대로). */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select, [role="combobox"]):focus,
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select, [role="combobox"]):focus-visible { outline: none !important; box-shadow: none !important; --tw-ring-color: transparent; --tw-ring-offset-width: 0px; }
 /* 터치 기기: 누르거나 입력할 때 파란 테두리·링을 그리지 않는다. */
 @media (hover: none), (pointer: coarse) {
   :focus, :focus-visible { outline: none !important; }

@@ -24,7 +24,6 @@ body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary
 .floating-field input:not(:placeholder-shown) + label,
 .floating-field input:-webkit-autofill + label { top: 9px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
 .floating-field input:focus + label { top: 9px; color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 18px; transform: none; }
-.floating-field input:focus { border-color: var(--mb-text-secondary); }
 .password-field { position: relative; }
 .password-field input { padding-right: 64px; }
 .password-field label { max-width: calc(100% - 96px); }

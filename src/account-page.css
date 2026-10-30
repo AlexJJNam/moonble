@@ -39,7 +39,7 @@ button { font: inherit; cursor: pointer; }
 .account-dialog-close:disabled { opacity: .45; cursor: wait; }
 .account-profile-edit-dialog fieldset { margin-top: 24px; }
 .account-profile-edit-dialog input { border-color: var(--mb-border-strong); background: #fbfcfd; }
-.account-profile-edit-dialog input:focus { border-color: var(--mb-text-secondary); outline: none; background: var(--mb-surface); }
+.account-profile-edit-dialog input:focus { outline: none; background: var(--mb-surface); }
 .account-profile-edit-dialog .shell-primary { width: 100%; min-height: var(--mb-control-height); border: 0; }
 .account-dialog .account-dialog-error { margin: 12px 0 0; color: var(--mb-danger); font-size: var(--mb-font-13); line-height: 20px; }
 .account-dialog-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
@@ -104,7 +104,7 @@ button { font: inherit; cursor: pointer; }
 .account-main .profile-form-card>p { margin-top: 6px; font-size: var(--mb-font-14); line-height: 22px; }
 .account-main .profile-card fieldset { margin-top: 24px; }
 .account-main .profile-card input { border-color: var(--mb-border); background: #fbfcfd; }
-.account-main .profile-card input:focus { border-color: var(--mb-text-secondary); outline: none; background: var(--mb-surface); }
+.account-main .profile-card input:focus { outline: none; background: var(--mb-surface); }
 .account-main .shell-primary { width: 100%; min-height: 50px; border: 0; }
 .account-mobile-session { display: block; }
 .account-logout-action { min-height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; margin-top: 16px; padding: 4px 0; border: 0; color: var(--mb-text-secondary); background: transparent; font-weight: 600; text-align: left; }

@@ -151,7 +151,6 @@
 .quiz-community-topic select:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 .quiz-community-compose-title, .quiz-community-compose-body { width: 100%; display: block; border: 0; color: var(--mb-text-primary); background: transparent; font-family: var(--mb-font-sans); outline: 0; }
 .quiz-community-compose-title { margin-top: var(--mb-space-16); padding: 0 0 var(--mb-space-12); border-bottom: 1px solid var(--mb-border); font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-semibold); }
-.quiz-community-compose-title:focus { border-bottom-color: var(--mb-primary); }
 .quiz-community-compose-body { min-height: 200px; margin-top: var(--mb-space-12); padding: 0; resize: vertical; font-size: var(--mb-font-16); line-height: 24px; }
 .quiz-community-compose-title::placeholder, .quiz-community-compose-body::placeholder { color: var(--mb-text-disabled); }
 .quiz-community-policy { margin: var(--mb-space-12) 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
@@ -318,8 +317,6 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 .quiz-community-dialog :where(input, textarea, select):focus, .quiz-community-dialog :where(input, textarea, select):focus-visible,
 .quiz-community-comment-field input:focus, .quiz-community-comment-field input:focus-visible,
 .quiz-community-gif-panel :where(input, textarea):focus, .quiz-community-gif-panel :where(input, textarea):focus-visible { outline: 0 !important; box-shadow: none; }
-.quiz-community-compose-title:focus { border-bottom-color: var(--mb-border-strong); }
-.quiz-community-comment-field:focus-within { border-color: var(--mb-border-strong); }
 .quiz-community-gif-panel .GifPickerReact { --gpr-search-border-color-active: var(--mb-border-strong); }
 
 /* 모바일에서는 글을 눌렀을 때 피드 안의 확장이 아니라 게시글 단독 화면으로 연다. */

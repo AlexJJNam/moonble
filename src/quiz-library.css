@@ -199,9 +199,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-manage-fields label>span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
 .quiz-manage-fields input, .quiz-manage-fields textarea, .quiz-manage-fields select { width: 100%; min-height: var(--mb-control-height); border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); padding: 11px 14px; outline: 0; color: var(--mb-text-primary); background: var(--mb-surface); font-size: var(--mb-font-16); line-height: 24px; }
 .quiz-manage-fields input.quiz-group-name-preview { border-color: var(--group-preview-border); color: var(--group-preview-color); background: var(--group-preview-tint); }
-.quiz-manage-fields input.quiz-group-name-preview:focus { border-color: var(--group-preview-color); box-shadow: 0 0 0 3px var(--group-preview-tint); }
 .quiz-manage-fields textarea { min-height: 88px; resize: vertical; }
-.quiz-manage-fields input:focus, .quiz-manage-fields textarea:focus, .quiz-manage-fields select:focus { border-color: var(--mb-text-secondary); box-shadow: none; }
 .quiz-group-color-field { min-width: 0; margin: -3px 0 0; padding: 0; border: 0; }
 .quiz-group-color-field legend { margin-bottom: 7px; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 650; }
 .quiz-group-color-options { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
@@ -343,7 +341,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-source-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
 .creator-source-divider::before, .creator-source-divider::after { content: ''; height: 1px; flex: 1 1 auto; background: var(--mb-border); }
 .creator-sheet-link { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 5px 5px 5px 14px; border: 1px solid var(--mb-border); border-radius: 12px; background: var(--mb-surface); transition: border-color var(--mb-duration), box-shadow var(--mb-duration); }
-.creator-sheet-link:focus-within { border-color: var(--mb-text-secondary); box-shadow: none; }
 .creator-sheet-link>svg { flex: 0 0 auto; color: var(--mb-text-tertiary); }
 .creator-sheet-link input { min-width: 0; flex: 1 1 auto; border: 0; outline: 0; color: var(--mb-text-primary); background: transparent; font-size: var(--mb-font-14); }
 .creator-sheet-link input::placeholder { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
@@ -360,7 +357,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .creator-bank-meta label { min-width: 0; display: grid; gap: 6px; }
 .creator-bank-meta label>span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 650; }
 .creator-bank-meta input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--mb-border); border-radius: 10px; outline: 0; color: var(--mb-text-primary); background: var(--mb-surface); font-size: var(--mb-font-14); line-height: 22px; transition: border-color var(--mb-duration), box-shadow var(--mb-duration); }
-.creator-bank-meta input:focus { border-color: var(--mb-text-secondary); box-shadow: none; }
 .creator-bank-meta.is-revealing label { animation: creator-meta-reveal 720ms cubic-bezier(.2,.75,.25,1) both; }
 .creator-bank-meta.is-revealing label+label { animation-delay: 100ms; }
 @keyframes creator-meta-reveal { from { opacity: 0; filter: blur(8px); transform: translateY(8px); } to { opacity: 1; filter: none; transform: none; } }
@@ -492,7 +488,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-date-range label { display: grid; gap: 2px; }
 .achievement-date-range label>span { color: var(--mb-text-tertiary); font-size: 10px; line-height: 14px; }
 .achievement-date-range input { width: 150px; height: var(--mb-control-compact-height); padding: 0 12px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); outline: 0; color: var(--mb-text-primary); background: var(--mb-surface); font-size: var(--mb-font-14); font-weight: var(--mb-weight-medium); }
-.achievement-date-range input:focus { outline: 2px solid var(--mb-primary); }
+.achievement-date-range input:focus { outline: none; }
 .achievement-date-range>i { padding-bottom: 11px; color: var(--mb-text-tertiary); font-style: normal; }
 .achievement-custom-popover>p { margin: 8px 0 0; color: var(--mb-danger); font-size: var(--mb-font-12); }
 .achievement-custom-popover>button, .achievement-period-custom>button { width: 100%; min-height: var(--mb-control-compact-height); margin-top: 12px; border: 0; border-radius: var(--mb-radius-12); color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-14); font-weight: var(--mb-weight-semibold); }
