@@ -49,9 +49,26 @@ export function writeAchievementHistoryCache(userId, history) {
   }
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// 틀린 문제에 고른 답 { 문항 id: [보기 번호] }(027부터 저장). 모양이 이상하면 버린다.
+function cleanWrongAnswers(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const result = {};
+  Object.entries(value).slice(0, 500).forEach(([id, chosen]) => {
+    if (/^\d{1,12}$/.test(id) && Array.isArray(chosen)) result[id] = chosen.filter(index => Number.isInteger(index) && index >= 0 && index < 50).slice(0, 50);
+  });
+  return Object.keys(result).length ? result : null;
+}
+
 function toRow(userId, item) {
   const record = normalizeRecord(item);
+  const extra = {};
+  const wrongAnswers = cleanWrongAnswers(record.wrongAnswers);
+  if (wrongAnswers) extra.wrong_answers = wrongAnswers;
+  if (UUID_PATTERN.test(String(record.retryOf || ''))) extra.retry_of = record.retryOf;
   return {
+    ...extra,
     id: record.id,
     user_id: userId,
     attempted_at: record.date,
@@ -91,10 +108,13 @@ function newestFirst(records) {
 
 async function uploadRecords(userId, records) {
   if (!supabase || !userId || !records.length) return;
-  const { error } = await supabase.from(TABLE).upsert(records.map(item => toRow(userId, item)), {
-    onConflict: 'id',
-    ignoreDuplicates: true,
-  });
+  const rows = records.map(item => toRow(userId, item));
+  const upload = list => supabase.from(TABLE).upsert(list, { onConflict: 'id', ignoreDuplicates: true });
+  let { error } = await upload(rows);
+  // 027 전(칸 없음)이거나 재풀이 원본이 지워졌으면 그 칸 없이 다시 올린다.
+  if (error && ['PGRST204', '42703', '23503'].includes(error.code)) {
+    ({ error } = await upload(rows.map(({ wrong_answers: _answers, retry_of: _retryOf, ...row }) => row)));
+  }
   if (error) throw error;
 }
 

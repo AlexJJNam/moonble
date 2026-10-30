@@ -1,4 +1,4 @@
-// 화면 상위 탭: 문제지(나의 문제지·문제 서칭·커뮤니티)와 워크스페이스(시간표 설정·PRD)가 같은 모양을 쓴다.
+// 화면 상위 탭: 문제지(나의 문제지·문제 서칭·커뮤니티)와 워크스페이스(시간표 설정·일지·회고·PRD)가 같은 모양을 쓴다.
 import React from 'react';
 import './section-tabs.css';
 
@@ -11,6 +11,7 @@ export function SectionTabs({ label, items, current, className = '' }) {
 
 const WORKSPACE_TABS = [
   { value: 'schedule', href: '#/schedule', label: '시간표 설정' },
+  { value: 'journal', href: '#/journal', label: '일지·회고' },
   { value: 'prd', href: '#/list', label: 'PRD' },
 ];
 

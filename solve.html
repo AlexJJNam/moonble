@@ -4265,13 +4265,13 @@
       if (paper === 'retry') {
         let ids = [];
         try { ids = JSON.parse(sessionStorage.getItem('moonble:retry-question-ids') || '[]'); } catch { ids = []; }
-        let retryMix = [];
-        try {
-          const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
-          if (retryMeta.paperId === 'mix' && typeof window.getCustomBankMix === 'function') retryMix = window.getCustomBankMix(retryMeta.groupId) || [];
-        } catch { retryMix = []; }
-        const customBank = [...retryMix, ...((typeof window.getCustomBank === 'function' ? window.getCustomBank() : null) || [])];
-        const restored = (Array.isArray(ids) ? ids : []).map(id => BANK.find(q => q.id === id) || customBank.find(q => q.id === id)).filter(Boolean);
+        let retryMeta = {};
+        try { retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}') || {}; } catch { retryMeta = {}; }
+        // 문항 id는 문제지마다 1부터라 기본 문제지와 겹친다: 풀었던 문제지(Mix·내 문제지·기본)에서만 찾는다.
+        let source = BANK;
+        if (retryMeta.paperId === 'mix') source = (typeof window.getCustomBankMix === 'function' ? window.getCustomBankMix(retryMeta.groupId) : null) || [];
+        else if (retryMeta.bankId) source = (typeof window.getCustomBank === 'function' ? window.getCustomBank(retryMeta.bankId) : null) || [];
+        const restored = (Array.isArray(ids) ? ids : []).map(id => source.find(q => q.id === id)).filter(Boolean);
         return restored.length ? restored : BANK;
       }
       return null;
@@ -6485,6 +6485,7 @@ if (shareToken || requestedPaper === 'shared') {
 })();
 </script>
 <script type="module" src="/src/account.jsx"></script>
+<script type="module" src="/src/solve-review.js"></script>
   <script type="module" src="/src/pwa-register.js"></script>
   <div id="quizScrollProgress" class="quiz-scroll-progress" role="progressbar" aria-label="문제풀이 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
     <span></span>

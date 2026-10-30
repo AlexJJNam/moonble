@@ -12,6 +12,7 @@ import { PrdStudio } from './components/prd-studio';
 import { Toaster } from './components/ui/toaster';
 import { WorkspaceTabs } from '../section-tabs.jsx';
 import { SchedulePage } from '../schedule/schedule-page.jsx';
+import { JournalPage } from '../journal/journal-page.jsx';
 import '../design-system.css';
 import './app/globals.css';
 import './shell.css';
@@ -74,8 +75,8 @@ function Workspace() {
     window.location.replace(new URL('./account.html', window.location.href));
     return <div className="workspace-check" role="status"><span className="moonble-spinner" aria-hidden="true" /><span className="mb-sr-only">내 계정으로 이동 중</span></div>;
   }
-  // 워크스페이스 상위 탭: 시간표 설정 · PRD(기본). PRD 편집 화면에서는 탭을 숨긴다.
-  const workspaceSection = path === '/schedule' ? 'schedule' : (path === '/list' || path === '/' || path === '') ? 'prd' : null;
+  // 워크스페이스 상위 탭: 시간표 설정(기본) · 일지·회고 · PRD. PRD 편집 화면에서는 탭을 숨긴다.
+  const workspaceSection = path === '/schedule' ? 'schedule' : (path === '/journal' || path.startsWith('/journal/')) ? 'journal' : (path === '/list' || path === '/' || path === '') ? 'prd' : null;
   const showTabs = Boolean(workspaceSection) && !initial;
   return <>
     <AppHeader active="prd" user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={showTabs ? <WorkspaceTabs current={workspaceSection} /> : null} />
@@ -89,6 +90,8 @@ function Workspace() {
             ? <PrdStudio key={route} prdId={path === '/edit/new' ? undefined : path.slice('/edit/'.length)} />
             : workspaceSection === 'schedule'
               ? <SchedulePage user={user} tabs={<WorkspaceTabs current="schedule" className="quiz-library-tabs--desktop" />} />
+            : workspaceSection === 'journal'
+              ? <JournalPage user={user} path={path} tabs={<WorkspaceTabs current="journal" className="quiz-library-tabs--desktop" />} />
               : <PrdList key={`${user.id}:${profile.name}:${profile.companyName}`} tabs={<WorkspaceTabs current="prd" className="quiz-library-tabs--desktop" />} />}
         </WorkspaceBoundary>}
     {showFooter && <SiteFooter />}

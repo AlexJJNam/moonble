@@ -1,0 +1,13 @@
+/* 일지의 '틀린 문제 보기': 제출·다시하기 버튼 대신 '틀린 문제 다시 풀기'만 둔다. */
+html.is-wrong-review .quiz-actions,
+html.is-wrong-review #retryBtn,
+html.is-wrong-review #retryWrongBtn,
+html.is-wrong-review #submitBtn { display: none !important; }
+html.is-wrong-review #quizContainer .option-card { cursor: default; }
+.solve-review-notice { display: grid; gap: 2px; margin: 0 0 16px; padding: 14px 16px; border-radius: var(--mb-radius-12, 12px); background: var(--mb-surface-muted, #f2f4f6); }
+.solve-review-notice strong { color: var(--mb-text-primary, #191f28); font-size: var(--mb-font-16, 16px); line-height: 24px; }
+.solve-review-notice p { margin: 0; color: var(--mb-text-secondary, #4e5968); font-size: var(--mb-font-14, 14px); line-height: 20px; }
+.solve-review-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 20px; margin: 24px 0 8px; }
+.solve-review-actions .mb-action { text-decoration: none; }
+.solve-review-return { color: var(--mb-text-secondary, #4e5968); font-size: var(--mb-font-14, 14px); font-weight: 600; text-decoration: none; }
+.solve-review-actions.is-retry { margin-top: 8px; }
