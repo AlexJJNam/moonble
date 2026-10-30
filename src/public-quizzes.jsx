@@ -89,7 +89,7 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }
   const liked = Boolean(likeState?.liked);
   const count = Number.isInteger(likeState?.likeCount) ? likeState.likeCount : null;
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
-  const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : '', item.average_score != null && item.participants > 0 ? `평균 ${Number(item.average_score)}점` : ''].filter(Boolean).join(' · ');
+  const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : ''].filter(Boolean).join(' · ');
   const samples = usePublicSamples(item);
   const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples };
   return <article className="paper-card public-quiz-card">
@@ -102,7 +102,6 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }
         <div className="paper-copy">
           <h2 className="mb-card-title">{item.title}</h2>
           <p>{categoryLabel(item.category) ? `${categoryLabel(item.category)} · ` : ''}{item.author_name} · {stats}</p>
-          {item.post_count > 0 && <p>이야기 {item.post_count.toLocaleString('ko-KR')}개</p>}
         </div>
       </div>
     </a>
