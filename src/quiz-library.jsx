@@ -8,7 +8,7 @@ import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
 import { DEFAULT_GROUP_ID, clearCustomBank, createCustomGroup, exportCustomBankPDF, deleteCustomGroup, getCustomBankCollection, reorderCustomGroups, setActiveCustomBank, setCustomBankUser, syncCustomBankCollection, updateCustomBankMeta, updateCustomGroup, createMixBank, MIX_SOURCE } from './custom-bank.js';
 import { QuizAchievement } from './quiz-achievement.jsx';
-import { QuizCreator } from './quiz-creator.jsx';
+import { CREATOR_REVEAL_BANK_KEY, QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
 import { FlowActionButton } from './flow-action-button.jsx';
 import { revealPage } from './page-readiness.js';
@@ -21,7 +21,6 @@ import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from '.
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
 import { SearchField, useMediaQuery } from './search-field.jsx';
-import { ProfileUpdateEffect } from './profile-update-effect.jsx';
 import { CreatorTabs, SectionTabs } from './section-tabs.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
@@ -272,7 +271,6 @@ function QuizLibrary() {
   // Mix 만들기: 문제지를 여러 개 골라 문항을 섞은 새 문제지를 만든다.
   const [mixSelecting, setMixSelecting] = useState(false);
   const [mixSelected, setMixSelected] = useState([]);
-  const [mixEffect, setMixEffect] = useState('');
   // 문제 생성하기 화면의 단계(헤더 탭 표시용)와 단계를 바꾸는 함수.
   const [creatorScreen, setCreatorScreen] = useState('create');
   const creatorStepRef = useRef(null);
@@ -975,10 +973,12 @@ function QuizLibrary() {
   }
   function createMix() {
     try {
-      createMixBank(user.id, mixSelected, { groupId: activeGroup !== 'all' ? activeGroup : DEFAULT_GROUP_ID });
+      const bank = createMixBank(user.id, mixSelected, { groupId: activeGroup !== 'all' ? activeGroup : DEFAULT_GROUP_ID });
       refreshCollection();
       cancelMix();
-      setMixEffect('Mix 문제지가 생성됐어요!');
+      // 파일 등록 때와 같은 등록 완료 화면에서 섞인 문항을 확인하고, 목록으로 갈지 바로 풀지 고른다.
+      try { sessionStorage.setItem(CREATOR_REVEAL_BANK_KEY, bank.id); } catch { /* 저장이 막히면 생성 화면만 연다. */ }
+      window.location.hash = 'create';
     } catch (mixError) {
       setNotice(mixError.message || 'Mix 문제지를 만들지 못했어요.');
     }
@@ -1154,9 +1154,9 @@ function QuizLibrary() {
           })}
         </section>
         {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : category ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 카테고리에 문제지가 없어요</h2><p>다른 카테고리를 고르거나 전체를 눌러 모든 문제지를 보세요.</p><button onClick={() => setCategory(null)}>전체 보기</button></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
-        {mixEffect && <ProfileUpdateEffect message={mixEffect} onComplete={() => setMixEffect('')} />}
+        {mixSelecting && <button type="button" className="quiz-mix-backdrop" aria-label="Mix 선택 닫기" onClick={cancelMix} />}
         {mixSelecting && <div className="quiz-mix-bar" role="region" aria-label="Mix 만들기">
-          <div className="quiz-mix-bar-copy"><strong>{mixSelected.length ? `${mixSelected.length}개 선택됨` : '믹스할 문제지를 선택해주세요'}</strong><small>2개 이상 고르면 문항을 섞어 새 문제지를 만들어요.</small></div>
+          <div className="quiz-mix-bar-copy"><strong>{mixSelected.length ? `${mixSelected.length}개 선택됨` : '문제지를 선택해주세요'}</strong><small>복수 문제지를 선택해서 Mix 생성</small></div>
           <button type="button" onClick={cancelMix}>취소</button>
           <button type="button" className="is-primary" disabled={mixSelected.length < 2} onClick={createMix}>생성</button>
         </div>}

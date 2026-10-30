@@ -1,6 +1,9 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
-import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+
+// 다른 화면(나의 문제지의 Mix 생성)에서 만든 문제지를 파일 등록 때와 같은 흐름으로 보여줄 때 쓰는 값.
+export const CREATOR_REVEAL_BANK_KEY = 'moonble:creator-reveal-bank';
 import { CategoryChips } from './category-chips.jsx';
 import { CreatorTabs } from './section-tabs.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
@@ -449,6 +452,10 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     const result = csvToQuestions(text);
     if (result.error) throw new Error(result.error);
     const next = setCustomBank(result.questions, source, undefined, { title: result.title, description: result.description, create: true });
+    revealRegisteredBank(next);
+  }
+  // 등록 완료 흐름: 등록 영역의 성공 표시 → 결과 화면 스켈레톤 → 이름·설명과 문항 목록이 나타난다.
+  function revealRegisteredBank(next, doneMessage = '문제지 등록이 완료됐어요. 바로 풀어볼까요?') {
     setResultBank(next);
     setBankTitle(next.title || '');
     setBankDescription(next.description || '');
@@ -473,8 +480,18 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
         metaRevealTimer.current = window.setTimeout(() => setMetaReveal(false), 1100);
       }, 520);
     }, 1180);
-    setMessage('문제지 등록이 완료됐어요. 바로 풀어볼까요?');
+    setMessage(doneMessage);
   }
+  // 나의 문제지에서 Mix를 만들고 넘어온 경우: 같은 등록 완료 흐름으로 결과를 보여준다.
+  useEffect(() => {
+    let bankId = null;
+    try { bankId = sessionStorage.getItem(CREATOR_REVEAL_BANK_KEY); sessionStorage.removeItem(CREATOR_REVEAL_BANK_KEY); } catch { bankId = null; }
+    if (!bankId) return;
+    const bank = getCustomBankMeta(undefined, bankId);
+    if (!bank) return;
+    setScreen('upload');
+    revealRegisteredBank(bank, 'Mix 문제지가 만들어졌어요. 바로 풀어볼까요?');
+  }, []);
 
   function persistBankMeta(category = bankCategory) {
     try {
