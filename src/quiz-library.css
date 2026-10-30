@@ -9,7 +9,7 @@
 @property --creator-prompt-tone-c { syntax: '<color>'; inherits: true; initial-value: #8bcff0; }
 @property --creator-prompt-tone-d { syntax: '<color>'; inherits: true; initial-value: #b8e7e7; }
 html { min-width: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-body { min-width: 0; margin: 0; overflow-x: hidden; color: var(--mb-text-primary); background: var(--mb-bg); }
+body { min-width: 0; margin: 0; overflow-x: clip; color: var(--mb-text-primary); background: var(--mb-bg); }
 a { color: inherit; text-decoration: none; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
