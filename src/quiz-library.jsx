@@ -34,6 +34,8 @@ import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupCo
 import { PublicQuizSearch } from './public-quizzes.jsx';
 import { SearchField } from './search-field.jsx';
 import { SectionTabs } from './section-tabs.jsx';
+import { CategoryChips } from './category-chips.jsx';
+import { categoryLabel } from './quiz-categories.js';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
@@ -200,6 +202,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
           <label><span>문제지 설명</span><textarea rows="3" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
+          <div className="quiz-manage-category"><span>카테고리</span><CategoryChips wrap label="카테고리" value={editor.category || null} onChange={next => onChange({ ...editor, category: next })} /></div>
         </div> : <div className="quiz-manage-fields">
           <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength={12} value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value.slice(0, 12) })} /><small className="quiz-group-name-hint">{editor.name.length}/12자</small></label>
           <fieldset className="quiz-group-color-field"><legend>배경 색상</legend><div className="quiz-group-color-options" role="group" aria-label="배경 색상">
@@ -249,6 +252,7 @@ function QuizLibrary() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState(null);
   const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
@@ -567,7 +571,7 @@ function QuizLibrary() {
       if (editor.type === 'favorite-delete-confirm') {
         queuePaperDeletion(editor.paper);
       } else if (editor.type === 'bank-edit') {
-        updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId);
+        updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId, editor.category || null);
         setNotice('문제지 정보를 저장했어요.');
       } else if (editor.type === 'bank-delete') {
         const bank = collection.banks.find(item => item.id === editor.bankId);
@@ -927,13 +931,14 @@ function QuizLibrary() {
     level: '내 문제지',
     count: bank.questions.length,
     description: bank.description,
+    category: bank.category || null,
     savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
     visibility: bank.visibility || (shareVisibilities ? (shareVisibilities[bank.id] === 'public' ? 'public' : shareVisibilities[bank.id] === 'unlisted' ? 'partial' : 'personal') : (getCachedQuizShareToken(user.id, bank.id) ? 'partial' : 'personal')),
     samples: bank.questions.slice(0, 4).map(question => ({ title: question.q, options: question.options })),
   }));
-  const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers : [];
+  const visibleSamples = sampleVisible && undoablePaperDelete?.kind !== 'sample' ? papers.map(paper => ({ ...paper, category: paper.category || 'marketing' })) : [];
   const allPapers = [...customPapers, ...visibleSamples].map(paper => ({
     ...paper,
     lastOpenedAt: paperAccess[paper.id] || null,
@@ -947,7 +952,8 @@ function QuizLibrary() {
       || (paperScope === 'personal' && paper.kind === 'custom' && paper.visibility === 'personal')
       || (paperScope === 'public' && (paper.kind !== 'custom' || paper.visibility === 'public'))
       || (paperScope === 'partial' && paper.kind === 'custom' && paper.visibility === 'partial');
-    return groupMatch && scopeMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level}`.toLocaleLowerCase().includes(search);
+    const categoryMatch = !category || paper.category === category;
+    return groupMatch && scopeMatch && categoryMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level} ${categoryLabel(paper.category)}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
     const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
@@ -1016,6 +1022,7 @@ function QuizLibrary() {
             onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
           <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent" />
+          <CategoryChips className="quiz-library-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
@@ -1039,7 +1046,7 @@ function QuizLibrary() {
             >
               <CardSurface className="paper-card-link" {...(!editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); if (mobileSearchOpen && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); window.location.replace(href); } }}>
                 <PaperPreview paper={paper} style={paperGroupStyle} />
-                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
+                <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor({ type: 'bank-edit', bankId: paper.customBankId, title: paper.label, description: paper.description, groupId: paper.groupId, category: paper.category || null }); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{paper.lastOpenedAt ? <time className="paper-added-at" dateTime={paper.lastOpenedAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(paper.lastOpenedAt))}>{formatRelativeDateShortYear(paper.lastOpenedAt)}</time> : <span className="paper-added-at is-unplayed">아직 풀이 전</span>}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
               {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">
@@ -1049,7 +1056,7 @@ function QuizLibrary() {
             </article>;
           })}
         </section>
-        {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
+        {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : category ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 카테고리에 문제지가 없어요</h2><p>다른 카테고리를 고르거나 전체를 눌러 모든 문제지를 보세요.</p><button onClick={() => setCategory(null)}>전체 보기</button></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
         </>}
       </main>}<SiteFooter />

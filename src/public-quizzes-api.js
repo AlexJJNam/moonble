@@ -9,8 +9,11 @@ function requireSupabase() {
   return supabase;
 }
 
-export async function listPublicQuizzes({ query = '', sort = 'popular', offset = 0 } = {}) {
-  const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', { p_query: query || null, p_sort: sort, p_offset: offset, p_limit: PUBLIC_PAGE_SIZE });
+export async function listPublicQuizzes({ query = '', sort = 'popular', offset = 0, category = null } = {}) {
+  // 카테고리 필터(018)는 고른 경우에만 보낸다. 018 적용 전에도 전체 목록은 그대로 동작한다.
+  const args = { p_query: query || null, p_sort: sort, p_offset: offset, p_limit: PUBLIC_PAGE_SIZE };
+  if (category) args.p_category = category;
+  const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', args);
   if (error) {
     const result = new Error(missing(error) ? '공개 문제 검색을 준비하고 있어요.' : '잠시 후 다시 시도해주세요.');
     result.unavailable = missing(error);

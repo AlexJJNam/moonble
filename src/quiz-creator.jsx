@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+import { CategoryChips } from './category-chips.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
 import { TooltipIcon } from './tooltip-icon.jsx';
@@ -187,6 +188,7 @@ export function QuizCreator({ custom, onChange }) {
   const [resultReady, setResultReady] = useState(true);
   const [bankTitle, setBankTitle] = useState(custom?.title || '');
   const [bankDescription, setBankDescription] = useState(custom?.description || '');
+  const [bankCategory, setBankCategory] = useState(custom?.category || null);
   const promptBarRef = useRef(null);
   const promptInputRef = useRef(null);
   const promptDockOriginRef = useRef(null);
@@ -239,7 +241,8 @@ export function QuizCreator({ custom, onChange }) {
     if (resultBank && custom?.id !== resultBank.id) return;
     setBankTitle(custom?.title || '');
     setBankDescription(custom?.description || '');
-  }, [custom?.title, custom?.description, custom?.savedAt]);
+    setBankCategory(custom?.category || null);
+  }, [custom?.title, custom?.description, custom?.category, custom?.savedAt]);
 
   useEffect(() => () => {
     window.clearTimeout(examplePromptRevealTimerRef.current);
@@ -452,6 +455,7 @@ export function QuizCreator({ custom, onChange }) {
     setResultBank(next);
     setBankTitle(next.title || '');
     setBankDescription(next.description || '');
+    setBankCategory(next.category || null);
     onChange(next);
     setUploadSuccess(false);
     window.clearTimeout(uploadSuccessTimer.current);
@@ -475,9 +479,9 @@ export function QuizCreator({ custom, onChange }) {
     setMessage('문제지 등록이 완료됐어요. 바로 풀어볼까요?');
   }
 
-  function persistBankMeta() {
+  function persistBankMeta(category = bankCategory) {
     try {
-      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, displayBank?.id);
+      const next = updateCustomBankMeta(bankTitle, bankDescription, undefined, displayBank?.id, undefined, category);
       if (next) {
         setResultBank(next);
         onChange(next);
@@ -568,8 +572,10 @@ export function QuizCreator({ custom, onChange }) {
       <header><CreatorStepMarker step="upload" label="등록 완료" /><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
       {!resultReady ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">생성한 문제지 목록을 정리하고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : displayBank ? <div className="creator-result-reveal">
         <div className={`creator-bank-meta${metaReveal ? ' is-revealing' : ''}`}>
-          <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={persistBankMeta} /></label>
-          <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={persistBankMeta} /></label>
+          <label><span>문제지 이름</span><input type="text" value={bankTitle} maxLength={80} onChange={event => setBankTitle(event.target.value)} onBlur={() => persistBankMeta()} /></label>
+          <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={() => persistBankMeta()} /></label>
+          <div className="creator-bank-category"><span id="creator-bank-category-label">카테고리</span>
+            <CategoryChips wrap label="카테고리" value={bankCategory} onChange={next => { setBankCategory(next); persistBankMeta(next); }} /></div>
         </div>
         <nav className="creator-result-actions" aria-label="문제지 등록 후 이동">
           <a className="creator-result-action-library" href="./quiz.html#paper-library"><BookOpen size={16} aria-hidden="true" />문제지 목록으로 가기</a>
@@ -665,7 +671,7 @@ export function QuizCreator({ custom, onChange }) {
         <button type="button" disabled={sheetPending || pending || !sheetLink.trim()} onClick={importSheet}>{sheetPending ? '가져오는 중' : '가져오기'}</button>
       </div>
       <div className="creator-upload-foot"><button className="creator-sample" type="button" onClick={downloadSampleCSV}><Download size={16} aria-hidden="true" />CSV 형식 먼저 보기</button><p>시트는 ‘링크가 있는 모든 사용자 · 뷰어’로 공유해주세요.</p></div>
-      {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
+      {custom && <button className="creator-recent-result" type="button" onClick={() => { setResultBank(custom); setBankTitle(custom.title || ''); setBankDescription(custom.description || ''); setBankCategory(custom.category || null); setResultReady(true); setScreen('result'); }}>최근 등록한 문제지 보기</button>}
     </section>
     {screen === 'create' ? <div className="creator-file-choice"><span>이미 파일이 있으신가요?</span><button type="button" onClick={() => changeStep('upload')}>파일 등록</button></div> : <button className="creator-step-link" type="button" disabled={pending || sheetPending || !resultReady} onClick={() => changeStep('create')}>문제 만들기로 돌아가기</button>}
     </div>

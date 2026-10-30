@@ -888,3 +888,10 @@ button:disabled { cursor: wait; opacity: .6; }
   .quiz-view-toggle-button { order: 2; }
   .quiz-library-search { order: 3; flex: 0 0 100%; width: 100%; margin-left: 0; }
 }
+
+/* 문제 생성 결과 · 문제지 편집: 카테고리 고르기 */
+.creator-bank-category, .quiz-manage-category { grid-column: 1 / -1; min-width: 0; display: grid; gap: 6px; }
+.creator-bank-category > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 650; }
+.quiz-library-categories { order: 4; flex: 0 0 100%; }
+.quiz-manage-category > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
+.public-quiz-categories { margin-top: calc(var(--mb-space-8) * -1); }

@@ -1,5 +1,6 @@
 // Shared CSV format and storage for the library and existing solver.
 import { supabase } from './supabase.js';
+import { normalizeCategory } from './quiz-categories.js';
 
   var LEGACY_CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
   var CUSTOM_BANK_KEY_PREFIX = 'moonble:user:';
@@ -38,7 +39,8 @@ import { supabase } from './supabase.js';
       source: source,
       title: typeof bank.title === 'string' && bank.title.trim() ? bank.title.trim() : defaultTitle(source),
       description: typeof bank.description === 'string' && bank.description.trim() ? bank.description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
-      savedAt: typeof bank.savedAt === 'string' ? bank.savedAt : new Date().toISOString()
+      savedAt: typeof bank.savedAt === 'string' ? bank.savedAt : new Date().toISOString(),
+      category: normalizeCategory(bank.category)
     };
   }
   function emptyCollection() {
@@ -86,6 +88,7 @@ import { supabase } from './supabase.js';
       description: bank.description || '',
       source: bank.source || '커스텀 문제',
       questions: bank.questions,
+      category: normalizeCategory(bank.category),
       sort_order: sortOrder,
       saved_at: bank.savedAt || new Date().toISOString(),
       updated_at: bank.updatedAt || bank.savedAt || new Date().toISOString()
@@ -164,7 +167,9 @@ import { supabase } from './supabase.js';
         source: row.source,
         questions: row.questions,
         savedAt: row.saved_at,
-        updatedAt: row.updated_at
+        updatedAt: row.updated_at,
+        // 018 적용 전 응답에는 category가 없으므로 기기에 있는 값을 유지한다.
+        category: 'category' in row ? row.category : localBanks.get(row.id)?.category
       });
       if (!remote) return;
       var localBank = localBanks.get(row.id);
@@ -188,6 +193,15 @@ import { supabase } from './supabase.js';
     }).length;
     return { collection: normalized, localOnlyCount: localOnlyCount };
   }
+  // 카테고리 컬럼(018)이 아직 없으면 예전 컬럼만 다시 불러온다.
+  async function loadRemoteBanks(id) {
+    var columns = 'id,owner_id,group_id,title,description,source,questions,sort_order,saved_at,updated_at,deleted_at';
+    var result = await supabase.from('quiz_banks').select(columns + ',category').eq('owner_id', id).order('sort_order', { ascending: true });
+    if (result.error && (result.error.code === '42703' || /category/.test(result.error.message || ''))) {
+      result = await supabase.from('quiz_banks').select(columns).eq('owner_id', id).order('sort_order', { ascending: true });
+    }
+    return result;
+  }
   export async function syncCustomBankCollection(userId) {
     var id = userId || activeUserId;
     var local = readCollection(id);
@@ -196,7 +210,7 @@ import { supabase } from './supabase.js';
     if (pendingWrite) await pendingWrite.catch(function () {});
     var results = await Promise.all([
       supabase.from('quiz_groups').select('id,owner_id,name,color_key,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
-      supabase.from('quiz_banks').select('id,owner_id,group_id,title,description,source,questions,sort_order,saved_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true })
+      loadRemoteBanks(id)
     ]);
     if (results[0].error) throw results[0].error;
     if (results[1].error) throw results[1].error;
@@ -292,7 +306,8 @@ import { supabase } from './supabase.js';
       return bank;
     } catch (e) { throw new Error('브라우저 저장 공간에 문제지를 저장하지 못했습니다.'); }
   }
-  export function updateCustomBankMeta(title, description, userId, bankId, groupId) {
+  // category: undefined면 기존 값을 유지한다.
+  export function updateCustomBankMeta(title, description, userId, bankId, groupId, category) {
     try {
       var collection = readCollection(userId);
       var id = bankId || collection.activeBankId;
@@ -304,6 +319,7 @@ import { supabase } from './supabase.js';
         title: typeof title === 'string' && title.trim() ? title.trim() : defaultTitle(bank.source),
         description: typeof description === 'string' && description.trim() ? description.trim() : '직접 등록한 문제로 학습을 시작해보세요.',
         groupId: validGroup ? groupId : bank.groupId,
+        category: category === undefined ? normalizeCategory(bank.category) : normalizeCategory(category),
         updatedAt: new Date().toISOString()
       };
       collection.banks = collection.banks.map(item => item.id === id ? next : item);
