@@ -6,7 +6,8 @@ import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Hear
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
-import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken } from './quiz-share.js';
+import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare } from './quiz-share.js';
+import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
@@ -136,7 +137,7 @@ function Dialog({ labelledBy, describedBy, className = '', onClose, children }) 
   </div>, document.body);
 }
 
-function ConfirmDialog({ title, description, confirmLabel, danger, busy, onConfirm, onClose }) {
+function ConfirmDialog({ title, description, confirmLabel, danger, busy, onConfirm, onClose, caption = null }) {
   const id = useId();
   return <Dialog labelledBy={`${id}-title`} describedBy={`${id}-desc`} className="is-confirm" onClose={busy ? () => {} : onClose}>
     <h2 id={`${id}-title`}>{title}</h2>
@@ -144,6 +145,7 @@ function ConfirmDialog({ title, description, confirmLabel, danger, busy, onConfi
     <footer className="quiz-community-dialog-actions">
       <button type="button" onClick={onClose} disabled={busy}>취소</button>
       <button type="button" className={danger ? 'is-danger' : 'is-primary'} onClick={onConfirm} disabled={busy} data-autofocus>{confirmLabel}</button>
+      {caption && <button type="button" className="mb-preview-caption" onClick={caption.onClick}>{caption.label}</button>}
     </footer>
   </Dialog>;
 }
@@ -213,6 +215,7 @@ function RecordLine({ record }) {
 // 글에 붙은 문제지: 썸네일 + 요약 + 풀어보기(공유 링크). 작성 중에는 미리보기로 쓴다.
 function QuizAttachment({ attachment, record, onRemove }) {
   const [confirming, setConfirming] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const questionCount = Number(attachment.question_count ?? attachment.questionCount) || 0;
   const stats = [questionCount ? `${questionCount}문항` : '', Number.isInteger(attachment.participants) && attachment.participants > 0 ? `${attachment.participants.toLocaleString('ko-KR')}명 참여` : '',
     attachment.average_score != null && attachment.participants > 0 ? `평균 ${Number(attachment.average_score)}점` : ''].filter(Boolean).join(' · ');
@@ -242,8 +245,11 @@ function QuizAttachment({ attachment, record, onRemove }) {
       <span className="quiz-community-attachment-cta">풀어보기<ChevronRight size={16} aria-hidden="true" /></span>
     </a>
     {confirming && <span className="quiz-community-confirm-host" onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
-      <ConfirmDialog title="이 문제를 푸시겠어요?" description={stats ? `${attachment.title} · ${stats}` : attachment.title} confirmLabel="풀어보기"
-        onConfirm={() => { window.location.href = solveHref(token); }} onClose={() => setConfirming(false)} />
+      {!previewing && <ConfirmDialog title="이 문제를 푸시겠어요?" description={stats ? `${attachment.title} · ${stats}` : attachment.title} confirmLabel="풀어보기"
+        caption={{ label: '미리보기', onClick: () => setPreviewing(true) }}
+        onConfirm={() => { window.location.href = solveHref(token); }} onClose={() => setConfirming(false)} />}
+      {previewing && <QuizPreviewDialog solveHref={solveHref(token)} onClose={() => setPreviewing(false)}
+        load={() => getQuizShare(token).then(share => previewPaperFromQuestions(share))} />}
     </span>}
   </>;
 }

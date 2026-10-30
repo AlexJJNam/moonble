@@ -1,0 +1,81 @@
+// 문제지 미리보기: 문제지 카드 썸네일과 앞 문항 몇 개를 보여주고, 바로 풀러 갈 수 있다.
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
+import { PaperPreview } from './paper-preview.jsx';
+import { lockPageScroll } from './scroll-lock.js';
+import './quiz-preview-dialog.css';
+
+// 문제 목록을 PaperPreview가 쓰는 모양으로 바꾼다. 정답은 넣지 않는다.
+export function previewPaperFromQuestions({ title, description = '', questions = [] }) {
+  return {
+    kind: 'custom',
+    label: title || '문제지',
+    description,
+    count: questions.length,
+    samples: questions.slice(0, 4).map(question => ({ title: String(question.q || question.title || ''), options: Array.isArray(question.options) ? question.options.map(String) : [] })),
+  };
+}
+
+// load(): 위 모양의 문제지(또는 그 Promise). 대화상자 위에 다시 뜨므로 Esc는 이 창만 닫는다.
+export function QuizPreviewDialog({ load, solveHref, onClose }) {
+  const titleId = useId();
+  const dialogRef = useRef(null);
+  const loadRef = useRef(load);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const [state, setState] = useState({ status: 'loading', paper: null, error: '' });
+  useEffect(() => {
+    let alive = true;
+    Promise.resolve().then(() => loadRef.current())
+      .then(paper => { if (alive) setState({ status: 'ready', paper, error: '' }); })
+      .catch(error => { if (alive) setState({ status: 'error', paper: null, error: error?.message || '미리보기를 불러오지 못했어요.' }); });
+    return () => { alive = false; };
+  }, []);
+  useEffect(() => {
+    const unlock = lockPageScroll();
+    const previous = document.activeElement;
+    dialogRef.current?.focus({ preventScroll: true });
+    const onKey = event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onCloseRef.current();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      unlock();
+      window.removeEventListener('keydown', onKey, true);
+      if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
+    };
+  }, []);
+  const paper = state.paper;
+  const stop = event => event.stopPropagation();
+  return createPortal(<div className="mb-preview-overlay" role="presentation" onClick={stop} onKeyDown={stop}
+    onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={dialogRef} className="mb-preview-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <header className="mb-preview-head">
+        <h2 id={titleId}>미리보기</h2>
+        <button type="button" className="mb-preview-close" aria-label="닫기" onClick={onClose}><X size={19} aria-hidden="true" /></button>
+      </header>
+      {state.status === 'loading' && <div className="mb-preview-card is-loading" role="status"><span className="mb-sr-only">미리보기를 불러오는 중이에요.</span></div>}
+      {state.status === 'error' && <p className="mb-preview-error" role="alert">{state.error}</p>}
+      {paper && <>
+        <article className="mb-preview-card">
+          <PaperPreview paper={paper} />
+          <div className="mb-preview-info">
+            <strong>{paper.label}</strong>
+            <span>{paper.count.toLocaleString('ko-KR')}문항{paper.description ? ` · ${paper.description}` : ''}</span>
+          </div>
+        </article>
+        {paper.samples.length > 0 && <ol className="mb-preview-questions" aria-label="앞 문항">
+          {paper.samples.slice(0, 3).map((sample, index) => <li key={`${sample.title}-${index}`}><b>Q{index + 1}</b><span>{sample.title}</span></li>)}
+        </ol>}
+      </>}
+      <footer className="mb-preview-actions">
+        <button type="button" onClick={onClose}>닫기</button>
+        <a className="is-primary" href={solveHref}>풀어보기</a>
+      </footer>
+    </section>
+  </div>, document.body);
+}

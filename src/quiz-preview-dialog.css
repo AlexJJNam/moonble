@@ -1,0 +1,38 @@
+/* 문제지 미리보기 팝업: 공통 대화상자 규격 + 문제지 목록 카드 모양. 다른 대화상자 위에 뜬다. */
+.mb-preview-overlay { position: fixed; z-index: calc(var(--mb-z-overlay) + 60); inset: 0; display: grid; place-items: center; padding: var(--mb-space-16); background: rgb(15 23 42 / 42%); font-family: var(--mb-font-sans); animation: mb-preview-fade 160ms ease backwards; }
+.mb-preview-dialog { box-sizing: border-box; width: min(440px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; padding: var(--mb-dialog-padding); border-radius: var(--mb-dialog-radius); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 24px 72px rgb(15 23 42 / 22%); outline: 0; }
+.mb-preview-head { display: flex; align-items: center; justify-content: space-between; gap: var(--mb-space-8); margin: -6px -8px 0 0; }
+.mb-preview-head h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
+.mb-preview-close { width: var(--mb-target-size); height: var(--mb-target-size); display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: transparent; cursor: pointer; }
+.mb-preview-close:hover { background: var(--mb-surface-muted); }
+.mb-preview-close:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: -2px; }
+.mb-preview-card { margin-top: var(--mb-space-16); overflow: hidden; border: 1px solid var(--mb-border); border-radius: var(--mb-radius-16); background: var(--mb-surface); }
+.mb-preview-card.is-loading { aspect-ratio: 16 / 11; background: linear-gradient(90deg, var(--mb-surface-muted) 25%, #f7f8fa 50%, var(--mb-surface-muted) 75%) 0 0 / 220% 100%; animation: mb-preview-shimmer 1.2s linear infinite; }
+.mb-preview-card .preview-count { display: none; }
+.mb-preview-info { display: grid; gap: 2px; padding: var(--mb-space-12) var(--mb-space-16) var(--mb-space-16); }
+.mb-preview-info strong { overflow-wrap: anywhere; font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); }
+.mb-preview-info span { display: -webkit-box; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.mb-preview-questions { display: grid; gap: var(--mb-space-8); margin: var(--mb-space-16) 0 0; padding: 0; list-style: none; }
+.mb-preview-questions li { min-width: 0; display: flex; align-items: baseline; gap: var(--mb-space-8); font-size: var(--mb-font-14); line-height: 20px; }
+.mb-preview-questions b { flex: 0 0 auto; color: var(--mb-primary-strong); font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; }
+.mb-preview-questions span { min-width: 0; overflow: hidden; color: var(--mb-text-secondary); text-overflow: ellipsis; white-space: nowrap; }
+.mb-preview-error { margin: var(--mb-space-16) 0 0; color: var(--mb-danger); font-size: var(--mb-font-14); line-height: 20px; }
+.mb-preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--mb-space-8); margin-top: var(--mb-space-24); }
+.mb-preview-actions > * { box-sizing: border-box; min-height: var(--mb-control-height); display: flex; align-items: center; justify-content: center; padding: 12px var(--mb-space-16); border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); text-decoration: none; cursor: pointer; }
+.mb-preview-actions > .is-primary { color: #fff; background: var(--mb-primary-strong); }
+.mb-preview-actions > .is-primary:hover { background: var(--mb-primary-hover); }
+.mb-preview-actions > *:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+/* 풀어보기 버튼 바로 아래 회색 캡션: 미리보기 열기 */
+.mb-preview-caption { grid-column: 2; justify-self: center; min-height: 36px; margin-top: calc(var(--mb-space-4) * -1); padding: 0 var(--mb-space-8); border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-tertiary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-medium); cursor: pointer; }
+.mb-preview-caption:hover { color: var(--mb-text-secondary); }
+.mb-preview-caption:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+@keyframes mb-preview-fade { from { opacity: 0; } }
+@keyframes mb-preview-shimmer { to { background-position-x: -220%; } }
+@media (max-width: 640px) {
+  .mb-preview-overlay { align-items: end; padding: var(--mb-space-8) var(--mb-space-8) calc(var(--mb-space-8) + env(safe-area-inset-bottom)); }
+  .mb-preview-dialog { max-height: calc(100dvh - 16px - env(safe-area-inset-bottom)); padding: 12px 20px 20px; border-radius: var(--mb-sheet-radius); }
+  .mb-preview-dialog::before { content: ''; display: block; width: 36px; height: 4px; margin: 0 auto 12px; border-radius: 999px; background: var(--mb-border); }
+  .mb-preview-head { margin-top: 0; }
+  .mb-preview-head h2 { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); }
+}
+@media (prefers-reduced-motion: reduce) { .mb-preview-overlay, .mb-preview-card.is-loading { animation: none; } }

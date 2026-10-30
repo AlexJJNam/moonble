@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrandLogo } from './brand-logo.jsx';
+import './paper-preview.css';
 
 export const BUILT_IN_PAPER_PREVIEWS = [
   { id: 'basics', kind: 'basics', label: 'GA4 핵심 개념', description: '이벤트부터 보고서까지, 분석의 기본기를 다져보세요.', count: 20, level: '기본', topics: '데이터 모델 · 이벤트 · 보고서', samples: [

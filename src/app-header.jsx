@@ -4,6 +4,7 @@ import { profileOf } from './profile.js';
 import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
+import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
@@ -52,10 +53,10 @@ function getFavoriteSidebarItems(userId) {
     if (id.startsWith('custom:')) {
       const bank = banks.find(item => item.id === id.slice('custom:'.length));
       const group = bank && collection.groups.find(item => item.id === bank.groupId);
-      return bank ? { id, type: 'paper', label: bank.title, caption: bank.groupId === DEFAULT_GROUP_ID ? '미분류' : (group?.name || '미분류'), href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz` } : null;
+      return bank ? { id, type: 'paper', label: bank.title, caption: bank.groupId === DEFAULT_GROUP_ID ? '미분류' : (group?.name || '미분류'), href: `./solve.html?paper=custom&bank=${encodeURIComponent(bank.id)}#quiz`, preview: () => previewPaperFromQuestions({ title: bank.title, description: bank.description || '', questions: Array.isArray(bank.questions) ? bank.questions : [] }) } : null;
     }
     const paper = builtInPapers.get(id);
-    return paper ? { id, type: 'paper', label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz` } : null;
+    return paper ? { id, type: 'paper', label: paper.label, href: `./solve.html?paper=${encodeURIComponent(paper.id)}#quiz`, preview: () => paper } : null;
   }).filter(Boolean);
 
   let favoritePrds = [];
@@ -243,6 +244,8 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
   const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
   const [favoriteGroupsOpen, setFavoriteGroupsOpen] = useState({ paper: true, prd: true });
   const [favoriteSolvePaper, setFavoriteSolvePaper] = useState(null);
+  const [favoritePreviewOpen, setFavoritePreviewOpen] = useState(false);
+  useEffect(() => { if (!favoriteSolvePaper) setFavoritePreviewOpen(false); }, [favoriteSolvePaper]);
   const [solverPaper, setSolverPaper] = useState(() => window.moonbleSolverPaper || {
     title: document.querySelector('#quiz .section-head h2')?.textContent?.trim() || '',
   });
@@ -862,9 +865,11 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
       <footer>
         <button type="button" className="mb-favorite-solve-cancel" onClick={() => setFavoriteSolvePaper(null)}>취소</button>
         <a ref={favoriteSolveConfirmRef} className="mb-favorite-solve-confirm" href={favoriteSolvePaper.href}>풀어보기</a>
+        {favoriteSolvePaper.preview && <button type="button" className="mb-preview-caption" onClick={() => setFavoritePreviewOpen(true)}>미리보기</button>}
       </footer>
     </section>
   </div>}
+  {favoriteSolvePaper?.preview && favoritePreviewOpen && <QuizPreviewDialog solveHref={favoriteSolvePaper.href} load={favoriteSolvePaper.preview} onClose={() => setFavoritePreviewOpen(false)} />}
   {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
     <div className="mb-notification-screen-nav">
       <button ref={notificationBackRef} type="button" aria-label="알림 닫기" onClick={closeNotifications}><ChevronLeft size={24} aria-hidden="true" /></button>
