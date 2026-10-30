@@ -1,8 +1,9 @@
-/* 카테고리 알약: 보조 컨트롤 32px, 선택은 옅은 파랑 면(디자인 가이드의 선택 필터 규칙). */
+/* 카테고리 알약: 보조 컨트롤 32px, 옅은 회색 면. 고른 칩은 진한 회색 면. */
 .mb-category-chips { min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mb-category-chips::-webkit-scrollbar { display: none; }
 .mb-category-chips.is-wrap { flex-wrap: wrap; overflow: visible; }
-.mb-category-chips button { flex: 0 0 auto; min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--mb-border); border-radius: 999px; color: var(--mb-text-secondary); background: var(--mb-surface); font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); white-space: nowrap; cursor: pointer; transition: background-color var(--mb-duration), color var(--mb-duration), border-color var(--mb-duration); }
-@media (hover: hover) { .mb-category-chips button:hover { color: var(--mb-text-primary); background: var(--mb-surface-muted); } }
-.mb-category-chips button[aria-pressed='true'] { border-color: transparent; color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.mb-category-chips button { flex: 0 0 auto; min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid transparent; border-radius: 999px; color: var(--mb-text-primary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); white-space: nowrap; cursor: pointer; transition: background-color var(--mb-duration), color var(--mb-duration), border-color var(--mb-duration); }
+@media (hover: hover) { .mb-category-chips button:hover { background: var(--mb-border); } }
+/* 고른 칩은 진한 회색(#404040) 면에 흰 글자 */
+.mb-category-chips button[aria-pressed='true'] { border-color: transparent; color: #fff; background: #404040; }
 .mb-category-chips button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }

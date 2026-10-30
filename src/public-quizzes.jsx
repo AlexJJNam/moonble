@@ -11,13 +11,31 @@ import { getQuizShare } from './quiz-share.js';
 import { getLikedPublicQuizzes, toggleLikedPublicQuiz } from './paper-favorites.js';
 import { listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles } from './public-quizzes-api.js';
 
+// 썸네일 문항: 검색 결과에 앞 문항(samples)이 없으면(019/020 적용 전) 공유 문제를 한 번 불러와 나의 문제지처럼 앞 6문항을 그린다.
+const sampleCache = new Map();
+function usePublicSamples(item) {
+  const own = Array.isArray(item.samples) && item.samples.length ? item.samples.map(sample => ({ title: String(sample?.q || ''), options: Array.isArray(sample?.options) ? sample.options.map(String) : [] })) : null;
+  const [fetched, setFetched] = useState(() => sampleCache.get(item.token) || null);
+  useEffect(() => {
+    if (own) return undefined;
+    if (sampleCache.has(item.token)) { setFetched(sampleCache.get(item.token)); return undefined; }
+    let alive = true;
+    getQuizShare(item.token).then(share => {
+      const samples = share.questions.slice(0, 6).map(question => ({ title: question.q, options: question.options }));
+      sampleCache.set(item.token, samples);
+      if (alive) setFetched(samples);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [item.token, Boolean(own)]);
+  return own || fetched || (item.preview ? [{ title: item.preview, options: [] }] : []);
+}
+
 function PublicQuizCard({ item, userId, onLikeChange }) {
   const [confirming, setConfirming] = useState(false);
   const [liked, setLiked] = useState(() => getLikedPublicQuizzes(userId).some(saved => saved.token === item.token));
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : '', item.average_score != null && item.participants > 0 ? `평균 ${Number(item.average_score)}점` : ''].filter(Boolean).join(' · ');
-  // 썸네일에는 앞 문항 최대 6개(019의 samples). 019 적용 전에는 첫 문항(preview)만 쓴다.
-  const samples = Array.isArray(item.samples) && item.samples.length ? item.samples.map(sample => ({ title: String(sample?.q || ''), options: Array.isArray(sample?.options) ? sample.options.map(String) : [] })) : item.preview ? [{ title: item.preview, options: [] }] : [];
+  const samples = usePublicSamples(item);
   const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples };
   return <article className="paper-card public-quiz-card">
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}

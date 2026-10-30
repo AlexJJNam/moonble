@@ -667,8 +667,9 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
           distance = 0;
         }
         distance += Math.abs(delta);
+        // 모바일 헤더는 스크롤 중에도 고정한다(디자인 가이드). 숨김 상태를 바꾸면 헤더 전체가 다시 그려져 탭이 흔들려 보이므로 바꾸지 않는다.
         if (distance >= (solver ? 8 : 18)) {
-          setMobileHeaderHidden(nextDirection > 0);
+          setMobileHeaderHidden(false);
           distance = 0;
         }
       }

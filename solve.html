@@ -986,6 +986,12 @@
     @media (max-width: 559px) {
       #quiz.has-quiz-draft-status > .section-head { margin-right: 130px; }
     }
+    /* 모바일: 임시저장 시각은 제목과 문항 사이에 두고, 제목 영역은 좁히지 않는다. */
+    @media (max-width: 767px) {
+      #quiz.has-quiz-draft-status > .section-head { margin-right: 0; }
+      #quiz > .quiz-draft-status { display: block; margin: var(--mb-space-4) 0 var(--mb-space-12); }
+      #quiz > .quiz-draft-status[hidden] { display: none; }
+    }
 
     .col-toggle {
       display: none;
@@ -3713,6 +3719,20 @@
     let quizDraftReady = false;
     let quizDraftLeaving = false;
     const quizDraftStatus = byId('quizDraftStatus');
+    // 모바일에서는 임시저장 시각을 제목(.section-head) 바로 아래로 옮기고, PC에서는 오른쪽 위 도구 줄로 되돌린다.
+    (() => {
+      const quizSection = byId('quiz');
+      const controls = quizDraftStatus?.parentElement;
+      if (!quizDraftStatus || !quizSection || !controls || !window.matchMedia) return;
+      const mobile = window.matchMedia('(max-width: 767px)');
+      const place = () => {
+        const head = quizSection.querySelector(':scope > .section-head');
+        if (mobile.matches && head) head.after(quizDraftStatus);
+        else if (quizDraftStatus.parentElement !== controls && controls.isConnected) controls.prepend(quizDraftStatus);
+      };
+      place();
+      mobile.addEventListener('change', place);
+    })();
     const quizDraftGuard = 'moonbleQuizDraftGuard';
 
     function quizQuestionFingerprint(question) {

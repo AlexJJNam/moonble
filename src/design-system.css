@@ -317,3 +317,8 @@ img { -webkit-user-drag: none; }
   .mb-interactive { transition: none !important; }
   .mb-flow-action { animation: none !important; background-position: 50% 50%; }
 }
+
+/* 모바일 앱 화면: 맨 위·아래에서 페이지가 튕기며 고정 헤더와 탭이 함께 끌려 내려오지 않게 한다. */
+@media (max-width: 767px) {
+  html, body { overscroll-behavior-y: none; }
+}
