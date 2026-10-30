@@ -56,7 +56,9 @@ function cacheLikedTokens(userId, tokens) {
     const old = new Map(getLikedPublicQuizzes(userId).map(item => [item.token, item]));
     const pending = readPendingLikes(userId);
     const current = [...new Set([...tokens, ...Object.keys(pending).filter(token => pending[token])])].slice(0, 300);
-    localStorage.setItem(localLikesKey(userId), JSON.stringify(current.map(token => old.get(token) || { token, title: '', likedAt: new Date().toISOString() })));
+    const items = current.map(token => old.get(token) || { token, title: '', likedAt: new Date().toISOString() });
+    localStorage.setItem(localLikesKey(userId), JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent('moonble:public-quiz-likes', { detail: { userId, items } }));
   } catch { /* 서버 스크랩은 기기 저장소에 영향을 받지 않는다. */ }
 }
 

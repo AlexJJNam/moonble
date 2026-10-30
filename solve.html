@@ -6462,23 +6462,29 @@ if (shareToken || requestedPaper === 'shared') {
 <script>
 (() => {
   // 확인 모달이 열려있는 동안 뒷배경 스크롤 방지.
-  // 여러 모달이 겹칠 일은 없지만 안전하게 카운터로 관리.
+  // 커뮤니티 모달과 이 페이지 모달이 함께 쓰는 참조 카운터.
   var lockCount = 0;
-  var savedOverflow = '';
+  var savedOverflow = null;
 
   function lock() {
+    if (lockCount === 0) {
+      savedOverflow = {
+        root: document.documentElement.style.overflow,
+        body: document.body.style.overflow,
+      };
+    }
     lockCount += 1;
-    if (lockCount > 1) return;
-    savedOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
   }
 
   function unlock() {
-    lockCount = Math.max(0, lockCount - 1);
+    if (lockCount === 0) return;
+    lockCount -= 1;
     if (lockCount > 0) return;
-    document.documentElement.style.overflow = savedOverflow;
-    document.body.style.overflow = '';
+    document.documentElement.style.overflow = savedOverflow?.root || '';
+    document.body.style.overflow = savedOverflow?.body || '';
+    savedOverflow = null;
   }
 
   window.moonbleScrollLock = { lock: lock, unlock: unlock };

@@ -147,9 +147,9 @@ export async function updatePost(postId, { topic, title, body, gif = null }) {
   return data;
 }
 
-export async function createComment(postId, body, gif = null) {
+export async function createComment(postId, body, gif = null, shareToken = null) {
   const { data, error } = await requireSupabase().rpc('moonble_create_community_post_comment', {
-    p_post_id: postId, p_body: body.trim(), ...(gif ? { p_gif: gif } : {}),
+    p_post_id: postId, p_body: body.trim(), ...(gif ? { p_gif: gif } : {}), ...(shareToken ? { p_share_token: shareToken } : {}),
   });
   if (error) throw failure(error, '댓글을 남기지 못했어요.');
   return data;

@@ -14,9 +14,10 @@ import { FlowActionButton } from './flow-action-button.jsx';
 import { revealPage } from './page-readiness.js';
 import { BUILT_IN_PAPER_PREVIEWS as papers, PaperPreview } from './paper-preview.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
-import { CommunityPage } from './quiz-community.jsx';
+import { CommunityPage, CommunitySortToggle } from './quiz-community.jsx';
 import { formatRelativeDateShortYear } from './date-format.js';
 import { getPaperLastActivityMap, getPaperSolveStatus, paperSolveStatusLabel } from './paper-activity.js';
+import { readAchievementHistory } from './achievement-history.js';
 import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from './paper-favorites.js';
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
@@ -333,6 +334,8 @@ function QuizLibrary() {
   const creatorStepRef = useRef(null);
   const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
+  const [librarySort, setLibrarySort] = useState('latest');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
   const paperAccessSnapshotRef = useRef(JSON.stringify(getPaperLastActivityMap(initialUser?.id)));
@@ -1092,20 +1095,30 @@ function QuizLibrary() {
     ...paper,
     lastOpenedAt: paperAccess[paper.id] || null,
   }));
+  const attemptCounts = new Map();
+  readAchievementHistory(user.id).forEach(record => {
+    const paperId = record.bankId ? `custom:${record.bankId}` : record.paperId;
+    if (paperId) attemptCounts.set(paperId, (attemptCounts.get(paperId) || 0) + 1);
+  });
   const search = query.trim().toLocaleLowerCase();
   // 검색어 자동완성: 내 문제지(샘플 포함) 제목 중 검색어가 들어간 것.
   const suggestPaperTitles = term => { const needle = term.toLocaleLowerCase(); return [...new Set(allPapers.map(paper => paper.label).filter(title => title && title.toLocaleLowerCase().includes(needle)))].slice(0, 8); };
   const visiblePapers = allPapers.filter(paper => {
     const groupMatch = activeGroup === 'all' || (paper.kind === 'custom' && paper.groupId === activeGroup);
+    const favoriteMatch = !favoritesOnly || favoritePaperIds.includes(paper.id);
     const scopeMatch = paperScope === 'all'
       || (paperScope === 'personal' && paper.kind === 'custom' && paper.visibility === 'personal')
       || (paperScope === 'public' && (paper.kind !== 'custom' || paper.visibility === 'public'))
       || (paperScope === 'partial' && paper.kind === 'custom' && paper.visibility === 'partial');
     const categoryMatch = !category || paper.category === category;
-    return groupMatch && scopeMatch && categoryMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level} ${categoryLabel(paper.category)}`.toLocaleLowerCase().includes(search);
+    return groupMatch && favoriteMatch && scopeMatch && categoryMatch && `${paper.label} ${paper.description} ${paper.topics} ${paper.level} ${categoryLabel(paper.category)}`.toLocaleLowerCase().includes(search);
   }).sort((a, b) => {
     const aOpened = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
     const bOpened = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
+    if (librarySort === 'popular') {
+      const attemptDifference = (attemptCounts.get(b.id) || 0) - (attemptCounts.get(a.id) || 0);
+      if (attemptDifference) return attemptDifference;
+    }
     if (aOpened || bOpened) {
       if (!aOpened) return 1;
       if (!bOpened) return -1;
@@ -1168,13 +1181,23 @@ function QuizLibrary() {
         </div>
         <div className="quiz-library-tools">
           <div className="quiz-filter-groups"><SegmentedControl className="quiz-community-sort is-text-tabs" ariaLabel="문제지 종류" items={paperScopes} value={paperScope} onChange={setPaperScope} /></div>
-          <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
-            onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
           <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent"
             tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
             filterValue={category} onFilterApply={setCategory}
             screenExtra={(draft, setDraft) => <div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={draft} onChange={setDraft} /></div>} />
+        </div>
+        <div className="quiz-community-page-sort public-quiz-sort quiz-library-sort-row">
+          <CommunitySortToggle ariaLabel="나의 문제지" sort={librarySort} onChange={setLibrarySort} />
+          <div className="public-quiz-sort-right">
+            <label className="mb-switch">
+              <input type="checkbox" role="switch" checked={favoritesOnly} aria-checked={favoritesOnly} onChange={event => setFavoritesOnly(event.target.checked)} />
+              <span className="mb-switch-track" aria-hidden="true"><span /></span>
+              <span className="mb-switch-label">즐겨찾기</span>
+            </label>
+            <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
+              onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
+          </div>
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {

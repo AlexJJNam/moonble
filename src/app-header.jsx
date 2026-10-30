@@ -7,9 +7,11 @@ import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { StudyReminders } from './schedule/schedule-reminders.jsx';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
-import { getFavoritePaperIds } from './paper-favorites.js';
+import { getFavoritePaperIds, getLikedPublicQuizzes } from './paper-favorites.js';
+import { getMyPublicQuizLikedTokens } from './public-quiz-likes.js';
+import { listPublicQuizzes, PUBLIC_PAGE_SIZE } from './public-quizzes-api.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
-import { getNextQuizShareNotification } from './quiz-share.js';
+import { getNextQuizShareNotification, getQuizShare } from './quiz-share.js';
 import { formatRelativeDate } from './date-format.js';
 import { supabase } from './supabase.js';
 import { quizMemoPaperKey, readQuizMemos, removeQuizMemo } from './quiz-memos.js';
@@ -82,6 +84,16 @@ function getFavoriteSidebarItems(userId) {
   } catch { /* 저장된 PRD가 없거나 손상되어도 문제지 즐겨찾기는 표시한다. */ }
 
   return [...favoritePapers, ...favoritePrds];
+}
+
+function getLocalScrapSidebarItems(userId) {
+  return getLikedPublicQuizzes(userId).map(item => ({
+    id: `scrap:${item.token}`,
+    type: 'scrap',
+    label: item.title || '스크랩한 문제지',
+    href: `./solve.html#share=${encodeURIComponent(item.token)}`,
+    preview: () => getQuizShare(item.token).then(share => previewPaperFromQuestions(share)),
+  }));
 }
 
 function useSolverQuestions(enabled) {
@@ -243,7 +255,8 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
   const [shareNotification, setShareNotification] = useState(null);
   const [shareNotifications, setShareNotifications] = useState([]);
   const [favoriteSidebarItems, setFavoriteSidebarItems] = useState(() => getFavoriteSidebarItems(user?.id));
-  const [favoriteGroupsOpen, setFavoriteGroupsOpen] = useState({ paper: true, prd: true });
+  const [scrapSidebarItems, setScrapSidebarItems] = useState(() => getLocalScrapSidebarItems(user?.id));
+  const [favoriteGroupsOpen, setFavoriteGroupsOpen] = useState({ paper: true, scrap: true, prd: true });
   const [favoriteSolvePaper, setFavoriteSolvePaper] = useState(null);
   const [favoritePreviewOpen, setFavoritePreviewOpen] = useState(false);
   useEffect(() => { if (!favoriteSolvePaper) setFavoritePreviewOpen(false); }, [favoriteSolvePaper]);
@@ -278,6 +291,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
   const solverHeading = '문제 목록';
   const favoriteGroups = [
     { type: 'paper', label: '문제지', items: favoriteSidebarItems.filter(item => item.type === 'paper') },
+    { type: 'scrap', label: '스크랩', items: scrapSidebarItems },
     { type: 'prd', label: 'PRD', items: favoriteSidebarItems.filter(item => item.type === 'prd') },
   ].filter(group => group.items.length > 0);
   const openFavoriteGroupCount = favoriteGroups.filter(group => favoriteGroupsOpen[group.type]).length;
@@ -402,6 +416,53 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
     setShareNotifications(readShareNotifications(user?.id));
     setNotificationOpen(false);
     setBrowserNotificationSettings(getBrowserNotificationSettings(user?.id));
+  }, [user?.id]);
+
+  useEffect(() => {
+    let alive = true;
+    let revision = 0;
+    async function refreshScraps() {
+      const request = ++revision;
+      const localItems = getLocalScrapSidebarItems(user?.id);
+      setScrapSidebarItems(current => current.length === localItems.length && current.every((item, index) => item.id === localItems[index]?.id && item.label === localItems[index]?.label) ? current : localItems);
+      if (!user?.id || !supabase) return;
+      try {
+        const tokens = await getMyPublicQuizLikedTokens();
+        const found = new Map();
+        for (let offset = 0; offset < tokens.length; offset += PUBLIC_PAGE_SIZE) {
+          const page = await listPublicQuizzes({ tokens: tokens.slice(offset, offset + PUBLIC_PAGE_SIZE), sort: 'latest' });
+          page.items.forEach(item => found.set(item.token, item));
+        }
+        if (!alive || request !== revision) return;
+        setScrapSidebarItems(tokens.map(token => {
+          const item = found.get(token);
+          if (!item) return null;
+          return {
+            id: `scrap:${token}`,
+            type: 'scrap',
+            label: item.title || '스크랩한 문제지',
+            href: `./solve.html#share=${encodeURIComponent(token)}`,
+            preview: () => getQuizShare(token).then(share => previewPaperFromQuestions(share)),
+          };
+        }).filter(Boolean));
+      } catch {
+        // DB 연결 전이거나 일시 오류일 때는 이 기기에 저장된 스크랩을 유지한다.
+      }
+    }
+    const onLikeChange = event => {
+      if (event.detail?.userId && event.detail.userId !== user?.id) return;
+      refreshScraps();
+    };
+    refreshScraps();
+    window.addEventListener('storage', onLikeChange);
+    window.addEventListener('pageshow', onLikeChange);
+    window.addEventListener('moonble:public-quiz-likes', onLikeChange);
+    return () => {
+      alive = false;
+      window.removeEventListener('storage', onLikeChange);
+      window.removeEventListener('pageshow', onLikeChange);
+      window.removeEventListener('moonble:public-quiz-likes', onLikeChange);
+    };
   }, [user?.id]);
 
   useEffect(() => {
@@ -814,7 +875,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
           <a href="./prd.html" aria-current={active === 'prd' ? 'page' : undefined}><FileText size={18} aria-hidden="true" /><span>워크스페이스</span></a>
           <a className="mb-app-my" href="./account.html" aria-current={active === 'account' ? 'page' : undefined}><UserRound size={18} aria-hidden="true" /><span>MY</span></a>
         </nav>}
-      {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
+      {!solver && user && (favoriteSidebarItems.length > 0 || scrapSidebarItems.length > 0) && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">
         <h2 className="mb-favorites-heading" id="mb-favorites-heading">즐겨찾기</h2>
         <nav className={`mb-favorites-list${openFavoriteGroupCount > 1 ? ' has-multiple-open-groups' : ''}`} aria-label="즐겨찾기">
           {favoriteGroups.map(group => <div className={`mb-favorite-group${favoriteGroupsOpen[group.type] ? '' : ' is-collapsed'}`} key={group.type}>
@@ -826,7 +887,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
             </h3>
             <div className="mb-favorite-group-items" id={`mb-favorite-${group.type}-items`} role="group" aria-labelledby={`mb-favorite-${group.type}-heading`} tabIndex={favoriteGroupsOpen[group.type] ? 0 : undefined} hidden={!favoriteGroupsOpen[group.type]}>
               {group.items.map(paper => <a className={`mb-favorite-link${paper.type === 'prd' ? ' is-prd' : ''}`} href={paper.href} key={paper.id} title={paper.label} onClick={event => {
-                if (paper.type !== 'paper') return;
+                if (paper.type !== 'paper' && paper.type !== 'scrap') return;
                 if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
                 favoriteSolveTriggerRef.current = event.currentTarget;

@@ -456,11 +456,13 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-filter-label { min-width: 42px; flex: 0 0 auto; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-weight: 600; }
 .achievement-group-filters { min-width: 0; display: flex; flex: 1 1 auto; align-items: center; gap: 4px; overflow-x: auto; padding: 1px; scrollbar-width: none; }
 .achievement-group-filters::-webkit-scrollbar { display: none; }
-.achievement-group-filters button { position: relative; flex: 0 0 auto; min-height: 36px; display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border: 0; border-radius: 999px; color: var(--mb-text-secondary); background: transparent; font-size: var(--mb-font-12); line-height: 20px; font-weight: 600; white-space: nowrap; }
+.achievement-group-filters button { position: relative; box-sizing: border-box; flex: 0 0 auto; height: 36px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; color: var(--mb-text-secondary); background: transparent; font-size: 14px; line-height: 20px; font-weight: 600; white-space: nowrap; transition: color 160ms ease, background-color 160ms ease; }
 @media (hover: hover) { .achievement-group-filters button:hover { background: var(--mb-surface-muted); } }
-/* 두 번째 단계 서브탭(필터 칩)의 고른 상태: 진한 회색(#404040) 면에 흰 글자 */
-.achievement-group-filters button.is-active { color: #fff; background: #404040; }
-.achievement-group-filters small { min-width: 16px; color: inherit; font-size: var(--mb-font-12); line-height: 16px; font-weight: 600; text-align: center; }
+.achievement-group-filters button.is-active { color: #1b64da; background: #e8f3ff; font-weight: 700; }
+.achievement-group-filters button[data-group-id="ungrouped"].is-active { color: #667085; background: #f2f4f6; }
+.achievement-group-filters small { min-width: 18px; padding: 0 5px; border-radius: 999px; color: var(--mb-text-tertiary); background: transparent; font-size: 11px; line-height: 18px; font-weight: 600; text-align: center; }
+.achievement-group-filters button.is-active small { color: #1b64da; background: rgb(255 255 255 / 72%); }
+.achievement-group-filters button[data-group-id="ungrouped"].is-active small { color: #667085; }
 .achievement-group-filters button:disabled { color: var(--mb-text-disabled); background: transparent; cursor: not-allowed; }
 .achievement-paper-depth { min-width: 0; min-height: 38px; display: flex; align-items: center; gap: 10px; padding-left: 8px; }
 .achievement-paper-depth>span { flex: 0 0 auto; }
@@ -689,15 +691,16 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-summary .achievement-summary-date { font-size: clamp(15px, 4.7vw, 18px); line-height: 25px; letter-spacing: -.09em; }
   .achievement-summary strong small { font-size: 13px; }
   .achievement-summary article>small { font-size: 12px; line-height: 16px; }
-  .achievement-group-filters button { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; }
-  .achievement-group-filters button.is-active { color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+  .achievement-group-filters button { height: 34px; min-height: 34px; color: var(--mb-text-secondary); font-size: 14px; line-height: 18px; }
+  .achievement-group-filters button.is-active { color: #1b64da; background: #e8f3ff; }
+  .achievement-group-filters button[data-group-id="ungrouped"].is-active { color: #667085; background: #f2f4f6; }
   .achievement-period-mobile-trigger { color: var(--mb-text-secondary); background: var(--mb-surface); box-shadow: none; }
   .achievement-legend { width: 100%; flex-wrap: wrap; }
   .achievement-confirm { width: 100%; flex-wrap: wrap; }
   .achievement-group-depth { min-height: 34px; gap: 7px; margin-right: -16px; padding: 0 16px 0 0; }
   .achievement-group-filters { gap: 4px; }
   .achievement-filter-label { min-width: 42px; }
-  .achievement-group-filters button { min-height: 34px; padding: 6px 10px; font-size: var(--mb-font-12); line-height: 18px; }
+  .achievement-group-filters button { min-height: 34px; padding: 6px 10px; font-size: 14px; line-height: 18px; }
   .achievement-paper-depth { min-height: 34px; align-items: center; gap: 7px; margin-right: -16px; padding-left: 0; padding-right: 16px; }
   .achievement-paper-depth>span { padding-top: 0; }
   .achievement-paper-filters { gap: 4px; }
@@ -851,6 +854,7 @@ button:disabled { cursor: wait; opacity: .6; }
 /* 문제 찾기: 인기순 전환 왼쪽, 보기 전환 버튼 오른쪽 끝. */
 .public-quiz-sort { display: flex; align-items: center; justify-content: space-between; gap: var(--mb-space-12); margin-top: calc(var(--mb-space-4) * -1); }
 .public-quiz-sort .quiz-community-sort-toggle { margin: 0; }
+.quiz-library-sort-row { margin-top: var(--mb-space-8); }
 .public-quiz-muted { margin: var(--mb-space-24) 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 20px; text-align: center; }
 .public-quiz-card .paper-copy p { margin: 2px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .public-quiz-more { width: 100%; min-height: var(--mb-control-compact-height); border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }

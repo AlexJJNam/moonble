@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -281,10 +281,10 @@ function QuizAttachment({ attachment, record, onRemove }) {
   </>;
 }
 
-function AttachPicker({ banks, solved, onPick, onBack }) {
+function AttachPicker({ banks = [], solved, onPick, onBack, titleId }) {
   return <div className="quiz-community-picker">
     <header className="quiz-community-picker-head">
-      <h2>문제지 첨부</h2>
+      <h2 id={titleId}>문제지 첨부</h2>
       <button type="button" className="quiz-community-icon-button" aria-label="첨부 선택 닫기" onClick={onBack} data-autofocus><X size={20} aria-hidden="true" /></button>
     </header>
     <p className="quiz-community-dialog-copy">첨부한 문제지는 공유 링크와 함께 올라가서 누구나 풀어볼 수 있어요.</p>
@@ -340,7 +340,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
 
   if (view === 'attach') {
     return <Dialog labelledBy={`${id}-pick`} className="is-compose" onClose={() => setView('edit')}>
-      <AttachPicker banks={attachSource?.banks || []} solved={getSolvedShares()} onBack={() => setView('edit')}
+      <AttachPicker banks={attachSource?.banks || []} solved={getSolvedShares()} titleId={`${id}-pick`} onBack={() => setView('edit')}
         onPick={picked => { onDraftChange({ ...draft, attachment: picked, showRecord: true }); setView('edit'); }} />
     </Dialog>;
   }
@@ -404,7 +404,7 @@ export function MentionText({ text }) {
   return <>{nodes}</>;
 }
 
-function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce, detail = false, scrollRef = null, commentsRef = null, children = null }) {
+function CommentThread({ post, viewer, attachSource = null, onCountChange, onRequireLogin, onAnnounce, detail = false, scrollRef = null, commentsRef = null, children = null }) {
   const [comments, setComments] = useState(null);
   const [likesEnabled, setLikesEnabled] = useState(false);
   const [sort, setSort] = useState('popular');
@@ -412,6 +412,8 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   const [body, setBody] = useState('');
   const [gif, setGif] = useState(null);
   const [gifOpen, setGifOpen] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const [attachOpen, setAttachOpen] = useState(false);
   const [menuId, setMenuId] = useState(null);
   const [busy, setBusy] = useState(false);
   const gifButtonRef = useRef(null);
@@ -433,13 +435,24 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
   async function submit(event) {
     event.preventDefault();
     if (!viewer?.ready) { onRequireLogin(); return; }
-    if ((!body.trim() && !gif) || busy) return;
+    if ((!body.trim() && !gif && !attachment) || busy) return;
     setBusy(true); setError('');
     try {
-      const comment = await createComment(post.id, body, gif);
+      let shareToken = attachment?.kind === 'share' ? attachment.token : null;
+      if (attachment?.kind === 'bank') shareToken = await attachSource?.resolveToken?.(attachment.bankId);
+      if (attachment?.kind === 'bank' && !shareToken) throw new Error('문제지 공유 링크를 준비하지 못했어요.');
+      let comment;
+      try {
+        comment = await createComment(post.id, body, gif, shareToken);
+      } catch (createError) {
+        if (attachment?.kind !== 'bank' || createError.code !== 'P0002') throw createError;
+        shareToken = await attachSource.resolveToken(attachment.bankId, { fresh: true });
+        comment = await createComment(post.id, body, gif, shareToken);
+      }
       setComments(current => [...(current || []), { like_count: 0, liked: false, ...comment }]);
       setBody('');
       setGif(null);
+      setAttachment(null);
       onCountChange(1);
       if (detail) requestAnimationFrame(() => { const scroller = scrollRef?.current; if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }); });
     } catch (submitError) { setError(submitError.message); }
@@ -475,14 +488,20 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
         <label className="mb-sr-only" htmlFor={inputId}>댓글</label>
         <input id={inputId} ref={inputRef} value={body} maxLength={COMMENT_BODY_LIMIT} placeholder={viewer?.ready ? '댓글을 남겨보세요' : '로그인하고 댓글을 남겨보세요'}
           onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
+        <button type="button" className="quiz-community-comment-attach" aria-label="댓글에 문제지 첨부" title="문제지 첨부" disabled={busy} onClick={() => { if (!viewer?.ready) { onRequireLogin(); return; } setAttachOpen(true); }}><Paperclip size={17} aria-hidden="true" /></button>
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
-        <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif) || busy : false}>남기기</button>
+        <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif && !attachment) || busy : false}>남기기</button>
       </div>
     </form>;
   const draftArea = <>
+    {attachment && <div className="quiz-community-comment-attachment"><QuizAttachment attachment={attachment} onRemove={() => setAttachment(null)} /></div>}
     {gif && <GifDraftPreview gif={gif} compact onRemove={() => setGif(null)} onReplace={() => setGifOpen(true)} />}
     {error && <p className="quiz-community-form-error" role="alert">{error}</p>}
   </>;
+  const attachPicker = attachOpen && <Dialog className="is-compose" labelledBy={`${inputId}-attachment-title`} onClose={() => setAttachOpen(false)}>
+    <AttachPicker banks={attachSource?.banks || []} solved={getSolvedShares()} titleId={`${inputId}-attachment-title`} onBack={() => setAttachOpen(false)}
+      onPick={picked => { setAttachment(picked); setAttachOpen(false); }} />
+  </Dialog>;
   const sortToggle = (detail || (likesEnabled && comments && comments.length > 1)) && <CommunitySortToggle ariaLabel="댓글" sort={sort} onChange={setSort} />;
   const list = comments === null ? <p className="quiz-community-muted">댓글을 불러오는 중이에요.</p>
       : comments.length === 0 ? <p className="quiz-community-muted">아직 댓글이 없어요.</p>
@@ -492,6 +511,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
             <p className="quiz-community-comment-head"><strong>{comment.author_name}</strong><AuthorBadges item={comment} /><time dateTime={comment.created_at}>{formatRelativeDate(comment.created_at)}</time></p>
             {comment.body && <p className="quiz-community-comment-body"><MentionText text={comment.body} /></p>}
             <CommunityGif gif={comment.gif} size="comment" />
+            {comment.attachment && <QuizAttachment attachment={comment.attachment} />}
             <div className="quiz-community-comment-actions">
               {likesEnabled && <button type="button" className={comment.liked ? 'is-liked' : ''} aria-pressed={comment.liked} aria-label={`댓글 좋아요 ${comment.like_count || 0}개`} onClick={() => like(comment)}>
                 <Heart size={16} aria-hidden="true" fill={comment.liked ? 'currentColor' : 'none'} />{comment.like_count > 0 && <span>{comment.like_count}</span>}
@@ -522,6 +542,7 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
         {form}
       </div>
       {gifPicker}
+      {attachPicker}
     </>;
   }
   return <div className="quiz-community-comments">
@@ -530,10 +551,11 @@ function CommentThread({ post, viewer, onCountChange, onRequireLogin, onAnnounce
     {sortToggle}
     {list}
     {gifPicker}
+    {attachPicker}
   </div>;
 }
 
-function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAnnounce, focusComments = false }) {
+function PostDetailDialog({ post, viewer, attachSource = null, onClose, onPatch, onRequireLogin, onAnnounce, focusComments = false }) {
   const id = useId();
   const [liking, setLiking] = useState(false);
   const commentsRef = useRef(null);
@@ -582,7 +604,7 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
       <h2 id={`${id}-title`}>게시글</h2>
       <span aria-hidden="true" />
     </header>
-    <CommentThread detail post={post} viewer={viewer} scrollRef={scrollRef} commentsRef={commentsRef} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce}>
+    <CommentThread detail post={post} viewer={viewer} attachSource={attachSource} scrollRef={scrollRef} commentsRef={commentsRef} onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce}>
       <article className="quiz-community-detail-post">
         <header className="quiz-community-post-head">
           <CommunityAvatar name={post.author_name} path={post.author_avatar} />
@@ -606,7 +628,7 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
 }
 
 // 글 id만 아는 곳(마이페이지 댓글 등)에서 글 상세를 연다.
-export function CommunityPostDetail({ postId, viewer, focusComments = false, onClose }) {
+export function CommunityPostDetail({ postId, viewer, attachSource = null, focusComments = false, onClose }) {
   const [post, setPost] = useState(null);
   const [error, setError] = useState('');
   const [announcement, setAnnouncement] = useState('');
@@ -622,13 +644,13 @@ export function CommunityPostDetail({ postId, viewer, focusComments = false, onC
   }
   if (!post) return null;
   return <>
-    <PostDetailDialog post={post} viewer={viewer} focusComments={focusComments} onClose={onClose}
+    <PostDetailDialog post={post} viewer={viewer} attachSource={attachSource} focusComments={focusComments} onClose={onClose}
       onPatch={patch => setPost(current => current ? { ...current, ...patch } : current)} onRequireLogin={() => {}} onAnnounce={announce} />
     <p className="mb-sr-only" role="status" aria-live="polite">{announcement}</p>
   </>;
 }
 
-function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit, onAskDetail }) {
+function PostCard({ post, viewer, attachSource = null, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit, onAskDetail }) {
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -716,7 +738,7 @@ function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDele
         </button>
         <button type="button" aria-label="공유" onClick={share}><Share2 size={18} aria-hidden="true" /></button>
       </div>
-      {commentsOpen && <CommentThread post={post} viewer={viewer} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce}
+      {commentsOpen && <CommentThread post={post} viewer={viewer} attachSource={attachSource} onRequireLogin={onRequireLogin} onAnnounce={onAnnounce}
         onCountChange={delta => onPatch({ comment_count: Math.max(0, post.comment_count + delta) })} />}
     </div>
   </li>;
@@ -864,7 +886,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <p>{scope === 'mine' ? '커뮤니티에서 첫 글을 남겨보세요.' : scope === 'liked' ? '마음에 드는 글에 하트를 눌러보세요.' : scope === 'share' ? '풀이 소감이나 궁금한 점을 가장 먼저 남겨보세요.' : '내가 만든 문제지를 첨부하고 첫 글을 남겨보세요.'}</p>
     </div>}
     {state.posts.length > 0 && <ol className="quiz-community-feed">
-      {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
+      {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer} attachSource={attachSource}
         onPatch={patch => patchPost(post.id, patch)} onRequireLogin={requireLogin} onAnnounce={announce}
         onAskDetail={detailMode ? (target, options = {}) => setDialog({ type: 'detail', post: target, focusComments: options.focusComments === true }) : undefined}
         onAskEdit={target => { setEditDraft({ topic: target.topic || '', title: target.title || '', body: target.body || '', attachment: null, showRecord: false, gif: target.gif || null }); setDialog({ type: 'edit', post: target }); }}
@@ -886,7 +908,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       try { await reportPost(dialog.post.id, reason); setDialog(null); announce('신고를 접수했어요. 확인 후 조치할게요.'); }
       catch (reportError) { setDialog(null); announce(reportError.message); }
     }} />}
-    {dialog?.type === 'detail' && <PostDetailDialog post={dialog.post} viewer={viewer} focusComments={dialog.focusComments} onClose={() => setDialog(null)}
+    {dialog?.type === 'detail' && <PostDetailDialog post={dialog.post} viewer={viewer} attachSource={attachSource} focusComments={dialog.focusComments} onClose={() => setDialog(null)}
       onPatch={patch => { patchPost(dialog.post.id, patch); setDialog(current => current?.type === 'detail' ? { ...current, post: { ...current.post, ...patch } } : current); }} onRequireLogin={requireLogin} onAnnounce={announce} />}
   </Wrapper>;
 }

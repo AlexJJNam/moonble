@@ -68,5 +68,8 @@ export function toggleLikedPublicQuiz(userId, item) {
   } catch {
     // 저장이 막혀도 현재 화면의 표시는 바꾼다.
   }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('moonble:public-quiz-likes', { detail: { userId, items: next } }));
+  }
   return !liked;
 }

@@ -355,8 +355,8 @@ export function QuizAchievement({ userId }) {
   useEffect(() => () => window.clearTimeout(periodCloseTimerRef.current), []);
 
   const groupFilters = useMemo(() => [
-    { id: DEFAULT_GROUP_ID, name: '미분류' },
     ...collection.groups,
+    { id: DEFAULT_GROUP_ID, name: '미분류' },
   ].map(group => ({
     ...group,
     count: history.filter(item => (item.groupId || DEFAULT_GROUP_ID) === group.id).length,
@@ -571,7 +571,7 @@ export function QuizAchievement({ userId }) {
           <span className="achievement-filter-label">그룹</span>
           <div className="achievement-group-filters" role="group" aria-label="문제지 그룹 복수 선택">
             <button className={!selectedGroups.length ? 'is-active' : ''} type="button" aria-pressed={!selectedGroups.length} onClick={() => setSelectedGroups([])}>전체 <small>{history.length}</small></button>
-            {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} type="button" aria-pressed={selectedGroups.includes(group.id)} disabled={!group.count} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
+            {groupFilters.map(group => <button className={selectedGroups.includes(group.id) ? 'is-active' : ''} data-group-id={group.id} type="button" aria-pressed={selectedGroups.includes(group.id)} disabled={!group.count} key={group.id} onClick={() => setSelectedGroups(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id])}>{group.name} <small>{group.count}</small></button>)}
           </div>
         </div>
         {selectedGroups.length > 0 && paperFilters.length > 0 && <div className="achievement-paper-depth">
