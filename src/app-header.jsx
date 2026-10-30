@@ -865,8 +865,8 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
       <footer>
         <button type="button" className="mb-favorite-solve-cancel" onClick={() => setFavoriteSolvePaper(null)}>취소</button>
         <a ref={favoriteSolveConfirmRef} className="mb-favorite-solve-confirm" href={favoriteSolvePaper.href}>풀어보기</a>
-        {favoriteSolvePaper.preview && <button type="button" className="mb-preview-caption" onClick={() => setFavoritePreviewOpen(true)}>미리보기</button>}
       </footer>
+      {favoriteSolvePaper.preview && <p className="mb-preview-caption"><span>어떤 문제인지 궁금하신가요?</span><button type="button" onClick={() => setFavoritePreviewOpen(true)}>미리보기</button></p>}
     </section>
   </div>}
   {favoriteSolvePaper?.preview && favoritePreviewOpen && <QuizPreviewDialog solveHref={favoriteSolvePaper.href} load={favoriteSolvePaper.preview} onClose={() => setFavoritePreviewOpen(false)} />}

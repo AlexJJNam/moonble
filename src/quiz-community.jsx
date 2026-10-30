@@ -145,8 +145,8 @@ function ConfirmDialog({ title, description, confirmLabel, danger, busy, onConfi
     <footer className="quiz-community-dialog-actions">
       <button type="button" onClick={onClose} disabled={busy}>취소</button>
       <button type="button" className={danger ? 'is-danger' : 'is-primary'} onClick={onConfirm} disabled={busy} data-autofocus>{confirmLabel}</button>
-      {caption && <button type="button" className="mb-preview-caption" onClick={caption.onClick}>{caption.label}</button>}
     </footer>
+    {caption && <p className="mb-preview-caption"><span>{caption.lead}</span><button type="button" onClick={caption.onClick}>{caption.label}</button></p>}
   </Dialog>;
 }
 
@@ -246,7 +246,7 @@ function QuizAttachment({ attachment, record, onRemove }) {
     </a>
     {confirming && <span className="quiz-community-confirm-host" onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
       {!previewing && <ConfirmDialog title="이 문제를 푸시겠어요?" description={stats ? `${attachment.title} · ${stats}` : attachment.title} confirmLabel="풀어보기"
-        caption={{ label: '미리보기', onClick: () => setPreviewing(true) }}
+        caption={{ lead: '어떤 문제인지 궁금하신가요?', label: '미리보기', onClick: () => setPreviewing(true) }}
         onConfirm={() => { window.location.href = solveHref(token); }} onClose={() => setConfirming(false)} />}
       {previewing && <QuizPreviewDialog solveHref={solveHref(token)} onClose={() => setPreviewing(false)}
         load={() => getQuizShare(token).then(share => previewPaperFromQuestions(share))} />}
