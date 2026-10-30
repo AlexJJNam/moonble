@@ -88,7 +88,8 @@ function SearchInput({ inputRef, label, placeholder, value, onChange, onClear, .
 }
 
 // 모바일 전체 화면 검색. 뒤로가기 버튼·기기 뒤로가기·Esc로 닫힌다.
-function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
+function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, extra, onSubmit, onClose, onRemoveRecent, onClearRecent }) {
+  const screenRef = useRef(null);
   const [draft, setDraft] = useState(initial);
   const closedRef = useRef(false);
   const onCloseRef = useRef(onClose);
@@ -117,19 +118,35 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
     document.addEventListener('keydown', onKey);
     return () => { unlock(); window.removeEventListener('popstate', onPop); window.removeEventListener('pagehide', onPageHide); document.removeEventListener('keydown', onKey); };
   }, [finish, inputRef]);
+  // 키보드가 올라오면 화면 높이를 보이는 영역에 맞춰 아래쪽 조회 조건이 가려지지 않게 한다.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const screen = screenRef.current;
+    if (!viewport || !screen) return undefined;
+    const fit = () => {
+      screen.style.height = `${Math.round(viewport.height)}px`;
+      screen.style.top = `${Math.max(0, Math.round(viewport.offsetTop))}px`;
+    };
+    fit();
+    viewport.addEventListener('resize', fit);
+    viewport.addEventListener('scroll', fit);
+    return () => { viewport.removeEventListener('resize', fit); viewport.removeEventListener('scroll', fit); };
+  }, []);
   const submit = term => finish(() => onSubmit(term));
-  return createPortal(<div className="mb-search-screen" role="dialog" aria-modal="true" aria-label={label}>
+  return createPortal(<div ref={screenRef} className="mb-search-screen" role="dialog" aria-modal="true" aria-label={label}>
     <form className="mb-search-screen-head" role="search" onSubmit={event => { event.preventDefault(); submit(draft); }}>
       <button type="button" className="mb-search-back" aria-label="검색 닫기" onClick={() => finish(() => onCloseRef.current())}><ChevronLeft size={22} aria-hidden="true" /></button>
       <SearchInput inputRef={inputRef} label={label} placeholder={placeholder} value={draft} onChange={setDraft} onClear={() => { setDraft(''); inputRef.current?.focus(); }} />
     </form>
+    {extra && <div className="mb-search-screen-filter">{extra}</div>}
     <div className="mb-search-screen-body">
       <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={submit} onRemoveRecent={onRemoveRecent} onClearRecent={onClearRecent} />
     </div>
   </div>, document.body);
 }
 
-export function SearchField({ label, placeholder, value, onSearch, suggest, recentKey, className = '' }) {
+// tags: 검색창 안 검색어 앞에 보이는 조회 조건 [{ key, label, onRemove }]. screenExtra: 모바일 검색 화면 입력창 바로 아래 조회 조건(예: 카테고리).
+export function SearchField({ label, placeholder, value, onSearch, suggest, recentKey, className = '', tags = [], screenExtra = null }) {
   const mobile = useMediaQuery(MOBILE_QUERY);
   const [draft, setDraft] = useState(value);
   const [recent, setRecent] = useState(() => readRecent(recentKey));
@@ -161,11 +178,13 @@ export function SearchField({ label, placeholder, value, onSearch, suggest, rece
 
   if (mobile) {
     return <div className={`mb-search-box ${className}`}>
-      <button ref={triggerRef} type="button" className={`mb-search-field mb-search-trigger${value ? ' has-value' : ''}`} aria-label={value ? `${label}: ${value}` : label} onClick={openScreen}>
-        <Search size={18} aria-hidden="true" /><span>{value || placeholder}</span>
-      </button>
-      {value && <button type="button" className="mb-search-clear" aria-label="검색어 지우기" onClick={() => onSearch('')}><X size={14} aria-hidden="true" /></button>}
-      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest}
+      <div className={`mb-search-field mb-search-trigger-field${value ? ' has-value' : ''}`}>
+        <Search size={18} aria-hidden="true" />
+        {tags.map(tag => <span key={tag.key} className="mb-search-tag"><span>{tag.label}</span><button type="button" aria-label={`${tag.label} 조건 지우기`} onClick={tag.onRemove}><X size={12} aria-hidden="true" /></button></span>)}
+        <button ref={triggerRef} type="button" className="mb-search-trigger" aria-label={value ? `${label}: ${value}` : label} onClick={openScreen}><span>{value || (tags.length ? '' : placeholder)}</span></button>
+        {value && <button type="button" className="mb-search-clear" aria-label="검색어 지우기" onClick={() => onSearch('')}><X size={14} aria-hidden="true" /></button>}
+      </div>
+      {screenOpen && <SearchScreen inputRef={screenInputRef} label={label} placeholder={placeholder} initial={value} recent={recent} suggest={suggest} extra={screenExtra}
         onRemoveRecent={removeRecent} onClearRecent={clearRecent}
         onSubmit={term => { apply(term); setScreenOpen(false); refocusTrigger(); }}
         onClose={() => { setScreenOpen(false); refocusTrigger(); }} />}

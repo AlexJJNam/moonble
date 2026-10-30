@@ -1010,3 +1010,6 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-main.is-mix-selecting .paper-card.is-mix-disabled { opacity: .55; }
 @media (max-width: 767px) { .quiz-mix-bar { bottom: calc(16px + env(safe-area-inset-bottom)); } }
 @media (prefers-reduced-motion: reduce) { .quiz-mix-backdrop { animation: none; } }
+
+/* 모바일: 카테고리 칩 줄은 숨기고 검색 화면 아래쪽에서 고른다(고른 조건은 검색창 태그로 보인다). */
+@media (max-width: 767px) { .quiz-library-categories, .public-quiz-categories { display: none; } }

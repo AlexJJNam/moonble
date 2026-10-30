@@ -86,7 +86,9 @@ export function PublicQuizSearch({ userId = null }) {
   return <section className="public-quiz-search" aria-labelledby="public-search-title">
     <h2 id="public-search-title" className="mb-sr-only">공개 문제 검색</h2>
     <SearchField label="공개 문제 검색" placeholder="제목이나 설명으로 찾아보세요" value={query} onSearch={setQuery}
-      suggest={suggestPublicQuizTitles} recentKey="moonble:public-search-recent" />
+      suggest={suggestPublicQuizTitles} recentKey="moonble:public-search-recent"
+      tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
+      screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
     <CategoryChips className="public-quiz-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
     <div className="quiz-community-page-sort public-quiz-sort">
       <div className="public-quiz-sort-left">

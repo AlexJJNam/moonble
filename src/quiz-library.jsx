@@ -1108,7 +1108,9 @@ function QuizLibrary() {
           <button type="button" className="quiz-view-toggle-button" aria-label={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'} title={view === 'grid' ? '1열 목록으로 보기' : '2열 카드로 보기'}
             onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
           <SearchField className="quiz-library-search" label="문제지 검색" placeholder="문제지 제목으로 찾아보세요" value={query} onSearch={setQuery}
-            suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent" />
+            suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent"
+            tags={category ? [{ key: 'category', label: categoryLabel(category), onRemove: () => setCategory(null) }] : []}
+            screenExtra={<div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} /></div>} />
           <CategoryChips className="quiz-library-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
         </div>
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
