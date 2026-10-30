@@ -60,7 +60,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-title p { margin: 5px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); line-height: 22px; }
 .quiz-library-main .quiz-title { gap: 16px; margin-bottom: 16px; }
 .quiz-library-main .quiz-title p { margin-top: 3px; font-size: var(--mb-font-13); line-height: 20px; }
-.quiz-library-main .quiz-create-button { border-radius: var(--mb-radius-12); font-size: var(--mb-font-14); }
+.quiz-library-main .quiz-create-button { border-radius: 10px; font-size: var(--mb-font-13); }
 /* 상위 메뉴 탭: 나의 문제지 / 커뮤니티 */
 .quiz-library-tabs { display: flex; gap: var(--mb-space-24); margin: -4px 0 var(--mb-space-16); border-bottom: 1px solid var(--mb-border); }
 .quiz-library-tabs a { position: relative; min-height: var(--mb-target-size); display: inline-flex; align-items: center; padding: 0 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-medium); text-decoration: none; white-space: nowrap; transition: color var(--mb-duration); }
@@ -621,7 +621,7 @@ button:disabled { cursor: wait; opacity: .6; }
   .quiz-title>div { min-width: 0; flex: 1 1 auto; }
   .quiz-library-main .quiz-title { align-items: center; gap: 10px; margin-bottom: 16px; }
   .quiz-library-main .quiz-title p { display: none; }
-  .quiz-title .quiz-create-button { width: auto; flex: 0 0 auto; font-size: var(--mb-font-14); }
+  .quiz-title .quiz-create-button { width: auto; flex: 0 0 auto; font-size: var(--mb-font-13); }
   .quiz-create-optional { display: none; }
   .paper-group-bar { gap: 5px; margin: 0 -16px 10px 0; }
   .paper-group-strip { gap: 3px; padding: 1px 3px 1px 0; }

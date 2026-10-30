@@ -269,8 +269,10 @@ img { -webkit-user-drag: none; }
 
 .mb-flow-action:disabled { cursor: wait; opacity: .6; }
 .mb-flow-action svg { flex: 0 0 auto; pointer-events: none; }
-.mb-flow-action--compact { min-height: var(--mb-control-compact-height); gap: 6px; padding: 10px 14px; }
-.mb-flow-action--compact svg { width: 16px; height: 16px; }
+/* 페이지 생성 버튼(새 문제지·PRD 작성): 토스 앱처럼 작은 알약형. 보이는 높이 36px, 터치 영역은 44px. */
+.mb-flow-action--compact { position: relative; min-height: 36px; gap: 4px; padding: 0 12px; border-radius: 10px; font-size: var(--mb-font-13); line-height: 18px; }
+.mb-flow-action--compact::after { content: ''; position: absolute; top: 50%; right: 0; left: 0; height: var(--mb-target-size); transform: translateY(-50%); }
+.mb-flow-action--compact svg { width: 14px; height: 14px; }
 
 .mb-sr-only {
   position: absolute;

@@ -146,7 +146,7 @@ font-family: var(--mb-font-sans);
 | --- | --- | --- |
 | 기본 버튼(폼·대화상자·시트) | 높이 48px, 모서리 12px, 16/24/600 | `--mb-control-height`, `--mb-radius-12` |
 | 보조 크기 버튼(페이지 헤더·도구 막대·팝오버) | 높이 44px, 모서리 12px, 14/20/600 | `--mb-control-compact-height` |
-| 페이지 생성 주요 버튼(문제지·PRD) | 공통 `FlowActionButton` 소형 변형, 높이 44px, 좌우 여백 14px, 간격 6px, 아이콘 16px | `.mb-flow-action--compact` |
+| 페이지 생성 주요 버튼(문제지·PRD) | 공통 `FlowActionButton` 소형 변형, 보이는 높이 36px(터치 영역 44px), 좌우 여백 12px, 모서리 10px, 13/18/600, 간격 4px, 아이콘 14px | `.mb-flow-action--compact` |
 | 흰 글자 주요 버튼 | 배경 `#1b64da`, 호버 `#1554b6` | `--mb-primary-strong`, `--mb-primary-hover` |
 | 보조·위험 버튼 | 보조: 회색 면 + 설명 글자색. 위험: `--mb-danger` 채움 또는 `--mb-danger-soft` | `--mb-surface-muted`, `--mb-text-secondary` |
 | 아이콘 버튼 | 보이는 크기는 화면에 맞추되 터치 영역은 44×44px 이상 | `--mb-target-size` |
