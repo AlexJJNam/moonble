@@ -138,7 +138,10 @@ function SearchScreen({ inputRef, label, placeholder, initial, recent, suggest, 
       <button type="button" className="mb-search-back" aria-label="검색 닫기" onClick={() => finish(() => onCloseRef.current())}><ChevronLeft size={22} aria-hidden="true" /></button>
       <SearchInput inputRef={inputRef} label={label} placeholder={placeholder} value={draft} onChange={setDraft} onClear={() => { setDraft(''); inputRef.current?.focus(); }} />
     </form>
-    {extra && <div className="mb-search-screen-filter">{extra}</div>}
+    {extra && <div className="mb-search-screen-filter"
+      // 조회 조건을 눌러도 입력창 포커스를 지켜 자판이 내려가지 않게 한다(눌린 버튼이 포커스를 가져가지 않게 하고, 빠졌으면 같은 탭 안에서 다시 포커스).
+      onMouseDown={event => event.preventDefault()}
+      onClick={() => { if (document.activeElement !== inputRef.current) inputRef.current?.focus({ preventScroll: true }); }}>{extra}</div>}
     <div className="mb-search-screen-body">
       <SearchSuggestions draft={draft} recent={recent} suggest={suggest} onPick={submit} onRemoveRecent={onRemoveRecent} onClearRecent={onClearRecent} />
     </div>
