@@ -621,11 +621,11 @@ export function QuizAchievement({ userId }) {
               <span className="achievement-rank" aria-hidden="true">{index + 1}</span>
               <div className="achievement-paper-thumb" role="img" aria-label={`${paper.title} 문제지 미리보기`}><PaperPreview paper={previewForHistory(item)} compact /></div>
               <div className="achievement-attempt">
-                <div className="achievement-attempt-score"><span className="achievement-score-badge">{item.score}점</span><small>({item.correct}/{item.total})</small></div>
                 <strong className="achievement-paper-title" title={paper.title}>{paper.title}</strong>
                 {paper.description && <p className="achievement-paper-description" title={paper.description}>{paper.description}</p>}
-                <time dateTime={item.date}>{formatDate(item.date)}</time>
+                <p className="achievement-attempt-meta"><time dateTime={item.date}>{formatDate(item.date)}</time><span>{item.correct}/{item.total} 정답</span></p>
               </div>
+              <span className="achievement-score" aria-label={`${item.score}점`}>{item.score}<small>점</small></span>
               <div className="achievement-actions">
                 <button className="achievement-retry-action" type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
                 {item.wrongIds?.length > 0 && <button className="achievement-retry-action" type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}

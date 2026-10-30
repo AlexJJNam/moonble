@@ -556,16 +556,17 @@ button:disabled { cursor: wait; opacity: .6; }
 .achievement-confirm { display: flex; align-items: center; gap: 4px; color: var(--mb-text-secondary); font-size: var(--mb-font-12); }
 .achievement-confirm .danger, .achievement-actions .danger { color: var(--mb-danger); background: var(--mb-danger-soft); }
 .achievement-list { list-style: none; margin: 0; padding: 0; }
-.achievement-list li { display: grid; grid-template-columns: 40px 92px minmax(160px, 1fr) auto; align-items: center; gap: 12px; min-height: 76px; padding: 14px 0; border-top: 1px solid var(--mb-border); }
+.achievement-list li { display: grid; grid-template-columns: 40px 92px minmax(160px, 1fr) auto auto; align-items: center; gap: 12px; min-height: 76px; padding: 14px 0; border-top: 1px solid var(--mb-border); }
 .achievement-rank { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); font-variant-numeric: tabular-nums; font-weight: 500; text-align: center; }
 .achievement-paper-thumb { width: 92px; height: 58px; overflow: hidden; border-radius: 8px; }
 .achievement-attempt { min-width: 0; }
-.achievement-attempt-score { display: flex; align-items: center; gap: 7px; min-height: 24px; }
-.achievement-score-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 9px; border-radius: 999px; background: var(--mb-primary-soft); color: var(--mb-primary-strong); font-size: var(--mb-font-12); line-height: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.achievement-attempt-score small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); font-weight: 500; }
-.achievement-paper-title { display: block; min-width: 0; margin-top: 3px; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-13); line-height: 19px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.achievement-paper-title { display: block; min-width: 0; margin: 0; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .achievement-paper-description { min-width: 0; margin: 1px 0 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
-.achievement-attempt time { display: block; margin-top: 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+/* 풀이 기록 한 줄: 제목 · (날짜 · 정답 수) · 오른쪽 점수 */
+.achievement-attempt-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin: 2px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-variant-numeric: tabular-nums; }
+.achievement-attempt-meta > * + *::before { content: '·'; margin-right: 6px; color: var(--mb-text-disabled); }
+.achievement-score { color: var(--mb-text-primary); font-size: var(--mb-font-17); line-height: 24px; font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; letter-spacing: -.01em; text-align: right; white-space: nowrap; }
+.achievement-score small { margin-left: 1px; color: var(--mb-text-secondary); font-size: var(--mb-font-13); font-weight: var(--mb-weight-semibold); }
 .achievement-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .achievement-actions button { display: inline-flex; align-items: center; gap: 5px; }
 .achievement-actions button:not(.icon-button):not(.danger):not(.achievement-retry-action) { border-radius: 999px; background: var(--mb-surface-muted); }
@@ -602,10 +603,21 @@ button:disabled { cursor: wait; opacity: .6; }
   .achievement-summary .achievement-summary-date { font-size: clamp(15px, 4.7vw, 18px); line-height: 25px; letter-spacing: -.09em; }
   .achievement-summary .achievement-summary-date.is-calendar { font-size: 20px; }
   .achievement-summary article>small { font-size: 12px; line-height: 16px; white-space: nowrap; }
-  .achievement-list li { grid-template-columns: 36px 78px minmax(0, 1fr); gap: 10px; }
-  .achievement-paper-thumb { width: 78px; height: 50px; }
-  .achievement-paper-thumb .paper-preview--compact { width: 78px; height: 50px; flex-basis: 78px; }
-  .achievement-actions { grid-column: 2 / -1; justify-content: flex-end; flex-wrap: wrap; }
+  /* 모바일 풀이 기록: 썸네일 | 제목·날짜 | 점수, 아래 줄에 작은 회색 버튼. 순위 번호·설명은 숨긴다. */
+  .achievement-list li { grid-template-columns: 72px minmax(0, 1fr) auto; grid-template-areas: "thumb info score" "thumb actions actions"; align-items: center; gap: 8px 12px; min-height: 0; padding: 16px 0; }
+  .achievement-rank, .achievement-paper-description { display: none; }
+  .achievement-paper-thumb { grid-area: thumb; align-self: start; width: 72px; height: 46px; }
+  .achievement-paper-thumb .paper-preview--compact { width: 72px; height: 46px; flex-basis: 72px; }
+  .achievement-attempt { grid-area: info; }
+  .achievement-paper-title { font-size: .9375rem; line-height: 22px; }
+  .achievement-attempt-meta { font-size: var(--mb-font-13); line-height: 20px; }
+  .achievement-score { grid-area: score; align-self: start; font-size: var(--mb-font-18); line-height: 22px; }
+  .achievement-actions { grid-area: actions; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+  .achievement-actions button.achievement-retry-action, .achievement-actions button { min-height: 32px; padding: 0 10px; border-radius: var(--mb-radius-8); font-size: var(--mb-font-13); line-height: 20px; }
+  .achievement-actions button.achievement-retry-action { gap: 4px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); }
+  .achievement-actions button.achievement-retry-action svg { width: 14px; height: 14px; }
+  .achievement-actions .icon-button { position: relative; width: 32px; margin-left: auto; padding: 0; }
+  .achievement-actions .icon-button::after { content: ''; position: absolute; top: 50%; left: 50%; width: var(--mb-target-size); height: var(--mb-target-size); transform: translate(-50%, -50%); }
   .paper-list .paper-preview { width: 160px; }
   .creator-step { padding: 22px; }
   .creator-intake-card { margin-top: 0; padding: 0 0 34px; border: 0; border-radius: 0; background: transparent; }
@@ -834,7 +846,7 @@ button:disabled { cursor: wait; opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .quiz-page.is-initial-reveal > .quiz-content, .quiz-skeleton-line, .quiz-skeleton-button, .quiz-skeleton-tabs i, .quiz-skeleton-tools span, .quiz-library-skeleton-preview, .quiz-library-skeleton-copy b, .quiz-library-skeleton-copy span, .quiz-library-skeleton-copy small, .mb-profile-skeleton-avatar, .mb-profile-skeleton-copy i, .mb-profile-skeleton-settings { animation: none; } }
 .paper-info h2, .preview-sheet-title { overflow-wrap: anywhere; }
 .quiz-page.is-library-editing .quiz-library-main { display: flex; flex-direction: column; }
-.quiz-library-edit-done { min-width: 132px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; margin: auto auto 24px; padding: 11px 24px; border: 0; border-radius: 13px; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-15, 15px); line-height: 22px; font-weight: 700; transition: background-color var(--mb-duration), transform var(--mb-duration); }
+.quiz-library-edit-done { min-width: 132px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; margin: auto auto 24px; padding: 11px 24px; border: 0; border-radius: 13px; color: #fff; background: var(--mb-primary-strong); font-size: .9375rem; line-height: 22px; font-weight: 700; transition: background-color var(--mb-duration), transform var(--mb-duration); }
 @media (hover: hover) { .quiz-library-edit-done:hover { background: var(--mb-primary); transform: translateY(-1px); } }
 .quiz-library-edit-done:focus-visible { outline: 3px solid rgb(49 130 246 / 35%); outline-offset: 3px; }
 @media (max-width: 767px) {
