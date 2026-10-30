@@ -5,6 +5,7 @@ import { UserAvatar } from './user-avatar.jsx';
 import { BrandLogo } from './brand-logo.jsx';
 import { BUILT_IN_PAPER_PREVIEWS } from './paper-preview.jsx';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
+import { StudyReminders } from './schedule/schedule-reminders.jsx';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { getFavoritePaperIds } from './paper-favorites.js';
 import { enableBrowserNotifications as requestBrowserNotifications, getBrowserNotificationSettings } from './browser-notifications.js';
@@ -870,6 +871,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
       {favoriteSolvePaper.preview && <p className="mb-preview-caption"><span>어떤 문제인지 궁금하신가요?</span><button type="button" onClick={() => setFavoritePreviewOpen(true)}>미리보기</button></p>}
     </section>
   </div>}
+  {user?.id && <StudyReminders userId={user.id} />}
   {favoriteSolvePaper?.preview && favoritePreviewOpen && <QuizPreviewDialog solveHref={favoriteSolvePaper.href} load={favoriteSolvePaper.preview} onClose={() => setFavoritePreviewOpen(false)} />}
   {notificationOpen && <section className="mb-notification-screen" id="mb-notification-screen" role="dialog" aria-modal="true" aria-labelledby="mb-notification-title">
     <div className="mb-notification-screen-nav">

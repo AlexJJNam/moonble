@@ -1,0 +1,114 @@
+/* 워크스페이스 시간표. 고른 요일·칩은 서브탭 규칙대로 #404040, 일정 색은 옅은 면 + 왼쪽 색 띠. */
+.mb-schedule-page { --sch-blue: #3182f6; --sch-blue-bg: #e8f3ff; --sch-blue-text: #1b64da; --sch-green: #12b886; --sch-green-bg: #e6f7f0; --sch-green-text: #0b7a5a; --sch-orange: #f59f00; --sch-orange-bg: #fff4e0; --sch-orange-text: #a35f00; --sch-purple: #7950f2; --sch-purple-bg: #f1edfe; --sch-purple-text: #5b3cc4; --sch-pink: #e64980; --sch-pink-bg: #fdeef4; --sch-pink-text: #b8336a; --sch-gray: #868e96; --sch-gray-bg: #f2f4f6; --sch-gray-text: #4e5968; font-family: var(--mb-font-sans); }
+.mb-schedule-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.mb-schedule-title h1 { margin: 0; }
+.mb-schedule-notify-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0 0 16px; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-notify-status svg { flex: 0 0 auto; }
+.mb-schedule-notify-status button { min-height: 28px; padding: 0 4px; border: 0; color: var(--mb-primary-strong); background: transparent; font: inherit; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.mb-schedule-hint { margin: 0 0 8px; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-muted { margin: 16px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-empty { padding: 40px 16px; border-radius: var(--mb-radius-16); background: var(--mb-surface-muted); text-align: center; }
+.mb-schedule-empty strong { display: block; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); }
+.mb-schedule-empty p { margin: 4px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; }
+.mb-schedule-empty button { min-height: 40px; margin-top: 16px; padding: 0 16px; border: 0; border-radius: var(--mb-radius-12); color: #fff; background: #404040; font: inherit; font-size: var(--mb-font-14); font-weight: var(--mb-weight-semibold); cursor: pointer; }
+
+/* 시간축 주간표(에브리타임처럼 PC·모바일 공통). 모바일은 화면 폭에 맞춰 글자와 칸을 줄인다. */
+.mb-week { border: 1px solid var(--mb-border); border-radius: var(--mb-radius-16); overflow: hidden; background: var(--mb-surface); }
+.mb-week-head { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--mb-border); }
+.mb-week-head span { display: flex; align-items: baseline; justify-content: center; gap: 6px; padding: 10px 0; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-medium); }
+.mb-week-head b { color: var(--mb-text-primary); font-size: var(--mb-font-16); font-weight: var(--mb-weight-bold); font-variant-numeric: tabular-nums; }
+.mb-week-head span.is-today b { min-width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 50%; color: #fff; background: var(--mb-primary-strong); font-size: var(--mb-font-14); }
+.mb-week-body { position: relative; display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
+.mb-week-times { position: relative; }
+.mb-week-times span { position: absolute; right: 8px; transform: translateY(-50%); color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 16px; font-variant-numeric: tabular-nums; }
+.mb-week-times span:first-child { transform: none; top: 2px !important; }
+.mb-week-col { position: relative; border-left: 1px solid var(--mb-border); cursor: copy; }
+.mb-week-col.is-today { background: rgb(49 130 246 / 4%); }
+.mb-week-line { position: absolute; right: 0; left: 0; height: 0; border-top: 1px dashed #eceef1; pointer-events: none; }
+.mb-week-now { position: absolute; z-index: 2; right: 0; left: 0; height: 2px; background: #f04452; pointer-events: none; }
+.mb-week-now::before { content: ''; position: absolute; top: -3px; left: -4px; width: 8px; height: 8px; border-radius: 50%; background: #f04452; }
+.mb-week-block { --block-color: var(--sch-blue); --block-bg: var(--sch-blue-bg); --block-text: var(--sch-blue-text); position: absolute; z-index: 1; min-width: 0; display: grid; align-content: start; gap: 1px; overflow: hidden; padding: 4px 6px 4px 8px; border: 0; border-left: 3px solid var(--block-color); border-radius: 6px; color: var(--block-text); background: var(--block-bg); font-family: var(--mb-font-sans); text-align: left; cursor: pointer; }
+.mb-week-block strong { overflow: hidden; font-size: var(--mb-font-13); line-height: 18px; font-weight: var(--mb-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.mb-week-block small { overflow: hidden; font-size: 11px; line-height: 15px; opacity: .85; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mb-week-block.is-green { --block-color: var(--sch-green); --block-bg: var(--sch-green-bg); --block-text: var(--sch-green-text); }
+.mb-week-block.is-orange { --block-color: var(--sch-orange); --block-bg: var(--sch-orange-bg); --block-text: var(--sch-orange-text); }
+.mb-week-block.is-purple { --block-color: var(--sch-purple); --block-bg: var(--sch-purple-bg); --block-text: var(--sch-purple-text); }
+.mb-week-block.is-pink { --block-color: var(--sch-pink); --block-bg: var(--sch-pink-bg); --block-text: var(--sch-pink-text); }
+.mb-week-block.is-gray { --block-color: var(--sch-gray); --block-bg: var(--sch-gray-bg); --block-text: var(--sch-gray-text); }
+@media (hover: hover) { .mb-week-block:hover { filter: brightness(.97); } }
+
+@media (max-width: 767px) {
+  .mb-week { margin: 0 calc(var(--mb-page-pad-inline, 16px) * -1); border-right: 0; border-left: 0; border-radius: 0; }
+  .mb-week.is-compact .mb-week-head, .mb-week.is-compact .mb-week-body { grid-template-columns: 28px repeat(7, minmax(0, 1fr)); }
+  .mb-week.is-compact .mb-week-head span { flex-direction: column; align-items: center; gap: 0; padding: 6px 0; font-size: var(--mb-font-12); line-height: 16px; }
+  .mb-week.is-compact .mb-week-head b { font-size: var(--mb-font-13); line-height: 18px; }
+  .mb-week.is-compact .mb-week-head span.is-today b { min-width: 22px; height: 22px; font-size: var(--mb-font-12); }
+  .mb-week.is-compact .mb-week-times span { right: 4px; font-size: 11px; }
+  .mb-week.is-compact .mb-week-block { padding: 3px 3px 3px 4px; border-left-width: 2px; border-radius: 4px; }
+  .mb-week.is-compact .mb-week-block strong { display: -webkit-box; font-size: 11px; line-height: 14px; white-space: normal; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .mb-week.is-compact .mb-week-block small { font-size: 10px; line-height: 13px; }
+}
+
+/* 문제지 연결: 검색 입력 + 결과 목록, 고른 문제지는 칩 */
+.mb-schedule-paper-input { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: var(--mb-radius-12); color: var(--mb-text-tertiary); background: var(--mb-surface-muted); }
+.mb-schedule-paper-input input { min-width: 0; width: 100%; height: 42px; padding: 0; border: 0; outline: 0; color: var(--mb-text-primary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; }
+.mb-schedule-paper-input input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.mb-schedule-paper-results { max-height: 200px; display: grid; gap: 0; margin: 4px 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.mb-schedule-paper-results button { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-primary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; text-align: left; cursor: pointer; }
+.mb-schedule-paper-results button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-schedule-paper-results button small { flex: 0 0 auto; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+@media (hover: hover) { .mb-schedule-paper-results button:hover { background: var(--mb-surface-muted); } }
+.mb-schedule-paper-empty { margin: 6px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-paper-picked { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 14px; border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface-muted); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); }
+.mb-schedule-paper-picked span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-schedule-paper-picked button { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; cursor: pointer; }
+
+/* 일정 추가·편집 시트 */
+.mb-schedule-overlay { position: fixed; z-index: var(--mb-z-overlay); inset: 0; display: grid; place-items: center; padding: 16px; background: rgb(15 23 42 / 42%); font-family: var(--mb-font-sans); animation: mb-schedule-fade 160ms ease backwards; }
+.mb-schedule-dialog { box-sizing: border-box; width: min(480px, 100%); max-height: calc(100dvh - 32px); display: grid; gap: 12px; overflow-y: auto; overscroll-behavior: contain; padding: var(--mb-dialog-padding); border-radius: var(--mb-dialog-radius); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 24px 72px rgb(15 23 42 / 22%); }
+.mb-schedule-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -6px -8px -4px 0; }
+.mb-schedule-dialog h2 { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
+.mb-schedule-close { width: var(--mb-target-size); height: var(--mb-target-size); display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-secondary); background: transparent; cursor: pointer; }
+.mb-schedule-field { min-width: 0; display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }
+.mb-schedule-field > span, .mb-schedule-field legend, .mb-schedule-notify-row > span { padding: 0; color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
+.mb-schedule-field legend { margin-bottom: 4px; }
+.mb-schedule-field input[type='text'], .mb-schedule-field input[type='time'], .mb-schedule-field textarea, .mb-schedule-field select { box-sizing: border-box; width: 100%; min-height: var(--mb-control-height); padding: 0 14px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; }
+.mb-schedule-field textarea { min-height: 64px; padding: 10px 14px; resize: vertical; }
+.mb-schedule-field small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.mb-schedule-times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mb-schedule-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.mb-schedule-days button, .mb-schedule-chips button { min-height: 40px; padding: 0 4px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.mb-schedule-days button[aria-pressed='true'], .mb-schedule-chips button[aria-pressed='true'] { color: #fff; background: #404040; }
+.mb-schedule-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mb-schedule-chips button { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: var(--mb-font-13); }
+.mb-schedule-notify-row { display: flex; align-items: center; justify-content: space-between; min-height: 32px; }
+.mb-schedule-switch { position: relative; display: inline-flex; cursor: pointer; }
+.mb-schedule-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.mb-schedule-switch > span { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--mb-border-strong); transition: background-color var(--mb-duration); }
+.mb-schedule-switch > span i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); transition: transform var(--mb-duration); }
+.mb-schedule-switch input:checked + span { background: var(--mb-primary-strong); }
+.mb-schedule-switch input:checked + span i { transform: translateX(18px); }
+.mb-schedule-colors { display: flex; gap: 10px; }
+.mb-schedule-colors button { width: 28px; height: 28px; padding: 0; border: 2px solid transparent; border-radius: 50%; background: var(--sch-blue); box-shadow: inset 0 0 0 2px #fff; cursor: pointer; }
+.mb-schedule-colors button.is-green { background: var(--sch-green); }
+.mb-schedule-colors button.is-orange { background: var(--sch-orange); }
+.mb-schedule-colors button.is-purple { background: var(--sch-purple); }
+.mb-schedule-colors button.is-pink { background: var(--sch-pink); }
+.mb-schedule-colors button.is-gray { background: var(--sch-gray); }
+.mb-schedule-colors button[aria-pressed='true'] { border-color: #404040; }
+.mb-schedule-error { margin: 0; color: var(--mb-danger); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-dialog footer { display: flex; gap: 8px; margin-top: 4px; }
+.mb-schedule-dialog footer button { flex: 1; min-height: var(--mb-control-height); padding: 0 16px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.mb-schedule-dialog footer button.is-primary { color: #fff; background: var(--mb-primary-strong); }
+.mb-schedule-dialog footer .mb-schedule-delete { flex: 0 0 auto; color: var(--mb-danger); background: transparent; padding: 0 8px; }
+.mb-schedule-dialog footer .mb-schedule-delete.is-confirming { color: #fff; background: var(--mb-danger); padding: 0 14px; }
+.mb-schedule-dialog footer button:disabled { cursor: default; opacity: .5; }
+@keyframes mb-schedule-fade { from { opacity: 0; } }
+@media (max-width: 767px) {
+  .mb-schedule-overlay { align-items: end; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
+  .mb-schedule-dialog { width: 100%; max-height: calc(100dvh - 16px - env(safe-area-inset-bottom)); padding: 12px 20px 20px; border-radius: var(--mb-sheet-radius); }
+  .mb-schedule-dialog::before { content: ''; display: block; width: 36px; height: 4px; margin: 0 auto -4px; border-radius: 999px; background: var(--mb-border); }
+  .mb-schedule-dialog header { margin-top: 0; }
+  .mb-schedule-dialog h2 { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); }
+}
+@media (prefers-reduced-motion: reduce) { .mb-schedule-overlay { animation: none; } .mb-schedule-switch > span, .mb-schedule-switch > span i { transition: none; } }

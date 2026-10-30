@@ -7,9 +7,10 @@ const router = {
 };
 export function useRouter() { return router; }
 export function useRoute() {
-  const [route, setRoute] = useState(window.location.hash.slice(1) || '/list');
+  // 워크스페이스는 시간표가 기본 화면이다(PRD 목록은 #/list).
+  const [route, setRoute] = useState(window.location.hash.slice(1) || '/schedule');
   useEffect(() => {
-    const change = () => setRoute(window.location.hash.slice(1) || '/list');
+    const change = () => setRoute(window.location.hash.slice(1) || '/schedule');
     window.addEventListener('hashchange', change);
     return () => window.removeEventListener('hashchange', change);
   }, []);

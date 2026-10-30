@@ -1,0 +1,22 @@
+/* 시간표 알림 카드: 화면 아래(모바일은 독바 위)에 뜬다. 색 띠는 일정 색. */
+.mb-reminder-toast { --reminder-color: #3182f6; position: fixed; z-index: var(--mb-z-toast); right: 24px; bottom: 24px; width: min(380px, calc(100% - 32px)); display: flex; align-items: flex-start; gap: 12px; padding: 14px 44px 14px 18px; border-radius: var(--mb-radius-16); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 12px 40px rgb(15 23 42 / 20%); font-family: var(--mb-font-sans); animation: mb-reminder-in 260ms cubic-bezier(.2, .8, .25, 1) backwards; }
+.mb-reminder-toast::before { content: ''; position: absolute; top: 14px; bottom: 14px; left: 0; width: 4px; border-radius: 0 4px 4px 0; background: var(--reminder-color); }
+.mb-reminder-toast.is-green { --reminder-color: #12b886; }
+.mb-reminder-toast.is-orange { --reminder-color: #f59f00; }
+.mb-reminder-toast.is-purple { --reminder-color: #7950f2; }
+.mb-reminder-toast.is-pink { --reminder-color: #e64980; }
+.mb-reminder-toast.is-gray { --reminder-color: #868e96; }
+.mb-reminder-copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.mb-reminder-copy small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; font-variant-numeric: tabular-nums; }
+.mb-reminder-copy strong { overflow: hidden; font-size: var(--mb-font-16); line-height: 22px; font-weight: var(--mb-weight-bold); text-overflow: ellipsis; white-space: nowrap; }
+.mb-reminder-copy p { margin: 0; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.mb-reminder-actions { flex: 0 0 auto; align-self: center; }
+.mb-reminder-actions a { min-height: 36px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 10px; color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); text-decoration: none; white-space: nowrap; }
+.mb-reminder-actions a.is-primary { color: #fff; background: var(--mb-primary-strong); }
+.mb-reminder-close { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--mb-text-tertiary); background: transparent; cursor: pointer; }
+.mb-reminder-close::after { content: ''; position: absolute; inset: -6px; }
+@keyframes mb-reminder-in { from { opacity: 0; transform: translateY(16px); } }
+@media (max-width: 767px) {
+  .mb-reminder-toast { right: 16px; left: 16px; bottom: var(--mb-mobile-floating-bottom); width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .mb-reminder-toast { animation: none; } }

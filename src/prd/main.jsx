@@ -11,6 +11,7 @@ import PrdList from './app/list/page';
 import { PrdStudio } from './components/prd-studio';
 import { Toaster } from './components/ui/toaster';
 import { WorkspaceTabs } from '../section-tabs.jsx';
+import { SchedulePage } from '../schedule/schedule-page.jsx';
 import '../design-system.css';
 import './app/globals.css';
 import './shell.css';
@@ -27,20 +28,6 @@ class WorkspaceBoundary extends React.Component {
     return this.props.children;
   }
 }
-// 시간표 설정 탭: 기능을 준비하는 동안 같은 페이지 규격으로 안내만 보여준다.
-function WorkspaceSchedule() {
-  return <main className="prd-list-page min-h-screen bg-white no-print">
-    <div className="prd-list-shell mb-page-gutter">
-      <WorkspaceTabs current="schedule" className="quiz-library-tabs--desktop" />
-      <div className="prd-list-heading mb-4"><h1 className="mb-page-title">시간표 설정</h1></div>
-      <section className="workspace-empty" aria-label="시간표 설정 안내">
-        <strong>시간표 설정을 준비하고 있어요</strong>
-        <p>곧 이곳에서 시간표를 설정할 수 있어요.</p>
-      </section>
-    </div>
-  </main>;
-}
-
 function Workspace() {
   const [user, setUser] = useState(initialUser);
   const [pending, setPending] = useState(false);
@@ -101,7 +88,7 @@ function Workspace() {
           {path.startsWith('/edit/')
             ? <PrdStudio key={route} prdId={path === '/edit/new' ? undefined : path.slice('/edit/'.length)} />
             : workspaceSection === 'schedule'
-              ? <WorkspaceSchedule />
+              ? <SchedulePage user={user} tabs={<WorkspaceTabs current="schedule" className="quiz-library-tabs--desktop" />} />
               : <PrdList key={`${user.id}:${profile.name}:${profile.companyName}`} tabs={<WorkspaceTabs current="prd" className="quiz-library-tabs--desktop" />} />}
         </WorkspaceBoundary>}
     {showFooter && <SiteFooter />}

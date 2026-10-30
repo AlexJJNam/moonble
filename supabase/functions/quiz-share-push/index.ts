@@ -10,6 +10,18 @@ type QuizShareNotification = {
   total_count: number;
 };
 
+// 워크스페이스 시간표 알림(database/024_study_schedules.sql). url은 예약한 문제지 풀이 화면이다.
+type StudyReminderNotification = {
+  id: string;
+  user_id: string;
+  schedule_id: string | null;
+  title: string;
+  body: string;
+  url: string;
+};
+
+const PUSH_TABLES = new Set(['quiz_share_notifications', 'study_reminder_notifications']);
+
 function jsonResponse(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status,
@@ -68,19 +80,48 @@ Deno.serve(async request => {
     return jsonResponse(500, { error: 'Push service is not configured' });
   }
 
-  let payload: { type?: string; table?: string; schema?: string; record?: QuizShareNotification };
+  let payload: { type?: string; table?: string; schema?: string; record?: QuizShareNotification | StudyReminderNotification };
   try {
     payload = await request.json();
   } catch {
     return jsonResponse(400, { error: 'Invalid JSON payload' });
   }
-  if (payload.type !== 'INSERT' || payload.table !== 'quiz_share_notifications' || payload.schema !== 'public') {
+  if (payload.type !== 'INSERT' || !PUSH_TABLES.has(payload.table || '') || payload.schema !== 'public') {
     return jsonResponse(202, { ignored: true });
   }
 
-  const notification = payload.record;
-  if (!notification?.id || !notification.owner_id || typeof notification.paper_title !== 'string') {
-    return jsonResponse(400, { error: 'Invalid notification record' });
+  // 받을 사람과 보낼 내용을 표마다 만든다.
+  let recipientId = '';
+  let message = '';
+  if (payload.table === 'study_reminder_notifications') {
+    const reminder = payload.record as StudyReminderNotification | undefined;
+    if (!reminder?.id || !reminder.user_id || typeof reminder.title !== 'string' || typeof reminder.body !== 'string') {
+      return jsonResponse(400, { error: 'Invalid reminder record' });
+    }
+    let url = 'https://moonble.com/prd.html#/schedule';
+    try {
+      const parsed = new URL(reminder.url);
+      if (parsed.protocol === 'https:' && parsed.hostname === 'moonble.com') url = parsed.href;
+    } catch { /* 시간표 화면으로 보낸다. */ }
+    recipientId = reminder.user_id;
+    message = JSON.stringify({
+      title: reminder.title.slice(0, 80),
+      body: reminder.body.slice(0, 180),
+      tag: `moonble-schedule-${reminder.schedule_id || reminder.id}`,
+      url,
+    });
+  } else {
+    const notification = payload.record as QuizShareNotification | undefined;
+    if (!notification?.id || !notification.owner_id || typeof notification.paper_title !== 'string') {
+      return jsonResponse(400, { error: 'Invalid notification record' });
+    }
+    recipientId = notification.owner_id;
+    message = JSON.stringify({
+      title: '문블 · 공유한 문제 풀이',
+      body: `${notification.paper_title.slice(0, 80)} · ${notification.score}점 (${notification.correct_count}/${notification.total_count})`,
+      tag: `moonble-share-${notification.id}`,
+      url: 'https://moonble.com/quiz.html?openNotifications=1',
+    });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -89,7 +130,7 @@ Deno.serve(async request => {
   const { data: subscriptions, error } = await supabase
     .from('web_push_subscriptions')
     .select('endpoint, subscription')
-    .eq('user_id', notification.owner_id);
+    .eq('user_id', recipientId);
   if (error) {
     console.error('Unable to load push subscriptions:', error.message);
     return jsonResponse(500, { error: 'Unable to load subscriptions' });
@@ -97,12 +138,6 @@ Deno.serve(async request => {
   if (!subscriptions?.length) return jsonResponse(200, { sent: 0 });
 
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-  const message = JSON.stringify({
-    title: '문블 · 공유한 문제 풀이',
-    body: `${notification.paper_title.slice(0, 80)} · ${notification.score}점 (${notification.correct_count}/${notification.total_count})`,
-    tag: `moonble-share-${notification.id}`,
-    url: 'https://moonble.com/quiz.html?openNotifications=1',
-  });
 
   const results = await Promise.all(subscriptions.map(async item => {
     try {
