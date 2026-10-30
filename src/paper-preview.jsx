@@ -13,7 +13,7 @@ export const BUILT_IN_PAPER_PREVIEWS = [
   ] },
 ];
 
-export function PaperPreview({ paper, compact = false, style }) {
+export function PaperPreview({ paper, compact = false, style, badge = null }) {
   const samples = Array.isArray(paper?.samples) ? paper.samples : [];
   const label = paper?.label || '문제지';
   const count = Number(paper?.count) || 0;
@@ -45,6 +45,6 @@ export function PaperPreview({ paper, compact = false, style }) {
         </div>
       </>}
     </div>
-    <span className="preview-count">{count}문항</span>
+    {badge || <span className="preview-count">{count}문항</span>}
   </div>;
 }

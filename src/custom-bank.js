@@ -331,6 +331,22 @@ import { normalizeCategory } from './quiz-categories.js';
       return bank;
     } catch (e) { throw new Error('브라우저 저장 공간에 문제지를 저장하지 못했습니다.'); }
   }
+  // Mix: 고른 문제지(2개 이상)의 문항을 모아 새 문제지를 만든다. 문항 id는 1부터 다시 매기고, 출처는 'Mix'로 둔다.
+  export var MIX_SOURCE = 'Mix';
+  export function createMixBank(userId, bankIds, details) {
+    var collection = readCollection(userId);
+    var banks = (bankIds || []).map(function (id) { return collection.banks.find(function (bank) { return bank.id === id; }); }).filter(Boolean);
+    if (banks.length < 2) throw new Error('문제지를 2개 이상 골라주세요.');
+    var questions = [];
+    banks.forEach(function (bank) { bank.questions.forEach(function (question) { questions.push({ ...question, id: questions.length + 1 }); }); });
+    if (questions.length > 1000) throw new Error('Mix 문제지는 1,000문항까지 만들 수 있어요. 문제지를 줄여서 다시 골라주세요.');
+    var names = banks.map(function (bank) { return bank.title; });
+    var meta = details || {};
+    var title = ('Mix · ' + names[0] + (names.length > 1 ? ' 외 ' + (names.length - 1) + '개' : '')).slice(0, 80);
+    var description = (names.join(', ') + ' 문제지를 섞어 만든 문제지예요.').slice(0, 160);
+    var groupId = typeof meta.groupId === 'string' && (meta.groupId === DEFAULT_GROUP_ID || collection.groups.some(function (group) { return group.id === meta.groupId; })) ? meta.groupId : DEFAULT_GROUP_ID;
+    return setCustomBank(questions, MIX_SOURCE, userId, { create: true, title: title, description: description, groupId: groupId });
+  }
   // category: undefined면 기존 값을 유지한다.
   export function updateCustomBankMeta(title, description, userId, bankId, groupId, category) {
     try {

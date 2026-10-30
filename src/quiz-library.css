@@ -900,33 +900,9 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-list .paper-preview { width: 144px; height: 81px; }
 }
 
-/* 폴더 Mix: 폴더를 열면 맨 위에 보이는 섹션. 썸네일 뒤로 겹친 장(재생목록처럼)과 오른쪽 Mix 표시. */
-.paper-mix { margin-top: 16px; }
-.paper-mix-heading { margin: 0 0 10px; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
-.paper-mix-card { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items: start; gap: 16px; color: inherit; text-decoration: none; }
-.paper-mix-thumb { position: relative; padding-top: 8px; }
-.paper-mix-thumb::before, .paper-mix-thumb::after { content: ''; position: absolute; left: 50%; height: 8px; border-radius: 8px 8px 0 0; transform: translateX(-50%); }
-.paper-mix-thumb::before { top: 0; width: 84%; background: #c9d6e6; }
-.paper-mix-thumb::after { top: 4px; width: 92%; background: #a9bcd3; }
-.paper-mix-thumb .paper-preview { position: relative; z-index: 1; overflow: hidden; border-bottom: 0; border-radius: var(--mb-radius-12); }
-.paper-mix-thumb .paper-preview .preview-count { display: none; }
 /* 유튜브 Mix처럼 썸네일 오른쪽 아래 작은 배지 */
 .paper-mix-overlay { position: absolute; z-index: 2; right: 6px; bottom: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; color: #fff; background: rgb(0 0 0 / 72%); }
 .paper-mix-overlay b { font-size: var(--mb-font-12); line-height: 16px; font-weight: var(--mb-weight-semibold); }
-.paper-mix-info { min-width: 0; display: grid; gap: 4px; padding-top: 10px; }
-.paper-mix-info strong { font-size: var(--mb-font-16); line-height: 22px; font-weight: var(--mb-weight-semibold); overflow-wrap: anywhere; }
-.paper-mix-info p { display: -webkit-box; margin: 0; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.paper-mix-info p span { margin-left: 8px; }
-.paper-mix-info small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
-.paper-mix-card:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 4px; border-radius: var(--mb-radius-12); }
-@media (hover: hover) { .paper-mix-card:hover .paper-mix-info strong { text-decoration: underline; text-underline-offset: 3px; } }
-@media (max-width: 767px) {
-  .paper-mix { margin-top: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--mb-border); }
-  .paper-mix-heading { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); }
-  .paper-mix-card { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .paper-mix-info { padding-top: 8px; }
-  .paper-mix-info strong { font-size: .9375rem; line-height: 21px; }
-}
 
 /* 문제지 카드 ⋮ 메뉴: 유튜브처럼 넉넉한 줄 높이, 큰 선 아이콘, 테두리 없는 흰 면과 부드러운 그림자.
    PC는 버튼 아래 팝오버, 모바일은 화면 아래 넓은 시트. */
@@ -990,3 +966,28 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-manage-visibility > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
 .quiz-manage-visibility-tabs { width: 100%; min-width: 0; }
 .quiz-manage-visibility > small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+
+/* Mix: 'Mix' 버튼으로 문제지를 여러 개 골라 섞은 새 문제지를 만든다. Mix 문제지는 썸네일에 Mix 배지. */
+/* Mix 버튼: 새 문제지 만들기 왼쪽 */
+.quiz-title-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
+.quiz-mix-button { flex: 0 0 auto; min-height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-secondary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.quiz-mix-button.is-active { color: var(--mb-primary-strong); }
+@media (hover: hover) { .quiz-mix-button:hover { color: var(--mb-text-primary); } }
+.quiz-mix-button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+.paper-card.is-mix-selectable .paper-card-link { cursor: pointer; }
+.paper-card.is-mix-selected .paper-preview { box-shadow: 0 0 0 3px var(--mb-primary-strong); }
+.paper-card.is-mix-disabled { opacity: .4; pointer-events: none; }
+.paper-card.is-mix-selectable .paper-favorite-toggle { display: none; }
+.paper-mix-check { position: absolute; z-index: 6; top: 10px; left: 10px; width: 28px; height: 28px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 50%; color: #fff; background: rgb(0 0 0 / 28%); box-shadow: 0 1px 4px rgb(0 0 0 / 20%); pointer-events: none; }
+.paper-card.is-mix-selected .paper-mix-check { border-color: var(--mb-primary-strong); background: var(--mb-primary-strong); }
+.quiz-library-main.is-mix-selecting { padding-bottom: 140px; }
+.quiz-mix-bar { position: fixed; z-index: 60; left: 50%; bottom: 24px; width: min(560px, calc(100% - 32px)); display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 16px; border-radius: var(--mb-radius-16); background: var(--mb-surface); box-shadow: 0 8px 32px rgb(15 23 42 / 18%); transform: translateX(-50%); animation: paper-card-sheet-in 200ms cubic-bezier(.2, .8, .25, 1) backwards; }
+.quiz-mix-bar-copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.quiz-mix-bar-copy strong { overflow: hidden; color: var(--mb-text-primary); font-size: .9375rem; line-height: 22px; font-weight: var(--mb-weight-bold); text-overflow: ellipsis; white-space: nowrap; }
+.quiz-mix-bar-copy small { overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.quiz-mix-bar button { flex: 0 0 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: .9375rem; line-height: 22px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
+.quiz-mix-bar button.is-primary { color: #fff; background: var(--mb-primary-strong); }
+.quiz-mix-bar button:disabled { cursor: default; opacity: .45; }
+@media (max-width: 767px) {
+  .quiz-mix-bar { bottom: var(--mb-mobile-floating-bottom); }
+}

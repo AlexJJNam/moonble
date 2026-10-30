@@ -6,20 +6,7 @@ import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
 import { SiteFooter } from './site-footer.jsx';
-import {
-  DEFAULT_GROUP_ID,
-  clearCustomBank,
-  createCustomGroup,
-  exportCustomBankPDF,
-  deleteCustomGroup,
-  getCustomBankCollection,
-  reorderCustomGroups,
-  setActiveCustomBank,
-  setCustomBankUser,
-  syncCustomBankCollection,
-  updateCustomBankMeta,
-  updateCustomGroup,
-} from './custom-bank.js';
+import { DEFAULT_GROUP_ID, clearCustomBank, createCustomGroup, exportCustomBankPDF, deleteCustomGroup, getCustomBankCollection, reorderCustomGroups, setActiveCustomBank, setCustomBankUser, syncCustomBankCollection, updateCustomBankMeta, updateCustomGroup, createMixBank, MIX_SOURCE } from './custom-bank.js';
 import { QuizAchievement } from './quiz-achievement.jsx';
 import { QuizCreator } from './quiz-creator.jsx';
 import { AppHeader } from './app-header.jsx';
@@ -281,6 +268,9 @@ function QuizLibrary() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(null);
   const mobileSheet = useMediaQuery('(max-width: 767px)');
+  // Mix 만들기: 문제지를 여러 개 골라 문항을 섞은 새 문제지를 만든다.
+  const [mixSelecting, setMixSelecting] = useState(false);
+  const [mixSelected, setMixSelected] = useState([]);
   // 문제 생성하기 화면의 단계(헤더 탭 표시용)와 단계를 바꾸는 함수.
   const [creatorScreen, setCreatorScreen] = useState('create');
   const creatorStepRef = useRef(null);
@@ -966,6 +956,31 @@ function QuizLibrary() {
     setEditMode(false);
     setOpenMenu(null);
   }
+  function startMix() {
+    if (collection.banks.length < 2) { setNotice('Mix는 내 문제지가 2개 이상일 때 만들 수 있어요.'); return; }
+    setEditMode(false);
+    setOpenMenu(null);
+    setMixSelected([]);
+    setMixSelecting(true);
+  }
+  function cancelMix() {
+    setMixSelecting(false);
+    setMixSelected([]);
+  }
+  function toggleMixPaper(paper) {
+    if (!paper.customBankId) return;
+    setMixSelected(current => current.includes(paper.customBankId) ? current.filter(id => id !== paper.customBankId) : [...current, paper.customBankId]);
+  }
+  function createMix() {
+    try {
+      createMixBank(user.id, mixSelected, { groupId: activeGroup !== 'all' ? activeGroup : DEFAULT_GROUP_ID });
+      refreshCollection();
+      cancelMix();
+      setNotice('Mix 문제지를 만들었어요.');
+    } catch (mixError) {
+      setNotice(mixError.message || 'Mix 문제지를 만들지 못했어요.');
+    }
+  }
   // 문제지 편집 시트(이름·설명·그룹·공개 범위·카테고리)를 여는 값.
   function bankEditorFor(paper) {
     const visibility = paper.visibility || visibilityOfBank(paper.customBankId);
@@ -1000,6 +1015,7 @@ function QuizLibrary() {
     count: bank.questions.length,
     description: bank.description,
     category: bank.category || null,
+    source: bank.source,
     savedAt: bank.savedAt,
     topics: `등록 ${bank.questions.length}문항 · 매회 20문항 출제`,
     kind: 'custom',
@@ -1012,9 +1028,6 @@ function QuizLibrary() {
     lastOpenedAt: paperAccess[paper.id] || null,
   }));
   const search = query.trim().toLocaleLowerCase();
-  // 폴더(그룹)를 열면 맨 위에 그 폴더 문제지를 섞어 푸는 Mix를 둔다(문제지 2개 이상, 검색·편집 중에는 숨김).
-  const mixPapers = section === 'papers' && activeGroup !== 'all' && !search && !editMode ? customPapers.filter(paper => paper.groupId === activeGroup) : [];
-  const mixGroupName = activeGroup === DEFAULT_GROUP_ID ? '미분류' : (collection.groups.find(group => group.id === activeGroup)?.name || '폴더');
   // 검색어 자동완성: 내 문제지(샘플 포함) 제목 중 검색어가 들어간 것.
   const suggestPaperTitles = term => { const needle = term.toLocaleLowerCase(); return [...new Set(allPapers.map(paper => paper.label).filter(title => title && title.toLocaleLowerCase().includes(needle)))].slice(0, 8); };
   const visiblePapers = allPapers.filter(paper => {
@@ -1055,9 +1068,9 @@ function QuizLibrary() {
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : section === 'create' ? <CreatorTabs current={creatorScreen === 'create' ? 'create' : 'upload'} onSelect={next => creatorStepRef.current?.(next)} /> : null} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mixSelecting ? ' is-mix-selecting' : ''}`} id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
-        <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <div className="quiz-title-actions"><button type="button" className={`quiz-mix-button${mixSelecting ? ' is-active' : ''}`} aria-pressed={mixSelecting} onClick={() => mixSelecting ? cancelMix() : startMix()}><Shuffle size={15} aria-hidden="true" /><span>Mix</span></button><FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>}</div>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch userId={user.id} /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
@@ -1096,20 +1109,6 @@ function QuizLibrary() {
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent" />
           <CategoryChips className="quiz-library-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
         </div>
-        {mixPapers.length >= 2 && <section className="paper-mix" aria-labelledby="paper-mix-title">
-          <h2 id="paper-mix-title" className="paper-mix-heading">Mix</h2>
-          <a className="paper-mix-card" href={`./solve.html?paper=mix&group=${encodeURIComponent(activeGroup)}#quiz`} aria-label={`${mixGroupName} Mix · ${mixPapers.length}개 문제지를 섞어서 풀기`}>
-            <div className="paper-mix-thumb">
-              <PaperPreview paper={mixPapers[0]} />
-              <span className="paper-mix-overlay" aria-hidden="true"><Shuffle size={13} /><b>Mix</b></span>
-            </div>
-            <div className="paper-mix-info">
-              <strong>Mix - {mixGroupName}</strong>
-              <p>{mixPapers.map(paper => paper.label).slice(0, 2).join(', ')}{mixPapers.length > 2 ? ` 외 ${mixPapers.length - 2}개` : ''}<span>문제지 {mixPapers.length}개</span></p>
-              <small>{mixPapers.reduce((sum, paper) => sum + paper.count, 0).toLocaleString('ko-KR')}문항 중 매회 20문항을 섞어서 풀어요</small>
-            </div>
-          </a>
-        </section>}
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
@@ -1118,7 +1117,7 @@ function QuizLibrary() {
             const isFavorite = favoritePaperIds.includes(paper.id);
             const CardSurface = editingPaperCards ? 'div' : 'a';
             return <article
-              className={`paper-card${editingPaperCards && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}`}
+              className={`paper-card${editingPaperCards && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${paper.source === MIX_SOURCE ? ' is-mix-paper' : ''}${mixSelecting ? (paper.customBankId ? (mixSelected.includes(paper.customBankId) ? ' is-mix-selectable is-mix-selected' : ' is-mix-selectable') : ' is-mix-disabled') : ''}`}
               data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(editingPaperCards && paper.customBankId && supportsMousePaperDrag())}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}
@@ -1130,8 +1129,9 @@ function QuizLibrary() {
               onDragEnd={paper.customBankId ? finishPaperDrag : undefined}
               key={paper.id}
             >
-              <CardSurface className="paper-card-link" {...(!editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); if (mobileSearchOpen && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); window.location.replace(href); } }}>
-                <PaperPreview paper={paper} style={paperGroupStyle} />
+              <CardSurface className="paper-card-link" {...(mixSelecting ? { role: 'checkbox', 'aria-checked': mixSelected.includes(paper.customBankId), 'aria-disabled': !paper.customBankId, tabIndex: 0, 'aria-label': `${paper.label} Mix에 넣기`, onKeyDown: event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); toggleMixPaper(paper); } } } : !editingPaperCards ? { href, 'aria-label': `${paper.label} · ${paper.count}문항 문제 풀기` } : {})} onClick={event => { if (mixSelecting) { event.preventDefault(); toggleMixPaper(paper); return; } if (editingPaperCards) { event.preventDefault(); return; } if (paper.customBankId) setActiveCustomBank(paper.customBankId); }}>
+                <PaperPreview paper={paper} style={paperGroupStyle} badge={paper.source === MIX_SOURCE ? <span className="paper-mix-overlay"><Shuffle size={13} /><b>Mix</b></span> : null} />
+                {mixSelecting && paper.customBankId && <span className="paper-mix-check" aria-hidden="true">{mixSelected.includes(paper.customBankId) && <Check size={16} strokeWidth={3} />}</span>}
                 <div className="paper-info has-activity-caption"><div className="paper-copy"><div className="paper-name-row"><h2 className="mb-card-title">{paper.label}</h2>{editingPaperCards && paper.customBankId && <button className="paper-inline-edit" type="button" aria-label={`${paper.label} 정보 편집`} onClick={event => { event.stopPropagation(); setEditor(bankEditorFor(paper)); }}><EditIcon size={13} aria-hidden="true" /></button>}</div><p>{paper.category && <><span className="paper-category">{categoryLabel(paper.category)}</span><i aria-hidden="true">·</i></>}{paper.kind !== 'custom' && <><span>{paper.level}</span><i aria-hidden="true">·</i></>}<span className="paper-description">{paper.description}</span></p>{(() => {
                   // 풀이 상태(진행률 · 아직 풀이 전)와 시간(마지막 조회, 없으면 만든 때)을 나눠 한 줄 회색 캡션으로 보여준다.
                   const status = getPaperSolveStatus(user.id, paper.id);
@@ -1144,7 +1144,7 @@ function QuizLibrary() {
                 })()}</div></div>
               </CardSurface>
               <button className={`paper-favorite-toggle${isFavorite ? ' is-active' : ''}`} type="button" aria-label={`${paper.label} ${isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}`} aria-pressed={isFavorite} title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'} onPointerDown={event => event.stopPropagation()} onClick={event => togglePaperFavorite(event, paper)}><Star size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
-              {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && <div className="paper-card-actions">
+              {(paper.customBankId || paper.id === 'basics') && !editingPaperCards && !mixSelecting && <div className="paper-card-actions">
                   <button type="button" aria-label={`${paper.label} 편집 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === menuKey} onClick={event => { event.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}><MoreVertical size={18} /></button>
                   {openMenu === menuKey && <SheetLayer active={mobileSheet} label="문제지 메뉴" onClose={() => setOpenMenu(null)}><div className="paper-action-menu paper-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>{paper.kind === 'custom' && paper.customBankId && <><button className="paper-action-edit" type="button" role="menuitem" aria-label={`${paper.label} 편집`} onClick={() => editFromMenu(paper)}><EditIcon size={15} />편집</button><button type="button" role="menuitem" onClick={() => openShareDialog(paper)}><Link2 size={15} />공유 링크</button><button type="button" role="menuitem" onClick={() => exportPaperPDF(paper)}><FileDown size={15} />PDF 내보내기</button></>}<button className="is-danger" type="button" role="menuitem" onClick={() => { setOpenMenu(null); setEditor(isFavorite ? { type: 'favorite-delete-confirm', paper, title: paper.label } : (paper.customBankId ? { type: 'bank-delete', bankId: paper.customBankId, title: paper.label } : { type: 'sample-delete', title: paper.label })); }}><Trash2 size={15} />삭제</button></div></SheetLayer>}
               </div>}
@@ -1152,6 +1152,11 @@ function QuizLibrary() {
           })}
         </section>
         {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : category ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 카테고리에 문제지가 없어요</h2><p>다른 카테고리를 고르거나 전체를 눌러 모든 문제지를 보세요.</p><button onClick={() => setCategory(null)}>전체 보기</button></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
+        {mixSelecting && <div className="quiz-mix-bar" role="region" aria-label="Mix 만들기">
+          <div className="quiz-mix-bar-copy"><strong>{mixSelected.length ? `${mixSelected.length}개 선택됨` : '믹스할 문제지를 선택해주세요'}</strong><small>2개 이상 고르면 문항을 섞어 새 문제지를 만들어요.</small></div>
+          <button type="button" onClick={cancelMix}>취소</button>
+          <button type="button" className="is-primary" disabled={mixSelected.length < 2} onClick={createMix}>생성</button>
+        </div>}
         {editMode && <button className="quiz-library-edit-done" type="button" aria-label="편집완료" onClick={leaveEditMode}>편집완료</button>}
         </>}
       </main>}<SiteFooter />
