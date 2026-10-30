@@ -33,7 +33,7 @@ import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from '.
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
 import { SearchField } from './search-field.jsx';
-import { SectionTabs } from './section-tabs.jsx';
+import { CreatorTabs, SectionTabs } from './section-tabs.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
@@ -253,6 +253,9 @@ function QuizLibrary() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(null);
+  // 문제 생성하기 화면의 단계(헤더 탭 표시용)와 단계를 바꾸는 함수.
+  const [creatorScreen, setCreatorScreen] = useState('create');
+  const creatorStepRef = useRef(null);
   const [paperScope, setPaperScope] = useState('all');
   const [view, setView] = useState('grid');
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
@@ -984,9 +987,9 @@ function QuizLibrary() {
   const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '문제지';
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
-    <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : null} />
+    <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : section === 'create' ? <CreatorTabs current={creatorScreen === 'create' ? 'create' : 'upload'} onSelect={next => creatorStepRef.current?.(next)} /> : null} />
     <div className="quiz-content">
-      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
+      {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className="quiz-main mb-page-gutter quiz-library-main" id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
         <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton>}</div>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch /> : <>

@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
 import { CategoryChips } from './category-chips.jsx';
+import { CreatorTabs } from './section-tabs.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
 import { TooltipIcon } from './tooltip-icon.jsx';
@@ -117,13 +118,6 @@ function initialCreatorScreen() {
   return params.get('shared') === '1' || params.has('shareError') || window.history.state?.moonbleCreatorStep === 'upload' ? 'upload' : 'create';
 }
 
-function CreatorProgress({ screen }) {
-  const step = screen === 'create' ? 1 : 2;
-  return <div className={`creator-progress${screen === 'create' ? ' is-prompt-step' : ''}`}>
-    <div className="creator-progress-track" role="progressbar" aria-label="문제지 생성 진행" aria-valuemin={0} aria-valuemax={2} aria-valuenow={step} aria-valuetext={screen === 'result' ? '문제지 등록 완료' : `${step}/2단계: ${step === 1 ? '문제 만들기' : '파일 등록'}`}><span style={{ width: `${step * 50}%` }} /></div>
-    <div className="creator-progress-labels"><span className={step === 1 ? 'is-current' : ''} aria-current={step === 1 ? 'step' : undefined}>1. 문제 만들기</span><span className={step === 2 ? 'is-current' : ''} aria-current={step === 2 ? 'step' : undefined}>2. 파일 등록</span></div>
-  </div>;
-}
 
 function PromptSample({ hidden }) {
   const [sampleIndex, setSampleIndex] = useState(0);
@@ -165,7 +159,7 @@ function PromptReveal({ text, id }) {
   })}</span>;
 }
 
-export function QuizCreator({ custom, onChange }) {
+export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange = null }) {
   const [query, setQuery] = useState('');
   const [provider, setProvider] = useState('gemini');
   const [message, setMessage] = useState('');
@@ -236,6 +230,9 @@ export function QuizCreator({ custom, onChange }) {
     window.history.replaceState({ ...window.history.state, moonbleCreatorStep: next }, '');
     setScreen(next);
   }
+  // 헤더(모바일)의 문제 생성 · 문제 등록 탭이 단계를 바꾸고, 현재 단계를 알 수 있게 한다.
+  if (stepRef) stepRef.current = changeStep;
+  useEffect(() => { onScreenChange?.(screen); }, [screen, onScreenChange]);
 
   useEffect(() => {
     if (resultBank && custom?.id !== resultBank.id) return;
@@ -566,8 +563,8 @@ export function QuizCreator({ custom, onChange }) {
 
   if (screen === 'result') return <main className="quiz-main mb-page-gutter quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
     <button className="creator-result-back" type="button" onClick={() => { changeStep('create'); setResultBank(null); setResultReady(true); }}>문제 만들기로 돌아가기</button>
+    <CreatorTabs current="upload" onSelect={changeStep} className="quiz-library-tabs--desktop" />
     <div className="quiz-title creator-result-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
-    <CreatorProgress screen={screen} />
     <section className="creator-step creator-result-panel" aria-labelledby="creator-list-title">
       <header><CreatorStepMarker step="upload" label="등록 완료" /><div><h2 id="creator-list-title">문제지 등록 결과</h2><p>이름과 설명은 바로 수정할 수 있어요.</p></div></header>
       {!resultReady ? <div className="creator-preview-loading" role="status"><span className="mb-sr-only">생성한 문제지 목록을 정리하고 있어요</span><div className="creator-preview-skeleton-meta"><i /><i /></div><div className="creator-preview-skeleton-ready"><i /><span><b /><b /></span></div>{[0, 1, 2, 3].map(index => <div className="creator-preview-skeleton-row" key={index}><i /><span><b /><b /></span></div>)}</div> : displayBank ? <div className="creator-result-reveal">
@@ -592,8 +589,8 @@ export function QuizCreator({ custom, onChange }) {
 
   return <main className="quiz-main mb-page-gutter quiz-creator is-step-flow" id="quiz-creator" tabIndex={-1}>
     {promptFocused && <button className="creator-prompt-backdrop" type="button" aria-label="프롬프트 입력 닫기" onPointerDown={event => { event.preventDefault(); promptInputRef.current?.blur(); }} />}
+    <CreatorTabs current={screen === 'create' ? 'create' : 'upload'} onSelect={changeStep} className="quiz-library-tabs--desktop" />
     <div className="quiz-title"><div><h1 className="mb-page-title">문제 생성하기</h1></div></div>
-    <CreatorProgress screen={screen} />
 
     <div className="creator-intake-card">
     <section className="creator-step creator-prompt" aria-labelledby="creator-prompt-title" hidden={screen !== 'create'}>
