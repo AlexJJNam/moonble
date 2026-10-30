@@ -9,11 +9,24 @@ function requireSupabase() {
   return supabase;
 }
 
-export async function listPublicQuizzes({ query = '', sort = 'popular', offset = 0, category = null } = {}) {
+// tokens: 스크랩(하트)한 공개 문제만 불러올 때의 공유 토큰 목록(020). 020 적용 전에는 받은 목록에서 걸러낸다.
+export async function listPublicQuizzes({ query = '', sort = 'popular', offset = 0, category = null, tokens = null } = {}) {
+  if (Array.isArray(tokens) && !tokens.length) return { items: [], total: 0 };
   // 카테고리 필터(018)는 고른 경우에만 보낸다. 018 적용 전에도 전체 목록은 그대로 동작한다.
   const args = { p_query: query || null, p_sort: sort, p_offset: offset, p_limit: PUBLIC_PAGE_SIZE };
   if (category) args.p_category = category;
-  const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', args);
+  if (Array.isArray(tokens)) args.p_tokens = tokens.slice(0, 300);
+  let { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', args);
+  if (error && Array.isArray(tokens) && missing(error)) {
+    const fallback = { ...args, p_offset: 0, p_limit: 50 };
+    delete fallback.p_tokens;
+    ({ data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', fallback));
+    if (!error) {
+      const wanted = new Set(tokens);
+      const items = (Array.isArray(data?.items) ? data.items : []).filter(item => wanted.has(item.token));
+      return { items: offset ? [] : items, total: items.length };
+    }
+  }
   if (error) {
     const result = new Error(missing(error) ? '공개 문제 검색을 준비하고 있어요.' : '잠시 후 다시 시도해주세요.');
     result.unavailable = missing(error);

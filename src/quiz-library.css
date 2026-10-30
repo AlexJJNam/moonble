@@ -953,3 +953,15 @@ button:disabled { cursor: wait; opacity: .6; }
   .paper-grid:not(.paper-list) .paper-favorite-toggle { top: 10px; left: 10px; width: 40px; height: 40px; border-radius: 10px; }
   .paper-grid:not(.paper-list) .paper-favorite-toggle svg { width: 22px; height: 22px; }
 }
+
+/* 문제 서칭 정렬 줄: 인기순 · 스크랩 문제지 스위치(왼쪽), 보기 전환(오른쪽) */
+.public-quiz-sort-left { min-width: 0; display: flex; align-items: center; gap: var(--mb-space-12); }
+.mb-switch { position: relative; min-height: 32px; display: inline-flex; align-items: center; gap: 6px; color: var(--mb-text-secondary); font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); white-space: nowrap; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.mb-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.mb-switch-track { position: relative; width: 36px; height: 22px; flex: 0 0 36px; border-radius: 999px; background: var(--mb-border-strong); transition: background-color var(--mb-duration); }
+.mb-switch-track > span { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); transition: transform var(--mb-duration); }
+.mb-switch input:checked + .mb-switch-track { background: var(--mb-primary-strong); }
+.mb-switch input:checked + .mb-switch-track > span { transform: translateX(14px); }
+.mb-switch input:checked ~ .mb-switch-label { color: var(--mb-text-primary); }
+.mb-switch input:focus-visible + .mb-switch-track { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .mb-switch-track, .mb-switch-track > span { transition: none; } }
