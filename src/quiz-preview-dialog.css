@@ -37,3 +37,9 @@
   .mb-preview-head h2 { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); }
 }
 @media (prefers-reduced-motion: reduce) { .mb-preview-overlay, .mb-preview-card.is-loading { animation: none; } }
+
+/* 풀기 확인(공통 확인 대화상자 규격) */
+.mb-preview-dialog.is-confirm { width: min(420px, 100%); }
+.mb-preview-confirm-title { margin: 0; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
+.mb-preview-confirm-copy { margin: var(--mb-space-8) 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .mb-preview-confirm-title { font-size: var(--mb-mobile-dialog-size); line-height: var(--mb-mobile-dialog-line); } .mb-preview-confirm-copy { font-size: var(--mb-font-13); } }

@@ -895,3 +895,55 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-library-categories { order: 4; flex: 0 0 100%; }
 .quiz-manage-category > span { color: var(--mb-text-secondary); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-semibold); }
 .public-quiz-categories { margin-top: calc(var(--mb-space-8) * -1); }
+
+/* 문제지 카드: 유튜브 모바일 썸네일처럼 테두리·카드 면 없이, 둥근 썸네일 아래에 제목(최대 2줄)·설명(1줄)을 둔다.
+   문항 수는 썸네일 오른쪽 아래에 항상 보이는 배지(영상 길이 배지처럼)로 둔다. */
+.paper-card { border: 0; border-radius: 0; background: transparent; }
+.paper-card-link { overflow: visible; border-radius: 0; }
+.paper-card .paper-preview { overflow: hidden; border-bottom: 0; border-radius: var(--mb-radius-12); }
+.paper-card.is-editing .paper-preview { box-shadow: 0 0 0 2px var(--mb-primary); }
+.paper-card .preview-count { right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 4px; color: #fff; background: rgb(0 0 0 / 72%); font-size: var(--mb-font-12); line-height: 16px; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; opacity: 1; pointer-events: none; }
+.paper-card .paper-info, .paper-card .paper-info.has-activity-caption { min-height: 0; align-items: start; padding: 10px 2px 2px; background: transparent; }
+.paper-card .paper-info h2 { display: -webkit-box; overflow: hidden; font-size: .9375rem; line-height: 21px; font-weight: var(--mb-weight-semibold); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+.paper-card .paper-copy > p { margin-top: 4px; font-size: var(--mb-font-13); line-height: 18px; }
+.paper-card .paper-added-at { margin-top: 2px; font-size: var(--mb-font-12); line-height: 16px; text-align: left; }
+.paper-card .paper-card-actions { top: 6px; right: 6px; }
+.paper-card .paper-card-actions > button { border-radius: 50%; color: #fff; background: rgb(0 0 0 / 45%); }
+.paper-list .paper-card-link { gap: 12px; }
+.paper-list .paper-preview { border-right: 0; }
+.paper-list .paper-info, .paper-list .paper-info.has-activity-caption { min-height: 0; padding: 2px 44px 0 0; }
+@media (max-width: 767px) {
+  .paper-grid:not(.paper-list) { gap: 16px 10px; }
+  .paper-grid:not(.paper-list) .paper-info, .paper-grid:not(.paper-list) .paper-info.has-activity-caption { min-height: 0; padding: 8px 2px 0; }
+  .paper-grid:not(.paper-list) .paper-info h2 { font-size: var(--mb-font-14); line-height: 20px; }
+  .paper-grid:not(.paper-list) .paper-copy > p { font-size: var(--mb-font-12); line-height: 18px; }
+  .paper-card .paper-card-actions { top: 4px; right: 4px; }
+  .paper-list .paper-preview { width: 144px; height: 81px; }
+}
+
+/* 폴더 Mix: 폴더를 열면 맨 위에 보이는 섹션. 썸네일 뒤로 겹친 장(재생목록처럼)과 오른쪽 Mix 표시. */
+.paper-mix { margin-top: 16px; }
+.paper-mix-heading { margin: 0 0 10px; font-size: var(--mb-font-18); line-height: 26px; font-weight: var(--mb-weight-bold); letter-spacing: -.02em; }
+.paper-mix-card { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items: start; gap: 16px; color: inherit; text-decoration: none; }
+.paper-mix-thumb { position: relative; padding-top: 8px; }
+.paper-mix-thumb::before, .paper-mix-thumb::after { content: ''; position: absolute; left: 50%; height: 8px; border-radius: 8px 8px 0 0; transform: translateX(-50%); }
+.paper-mix-thumb::before { top: 0; width: 84%; background: #c9d6e6; }
+.paper-mix-thumb::after { top: 4px; width: 92%; background: #a9bcd3; }
+.paper-mix-thumb .paper-preview { position: relative; z-index: 1; overflow: hidden; border-bottom: 0; border-radius: var(--mb-radius-12); }
+.paper-mix-thumb .paper-preview .preview-count { display: none; }
+.paper-mix-overlay { position: absolute; z-index: 2; top: 8px; right: 0; bottom: 0; width: 34%; display: grid; place-content: center; justify-items: center; gap: 2px; border-radius: 0 var(--mb-radius-12) var(--mb-radius-12) 0; color: #fff; background: rgb(15 23 42 / 62%); }
+.paper-mix-overlay b { font-size: var(--mb-font-16); line-height: 22px; font-weight: var(--mb-weight-bold); }
+.paper-mix-overlay small { font-size: var(--mb-font-12); line-height: 16px; opacity: .85; }
+.paper-mix-info { min-width: 0; display: grid; gap: 4px; padding-top: 10px; }
+.paper-mix-info strong { font-size: var(--mb-font-16); line-height: 22px; font-weight: var(--mb-weight-semibold); overflow-wrap: anywhere; }
+.paper-mix-info p { display: -webkit-box; margin: 0; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-13); line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.paper-mix-info small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.paper-mix-card:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 4px; border-radius: var(--mb-radius-12); }
+@media (hover: hover) { .paper-mix-card:hover .paper-mix-info strong { text-decoration: underline; text-underline-offset: 3px; } }
+@media (max-width: 767px) {
+  .paper-mix { margin-top: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--mb-border); }
+  .paper-mix-heading { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); }
+  .paper-mix-card { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .paper-mix-info { padding-top: 8px; }
+  .paper-mix-info strong { font-size: .9375rem; line-height: 21px; }
+}

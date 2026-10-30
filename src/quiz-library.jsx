@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Star, Trash2, X } from 'lucide-react';
+import { Check, FileDown, FolderPlus, GripVertical, LayoutGrid, Link2, List, MoreHorizontal, Pipette, Plus, Search, Shuffle, Star, Trash2, X } from 'lucide-react';
 import { EditIcon } from './edit-icon.jsx';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile } from './profile.js';
@@ -944,6 +944,9 @@ function QuizLibrary() {
     lastOpenedAt: paperAccess[paper.id] || null,
   }));
   const search = query.trim().toLocaleLowerCase();
+  // 폴더(그룹)를 열면 맨 위에 그 폴더 문제지를 섞어 푸는 Mix를 둔다(문제지 2개 이상, 검색·편집 중에는 숨김).
+  const mixPapers = section === 'papers' && activeGroup !== 'all' && !search && !editMode ? customPapers.filter(paper => paper.groupId === activeGroup) : [];
+  const mixGroupName = activeGroup === DEFAULT_GROUP_ID ? '미분류' : (collection.groups.find(group => group.id === activeGroup)?.name || '폴더');
   // 검색어 자동완성: 내 문제지(샘플 포함) 제목 중 검색어가 들어간 것.
   const suggestPaperTitles = term => { const needle = term.toLocaleLowerCase(); return [...new Set(allPapers.map(paper => paper.label).filter(title => title && title.toLocaleLowerCase().includes(needle)))].slice(0, 8); };
   const visiblePapers = allPapers.filter(paper => {
@@ -1024,6 +1027,20 @@ function QuizLibrary() {
             suggest={suggestPaperTitles} recentKey="moonble:paper-search-recent" />
           <CategoryChips className="quiz-library-categories" label="카테고리 필터" allLabel="전체" value={category} onChange={setCategory} />
         </div>
+        {mixPapers.length >= 2 && <section className="paper-mix" aria-labelledby="paper-mix-title">
+          <h2 id="paper-mix-title" className="paper-mix-heading">Mix</h2>
+          <a className="paper-mix-card" href={`./solve.html?paper=mix&group=${encodeURIComponent(activeGroup)}#quiz`} aria-label={`${mixGroupName} Mix · ${mixPapers.length}개 문제지를 섞어서 풀기`}>
+            <div className="paper-mix-thumb">
+              <PaperPreview paper={mixPapers[0]} />
+              <span className="paper-mix-overlay" aria-hidden="true"><Shuffle size={18} /><b>Mix</b><small>{mixPapers.length}개</small></span>
+            </div>
+            <div className="paper-mix-info">
+              <strong>{mixGroupName} Mix</strong>
+              <p>{mixPapers.map(paper => paper.label).slice(0, 3).join(' · ')}{mixPapers.length > 3 ? ` 외 ${mixPapers.length - 3}개` : ''}</p>
+              <small>{mixPapers.reduce((sum, paper) => sum + paper.count, 0).toLocaleString('ko-KR')}문항 중 매회 20문항을 섞어서 풀어요</small>
+            </div>
+          </a>
+        </section>}
         <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
           {visiblePapers.map(paper => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;

@@ -79,3 +79,39 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
     </section>
   </div>, document.body);
 }
+
+// "이 문제를 푸시겠어요?" 확인 + 아래 회색 캡션으로 미리보기. 문제 서칭 등에서 쓴다.
+export function SolveConfirmDialog({ title, description, solveHref, loadPreview, onClose }) {
+  const titleId = useId();
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const [previewing, setPreviewing] = useState(false);
+  useEffect(() => {
+    if (previewing) return undefined;
+    const unlock = lockPageScroll();
+    const previous = document.activeElement;
+    dialogRef.current?.querySelector('.is-primary')?.focus({ preventScroll: true });
+    const onKey = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onCloseRef.current(); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      unlock();
+      window.removeEventListener('keydown', onKey, true);
+      if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
+    };
+  }, [previewing]);
+  if (previewing) return <QuizPreviewDialog solveHref={solveHref} load={loadPreview} onClose={() => setPreviewing(false)} />;
+  const stop = event => event.stopPropagation();
+  return createPortal(<div className="mb-preview-overlay" role="presentation" onClick={stop} onKeyDown={stop}
+    onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={dialogRef} className="mb-preview-dialog is-confirm" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <h2 id={titleId} className="mb-preview-confirm-title">{title}</h2>
+      {description && <p className="mb-preview-confirm-copy">{description}</p>}
+      <footer className="mb-preview-actions">
+        <button type="button" onClick={onClose}>취소</button>
+        <a className="is-primary" href={solveHref}>풀어보기</a>
+      </footer>
+      {loadPreview && <p className="mb-preview-caption"><span>어떤 문제인지 궁금하신가요?</span><button type="button" onClick={() => setPreviewing(true)}>미리보기</button></p>}
+    </section>
+  </div>, document.body);
+}

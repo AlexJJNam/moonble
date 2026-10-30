@@ -3802,6 +3802,8 @@
         paper += ':' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
       } else if (paper === 'custom') {
         paper += ':' + (params.get('bank') || '');
+      } else if (paper === 'mix') {
+        paper += ':' + (params.get('group') || '');
       } else if (paper === 'retry') {
         try { paper += ':' + (sessionStorage.getItem('moonble:retry-question-ids') || '') + ':' + (sessionStorage.getItem('moonble:retry-meta') || ''); } catch { return; }
       }
@@ -4222,10 +4224,18 @@
         const bankId = new URLSearchParams(window.location.search).get('bank');
         return window.getCustomBank(bankId) || BANK;
       }
+      if (paper === 'mix' && typeof window.getCustomBankMix === 'function') {
+        return window.getCustomBankMix(new URLSearchParams(window.location.search).get('group')) || BANK;
+      }
       if (paper === 'retry') {
         let ids = [];
         try { ids = JSON.parse(sessionStorage.getItem('moonble:retry-question-ids') || '[]'); } catch { ids = []; }
-        const customBank = (typeof window.getCustomBank === 'function' ? window.getCustomBank() : null) || [];
+        let retryMix = [];
+        try {
+          const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
+          if (retryMeta.paperId === 'mix' && typeof window.getCustomBankMix === 'function') retryMix = window.getCustomBankMix(retryMeta.groupId) || [];
+        } catch { retryMix = []; }
+        const customBank = [...retryMix, ...((typeof window.getCustomBank === 'function' ? window.getCustomBank() : null) || [])];
         const restored = (Array.isArray(ids) ? ids : []).map(id => BANK.find(q => q.id === id) || customBank.find(q => q.id === id)).filter(Boolean);
         return restored.length ? restored : BANK;
       }
@@ -4431,6 +4441,10 @@
       } else if (paperId === 'custom' && typeof window.getCustomBankMeta === 'function') {
         const bankMeta = window.getCustomBankMeta(bankId);
         if (bankMeta) { groupId = bankMeta.groupId || 'ungrouped'; paperTitle = bankMeta.title || paperTitle; paperDescription = bankMeta.description || ''; }
+      } else if (paperId === 'mix' && typeof window.getCustomBankMixMeta === 'function') {
+        const mixMeta = window.getCustomBankMixMeta(solveParams.get('group'));
+        bankId = null;
+        if (mixMeta) { groupId = mixMeta.groupId; paperTitle = mixMeta.title; paperDescription = mixMeta.description; }
       } else if (paperId === 'retry') {
         try {
           const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');
@@ -6059,7 +6073,7 @@
 </script>
 <script type="module">
 import { cachedAuthSession, getSessionSafely, supabase } from '/src/supabase.js';
-import { getCustomBank, getCustomBankMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
+import { getCustomBank, getCustomBankMeta, getCustomBankMix, getCustomBankMixMeta, setCustomBankUser, syncCustomBankCollection } from '/src/custom-bank.js';
 import { recordPaperAccess } from '/src/paper-activity.js';
 import { getQuizShare, submitQuizShareAttempt } from '/src/quiz-share.js';
 import { mountQuizCommunity } from '/src/quiz-community.jsx';
@@ -6227,13 +6241,16 @@ if (shareToken || requestedPaper === 'shared') {
 
     window.getCustomBank = bankId => getCustomBank(user.id, bankId);
     window.getCustomBankMeta = bankId => getCustomBankMeta(user.id, bankId);
+    window.getCustomBankMix = groupId => getCustomBankMix(user.id, groupId);
+    window.getCustomBankMixMeta = groupId => getCustomBankMixMeta(user.id, groupId);
     window.getActiveBank = function () {
       const selected = getSelectedPaperBank();
       return selected || getCustomBank(user.id) || BANK;
     };
 
     const solveParams = new URLSearchParams(location.search);
-    if (solveParams.get('paper') === 'custom' && !getCustomBank(user.id, solveParams.get('bank'))) {
+    if ((solveParams.get('paper') === 'custom' && !getCustomBank(user.id, solveParams.get('bank')))
+      || (solveParams.get('paper') === 'mix' && !getCustomBankMix(user.id, solveParams.get('group')))) {
       location.replace('./quiz.html');
     } else {
       const paperId = solveParams.get('paper') || 'random';
@@ -6252,6 +6269,11 @@ if (shareToken || requestedPaper === 'shared') {
         paperTitle = bankMeta?.title || paperTitle;
         paperDescription = bankMeta?.description || '';
         solverGroupId = bankMeta?.groupId || null;
+      } else if (paperId === 'mix') {
+        const mixMeta = getCustomBankMixMeta(user.id, solveParams.get('group'));
+        paperTitle = mixMeta?.title || paperTitle;
+        paperDescription = mixMeta?.description || '';
+        solverGroupId = mixMeta?.groupId || null;
       } else if (paperId === 'retry') {
         try {
           const retryMeta = JSON.parse(sessionStorage.getItem('moonble:retry-meta') || '{}');

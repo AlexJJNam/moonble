@@ -272,6 +272,31 @@ import { normalizeCategory } from './quiz-categories.js';
     var meta = getCustomBankMeta(userId, bankId);
     return meta ? meta.questions : null;
   }
+  // 폴더(그룹) Mix: 폴더 안 문제지 2개 이상의 문항을 모아 한 문제지처럼 푼다.
+  // 문항 id는 문제지마다 1부터라 겹치므로, 문제지 id에서 만든 고정 값으로 다시 매긴다(오답 다시 풀기에도 같은 id).
+  function mixBankKey(bankId) {
+    var hash = 0;
+    for (var index = 0; index < bankId.length; index += 1) hash = (hash * 31 + bankId.charCodeAt(index)) % 89999;
+    return hash + 10000;
+  }
+  export function getCustomBankMixMeta(userId, groupId) {
+    var collection = getCustomBankCollection(userId);
+    var id = groupId || DEFAULT_GROUP_ID;
+    var banks = collection.banks.filter(function (bank) { return (bank.groupId || DEFAULT_GROUP_ID) === id; });
+    if (banks.length < 2) return null;
+    var group = collection.groups.find(function (item) { return item.id === id; });
+    var name = id === DEFAULT_GROUP_ID ? '미분류' : (group ? group.name : '폴더');
+    var questions = [];
+    banks.forEach(function (bank) {
+      var key = mixBankKey(bank.id);
+      bank.questions.forEach(function (question) { questions.push({ ...question, id: key * 10000 + question.id }); });
+    });
+    return { groupId: id, title: name + ' Mix', description: banks.length + '개 문제지를 섞어서 풀어요.', bankCount: banks.length, questions: questions };
+  }
+  export function getCustomBankMix(userId, groupId) {
+    var meta = getCustomBankMixMeta(userId, groupId);
+    return meta ? meta.questions : null;
+  }
   export function setActiveCustomBank(bankId, userId) {
     try {
       var collection = readCollection(userId);

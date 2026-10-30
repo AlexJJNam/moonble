@@ -6,13 +6,18 @@ import { CommunitySortToggle } from './quiz-community.jsx';
 import { SearchField } from './search-field.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
+import { SolveConfirmDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
+import { getQuizShare } from './quiz-share.js';
 import { listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles } from './public-quizzes-api.js';
 
 function PublicQuizCard({ item }) {
+  const [confirming, setConfirming] = useState(false);
+  const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : '', item.average_score != null && item.participants > 0 ? `평균 ${Number(item.average_score)}점` : ''].filter(Boolean).join(' · ');
   const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples: item.preview ? [{ title: item.preview, options: [] }] : [] };
   return <article className="paper-card public-quiz-card">
-    <a className="paper-card-link" href={`./solve.html#share=${encodeURIComponent(item.token)}`} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}>
+    <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
+      onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       <PaperPreview paper={paper} />
       <div className="paper-info">
         <div className="paper-copy">
@@ -22,6 +27,8 @@ function PublicQuizCard({ item }) {
         </div>
       </div>
     </a>
+    {confirming && <SolveConfirmDialog title="이 문제를 푸시겠어요?" description={`${item.title} · ${stats}`} solveHref={href}
+      loadPreview={() => getQuizShare(item.token).then(share => previewPaperFromQuestions(share))} onClose={() => setConfirming(false)} />}
   </article>;
 }
 
