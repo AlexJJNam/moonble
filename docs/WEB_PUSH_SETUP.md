@@ -67,9 +67,13 @@ Until the migration, keys, function, webhook, frontend deployment, and per-devic
 
 The workspace timetable (`prd.html`, default tab) stores weekly study schedules in `public.study_schedules` (RLS: each user reads and writes only their own rows). A schedule can link a paper; tapping its reminder opens that paper's solve screen.
 
-1. Run `database/024_study_schedules.sql` in the SQL Editor. It creates the table, the reminder queue `public.study_reminder_notifications`, the function `moonble_enqueue_study_reminders()`, and a `pg_cron` job `moonble-study-reminders` that runs every minute. Each schedule keeps the browser time zone it was saved with, and `last_reminded_at` prevents duplicate reminders for the same occurrence. If the SQL output shows a notice that pg_cron was skipped, enable **pg_cron** in **Database → Extensions** and run the file again.
-2. Redeploy the push function, which now also handles reminder rows: `supabase functions deploy quiz-share-push`.
-3. In **Database → Webhooks**, add a second webhook exactly like step 5 but for table `public.study_reminder_notifications` (event `INSERT`, Supabase Edge Function `quiz-share-push`, same secret header).
-4. Each device turns on notifications once from the timetable (**알림 허용** / **푸시 알림 켜기**).
+**Now (app work):** run `database/024_study_schedules.sql`. It creates the schedule table, the reminder queue `public.study_reminder_notifications` and `moonble_enqueue_study_reminders()`, but schedules no background job. Schedules saved on a device before 024 move to Supabase automatically. While any Moonble page is open, reminders appear as an in-app card and a system notification (after the user allows notifications).
 
-Before these steps are complete, the timetable still works: schedules are kept on the device until the table exists (then moved to Supabase automatically), and reminders appear as an in-app card and a system notification while any Moonble page is open. In-app and push reminders share the tag `moonble-schedule-<id>`, so a device shows one notification per occurrence.
+**Later (push deployment, after the app work is finished):**
+
+1. Complete steps 2–5 above (VAPID keys, `VITE_WEB_PUSH_PUBLIC_KEY`, function secrets, `quiz-share-push` deployment). The function already handles reminder rows.
+2. In **Database → Webhooks**, add a second webhook like step 5 for table `public.study_reminder_notifications` (event `INSERT`, Edge Function `quiz-share-push`, same secret header).
+3. Run `database/025_study_reminder_cron.sql` to schedule the `pg_cron` job `moonble-study-reminders` every minute. If it reports that pg_cron was skipped, enable **pg_cron** in **Database → Extensions** and run it again.
+4. Each device turns on push once from the timetable (**푸시 알림 켜기**).
+
+Each schedule keeps the browser time zone it was saved with, and `last_reminded_at` prevents duplicate reminders for the same occurrence. In-app and push reminders share the tag `moonble-schedule-<id>`, so a device shows one notification per occurrence.

@@ -1,7 +1,7 @@
--- 워크스페이스 시간표: 요일별 일정(시간·메모·알림·예약 문제지)과 알림 예약.
--- 1) study_schedules: 내 일정만 읽고 쓸 수 있다(RLS).
--- 2) moonble_enqueue_study_reminders(): 알림 시각이 된 일정을 study_reminder_notifications에 넣는다(pg_cron이 1분마다 실행).
--- 3) study_reminder_notifications INSERT를 Database Webhook으로 quiz-share-push 함수에 연결하면 앱을 닫아도 푸시가 간다(docs/WEB_PUSH_SETUP.md 7단계).
+-- 워크스페이스 시간표: 요일별 일정(시간·메모·알림·예약 문제지)과 알림 구조.
+-- 1) study_schedules: 내 일정만 읽고 쓸 수 있다(RLS). 지금 실행하면 시간표가 서버에 저장된다.
+-- 2) study_reminder_notifications + moonble_enqueue_study_reminders(): 앱을 닫아도 오는 푸시 알림의 구조만 만든다.
+--    실제 발송(1분마다 실행하는 pg_cron 예약)은 푸시 배포 때 025_study_reminder_cron.sql로 켠다(docs/WEB_PUSH_SETUP.md 7단계).
 -- 기존 데이터는 바꾸지 않는다. 다시 실행해도 안전하다.
 
 create table if not exists public.study_schedules (
@@ -130,15 +130,3 @@ end;
 $$;
 revoke all on function public.moonble_enqueue_study_reminders() from public, anon, authenticated;
 revoke all on function public.moonble_study_schedule_guard() from public, anon, authenticated;
-
--- pg_cron으로 1분마다 실행. pg_cron을 켤 수 없는 환경이면 안내만 남기고 나머지는 그대로 적용한다
--- (Supabase → Database → Extensions에서 pg_cron을 켠 뒤 이 파일을 다시 실행하면 된다).
-do $$
-begin
-  create extension if not exists pg_cron;
-  perform cron.unschedule(jobid) from cron.job where jobname = 'moonble-study-reminders';
-  perform cron.schedule('moonble-study-reminders', '* * * * *', 'select public.moonble_enqueue_study_reminders()');
-exception when others then
-  raise notice 'pg_cron 예약을 건너뛰었어요: %. Database → Extensions에서 pg_cron을 켠 뒤 다시 실행해주세요.', sqlerrm;
-end;
-$$;
