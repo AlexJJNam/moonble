@@ -809,7 +809,7 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
           <a href="./quiz.html#paper-library" aria-current={active === 'papers' ? 'page' : undefined}><BookOpen size={18} aria-hidden="true" /><span>문제지</span></a>
           <a href="./quiz.html#create" aria-current={active === 'create' ? 'page' : undefined}><Sparkles size={18} aria-hidden="true" /><span>문제 생성하기</span></a>
           <a href="./quiz.html#achievement" aria-current={active === 'achievement' ? 'page' : undefined}><BarChart3 size={18} aria-hidden="true" /><span>나의 성취도</span></a>
-          <a href="./prd.html" aria-current={active === 'prd' ? 'page' : undefined}><FileText size={18} aria-hidden="true" /><span>PRD</span></a>
+          <a href="./prd.html" aria-current={active === 'prd' ? 'page' : undefined}><FileText size={18} aria-hidden="true" /><span>워크스페이스</span></a>
           <a className="mb-app-my" href="./account.html" aria-current={active === 'account' ? 'page' : undefined}><UserRound size={18} aria-hidden="true" /><span>MY</span></a>
         </nav>}
       {!solver && user && favoriteSidebarItems.length > 0 && <section className="mb-favorites" aria-labelledby="mb-favorites-heading">

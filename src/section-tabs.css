@@ -1,0 +1,9 @@
+/* 화면 상위 탭(문제지·워크스페이스 공통). 모바일에서는 앱 헤더 안(.mb-mobile-subnav)에 들어간다. */
+.quiz-library-tabs { display: flex; gap: var(--mb-space-24); margin: -4px 0 var(--mb-space-16); border-bottom: 1px solid var(--mb-border); }
+.quiz-library-tabs a { position: relative; min-height: var(--mb-target-size); display: inline-flex; align-items: center; padding: 0 2px; color: var(--mb-text-tertiary); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-medium); text-decoration: none; white-space: nowrap; transition: color var(--mb-duration); }
+@media (hover: hover) { .quiz-library-tabs a:hover { color: var(--mb-text-primary); } }
+.quiz-library-tabs a[aria-current='page'] { color: var(--mb-text-primary); font-weight: var(--mb-weight-bold); }
+.quiz-library-tabs a[aria-current='page']::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--mb-text-primary); }
+.quiz-library-tabs a:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; border-radius: 4px; }
+@media (min-width: 768px) { .quiz-library-tabs--desktop { margin-bottom: var(--mb-space-24); } }
+@media (max-width: 767px) { .quiz-library-tabs--desktop { display: none; } }

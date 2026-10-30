@@ -33,6 +33,7 @@ import { getFavoritePaperIds, removeFavoritePaper, toggleFavoritePaper } from '.
 import { buildGroupColorMap, defaultGroupColorKey, groupColorCheckColor, groupColorPreviewStyle, groupColorStyle, groupColorSwatch, GROUP_COLOR_OPTIONS, normalizeGroupHex } from './paper-group-colors.js';
 import { PublicQuizSearch } from './public-quizzes.jsx';
 import { SearchField } from './search-field.jsx';
+import { SectionTabs } from './section-tabs.jsx';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
 import './design-system.css';
@@ -50,12 +51,13 @@ const supportsMousePaperDrag = () => typeof window === 'undefined'
   || !window.matchMedia
   || window.matchMedia('(pointer: fine) and (hover: hover)').matches;
 
+const LIBRARY_TABS = [
+  { value: 'papers', href: '#library', label: '나의 문제지' },
+  { value: 'public', href: '#public', label: '문제 서칭' },
+  { value: 'community', href: '#community', label: '커뮤니티' },
+];
 function QuizLibraryTabs({ section, className = '' }) {
-  return <nav className={`quiz-library-tabs${className ? ` ${className}` : ''}`} aria-label="문제지 메뉴">
-    <a href="#library" aria-current={section === 'papers' ? 'page' : undefined}>나의 문제지</a>
-    <a href="#public" aria-current={section === 'public' ? 'page' : undefined}>문제 서칭</a>
-    <a href="#community" aria-current={section === 'community' ? 'page' : undefined}>커뮤니티</a>
-  </nav>;
+  return <SectionTabs label="문제지 메뉴" items={LIBRARY_TABS} current={section} className={className} />;
 }
 
 const initialSession = cachedAuthSession();

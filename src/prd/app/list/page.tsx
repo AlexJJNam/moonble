@@ -179,7 +179,7 @@ const ProjectManagementDialogContent = React.memo(({
 ProjectManagementDialogContent.displayName = 'ProjectManagementDialogContent';
 
 
-export default function PrdListPage() {
+export default function PrdListPage({ tabs = null }: { tabs?: React.ReactNode }) {
   const [groupedPrds, setGroupedPrds] = useState<GroupedPrds>({});
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -846,6 +846,7 @@ export default function PrdListPage() {
 
 
       <div className="prd-list-shell mb-page-gutter">
+        {tabs}
         <div className="prd-list-heading mb-4">
           <h1 className="mb-page-title">PRD</h1>
         </div>

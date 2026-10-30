@@ -30,3 +30,8 @@
 .privacy-request .privacy-confirm { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 16px; }
 .privacy-request .privacy-confirm input { width: 20px; min-height: 20px; margin: 0; accent-color: var(--mb-primary-strong); }
 .privacy-request button:disabled { opacity: .5; }
+
+/* 워크스페이스 · 시간표 설정 안내 */
+.workspace-empty { padding: var(--mb-space-48) var(--mb-space-16); border-radius: var(--mb-radius-16); background: var(--mb-surface-muted); text-align: center; }
+.workspace-empty strong { display: block; color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); }
+.workspace-empty p { margin: var(--mb-space-4) 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 20px; }
