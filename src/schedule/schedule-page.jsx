@@ -3,6 +3,8 @@
 // 일정에 문제지를 검색해 연결하면 알림을 눌렀을 때 그 문제지 풀이로 이동한다(MyStudyLife).
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { WheelPicker, WheelPickerWrapper } from '@ncdai/react-wheel-picker';
+import '@ncdai/react-wheel-picker/style.css';
 import { Bell, BellOff, BookOpen, CalendarPlus, Plus, Search, X } from 'lucide-react';
 import { FlowActionButton } from '../flow-action-button.jsx';
 import { getCustomBankCollection } from '../custom-bank.js';
@@ -20,6 +22,23 @@ import {
 import './schedule.css';
 
 const HOUR_HEIGHT = 48;
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => { const value = String(hour).padStart(2, '0'); return { value, label: value }; });
+const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, index) => { const value = String(index * 5).padStart(2, '0'); return { value, label: value }; });
+const LAST_START = 23 * 60 + 55;
+
+// iOS처럼 굴려서 고르는 시·분 휠(React Wheel Picker). 분은 5분 단위.
+function TimeWheel({ value, onChange, label }) {
+  const [hour, rawMinute] = value.split(':');
+  const minute = String((Math.round(Number(rawMinute) / 5) * 5) % 60).padStart(2, '0');
+  const wheelProps = { infinite: true, optionItemHeight: 36, visibleCount: 16, classNames: { optionItem: 'mb-time-wheel-option', highlightWrapper: 'mb-time-wheel-highlight' } };
+  return <div className="mb-time-wheel" role="group" aria-label={`${label} 시간 선택`}>
+    <WheelPickerWrapper className="mb-time-wheel-wrapper">
+      <WheelPicker {...wheelProps} options={HOUR_OPTIONS} value={hour} onValueChange={next => onChange(`${next}:${minute}`)} />
+      <WheelPicker {...wheelProps} options={MINUTE_OPTIONS} value={minute} onValueChange={next => onChange(`${hour}:${next}`)} />
+    </WheelPickerWrapper>
+    <span className="mb-time-wheel-colon" aria-hidden="true">:</span>
+  </div>;
+}
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -198,6 +217,7 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [timeEdit, setTimeEdit] = useState(null);
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -209,6 +229,13 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
     return () => { unlock(); document.removeEventListener('keydown', onKey); };
   }, []);
   const set = patch => setDraft(current => ({ ...current, ...patch }));
+  // 시작을 바꾸면 일정 길이를 유지한 채 끝도 함께 옮긴다.
+  const changeStart = next => setDraft(current => {
+    const duration = Math.max(5, toMinutes(current.end) - toMinutes(current.start));
+    const start = Math.min(toMinutes(next), LAST_START);
+    return { ...current, start: formatMinutes(start), end: formatMinutes(Math.min(start + duration, 23 * 60 + 59)) };
+  });
+  const timeInvalid = toMinutes(draft.end) <= toMinutes(draft.start);
   async function submit(event) {
     event.preventDefault();
     if (busy) return;
@@ -242,9 +269,16 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
             onClick={() => set({ days: draft.days.includes(day.value) ? draft.days.filter(value => value !== day.value) : [...draft.days, day.value] })}>{day.label}</button>)}
         </div>
       </fieldset>
-      <div className="mb-schedule-times">
-        <label className="mb-schedule-field"><span>시작</span><input type="time" step="300" value={draft.start} onChange={event => set({ start: event.target.value || draft.start })} /></label>
-        <label className="mb-schedule-field"><span>끝</span><input type="time" step="300" value={draft.end} onChange={event => set({ end: event.target.value || draft.end })} /></label>
+      <div className="mb-schedule-field">
+        <span>시간</span>
+        <div className="mb-schedule-time-row">
+          <button type="button" aria-expanded={timeEdit === 'start'} className={timeEdit === 'start' ? 'is-open' : ''} onClick={() => setTimeEdit(current => current === 'start' ? null : 'start')}><small>시작</small><b>{draft.start}</b></button>
+          <span aria-hidden="true">→</span>
+          <button type="button" aria-expanded={timeEdit === 'end'} className={`${timeEdit === 'end' ? 'is-open' : ''}${timeInvalid ? ' is-invalid' : ''}`} onClick={() => setTimeEdit(current => current === 'end' ? null : 'end')}><small>끝</small><b>{draft.end}</b></button>
+        </div>
+        {timeEdit && <TimeWheel key={timeEdit} label={timeEdit === 'start' ? '시작' : '끝'} value={timeEdit === 'start' ? draft.start : draft.end}
+          onChange={next => (timeEdit === 'start' ? changeStart(next) : set({ end: next }))} />}
+        {timeInvalid && <small className="mb-schedule-time-error">끝나는 시간은 시작 시간보다 늦어야 해요.</small>}
       </div>
       <div className="mb-schedule-field"><span>문제지 연결</span>
         <PaperPicker userId={userId} value={draft.paper} onChange={paper => set({ paper })} />

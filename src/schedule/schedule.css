@@ -75,7 +75,21 @@
 .mb-schedule-field input[type='text'], .mb-schedule-field input[type='time'], .mb-schedule-field textarea, .mb-schedule-field select { box-sizing: border-box; width: 100%; min-height: var(--mb-control-height); padding: 0 14px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); font-size: var(--mb-font-16); line-height: 24px; }
 .mb-schedule-field textarea { min-height: 64px; padding: 10px 14px; resize: vertical; }
 .mb-schedule-field small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
-.mb-schedule-times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* 시간: [시작 → 끝] 줄 + 누른 쪽 아래에 펼쳐지는 시·분 휠 */
+.mb-schedule-time-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.mb-schedule-time-row > span { color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
+.mb-schedule-time-row button { min-height: var(--mb-control-height); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 14px; border: 1px solid var(--mb-border-strong); border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); font-family: var(--mb-font-sans); cursor: pointer; }
+.mb-schedule-time-row button small { color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.mb-schedule-time-row button b { font-size: var(--mb-font-17); line-height: 24px; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; }
+.mb-schedule-time-row button.is-open { border-color: #404040; box-shadow: inset 0 0 0 1px #404040; }
+.mb-schedule-time-row button.is-invalid b { color: var(--mb-danger); text-decoration: line-through; }
+.mb-schedule-time-error { color: var(--mb-danger) !important; }
+.mb-time-wheel { position: relative; margin-top: 4px; padding: 4px 0; border-radius: var(--mb-radius-16); background: var(--mb-surface-muted); }
+.mb-time-wheel-wrapper { width: min(260px, 100%); margin: 0 auto; gap: 24px; }
+.mb-time-wheel-wrapper [data-rwp] { flex: 1; }
+.mb-time-wheel-option { color: var(--mb-text-tertiary); font-family: var(--mb-font-sans); font-size: var(--mb-font-17); font-variant-numeric: tabular-nums; }
+.mb-time-wheel-highlight { border-radius: var(--mb-radius-12); color: var(--mb-text-primary); background: var(--mb-surface); box-shadow: 0 1px 3px rgb(15 23 42 / 8%); font-family: var(--mb-font-sans); font-size: 1.25rem; font-weight: var(--mb-weight-semibold); font-variant-numeric: tabular-nums; }
+.mb-time-wheel-colon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -54%); color: var(--mb-text-primary); font-size: 1.25rem; font-weight: var(--mb-weight-semibold); pointer-events: none; }
 .mb-schedule-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .mb-schedule-days button, .mb-schedule-chips button { min-height: 40px; padding: 0 4px; border: 0; border-radius: var(--mb-radius-12); color: var(--mb-text-secondary); background: var(--mb-surface-muted); font-family: var(--mb-font-sans); font-size: var(--mb-font-14); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
 .mb-schedule-days button[aria-pressed='true'], .mb-schedule-chips button[aria-pressed='true'] { color: #fff; background: #404040; }
