@@ -43,7 +43,7 @@ const supportsMousePaperDrag = () => typeof window === 'undefined'
 
 const LIBRARY_TABS = [
   { value: 'papers', href: '#library', label: '나의 문제지' },
-  { value: 'public', href: '#public', label: '문제 서칭' },
+  { value: 'public', href: '#public', label: '문제 찾기' },
   { value: 'community', href: '#community', label: '커뮤니티' },
 ];
 function QuizLibraryTabs({ section, className = '' }) {
@@ -114,7 +114,7 @@ function SheetLayer({ active, onClose, label, children }) {
 const VISIBILITY_OPTIONS = [
   { value: 'personal', label: '미공개', copy: '나만 볼 수 있어요. 공유 링크가 중지돼요.' },
   { value: 'partial', label: '일부 공개', copy: '링크를 아는 사람만 풀 수 있어요.' },
-  { value: 'public', label: '공개', copy: '문제 서칭에 노출되고 누구나 풀 수 있어요.' },
+  { value: 'public', label: '공개', copy: '문제 찾기에 노출되고 누구나 풀 수 있어요.' },
 ];
 const VISIBILITY_LABELS = { personal: '미공개', partial: '일부 공개', public: '공개' };
 
@@ -1128,7 +1128,7 @@ function QuizLibrary() {
   const editingPaperCards = editMode;
   const hasLibrarySection = ['papers', 'public', 'community'].includes(section);
   // 페이지 제목은 선택한 탭 이름과 같게 둔다(대메뉴 이름은 '문제지').
-  const libraryTitle = section === 'public' ? '문제 서칭' : section === 'community' ? '커뮤니티' : '나의 문제지';
+  const libraryTitle = section === 'public' ? '문제 찾기' : section === 'community' ? '커뮤니티' : '나의 문제지';
   return <div className={`quiz-page is-initial-reveal${editMode && section === 'papers' ? ' is-library-editing' : ''}`} onClick={() => openMenu && setOpenMenu(null)}>
     <a className="quiz-skip" href={section === 'achievement' ? '#achievement' : section === 'create' ? '#quiz-creator' : '#paper-library'}>{section === 'achievement' ? '성취도 내용으로 건너뛰기' : section === 'create' ? '문제 생성 내용으로 건너뛰기' : '문제지 목록으로 건너뛰기'}</a>
     <AppHeader active={['community', 'public'].includes(section) ? 'papers' : section} user={user} pending={pending} error={error} onLogout={logout} mobileSubnav={hasLibrarySection ? <QuizLibraryTabs section={section} /> : section === 'create' ? <CreatorTabs current={creatorScreen === 'create' ? 'create' : 'upload'} onSelect={next => creatorStepRef.current?.(next)} /> : null} />

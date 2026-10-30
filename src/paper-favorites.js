@@ -43,7 +43,7 @@ export function removeFavoritePaper(userId, paperId) {
   return next;
 }
 
-// 문제 서칭(공개 문제) 하트: 즐겨찾기처럼 이 기기에 저장한다. 공유 토큰과 제목을 함께 남긴다.
+// 문제 찾기(공개 문제) 하트: 즐겨찾기처럼 이 기기에 저장한다. 공유 토큰과 제목을 함께 남긴다.
 function likeStorageKey(userId) {
   return userId ? `moonble:user:${userId}:public-quiz-likes-v1` : null;
 }

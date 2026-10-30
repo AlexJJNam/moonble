@@ -112,7 +112,7 @@ function localPapers(userId) {
   ];
 }
 
-// 일정에 연결할 문제지 검색: 기기에 있는 문제지 + 문제 서칭의 공개 문제
+// 일정에 연결할 문제지 검색: 기기에 있는 문제지 + 문제 찾기의 공개 문제
 function PaperPicker({ userId, value, onChange }) {
   const [query, setQuery] = useState('');
   const [remote, setRemote] = useState([]);

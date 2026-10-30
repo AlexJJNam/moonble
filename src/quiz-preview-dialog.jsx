@@ -133,7 +133,7 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
   </div>, document.body);
 }
 
-// "이 문제를 푸시겠어요?" 확인 + 아래 회색 캡션으로 미리보기. 문제 서칭 등에서 쓴다.
+// "이 문제를 푸시겠어요?" 확인 + 아래 회색 캡션으로 미리보기. 문제 찾기 등에서 쓴다.
 export function SolveConfirmDialog({ title, description, solveHref, loadPreview, onClose }) {
   const titleId = useId();
   const dialogRef = useRef(null);

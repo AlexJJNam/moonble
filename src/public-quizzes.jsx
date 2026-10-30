@@ -1,8 +1,8 @@
-// 문제 서칭: 공개로 올린 문제지를 검색해서 풀어보는 탭.
+// 문제 찾기: 공개로 올린 문제지를 검색해서 풀어보는 탭.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Heart, LayoutGrid, List, Search } from 'lucide-react';
 import { PaperPreview } from './paper-preview.jsx';
-import { CommunitySortToggle } from './quiz-community.jsx';
+import { CommunityAvatar, CommunitySortToggle } from './quiz-community.jsx';
 import { SearchField } from './search-field.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
@@ -96,7 +96,9 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       <PaperPreview paper={paper} />
-      <div className="paper-info">
+      <div className="paper-info public-quiz-info">
+        {/* 유튜브처럼 제목 왼쪽에 출제자 프로필(사진이 없으면 이니셜) */}
+        <CommunityAvatar name={item.author_name} path={item.author_avatar || ''} />
         <div className="paper-copy">
           <h2 className="mb-card-title">{item.title}</h2>
           <p>{categoryLabel(item.category) ? `${categoryLabel(item.category)} · ` : ''}{item.author_name} · {stats}</p>
