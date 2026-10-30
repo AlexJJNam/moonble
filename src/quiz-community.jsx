@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
@@ -11,6 +11,7 @@ import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dia
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
+import { QUIZ_CATEGORIES, categoryLabel } from './quiz-categories.js';
 import {
   COMMENT_BODY_LIMIT, COMMUNITY_PAGE_SIZE, COMMUNITY_TOPICS, CommunityUnavailableError, POST_BODY_LIMIT, POST_TITLE_LIMIT,
   canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getPost, getSolvedShares,
@@ -37,7 +38,33 @@ export function CommunitySortToggle({ ariaLabel, sort, onChange }) {
 }
 
 function topicLabel(value) {
-  return COMMUNITY_TOPICS.find(topic => topic.value === value)?.label || '';
+  return categoryLabel(value) || COMMUNITY_TOPICS.find(topic => topic.value === value)?.label || '';
+}
+
+function CommunityCategoryFilter({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const mobile = useDockLayout();
+  const currentLabel = value ? categoryLabel(value) : '전체 카테고리';
+  if (!mobile) return <label className="quiz-community-category-filter">
+    <span className="mb-sr-only">커뮤니티 카테고리 필터</span>
+    <select value={value || ''} onChange={event => onChange(event.target.value || null)}>
+      <option value="">전체 카테고리</option>
+      {QUIZ_CATEGORIES.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+    </select><ChevronDown size={14} aria-hidden="true" />
+  </label>;
+  return <>
+    <button type="button" className="quiz-community-category-trigger" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+      {currentLabel}<ChevronDown size={14} aria-hidden="true" />
+    </button>
+    {open && <Dialog className="is-category-filter" labelledBy="communityCategoryFilterTitle" onClose={() => setOpen(false)}>
+      <div className="quiz-community-category-sheet">
+        <h2 id="communityCategoryFilterTitle">카테고리</h2>
+        <button type="button" className={!value ? 'is-selected' : ''} aria-pressed={!value} onClick={() => { onChange(null); setOpen(false); }}>전체 카테고리</button>
+        {QUIZ_CATEGORIES.map(item => <button key={item.value} type="button" className={value === item.value ? 'is-selected' : ''} aria-pressed={value === item.value}
+          onClick={() => { onChange(item.value); setOpen(false); }}>{item.label}</button>)}
+      </div>
+    </Dialog>}
+  </>;
 }
 
 export function toViewer(user) {
@@ -323,10 +350,11 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
         <CommunityAvatar name={viewer.name} path={viewer.avatarPath} />
         <strong id={`${id}-title`}>{viewer.name}</strong>
         <label className="quiz-community-topic">
-          <span className="mb-sr-only">주제</span>
+          <span className="mb-sr-only">카테고리</span>
           <select value={draft.topic} onChange={event => onDraftChange({ ...draft, topic: event.target.value })}>
-            <option value="">주제 선택</option>
-            {COMMUNITY_TOPICS.map(topic => <option key={topic.value} value={topic.value}>{topic.label}</option>)}
+            <option value="">카테고리 선택</option>
+            {QUIZ_CATEGORIES.map(category => <option key={category.value} value={category.value}>{category.label}</option>)}
+            {draft.topic && !QUIZ_CATEGORIES.some(category => category.value === draft.topic) && <option value={draft.topic}>{topicLabel(draft.topic)}</option>}
           </select>
         </label>
         <button type="button" className="quiz-community-icon-button" aria-label="닫기" onClick={onClose} disabled={busy}><X size={20} aria-hidden="true" /></button>
@@ -726,6 +754,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   // 마이페이지 목록(mine·liked)은 최신순으로만 보여주고 새 글 입력창은 두지 않는다.
   const listOnly = scope === 'mine' || scope === 'liked';
   const [sort, setSort] = useState('latest');
+  const [category, setCategory] = useState(null);
   const [state, setState] = useState({ status: 'loading', posts: [], total: 0, error: '' });
   const [loadingMore, setLoadingMore] = useState(false);
   const [draft, setDraft] = useState(() => ({ ...EMPTY_DRAFT, attachment: fixedAttachment }));
@@ -741,14 +770,14 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     if (append) setLoadingMore(true);
     else setState(current => ({ ...current, status: current.posts.length ? 'refreshing' : 'loading', error: '' }));
     try {
-      const page = await listPosts({ scope, token, sort: nextSort, offset });
+      const page = await listPosts({ scope, token, sort: nextSort, offset, category: scope === 'all' && variant === 'page' ? category : null });
       if (request !== requestRef.current) return;
       setState(current => ({ status: 'ready', error: '', total: page.total, posts: append ? [...current.posts, ...page.posts.filter(post => !current.posts.some(item => item.id === post.id))] : page.posts }));
     } catch (loadError) {
       if (request !== requestRef.current) return;
       setState(current => ({ ...current, status: loadError instanceof CommunityUnavailableError ? 'unavailable' : 'error', error: loadError.message }));
     } finally { if (append) setLoadingMore(false); }
-  }, [scope, token]);
+  }, [scope, token, category, variant]);
 
   useEffect(() => { load(sort); }, [sort, viewer?.id, load]);
 
@@ -772,7 +801,9 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     }
     setDraft({ ...EMPTY_DRAFT, attachment: fixedAttachment });
     setDialog(null);
-    setState(current => ({ ...current, total: current.total + 1, posts: [post, ...current.posts.filter(item => item.id !== post.id)] }));
+    if (!category || nextDraft.topic === category) {
+      setState(current => ({ ...current, total: current.total + 1, posts: [post, ...current.posts.filter(item => item.id !== post.id)] }));
+    }
     announce('글을 남겼어요.');
     onPosted?.(post);
   }
@@ -818,7 +849,10 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <span>{canWrite ? (draft.body.trim() ? '작성 중인 글이 있어요' : placeholder) : '로그인하고 글을 남겨보세요'}</span>
       <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
     </button>}
-    {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-sort"><CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} /></div>}
+    {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-controls">
+      <CommunityCategoryFilter value={category} onChange={value => { setCategory(value); }} />
+      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} />
+    </div>}
 
     {state.status === 'loading' && <ul className="quiz-community-skeleton" aria-label="글을 불러오는 중">{[0, 1].map(key => <li key={key}><i /><span><b /><b /><b /></span></li>)}</ul>}
     {state.status === 'error' && <div className="quiz-community-error" role="alert">

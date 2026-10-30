@@ -1,6 +1,7 @@
 // 커뮤니티 RPC. 테이블은 직접 읽지 않고 012_community.sql 의 함수만 호출한다.
 import { supabase } from './supabase.js';
 import { hashQuizShareToken, readQuizShareParticipantId } from './quiz-share.js';
+import { normalizeCategory } from './quiz-categories.js';
 
 export const COMMUNITY_TOPICS = [
   { value: 'question', label: '질문' },
@@ -71,13 +72,15 @@ export function getSolvedShares() {
   } catch { return []; }
 }
 
-export async function listPosts({ scope = 'all', token = null, sort = 'popular', offset = 0 } = {}) {
-  const { data, error } = await requireSupabase().rpc('moonble_list_community_posts', {
+export async function listPosts({ scope = 'all', token = null, sort = 'popular', offset = 0, category = null } = {}) {
+  const normalizedCategory = normalizeCategory(category);
+  const { data, error } = await requireSupabase().rpc(normalizedCategory ? 'moonble_list_community_posts_by_category' : 'moonble_list_community_posts', {
     p_scope: scope,
     p_token_hash: scope === 'share' ? await communityTokenHash(token) : null,
     p_sort: sort,
     p_offset: offset,
     p_limit: COMMUNITY_PAGE_SIZE,
+    ...(normalizedCategory ? { p_category: normalizedCategory } : {}),
   });
   if (error) throw failure(error, '글을 불러오지 못했어요.');
   return {
