@@ -172,6 +172,14 @@ export async function getMyCommunitySummary() {
   return { posts: Number(data?.posts) || 0, comments: Number(data?.comments) || 0, likes: Number(data?.likes) || 0 };
 }
 
+// 글 하나를 피드와 같은 형태로 불러온다(017_community_post_detail.sql).
+export async function getPost(postId) {
+  const { data, error } = await requireSupabase().rpc('moonble_get_community_post', { p_post_id: postId });
+  if (error) throw failure(error, '글을 불러오지 못했어요.');
+  if (!data?.id) throw new Error('글을 찾지 못했어요. 삭제됐을 수 있어요.');
+  return data;
+}
+
 export async function listMyComments(offset = 0) {
   const { data, error } = await requireSupabase().rpc('moonble_list_my_community_comments', { p_offset: offset, p_limit: COMMUNITY_PAGE_SIZE });
   if (error) throw failure(error, '내가 쓴 댓글을 불러오지 못했어요.');

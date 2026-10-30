@@ -1,7 +1,8 @@
 // 마이페이지 커뮤니티 활동: 요약 섹션과 상세(작성한 글 / 작성한 댓글 / 좋아요한 글).
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Heart, MessageCircle, PenLine } from 'lucide-react';
-import { CommunityFeed, toViewer } from './quiz-community.jsx';
+import { ChevronLeft, MessageCircle } from 'lucide-react';
+import { CommunityAvatar, CommunityFeed, CommunityPostDetail, MentionText, toViewer } from './quiz-community.jsx';
+import { CommunityGif } from './community-gif.jsx';
 import { formatRelativeDate } from './date-format.js';
 import { COMMUNITY_PAGE_SIZE, getMyCommunitySummary, listMyComments } from './quiz-community-api.js';
 import './account-community.css';
@@ -47,9 +48,11 @@ export function CommunityActivitySummary() {
   </section>;
 }
 
-function MyCommentList() {
+// 내가 단 댓글: 피드와 같은 카드 모양. 누르면 그 글의 상세 화면(댓글 위치)을 연다.
+function MyCommentList({ viewer }) {
   const [state, setState] = useState({ status: 'loading', items: [], total: 0 });
   const [more, setMore] = useState(false);
+  const [openPostId, setOpenPostId] = useState(null);
   async function load(offset) {
     const page = await listMyComments(offset);
     setState(current => ({ status: 'ready', total: page.total, items: offset ? [...current.items, ...page.comments.filter(item => !current.items.some(old => old.id === item.id))] : page.comments }));
@@ -59,19 +62,36 @@ function MyCommentList() {
   if (state.status === 'error') return <p className="account-community-muted" role="alert">댓글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>;
   if (!state.items.length) return <div className="account-community-empty"><strong>아직 작성한 댓글이 없어요</strong><p>관심 있는 글에 댓글을 남겨보세요.</p></div>;
   return <>
-    <ul className="account-community-comments">
-      {state.items.map(item => <li key={item.id}>
-        <a href="./quiz.html#community" aria-label={`${item.post_title || item.post_body || '글'}에 남긴 댓글, 커뮤니티에서 보기`}>
-          <p className="account-community-on">{item.post_title || item.post_body || '삭제된 내용 없음'}<small> · {item.post_author_name}</small></p>
-          <p className="account-community-text">{item.body || 'GIF'}</p>
-          <p className="account-community-meta"><time dateTime={item.created_at}>{formatRelativeDate(item.created_at)}</time>{item.like_count > 0 && <span><Heart size={13} aria-hidden="true" />{item.like_count}</span>}</p>
-        </a>
-      </li>)}
-    </ul>
+    <ol className="quiz-community-feed account-comment-feed">
+      {state.items.map(item => {
+        const origin = item.post_title || item.post_body || '';
+        const label = `${origin || '글'}에 남긴 댓글, 글 보기`;
+        // 글 id가 없는 응답(017 적용 전)은 커뮤니티로 이동한다.
+        const open = () => { if (item.post_id) setOpenPostId(item.post_id); else window.location.href = './quiz.html#community'; };
+        return <li key={item.id} className="quiz-community-post">
+          <CommunityAvatar name={viewer?.name || ''} path={viewer?.avatarPath || ''} />
+          <div className="quiz-community-post-main is-detail-trigger" role="link" tabIndex={0} aria-label={label} onClick={open}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }}>
+            <header className="quiz-community-post-head">
+              <p><strong>{viewer?.name}</strong></p>
+              <p className="quiz-community-meta"><time dateTime={item.created_at}>{formatRelativeDate(item.created_at)}</time>{item.like_count > 0 && <span>좋아요 {item.like_count.toLocaleString('ko-KR')}</span>}</p>
+            </header>
+            {item.body && <p className="quiz-community-post-body"><MentionText text={item.body} /></p>}
+            <CommunityGif gif={item.gif} size="comment" />
+            <div className="account-comment-origin">
+              <span><MessageCircle size={14} aria-hidden="true" /><strong>{item.post_author_name}</strong>님의 글</span>
+              <p>{origin || '내용 없는 글'}</p>
+            </div>
+          </div>
+        </li>;
+      })}
+    </ol>
     {state.items.length < state.total && <button type="button" className="account-community-more-button" disabled={more}
       onClick={async () => { setMore(true); try { await load(state.items.length); } catch { /* 다음 페이지 실패는 목록을 유지한다. */ } finally { setMore(false); } }}>
       {more ? '불러오는 중' : `더 보기 (${Math.min(COMMUNITY_PAGE_SIZE, state.total - state.items.length)})`}
     </button>}
+    {openPostId && <CommunityPostDetail postId={openPostId} viewer={viewer} focusComments
+      onClose={() => { setOpenPostId(null); load(0).catch(() => {}); }} />}
   </>;
 }
 
@@ -87,6 +107,7 @@ export function CommunityActivityPage({ user, tab, onTabChange }) {
     <div className="account-heading account-community-heading">
       <a className="account-community-back" href="#" aria-label="내 정보로 돌아가기" onClick={event => { event.preventDefault(); onTabChange(null); }}><ChevronLeft size={22} aria-hidden="true" /></a>
       <h1 className="mb-page-title">커뮤니티 활동</h1>
+      <span aria-hidden="true" />
     </div>
     <div className="account-community-detail">
       <div className="account-community-tabs" role="tablist" aria-label="커뮤니티 활동">
@@ -96,7 +117,7 @@ export function CommunityActivityPage({ user, tab, onTabChange }) {
         </a>)}
       </div>
       <div role="tabpanel" aria-label={ACTIVITY_TABS.find(item => item.value === tab)?.label}>
-        {tab === 'comments' ? <MyCommentList key="comments" /> : <CommunityFeed key={tab} scope={ACTIVITY_SCOPE[tab]} viewer={viewer} variant="page" />}
+        {tab === 'comments' ? <MyCommentList key="comments" viewer={viewer} /> : <CommunityFeed key={tab} scope={ACTIVITY_SCOPE[tab]} viewer={viewer} variant="page" />}
       </div>
     </div>
   </>;

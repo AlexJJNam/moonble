@@ -288,13 +288,13 @@ function AccountPage() {
           <p>{profile.companyName}</p><small>{user.email}</small>
         </div>
       </section>
+      <CommunityActivitySummary />
       <ProfileForm user={user} initial={false} editing={profileEditing} onEditingChange={setProfileEditing} onSaved={updatedUser => {
         setUser(updatedUser);
         setProfileEditing(false);
       }} />
       <AiQuestionPreference user={user} onUserUpdated={setUser} />
       <PushNotificationPreference userId={user.id} />
-      <CommunityActivitySummary />
       <section className="profile-card account-mobile-session">
         <div><h2 className="mb-section-title">로그인 관리</h2></div>
         {error && <p className="account-session-error" role="alert">{error}</p>}

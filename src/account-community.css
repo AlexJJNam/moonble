@@ -47,3 +47,20 @@
 .account-community-more-button:hover:not(:disabled) { color: var(--mb-text-primary); background: var(--mb-border); }
 .account-community a:focus-visible, .account-community-detail a:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; border-radius: 4px; }
 @media (max-width: 767px) { .account-community { margin: 18px auto; } .account-community-head h2 { font-size: var(--mb-mobile-section-size); line-height: var(--mb-mobile-section-line); } }
+
+/* 작성한 댓글: 피드 카드와 같은 모양에 원글 요약을 붙인다. */
+.account-comment-feed .quiz-community-post-head { padding-right: 0; }
+.account-comment-origin { margin-top: var(--mb-space-12); padding: var(--mb-space-12); border-radius: var(--mb-radius-12); background: var(--mb-surface-muted); }
+.account-comment-origin > span { display: flex; align-items: center; gap: 4px; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+.account-comment-origin strong { color: var(--mb-text-secondary); font-weight: var(--mb-weight-semibold); }
+.account-comment-origin p { margin: 2px 0 0; display: -webkit-box; overflow: hidden; color: var(--mb-text-primary); font-size: var(--mb-font-14); line-height: 20px; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.account-community-heading > span:last-child { display: none; }
+
+/* 모바일 상세: 게시글 보기 화면처럼 상단 바(뒤로 · 가운데 제목)를 쓴다. */
+@media (max-width: 767px) {
+  .account-community-heading { box-sizing: border-box; max-width: none; min-height: 54px; display: grid; grid-template-columns: var(--mb-target-size) minmax(0, 1fr) var(--mb-target-size); align-items: center; gap: 0; margin: calc(var(--mb-page-pad-top) * -1) calc(var(--mb-page-pad-inline) * -1) var(--mb-space-8); padding: 0 var(--mb-space-8); border-bottom: 1px solid var(--mb-border); background: var(--mb-surface); }
+  .account-community-heading > span:last-child { display: block; }
+  .account-community-heading h1.mb-page-title { overflow: hidden; margin: 0; font-size: var(--mb-font-16); line-height: 24px; font-weight: var(--mb-weight-semibold); letter-spacing: -.01em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .account-community-back { width: var(--mb-target-size); height: var(--mb-target-size); margin: 0; color: var(--mb-text-primary); }
+  .account-community-tabs { gap: var(--mb-space-16); }
+}

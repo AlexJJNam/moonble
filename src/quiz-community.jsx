@@ -12,7 +12,7 @@ import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLaye
 import { lockPageScroll } from './scroll-lock.js';
 import {
   COMMENT_BODY_LIMIT, COMMUNITY_PAGE_SIZE, COMMUNITY_TOPICS, CommunityUnavailableError, POST_BODY_LIMIT, POST_TITLE_LIMIT,
-  canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getSolvedShares,
+  canAttachRecord, communityTokenHash, createComment, createPost, deleteComment, deletePost, externalShareUrl, getPost, getSolvedShares,
   listComments, listPosts, rememberSolvedShare, reportPost, solveHref, toggleCommentLike, toggleLike, updatePost,
 } from './quiz-community-api.js';
 import './quiz-community.css';
@@ -63,7 +63,7 @@ function InitialAvatar({ name, size = 'md' }) {
 }
 
 // 프로필 사진이 있으면 사진, 없거나 불러오지 못하면 이니셜을 보여준다.
-function CommunityAvatar({ name, path, size = 'md' }) {
+export function CommunityAvatar({ name, path, size = 'md' }) {
   const [image, setImage] = useState(() => ({ path, src: cachedCommunityAvatarUrl(path), loaded: false, failed: false }));
   useEffect(() => {
     let alive = true;
@@ -359,7 +359,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
 }
 
 // @이름 멘션은 파란 글씨로 보여준다.
-function MentionText({ text }) {
+export function MentionText({ text }) {
   const parts = String(text).split(/(^|\s)(@[^\s@]{1,24})/g);
   const nodes = [];
   for (let index = 0; index < parts.length; index += 1) {
@@ -571,6 +571,29 @@ function PostDetailDialog({ post, viewer, onClose, onPatch, onRequireLogin, onAn
   </Dialog>;
 }
 
+// 글 id만 아는 곳(마이페이지 댓글 등)에서 글 상세를 연다.
+export function CommunityPostDetail({ postId, viewer, focusComments = false, onClose }) {
+  const [post, setPost] = useState(null);
+  const [error, setError] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+  useEffect(() => {
+    let alive = true;
+    setPost(null); setError('');
+    getPost(postId).then(value => { if (alive) setPost(value); }).catch(loadError => { if (alive) setError(loadError.message); });
+    return () => { alive = false; };
+  }, [postId]);
+  const announce = useCallback(message => { setAnnouncement(''); requestAnimationFrame(() => setAnnouncement(message)); }, []);
+  if (error) {
+    return <ConfirmDialog title="글을 열 수 없어요" description={error} confirmLabel="확인" onConfirm={onClose} onClose={onClose} />;
+  }
+  if (!post) return null;
+  return <>
+    <PostDetailDialog post={post} viewer={viewer} focusComments={focusComments} onClose={onClose}
+      onPatch={patch => setPost(current => current ? { ...current, ...patch } : current)} onRequireLogin={() => {}} onAnnounce={announce} />
+    <p className="mb-sr-only" role="status" aria-live="polite">{announcement}</p>
+  </>;
+}
+
 function PostCard({ post, viewer, onPatch, onRequireLogin, onAnnounce, onAskDelete, onAskReport, onAskEdit, onAskDetail }) {
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
@@ -776,6 +799,8 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   const Wrapper = variant === 'card' ? 'section' : 'div';
   const dockLayout = useDockLayout();
   const showBar = variant === 'page' && !listOnly && scope === 'all' && dockLayout;
+  // 모바일 커뮤니티 탭과 마이페이지 목록은 글을 누르면 상세 화면으로 연다.
+  const detailMode = showBar || listOnly;
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
     {!listOnly && variant === 'card' && <header className="quiz-community-head">
       <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>
@@ -801,7 +826,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
     {state.posts.length > 0 && <ol className="quiz-community-feed">
       {state.posts.map(post => <PostCard key={post.id} post={post} viewer={viewer}
         onPatch={patch => patchPost(post.id, patch)} onRequireLogin={requireLogin} onAnnounce={announce}
-        onAskDetail={showBar ? (target, options = {}) => setDialog({ type: 'detail', post: target, focusComments: options.focusComments === true }) : undefined}
+        onAskDetail={detailMode ? (target, options = {}) => setDialog({ type: 'detail', post: target, focusComments: options.focusComments === true }) : undefined}
         onAskEdit={target => { setEditDraft({ topic: target.topic || '', title: target.title || '', body: target.body || '', attachment: null, showRecord: false, gif: target.gif || null }); setDialog({ type: 'edit', post: target }); }}
         onAskDelete={target => setDialog({ type: 'delete', post: target })} onAskReport={target => setDialog({ type: 'report', post: target })} />)}
     </ol>}
