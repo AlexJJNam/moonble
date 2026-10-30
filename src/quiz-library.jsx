@@ -239,6 +239,55 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
   </div>;
 }
 
+function QuizCreationGate({ onClose, onCreate, onMix, canMix }) {
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusFrame = window.requestAnimationFrame(() => dialogRef.current?.querySelector('.quiz-create-gate-option:not(:disabled)')?.focus());
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') onCloseRef.current();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const controls = [...dialogRef.current.querySelectorAll('button:not(:disabled)')];
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  return createPortal(<div className="quiz-manage-overlay quiz-create-gate-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={dialogRef} className="quiz-manage-dialog quiz-create-gate" role="dialog" aria-modal="true" aria-labelledby="quiz-create-gate-title">
+      <header><h2 id="quiz-create-gate-title">문제지 만들기</h2><button type="button" aria-label="닫기" onClick={onClose}><X size={19} /></button></header>
+      <div className="quiz-create-gate-options">
+        <button className="quiz-create-gate-option" type="button" onClick={onCreate}>
+          <span className="quiz-create-gate-icon"><Plus size={21} aria-hidden="true" /></span>
+          <span className="quiz-create-gate-copy"><strong>문제지 신규 생성</strong><small>AI로 만들거나 파일을 등록해요.</small></span>
+        </button>
+        <button className="quiz-create-gate-option" type="button" disabled={!canMix} onClick={onMix}>
+          <span className="quiz-create-gate-icon"><Shuffle size={19} aria-hidden="true" /></span>
+          <span className="quiz-create-gate-copy"><strong>문제지 Mix</strong><small>{canMix ? '여러 문제지를 골라 새 문제지를 만들어요.' : 'Mix를 만들려면 내 문제지가 2개 이상 필요해요.'}</small></span>
+        </button>
+      </div>
+    </section>
+  </div>, document.body);
+}
+
 function QuizLibrarySkeleton({ view }) {
   const count = view === 'list' ? 5 : 6;
   return <div className="quiz-page quiz-page-skeleton">
@@ -271,6 +320,7 @@ function QuizLibrary() {
   // Mix 만들기: 문제지를 여러 개 골라 문항을 섞은 새 문제지를 만든다.
   const [mixSelecting, setMixSelecting] = useState(false);
   const [mixSelected, setMixSelected] = useState([]);
+  const [creationGateOpen, setCreationGateOpen] = useState(false);
   // 문제 생성하기 화면의 단계(헤더 탭 표시용)와 단계를 바꾸는 함수.
   const [creatorScreen, setCreatorScreen] = useState('create');
   const creatorStepRef = useRef(null);
@@ -1068,7 +1118,7 @@ function QuizLibrary() {
     <div className="quiz-content">
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mixSelecting ? ' is-mix-selecting' : ''}`} id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
-        <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <div className="quiz-title-actions"><button type="button" className={`quiz-mix-button${mixSelecting ? ' is-active' : ''}`} aria-pressed={mixSelecting} onClick={() => mixSelecting ? cancelMix() : startMix()}><Shuffle size={15} aria-hidden="true" /><span>Mix</span></button><FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => { window.location.hash = 'create'; }}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>}</div>
+        <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <div className="quiz-title-actions"><FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => setCreationGateOpen(true)}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>}</div>
         {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch userId={user.id} /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
@@ -1152,7 +1202,7 @@ function QuizLibrary() {
             </article>;
           })}
         </section>
-        {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : category ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 카테고리에 문제지가 없어요</h2><p>다른 카테고리를 고르거나 전체를 눌러 모든 문제지를 보세요.</p><button onClick={() => setCategory(null)}>전체 보기</button></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => { window.location.hash = 'create'; }}>문제지 만들기</button></div>)}
+        {!visiblePapers.length && (search ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">검색 결과가 없어요</h2><p>다른 검색어로 다시 찾아보세요.</p></div> : category ? <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 카테고리에 문제지가 없어요</h2><p>다른 카테고리를 고르거나 전체를 눌러 모든 문제지를 보세요.</p><button onClick={() => setCategory(null)}>전체 보기</button></div> : <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">이 그룹에 문제지가 없어요</h2><p>새 문제지를 만들거나 다른 그룹을 선택해보세요.</p><button onClick={() => setCreationGateOpen(true)}>문제지 만들기</button></div>)}
         {mixSelecting && <button type="button" className="quiz-mix-backdrop" aria-label="Mix 선택 닫기" onClick={cancelMix} />}
         {mixSelecting && <div className="quiz-mix-bar" role="region" aria-label="Mix 만들기">
           <div className="quiz-mix-bar-copy"><strong>{mixSelected.length ? `${mixSelected.length}개 선택됨` : '문제지를 선택해주세요'}</strong><small>복수 문제지를 선택해서 Mix 생성</small></div>
@@ -1164,6 +1214,7 @@ function QuizLibrary() {
       </main>}<SiteFooter />
     </div>
     <ManagementDialog editor={editor} groups={collection.groups} onChange={setEditor} onClose={() => { setEditor(null); setOpenMenu(null); }} onSubmit={submitEditor} />
+    {creationGateOpen && <QuizCreationGate onClose={() => setCreationGateOpen(false)} canMix={collection.banks.length >= 2} onCreate={() => { setCreationGateOpen(false); window.location.hash = 'create'; }} onMix={() => { setCreationGateOpen(false); startMix(); }} />}
     {shareDialog && <div className="quiz-manage-overlay quiz-share-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !shareBusy) setShareDialog(null); }}><section className="quiz-manage-dialog quiz-share-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-share-title"><header><h2 id="quiz-share-title">문제지 공유</h2><button type="button" aria-label="닫기" onClick={() => !shareBusy && setShareDialog(null)}><X size={19} /></button></header>
       <p><strong>{shareDialog.title}</strong> 문제지를 링크로 공유해요.</p>
       <p className="quiz-share-status">{VISIBILITY_LABELS[shareDialog.visibility]} · {VISIBILITY_OPTIONS.find(option => option.value === shareDialog.visibility)?.copy} 공개 범위는 문제지 편집에서 바꿀 수 있어요.</p>

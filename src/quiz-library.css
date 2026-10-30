@@ -978,10 +978,26 @@ button:disabled { cursor: wait; opacity: .6; }
 .quiz-title-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; margin-left: auto; }
 /* 모바일 제목 줄의 '.quiz-title > div { flex: 1 }' 규칙이 버튼 묶음을 늘리지 않게 한다. */
 .quiz-title > div.quiz-title-actions { min-width: 0; flex: 0 0 auto; }
-.quiz-mix-button { flex: 0 0 auto; min-height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 0; border-radius: var(--mb-radius-8); color: var(--mb-text-tertiary); background: transparent; font-family: var(--mb-font-sans); font-size: var(--mb-font-13); line-height: 20px; font-weight: var(--mb-weight-semibold); cursor: pointer; }
-.quiz-mix-button.is-active { color: var(--mb-primary-strong); }
-@media (hover: hover) { .quiz-mix-button:hover { color: var(--mb-text-primary); } }
-.quiz-mix-button:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
+/* 새 문제지 선택 팝업은 파일 업로드 영역의 점선 테두리와 넓은 선택 영역을 따른다. */
+.quiz-create-gate-overlay { z-index: 1400; }
+.quiz-create-gate { width: min(540px, 100%); }
+.quiz-create-gate-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.quiz-create-gate-option { min-width: 0; min-height: 148px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; border: 1.5px dashed #91b9ee; border-radius: 16px; color: var(--mb-text-primary); background: #f8fbff; text-align: left; cursor: pointer; transition: border-color var(--mb-duration), background-color var(--mb-duration), transform var(--mb-duration); }
+.quiz-create-gate-option:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 3px; }
+.quiz-create-gate-option:disabled { cursor: not-allowed; opacity: .58; }
+.quiz-create-gate-icon { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); }
+.quiz-create-gate-copy { min-width: 0; display: grid; gap: 5px; }
+.quiz-create-gate-copy strong { color: var(--mb-text-primary); font-size: var(--mb-font-16); line-height: 22px; font-weight: var(--mb-weight-semibold); }
+.quiz-create-gate-copy small { color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; }
+@media (hover: hover) {
+  .quiz-create-gate-option:hover:not(:disabled) { border-color: var(--mb-primary-strong); background: #f2f8ff; transform: translateY(-1px); }
+}
+@media (max-width: 767px) {
+  .quiz-create-gate-options { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 18px; }
+  .quiz-create-gate-option { min-height: 88px; flex-direction: row; align-items: center; gap: 12px; padding: 14px; }
+  .quiz-create-gate-icon { width: 42px; height: 42px; border-radius: 13px; }
+  .quiz-create-gate-copy strong { font-size: var(--mb-font-14); line-height: 20px; }
+}
 .paper-card.is-mix-selectable .paper-card-link { cursor: pointer; }
 .paper-card.is-mix-selected .paper-preview { box-shadow: 0 0 0 3px var(--mb-primary-strong); }
 .paper-card.is-mix-disabled { opacity: .4; pointer-events: none; }
