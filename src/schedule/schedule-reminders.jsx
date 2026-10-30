@@ -26,7 +26,7 @@ function markFired(userId, key) {
 function reminderCopy({ schedule, startsAt }) {
   const minutes = Math.round((startsAt.getTime() - Date.now()) / 60000);
   const when = minutes > 0 ? `${minutes}분 후 시작` : '지금 시작';
-  return { title: schedule.title, time: `${schedule.start}–${schedule.end}`, when, memo: schedule.memo.split('\n')[0] || '' };
+  return { title: schedule.title, time: `${schedule.start} ~ ${schedule.end}`, when, memo: schedule.memo.split('\n')[0] || '' };
 }
 
 async function showSystemNotification(reminder, copy) {

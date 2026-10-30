@@ -269,7 +269,7 @@ function htmlResponse(body, status = 200) {
   });
 }
 
-// 내 캘린더에 저장(.ics): 앱이 일정 정보를 e 파라미터(base64url JSON)로 보내면 매주 반복 일정 파일을 만든다.
+// 내 캘린더에 저장(.ics): 앱이 일정 정보를 e 파라미터(base64url JSON)로 보내면 일정 파일(그날 한 번 또는 매주 반복)을 만든다.
 // text/calendar로 바로 내려 주면 iPhone은 '캘린더에 추가' 화면을, PC는 파일 저장을 띄운다. 서버에 저장하지 않는다.
 const ICS_DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 const ICS_NOTIFY = new Set([0, 5, 10, 15, 30, 60]);
@@ -286,7 +286,15 @@ function calendarEvent(input) {
   if (!input || typeof input !== 'object') return null;
   const title = String(input.t || '').trim().slice(0, 40);
   const memo = String(input.m || '').slice(0, 500);
-  const days = [...new Set((Array.isArray(input.d) ? input.d : []).map(Number))].filter(day => Number.isInteger(day) && day >= 0 && day <= 6);
+  // w=0이면 f 날짜에 한 번, 아니면 f(시작 날짜, 없어도 된다)부터 매주 반복
+  const weekly = input.w !== 0;
+  const from = String(input.f || '');
+  const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(from) ? new Date(`${from}T00:00:00Z`) : null;
+  const hasFrom = Boolean(fromDate) && !Number.isNaN(fromDate.getTime()) && fromDate.toISOString().slice(0, 10) === from;
+  if (!weekly && !hasFrom) return null;
+  const days = weekly
+    ? [...new Set((Array.isArray(input.d) ? input.d : []).map(Number))].filter(day => Number.isInteger(day) && day >= 0 && day <= 6)
+    : [fromDate.getUTCDay()];
   const start = String(input.s || '');
   const end = String(input.e || '');
   const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -297,7 +305,7 @@ function calendarEvent(input) {
   let url = '';
   try { const parsed = new URL(String(input.u || '')); if (parsed.protocol === 'https:' && parsed.hostname === 'moonble.com') url = parsed.href; } catch { url = ''; }
   return {
-    title, memo, days, start, end, timeZone, url,
+    title, memo, days, start, end, timeZone, url, weekly, from: hasFrom ? from : '',
     notify: ICS_NOTIFY.has(notify) ? notify : null,
     paperTitle: String(input.p || '').slice(0, 100),
     uid: /^[A-Za-z0-9-]{1,80}$/.test(String(input.i || '')) ? String(input.i) : crypto.randomUUID(),
@@ -323,10 +331,14 @@ function foldIcsLine(line) {
   return output + current;
 }
 
-// 일정 시간대의 오늘부터 처음 오는 반복 요일을 시작일로 쓴다. 시간은 기기 시간대 기준(floating)으로 둔다.
-function firstOccurrence(days, timeZone, now) {
+// 일정 시간대의 오늘
+function localToday(timeZone, now) {
   const [year, month, day] = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).split('-').map(Number);
-  const base = new Date(Date.UTC(year, month - 1, day));
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+// base부터 처음 오는 반복 요일을 시작일로 쓴다. 시간은 기기 시간대 기준(floating)으로 둔다.
+function firstOccurrence(days, base) {
   for (let offset = 0; offset < 7; offset += 1) {
     const candidate = new Date(base.getTime() + offset * 86400000);
     if (days.includes(candidate.getUTCDay())) return candidate;
@@ -335,7 +347,10 @@ function firstOccurrence(days, timeZone, now) {
 }
 
 export function scheduleIcs(event, now = new Date()) {
-  const date = firstOccurrence(event.days, event.timeZone, now);
+  const weekly = event.weekly !== false;
+  const from = event.from ? new Date(`${event.from}T00:00:00Z`) : null;
+  const today = localToday(event.timeZone, now);
+  const date = weekly ? firstOccurrence(event.days, from && from > today ? from : today) : from;
   const ymd = date.toISOString().slice(0, 10).replace(/-/g, '');
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
   const description = [
@@ -351,7 +366,7 @@ export function scheduleIcs(event, now = new Date()) {
     `DTSTAMP:${stamp}`,
     `DTSTART:${ymd}T${event.start.replace(':', '')}00`,
     `DTEND:${ymd}T${event.end.replace(':', '')}00`,
-    `RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=${event.days.map(day => ICS_DAYS[day]).join(',')}`,
+    ...(weekly ? [`RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=${event.days.map(day => ICS_DAYS[day]).join(',')}`] : []),
     `SUMMARY:${icsText(event.title)}`,
     `DESCRIPTION:${icsText(description)}`,
     ...(event.url ? [`URL:${event.url}`] : []),

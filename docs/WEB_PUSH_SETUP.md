@@ -67,7 +67,7 @@ Until the migration, keys, function, webhook, frontend deployment, and per-devic
 
 The workspace timetable (`prd.html`, default tab) stores weekly study schedules in `public.study_schedules` (RLS: each user reads and writes only their own rows). A schedule can link a paper; tapping its reminder opens that paper's solve screen.
 
-**Now (app work):** run `database/024_study_schedules.sql`. It creates the schedule table, the reminder queue `public.study_reminder_notifications` and `moonble_enqueue_study_reminders()`, but schedules no background job. Schedules saved on a device before 024 move to Supabase automatically. While any Moonble page is open, reminders appear as an in-app card and a system notification (after the user allows notifications).
+**Now (app work):** run `database/024_study_schedules.sql`. It creates the schedule table, the reminder queue `public.study_reminder_notifications` and `moonble_enqueue_study_reminders()`, but schedules no background job. Then run `database/026_study_schedule_dates.sql`, which adds one-time dates and weekly start dates (`repeat_weekly`, `start_date`) and makes the reminder queue respect them. Schedules saved on a device before 024/026 move to Supabase automatically. While any Moonble page is open, reminders appear as an in-app card and a system notification (after the user allows notifications).
 
 **Later (push deployment, after the app work is finished):**
 

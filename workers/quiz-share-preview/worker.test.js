@@ -172,7 +172,26 @@ test('calendar.ics starts on the first matching weekday and drops foreign links'
   assert.doesNotMatch(body, /VALARM/);
 });
 
+test('calendar.ics makes a one-time event on the chosen date without RRULE', async () => {
+  const event = { t: '모의고사', m: '', d: [], s: '10:00', e: '12:00', n: 30, z: 'Asia/Seoul', w: 0, f: '2026-11-03' };
+  const body = await (await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${calendarParam(event)}`), env)).text();
+  assert.match(body, /DTSTART:20261103T100000\r\n/);
+  assert.match(body, /DTEND:20261103T120000\r\n/);
+  assert.doesNotMatch(body, /RRULE/);
+  assert.match(body, /TRIGGER:-PT30M/);
+});
+
+test('calendar.ics starts a weekly event on its start date when that is later than today', () => {
+  const body = scheduleIcs({ title: '월요일 스터디', memo: '', days: [1], start: '19:00', end: '20:00', timeZone: 'Asia/Seoul', url: '', notify: null, paperTitle: '', uid: 'u2', weekly: true, from: '2026-11-10' }, new Date('2026-10-28T01:00:00Z'));
+  assert.match(body, /DTSTART:20261116T190000/);
+  assert.match(body, /RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=MO/);
+});
+
 test('calendar.ics rejects invalid schedules', async () => {
+  for (const event of [{ t: '날짜 없음', s: '10:00', e: '11:00', w: 0 }, { t: '없는 날짜', s: '10:00', e: '11:00', w: 0, f: '2026-02-30' }]) {
+    const response = await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${calendarParam(event)}`), env);
+    assert.equal(response.status, 400);
+  }
   const bad = await worker.fetch(new Request(`https://share.moonble.com/calendar.ics?e=${calendarParam({ t: '역순', d: [1], s: '10:00', e: '09:00' })}`), env);
   assert.equal(bad.status, 400);
   const foreign = calendarParam({ t: '링크', d: [2], s: '10:00', e: '11:00', u: 'https://evil.example/x' });

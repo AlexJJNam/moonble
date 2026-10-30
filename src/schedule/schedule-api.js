@@ -1,9 +1,10 @@
-// 시간표 저장소: 서버(study_schedules, 024)를 먼저 쓰고, 표가 아직 없으면 이 기기에 저장한다.
+// 시간표 저장소: 서버(study_schedules, 024 + 날짜 열 026)를 먼저 쓰고, 표나 날짜 열이 아직 없으면 이 기기에 저장한다.
 // 서버가 준비되면 기기에 있던 일정을 서버로 옮긴다.
 import { supabase } from '../supabase.js';
-import { normalizeSchedule, toRow } from './schedule-model.js';
+import { SCHEDULE_LIMIT, normalizeSchedule, toRow } from './schedule-model.js';
 
-const COLUMNS = 'id,title,memo,days,start_time,end_time,color,notify,notify_before,paper_kind,paper_ref,paper_title,timezone,updated_at';
+const COLUMNS = 'id,title,memo,repeat_weekly,start_date,days,start_time,end_time,color,notify,notify_before,paper_kind,paper_ref,paper_title,timezone,updated_at';
+const LIMIT_MESSAGE = `일정은 ${SCHEDULE_LIMIT}개까지 만들 수 있어요.`;
 const MISSING_SKIP_MS = 10 * 60 * 1000;
 const CACHE_MS = 2 * 60 * 1000;
 
@@ -21,7 +22,7 @@ function writeLocal(userId, items) {
   try { localStorage.setItem(localKey(userId), JSON.stringify(items)); } catch { /* 저장 공간이 없으면 화면에만 남는다. */ }
 }
 function isMissingTable(error) {
-  return ['PGRST205', '42P01', 'PGRST204'].includes(error?.code) || /study_schedules/.test(error?.message || '') && /(does not exist|could not find)/i.test(error?.message || '');
+  return ['PGRST205', '42P01', 'PGRST204', '42703'].includes(error?.code) || /study_schedules/.test(error?.message || '') && /(does not exist|could not find)/i.test(error?.message || '');
 }
 function serverRecentlyMissing() {
   try { return Date.now() - Number(sessionStorage.getItem(MISSING_KEY) || 0) < MISSING_SKIP_MS; } catch { return false; }
@@ -46,7 +47,7 @@ function makeLocalId() {
   return `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// { items, server }: server=false면 이 기기 저장(024 적용 전)
+// { items, server }: server=false면 이 기기 저장(024·026 적용 전)
 export async function listSchedules(userId, { fresh = false } = {}) {
   if (!userId) return { items: [], server: false };
   if (!fresh) { const cached = readCachedSchedules(userId); if (cached) return cached; }
@@ -66,7 +67,7 @@ export async function listSchedules(userId, { fresh = false } = {}) {
     throw new Error('시간표를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
   }
   let items = (data || []).map(normalizeSchedule).filter(Boolean);
-  // 024 적용 전에 이 기기에 저장한 일정을 서버로 옮긴다.
+  // 서버 준비 전에 이 기기에 저장한 일정을 서버로 옮긴다.
   const local = readLocal(userId);
   if (local.length) {
     const { data: moved, error: moveError } = await supabase.from('study_schedules').insert(local.map(toRow)).select(COLUMNS);
@@ -90,12 +91,12 @@ export async function saveSchedule(userId, schedule) {
       ? supabase.from('study_schedules').insert(row).select(COLUMNS).single()
       : supabase.from('study_schedules').update(row).eq('id', schedule.id).select(COLUMNS).single();
     const { data, error } = await request;
-    if (error) throw new Error(error.code === '54000' ? '일정은 100개까지 만들 수 있어요.' : '일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    if (error) throw new Error(error.code === '54000' ? LIMIT_MESSAGE : '일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
     saved = normalizeSchedule(data);
   } else {
     saved = normalizeSchedule({ ...toRow(schedule), id: schedule.id || makeLocalId(), updated_at: new Date().toISOString() });
     const items = readLocal(userId).filter(item => item.id !== saved.id);
-    if (!schedule.id && items.length >= 100) throw new Error('일정은 100개까지 만들 수 있어요.');
+    if (!schedule.id && items.length >= SCHEDULE_LIMIT) throw new Error(LIMIT_MESSAGE);
     writeLocal(userId, [...items, saved]);
   }
   const items = [...current.items.filter(item => item.id !== saved.id), saved];
