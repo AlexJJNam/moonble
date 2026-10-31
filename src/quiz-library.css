@@ -274,6 +274,13 @@ button:disabled { cursor: wait; opacity: .6; }
 @keyframes quiz-undo-toast-in { from { opacity: 0; transform: translateY(8px); } }
 .quiz-creator { max-width: 1320px; }
 .quiz-creator.is-step-flow { display: flex; flex-direction: column; }
+.creator-generation-loading { position: fixed; z-index: 3000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(255 255 255 / 92%); touch-action: none; animation: creator-generation-loading-in 180ms ease-out both; }
+.creator-generation-loading-content { display: grid; justify-items: center; gap: 18px; color: var(--mb-text-primary); text-align: center; }
+.creator-generation-loading-spinner.moonble-spinner { width: 32px; height: 32px; border-width: 3px; color: var(--mb-primary); }
+.creator-generation-loading-content p { margin: 0; font-size: var(--mb-font-16); line-height: 24px; font-weight: 600; animation: creator-generation-message-in 320ms ease-out both; }
+@keyframes creator-generation-loading-in { from { opacity: 0; } }
+@keyframes creator-generation-message-in { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .creator-generation-loading, .creator-generation-loading-content p { animation: none; } }
 .creator-progress { margin-bottom: 24px; }
 .creator-progress-track { height: 4px; overflow: hidden; border-radius: 999px; background: var(--mb-surface-muted); }
 .creator-progress-track>span { display: block; height: 100%; border-radius: inherit; background: var(--mb-primary); transition: width 320ms cubic-bezier(.22,.61,.36,1); }

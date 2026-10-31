@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
 import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, syncCustomBankCollection, updateCustomBankMeta } from './custom-bank.js';
 import { supabase } from './supabase.js';
@@ -111,6 +112,32 @@ const providerSegments = [
   { value: 'gemini', label: 'AI Mode' },
   { value: 'chatgpt', label: 'ChatGPT' },
 ];
+
+const generationLoadingMessages = [
+  '문제지를 만들고 있어요',
+  '요청하신 내용을 살펴보고 있어요',
+  '조금만 기다려 주세요',
+  '문제지를 준비하고 있어요',
+];
+
+function AiGenerationLoading() {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMessageIndex(index => (index + 1) % generationLoadingMessages.length);
+    }, 3600);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return createPortal(<div className="creator-generation-loading" role="status" aria-live="polite">
+    <span className="mb-sr-only">문제지를 만들고 있어요. 잠시만 기다려 주세요.</span>
+    <div className="creator-generation-loading-content" aria-hidden="true">
+      <span className="moonble-spinner creator-generation-loading-spinner" />
+      <p key={messageIndex}>{generationLoadingMessages[messageIndex]}</p>
+    </div>
+  </div>, document.body);
+}
 
 const creatorStepIcons = {
   upload: FileUp,
@@ -441,6 +468,7 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     aiPendingRef.current = true;
     setAiPending(true);
     promptInputRef.current?.blur();
+    setPromptFocused(false);
     try {
       const { data, error: generationError } = await supabase.functions.invoke('generate-quiz', { body: { prompt: value, requestId: window.crypto.randomUUID() } });
       if (Number.isInteger(data?.remaining)) setAiRemaining(data.remaining);
@@ -818,5 +846,6 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
 
     {message && <p className="creator-message" role="status">{message}</p>}
     {error && <p className="creator-error" role="alert">{error}</p>}
+    {aiPending && <AiGenerationLoading />}
   </main>;
 }
