@@ -227,15 +227,6 @@ function ReportDialog({ onSubmit, onClose }) {
   </Dialog>;
 }
 
-// 문제지 썸네일 간략 버전(장식용). 제목과 첫 문항 일부만 보여준다.
-function MiniSheet({ title, preview }) {
-  return <span className="quiz-community-sheet" aria-hidden="true">
-    <i />
-    <b>{title}</b>
-    {preview ? <em>Q1. {preview}</em> : <><u /><u /></>}
-  </span>;
-}
-
 const communityPaperPreviewCache = new Map();
 function communityPreviewPaper(share) {
   const paper = previewPaperFromQuestions(share);
@@ -270,8 +261,8 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
     loadCommunityPaperPreview(token).then(value => { if (alive) setPaper(value); }).catch(() => {});
     return () => { alive = false; };
   }, [token, localPaper]);
-  const thumbnailPath = paper?.thumbnailPath || null;
-  const thumbnailMedia = useMemo(() => paper?.thumbnailMedia || decodeQuizThumbnailGif(thumbnailPath), [paper?.thumbnailMedia, thumbnailPath]);
+  const thumbnailPath = paper?.thumbnailPath || attachment.thumbnailPath || null;
+  const thumbnailMedia = useMemo(() => paper?.thumbnailMedia || attachment.thumbnailMedia || decodeQuizThumbnailGif(thumbnailPath), [paper?.thumbnailMedia, attachment.thumbnailMedia, thumbnailPath]);
   const thumbnailKey = `${thumbnailPath || ''}|${thumbnailMedia ? JSON.stringify(thumbnailMedia) : ''}`;
   const [thumbnail, setThumbnail] = useState({ key: '', url: '', loading: false });
   useEffect(() => {
@@ -362,7 +353,7 @@ function AttachPicker({ banks = [], solved, onPick, onBack, titleId }) {
       <h3 id="community-pick-mine">내가 만든 문제지</h3>
       {banks.length ? <ul>{banks.map(bank => <li key={bank.id}>
         <button type="button" onClick={() => onPick({ kind: 'bank', bankId: bank.id, title: bank.title, questionCount: bank.questions?.length || 0, preview: String(bank.questions?.[0]?.q || '').slice(0, 80), samples: bank.questions?.slice(0, 6).map(question => ({ title: question.q, options: question.options })) || [], thumbnailPath: bank.thumbnailPath || null, thumbnailMedia: decodeQuizThumbnailGif(bank.thumbnailPath) })}>
-          <MiniSheet title={bank.title} preview={String(bank.questions?.[0]?.q || '').slice(0, 80)} />
+          <CommunityAttachmentThumbnail attachment={{ title: bank.title, samples: bank.questions?.slice(0, 6).map(question => ({ title: question.q, options: question.options })) || [], thumbnailPath: bank.thumbnailPath || null, thumbnailMedia: decodeQuizThumbnailGif(bank.thumbnailPath) }} active />
           <span><strong>{bank.title}</strong><span>{bank.questions?.length || 0}문항</span></span>
         </button>
       </li>)}</ul> : <p className="quiz-community-muted">아직 만든 문제지가 없어요.</p>}
@@ -371,7 +362,7 @@ function AttachPicker({ banks = [], solved, onPick, onBack, titleId }) {
       <h3 id="community-pick-solved">내가 푼 공유 문제</h3>
       {solved.length ? <ul>{solved.map(item => <li key={item.token}>
         <button type="button" onClick={() => onPick({ kind: 'share', token: item.token, title: item.title, questionCount: item.questionCount, preview: '' })}>
-          <MiniSheet title={item.title} />
+          <CommunityAttachmentThumbnail attachment={{ token: item.token }} active />
           <span><strong>{item.title}</strong><span>{item.questionCount ? `${item.questionCount}문항 · ` : ''}{formatRelativeDate(item.solvedAt)} 풀이</span></span>
         </button>
       </li>)}</ul> : <p className="quiz-community-muted">이 기기에서 공유 링크로 푼 문제가 여기에 나와요.</p>}

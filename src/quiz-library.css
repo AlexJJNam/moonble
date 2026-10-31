@@ -155,12 +155,12 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-copy>p span, .paper-copy>p i { flex: 0 0 auto; }
 .paper-copy>p i { color: var(--mb-text-disabled); font-style: normal; }
 .paper-copy>p .paper-description { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
-.paper-added-at { display: block; min-height: 16px; margin-top: 3px; color: var(--mb-text-tertiary); font-size: 11px; font-weight: 400; line-height: 16px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.paper-added-at { min-height: 16px; display: flex; align-items: center; justify-content: flex-end; margin-top: 3px; color: var(--mb-text-tertiary); font-size: 11px; font-weight: 400; line-height: 16px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 /* 카드 캡션: 풀이 상태 · 시간 (같은 회색 캡션) */
 .paper-added-at > * + *::before { content: '·'; margin: 0 4px; color: var(--mb-text-disabled); }
 .paper-added-at .paper-status { font-variant-numeric: tabular-nums; }
-.paper-added-at .paper-status { display: inline-flex; align-items: center; gap: 4px; }
-.paper-solve-status-ring { width: 14px; height: 14px; flex: 0 0 14px; overflow: visible; transform: rotate(-90deg); }
+.paper-added-at .paper-status { display: inline-flex; align-items: center; gap: 4px; line-height: 16px; vertical-align: middle; }
+.paper-solve-status-ring { display: block; width: 14px; height: 14px; flex: 0 0 14px; overflow: visible; transform: rotate(-90deg); }
 .paper-solve-status-track, .paper-solve-status-progress { fill: none; stroke-width: 2.2; }
 .paper-solve-status-track { stroke: #e4e8ed; }
 .paper-solve-status-progress { stroke: var(--mb-primary-strong); stroke-linecap: round; }
@@ -908,7 +908,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-card .paper-info h2 { display: -webkit-box; overflow: hidden; font-size: .9375rem; line-height: 21px; font-weight: var(--mb-weight-semibold); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 @media (max-width: 767px) { .paper-card .paper-info h2 { font-size: var(--mb-font-16); line-height: 24px; } }
 .paper-card .paper-copy > p { margin-top: 4px; font-size: var(--mb-font-13); line-height: 18px; }
-.paper-card .paper-added-at { margin-top: 2px; font-size: var(--mb-font-12); line-height: 16px; text-align: left; }
+.paper-card .paper-added-at { justify-content: flex-start; margin-top: 2px; font-size: var(--mb-font-12); line-height: 16px; text-align: left; }
 /* 카드 메뉴(⋮): 유튜브처럼 썸네일 밖 제목 오른쪽. 썸네일이 카드 폭의 16:9라 margin %(폭 기준)로 제목 줄에 맞춘다. */
 .paper-grid:not(.paper-list) .paper-card .paper-card-actions { top: 0; right: -8px; margin-top: calc(56.25% + 4px); }
 .paper-card .paper-card-actions > button { border-radius: 50%; color: var(--mb-text-secondary); background: transparent; }
@@ -959,6 +959,7 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-grid:not(.paper-list) .public-quiz-card .public-quiz-info { grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; padding-right: 2px; }
 .public-quiz-card .public-quiz-info > .quiz-community-avatar { width: 36px; height: 36px; flex-basis: 36px; margin-top: 1px; font-size: var(--mb-font-14); }
 .paper-list .public-quiz-card .public-quiz-info > .quiz-community-avatar { display: none; }
+.public-quiz-card .paper-copy > p { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .paper-grid:not(.paper-list) .public-quiz-card .public-quiz-info { padding-right: 30px; }
 .public-quiz-card-actions { z-index: 9; }
 .public-quiz-card-actions > button { width: 34px; height: 34px; }
