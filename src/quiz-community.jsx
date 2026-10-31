@@ -9,6 +9,7 @@ import { formatRelativeDate } from './date-format.js';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare } from './quiz-share.js';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { PaperPreview } from './paper-preview.jsx';
+import { decodeQuizThumbnailGif } from './quiz-thumbnail.js';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, CommunityMediaUploadButton, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
@@ -236,11 +237,19 @@ function MiniSheet({ title, preview }) {
 }
 
 const communityPaperPreviewCache = new Map();
+function communityPreviewPaper(share) {
+  const paper = previewPaperFromQuestions(share);
+  const media = paper.thumbnailMedia || decodeQuizThumbnailGif(paper.thumbnailPath);
+  // KLIPY는 애니메이션 원본 대신 API가 제공하는 정지 미리보기만 커뮤니티 첨부에서 쓴다.
+  if (media?.provider === 'klipy' && media.preview_url) paper.thumbnailMedia = { ...media, url: media.preview_url };
+  return paper;
+}
+
 function loadCommunityPaperPreview(token) {
   const cached = communityPaperPreviewCache.get(token);
   if (cached?.paper) return Promise.resolve(cached.paper);
   if (cached?.promise) return cached.promise;
-  const promise = getQuizShare(token).then(previewPaperFromQuestions);
+  const promise = getQuizShare(token).then(communityPreviewPaper);
   communityPaperPreviewCache.set(token, { promise });
   promise.then(paper => communityPaperPreviewCache.set(token, { paper }), () => communityPaperPreviewCache.delete(token));
   return promise;
@@ -250,7 +259,7 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
   const token = active ? attachment.token : null;
   const localQuestions = Array.isArray(attachment.samples) ? attachment.samples.map(sample => ({ q: sample.title, options: sample.options || [] })) : [];
   const localPaper = useMemo(() => localQuestions.length
-    ? previewPaperFromQuestions({ title: attachment.title, description: attachment.description || '', questions: localQuestions })
+    ? communityPreviewPaper({ title: attachment.title, description: attachment.description || '', questions: localQuestions, thumbnailPath: attachment.thumbnailPath || null, thumbnailMedia: attachment.thumbnailMedia || null })
     : null, [attachment.title, attachment.description, attachment.samples]);
   const [paper, setPaper] = useState(() => localPaper || (token ? communityPaperPreviewCache.get(token)?.paper || null : null));
   useEffect(() => {
@@ -311,7 +320,7 @@ function QuizAttachment({ attachment, record, onRemove }) {
         caption={{ lead: '어떤 문제인지 궁금하신가요?', label: '미리보기', onClick: () => setPreviewing(true) }}
         onConfirm={() => { window.location.href = solveHref(token); }} onClose={() => setConfirming(false)} />}
       {previewing && <QuizPreviewDialog solveHref={solveHref(token)} onClose={() => setPreviewing(false)}
-        load={() => getQuizShare(token).then(share => previewPaperFromQuestions(share))} />}
+        load={() => loadCommunityPaperPreview(token)} />}
     </span>}
   </>;
 }
@@ -326,7 +335,7 @@ function AttachPicker({ banks = [], solved, onPick, onBack, titleId }) {
     <section aria-labelledby="community-pick-mine">
       <h3 id="community-pick-mine">내가 만든 문제지</h3>
       {banks.length ? <ul>{banks.map(bank => <li key={bank.id}>
-        <button type="button" onClick={() => onPick({ kind: 'bank', bankId: bank.id, title: bank.title, questionCount: bank.questions?.length || 0, preview: String(bank.questions?.[0]?.q || '').slice(0, 80), samples: bank.questions?.slice(0, 6).map(question => ({ title: question.q, options: question.options })) || [] })}>
+        <button type="button" onClick={() => onPick({ kind: 'bank', bankId: bank.id, title: bank.title, questionCount: bank.questions?.length || 0, preview: String(bank.questions?.[0]?.q || '').slice(0, 80), samples: bank.questions?.slice(0, 6).map(question => ({ title: question.q, options: question.options })) || [], thumbnailPath: bank.thumbnailPath || null, thumbnailMedia: decodeQuizThumbnailGif(bank.thumbnailPath) })}>
           <MiniSheet title={bank.title} preview={String(bank.questions?.[0]?.q || '').slice(0, 80)} />
           <span><strong>{bank.title}</strong><span>{bank.questions?.length || 0}문항</span></span>
         </button>

@@ -99,6 +99,8 @@ export async function getQuizShare(token) {
   return {
     title: data.title.slice(0, 100),
     description: typeof data.description === 'string' ? data.description.slice(0, 300) : '',
+    thumbnailPath: typeof data.thumbnail_path === 'string' && data.thumbnail_path ? data.thumbnail_path : null,
+    thumbnailMedia: data.thumbnail_media && typeof data.thumbnail_media === 'object' ? data.thumbnail_media : null,
     questions: questions.map(question => ({ ...question, explain: typeof question.explain === 'string' ? question.explain : '' })),
   };
 }

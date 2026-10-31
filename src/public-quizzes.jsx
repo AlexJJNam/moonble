@@ -86,7 +86,7 @@ function usePublicSamples(item) {
   return own || fetched || (item.preview ? [{ title: item.preview, options: [] }] : []);
 }
 
-function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }) {
+function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, revealDelay = 0 }) {
   const [confirming, setConfirming] = useState(false);
   const liked = Boolean(likeState?.liked);
   const count = Number.isInteger(likeState?.likeCount) ? likeState.likeCount : null;
@@ -94,7 +94,7 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : ''].filter(Boolean).join(' · ');
   const samples = usePublicSamples(item);
   const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples, thumbnailPath: item.thumbnail_path || null, thumbnailMedia: item.thumbnail_media || null };
-  return <article className="paper-card public-quiz-card">
+  return <article className="paper-card public-quiz-card" style={{ '--paper-filter-reveal-delay': `${revealDelay}ms` }}>
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       <PaperPreview paper={paper} />
@@ -120,6 +120,7 @@ export function PublicQuizSearch({ userId = null }) {
   const [category, setCategory] = useState(null);
   const [view, setView] = useState('grid');
   const [scrapOnly, setScrapOnly] = useState(false);
+  const [filterRevealPhase, setFilterRevealPhase] = useState(0);
   const [state, setState] = useState({ status: 'loading', items: [], total: 0, error: '' });
   const [loadingMore, setLoadingMore] = useState(false);
   const [likeMode, setLikeMode] = useState('loading');
@@ -287,7 +288,7 @@ export function PublicQuizSearch({ userId = null }) {
       <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} />
       <div className="public-quiz-sort-right">
         <label className="mb-switch">
-          <input type="checkbox" role="switch" checked={scrapOnly} aria-checked={scrapOnly} onChange={event => setScrapOnly(event.target.checked)} />
+          <input type="checkbox" role="switch" checked={scrapOnly} aria-checked={scrapOnly} onChange={event => { setScrapOnly(event.target.checked); setFilterRevealPhase(current => current === 1 ? 2 : 1); }} />
           <span className="mb-switch-track" aria-hidden="true"><span /></span>
           <span className="mb-switch-label">스크랩 문제지</span>
         </label>
@@ -304,7 +305,7 @@ export function PublicQuizSearch({ userId = null }) {
     {state.status === 'unavailable' && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>곧 공개된 문제지를 찾아 풀 수 있어요.</p></div>}
     {state.status === 'error' && <div className="quiz-empty" role="alert"><h2 className="mb-card-title">공개 문제를 불러오지 못했어요</h2><p>{state.error}</p><button type="button" onClick={() => load(false, 0)}>다시 시도</button></div>}
     {ready && state.items.length === 0 && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{scrapOnly && !query && !category ? '스크랩한 문제지가 없어요' : query ? '검색 결과가 없어요' : category ? '이 카테고리의 공개 문제가 없어요' : '아직 공개된 문제가 없어요'}</h2><p>{scrapOnly && !query && !category ? '마음에 드는 문제지의 하트를 눌러 스크랩해보세요.' : query ? '다른 검색어로 다시 찾아보세요.' : category ? '다른 카테고리를 골라보세요.' : '내 문제지를 공개로 올려 첫 문제를 공유해보세요.'}</p></div>}
-    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}`} aria-label="공개 문제 목록">{state.items.map(item => <PublicQuizCard key={item.token} item={item} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} />)}</div>}
+    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="공개 문제 목록">{state.items.map((item, itemIndex) => <PublicQuizCard key={item.token} item={item} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} revealDelay={Math.min(itemIndex, 7) * 45} />)}</div>}
     {ready && state.items.length < state.total && <button type="button" className="public-quiz-more" disabled={loadingMore} onClick={() => load(true, state.items.length)}>{loadingMore ? '불러오는 중' : `더 보기 (${Math.min(PUBLIC_PAGE_SIZE, state.total - state.items.length)})`}</button>}
     {likeNotice && <p className="quiz-library-notice" role="status">{likeNotice}</p>}
   </section>;

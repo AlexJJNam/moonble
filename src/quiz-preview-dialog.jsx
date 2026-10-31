@@ -11,12 +11,14 @@ import { lockPageScroll } from './scroll-lock.js';
 import './quiz-preview-dialog.css';
 
 // 문제 목록을 PaperPreview가 쓰는 모양으로 바꾼다. 정답은 넣지 않는다.
-export function previewPaperFromQuestions({ title, description = '', questions = [] }) {
+export function previewPaperFromQuestions({ title, description = '', questions = [], thumbnailPath = null, thumbnailMedia = null }) {
   return {
     kind: 'custom',
     label: title || '문제지',
     description,
     count: questions.length,
+    thumbnailPath,
+    thumbnailMedia,
     samples: questions.slice(0, 6).map(question => ({ title: String(question.q || question.title || ''), options: Array.isArray(question.options) ? question.options.map(String) : [] })),
   };
 }

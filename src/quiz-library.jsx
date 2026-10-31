@@ -306,16 +306,17 @@ function QuizCreationGate({ onClose, onCreate, onMix, canMix }) {
 function QuizLibrarySkeleton({ view }) {
   const count = view === 'list' ? 5 : 6;
   return <div className="quiz-page quiz-page-skeleton">
-    <AppHeader active="papers" profileSkeleton />
+    <AppHeader active="papers" profileSkeleton mobileSubnav={<QuizLibraryTabs section="papers" />} />
     <div className="quiz-content">
       <main className="quiz-main mb-page-gutter quiz-library-main" aria-busy="true" aria-label="문제지 목록을 불러오는 중">
+        <QuizLibraryTabs section="papers" className="quiz-library-tabs--desktop" />
         <div className="quiz-skeleton-title-row"><span className="quiz-skeleton-line quiz-skeleton-title" /><span className="quiz-skeleton-button" /></div>
         <div className="quiz-skeleton-tabs" aria-hidden="true">{[76, 92, 104, 68].map((width, index) => <i key={index} style={{ width }} />)}</div>
         <div className="quiz-skeleton-tools"><span /><span /></div>
         <section className={`quiz-library-skeleton-grid${view === 'list' ? ' is-list' : ''}`} aria-hidden="true">
           {Array.from({ length: count }, (_, index) => <article className="quiz-library-skeleton-card" key={index}>
             <div className="quiz-library-skeleton-preview"><i /></div>
-            <div className="quiz-library-skeleton-copy"><b /><span /><small /></div>
+            <div className="quiz-library-skeleton-copy"><b /><b className="is-title-second" /><span /><small /></div>
           </article>)}
         </section>
       </main>
@@ -343,6 +344,7 @@ function QuizLibrary() {
   const [view, setView] = useState('grid');
   const [librarySort, setLibrarySort] = useState('registered');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [filterRevealPhase, setFilterRevealPhase] = useState(0);
   const [collection, setCollection] = useState(() => initialUser ? getCustomBankCollection(initialUser.id) : getCustomBankCollection());
   const [paperAccess, setPaperAccess] = useState(() => getPaperLastActivityMap(initialUser?.id));
   const paperAccessSnapshotRef = useRef(JSON.stringify(getPaperLastActivityMap(initialUser?.id)));
@@ -1212,7 +1214,7 @@ function QuizLibrary() {
           <CommunitySortToggle ariaLabel="나의 문제지" sort={librarySort} onChange={setLibrarySort} options={LIBRARY_SORT_OPTIONS} />
           <div className="public-quiz-sort-right">
             <label className="mb-switch">
-              <input type="checkbox" role="switch" checked={favoritesOnly} aria-checked={favoritesOnly} onChange={event => setFavoritesOnly(event.target.checked)} />
+              <input type="checkbox" role="switch" checked={favoritesOnly} aria-checked={favoritesOnly} onChange={event => { setFavoritesOnly(event.target.checked); setFilterRevealPhase(current => current === 1 ? 2 : 1); }} />
               <span className="mb-switch-track" aria-hidden="true"><span /></span>
               <span className="mb-switch-label">즐겨찾기</span>
             </label>
@@ -1220,8 +1222,8 @@ function QuizLibrary() {
               onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
           </div>
         </div>
-        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}`} aria-label="문제지 목록">
-          {visiblePapers.map(paper => {
+        <section className={`paper-grid${view === 'list' ? ' paper-list' : ''}${editingPaperCards ? ' is-editing' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="문제지 목록">
+          {visiblePapers.map((paper, paperIndex) => {
             const href = paper.customBankId ? `./solve.html?paper=custom&bank=${encodeURIComponent(paper.customBankId)}#quiz` : `./solve.html?paper=${paper.id}#quiz`;
             const menuKey = paper.customBankId ? `bank:${paper.customBankId}` : `sample:${paper.id}`;
             const paperGroupStyle = paper.customBankId ? groupColorStyle(paper.groupId, groupColors) : undefined;
@@ -1229,6 +1231,7 @@ function QuizLibrary() {
             const CardSurface = editingPaperCards ? 'div' : 'a';
             return <article
               className={`paper-card${editingPaperCards && paper.customBankId ? ' is-editing' : ''}${draggedBankId === paper.customBankId ? ' is-dragging' : ''}${touchDraggingBankId === paper.customBankId ? ' is-touch-dragging' : ''}${pressedBankId === paper.customBankId ? ' is-pressing' : ''}${paper.source === MIX_SOURCE ? ' is-mix-paper' : ''}${mixSelecting ? (paper.customBankId ? (mixSelected.includes(paper.customBankId) ? ' is-mix-selectable is-mix-selected' : ' is-mix-selectable') : ' is-mix-disabled') : ''}`}
+              style={{ '--paper-filter-reveal-delay': `${Math.min(paperIndex, 7) * 45}ms` }}
               data-bank-id={paper.customBankId || undefined}
               draggable={Boolean(editingPaperCards && paper.customBankId && supportsMousePaperDrag())}
               onPointerDown={paper.customBankId ? event => beginPaperPress(event, paper.customBankId) : undefined}

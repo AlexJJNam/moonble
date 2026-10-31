@@ -38,10 +38,10 @@ export function QuizThumbnailPicker({ path, file, onFileChange, onGifChange, onC
         {previewUrl ? <img src={previewUrl} alt="문제지 썸네일 미리보기" /> : <ImagePlus size={23} aria-hidden="true" />}
       </div>
       {GIF_ENABLED && <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={disabled} onToggle={() => setGifOpen(open => !open)} />}
-      <label className="quiz-thumbnail-picker-select">
+      {!(path || file) && <label className="quiz-thumbnail-picker-select">
         <input type="file" accept="image/gif,image/jpeg,image/png" disabled={disabled} onChange={event => { onFileChange?.(event.target.files?.[0] || null); event.target.value = ''; }} />
-        {path || file ? '이미지 파일 변경' : '이미지 파일 등록'}
-      </label>
+        이미지 파일 등록
+      </label>}
       {(path || file) && <button className="quiz-thumbnail-picker-clear" type="button" disabled={disabled} onClick={onClear}><Trash2 size={15} aria-hidden="true" />초기화</button>}
     </div>
     {gifOpen && <GifPickerPanel anchorRef={gifButtonRef} onClose={() => setGifOpen(false)} onPick={gif => { onGifChange?.(encodeQuizThumbnailGif(gif)); setGifOpen(false); }} />}
