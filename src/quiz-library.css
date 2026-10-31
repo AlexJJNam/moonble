@@ -159,6 +159,11 @@ button:disabled { cursor: wait; opacity: .6; }
 /* 카드 캡션: 풀이 상태 · 시간 (같은 회색 캡션) */
 .paper-added-at > * + *::before { content: '·'; margin: 0 4px; color: var(--mb-text-disabled); }
 .paper-added-at .paper-status { font-variant-numeric: tabular-nums; }
+.paper-added-at .paper-status { display: inline-flex; align-items: center; gap: 4px; }
+.paper-solve-status-ring { width: 14px; height: 14px; flex: 0 0 14px; overflow: visible; transform: rotate(-90deg); }
+.paper-solve-status-track, .paper-solve-status-progress { fill: none; stroke-width: 2.2; }
+.paper-solve-status-track { stroke: #e4e8ed; }
+.paper-solve-status-progress { stroke: var(--mb-primary-strong); stroke-linecap: round; }
 .paper-list { grid-template-columns: 1fr; }
 .paper-list { gap: 10px; }
 .paper-list .paper-card-link { display: flex; }
@@ -954,6 +959,12 @@ button:disabled { cursor: wait; opacity: .6; }
 .paper-grid:not(.paper-list) .public-quiz-card .public-quiz-info { grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; padding-right: 2px; }
 .public-quiz-card .public-quiz-info > .quiz-community-avatar { width: 36px; height: 36px; flex-basis: 36px; margin-top: 1px; font-size: var(--mb-font-14); }
 .paper-list .public-quiz-card .public-quiz-info > .quiz-community-avatar { display: none; }
+.paper-grid:not(.paper-list) .public-quiz-card .public-quiz-info { padding-right: 30px; }
+.public-quiz-card-actions { z-index: 9; }
+.public-quiz-card-actions > button { width: 34px; height: 34px; }
+.public-quiz-card-action-menu { z-index: 30; }
+.public-quiz-block-dialog>footer button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 767px) { .public-quiz-card-actions > button { width: 28px; height: 28px; } }
 .public-quiz-skeleton-grid { margin-top: 16px; }
 .public-quiz-skeleton-card { overflow: hidden; }
 .public-quiz-skeleton-preview { align-items: start; padding: 12px 16px 0; border: 0; background: #edf1f5; }

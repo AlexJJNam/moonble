@@ -1,16 +1,18 @@
 // 문제 찾기: 공개로 올린 문제지를 검색해서 풀어보는 탭.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Heart, LayoutGrid, List, Search } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Ban, Heart, LayoutGrid, List, MoreVertical, Pencil, Search, Share2 } from 'lucide-react';
 import { PaperPreview } from './paper-preview.jsx';
 import { CommunityAvatar, CommunitySortToggle } from './quiz-community.jsx';
-import { SearchField } from './search-field.jsx';
+import { SearchField, useMediaQuery } from './search-field.jsx';
 import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
 import { SolveConfirmDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { getQuizShare } from './quiz-share.js';
+import { externalShareUrl } from './quiz-community-api.js';
 import { getLikedPublicQuizzes, toggleLikedPublicQuiz } from './paper-favorites.js';
 import { getMyPublicQuizLikedTokens, getPublicQuizLikeStates, importPublicQuizLikes, setPublicQuizLike } from './public-quiz-likes.js';
-import { listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles } from './public-quizzes-api.js';
+import { blockPublicQuizAuthor, listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles } from './public-quizzes-api.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,50}$/;
 const localLikesKey = userId => `moonble:user:${userId}:public-quiz-likes-v1`;
@@ -86,14 +88,79 @@ function usePublicSamples(item) {
   return own || fetched || (item.preview ? [{ title: item.preview, options: [] }] : []);
 }
 
-function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, revealDelay = 0 }) {
+function PublicQuizActionSheet({ onClose, children }) {
+  return createPortal(<div className="paper-sheet-layer public-quiz-action-layer" role="presentation" onClick={event => event.stopPropagation()}>
+    <button type="button" className="paper-sheet-backdrop" aria-label="문제 메뉴 닫기" onClick={onClose} />
+    {children}
+  </div>, document.body);
+}
+
+function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, onEditOwn, onBlockAuthor, onAnnounce, mobile, revealDelay = 0 }) {
   const [confirming, setConfirming] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [blockConfirm, setBlockConfirm] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
+  const cardActionsRef = useRef(null);
+  const menuRef = useRef(null);
   const liked = Boolean(likeState?.liked);
   const count = Number.isInteger(likeState?.likeCount) ? likeState.likeCount : null;
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : ''].filter(Boolean).join(' · ');
   const samples = usePublicSamples(item);
   const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples, thumbnailPath: item.thumbnail_path || null, thumbnailMedia: item.thumbnail_media || null };
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onPointerDown = event => {
+      if (cardActionsRef.current?.contains(event.target) || menuRef.current?.contains(event.target)) return;
+      setMenuOpen(false);
+    };
+    const onKeyDown = event => { if (event.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
+
+  async function share() {
+    setMenuOpen(false);
+    const url = externalShareUrl(item.token);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `[문블] ${item.title}`, text: item.description || `${item.title} 문제지를 풀어보세요.`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        onAnnounce('공유 링크를 복사했어요.');
+      }
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(url);
+        onAnnounce('공유 링크를 복사했어요.');
+      } catch { onAnnounce('공유 링크를 복사하지 못했어요.'); }
+    }
+  }
+
+  async function confirmBlock() {
+    if (blockBusy) return;
+    setBlockBusy(true);
+    try {
+      await onBlockAuthor(item);
+      setBlockConfirm(false);
+      setMenuOpen(false);
+    } catch (error) {
+      onAnnounce(error?.message || '사용자를 차단하지 못했어요.');
+    } finally { setBlockBusy(false); }
+  }
+
+  const actionMenu = menuOpen && <div ref={menuRef} className="paper-action-menu paper-card-action-menu public-quiz-card-action-menu" role="menu" onClick={event => event.stopPropagation()}>
+    {item.is_mine
+      ? <button className="paper-action-edit" type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEditOwn?.(item); }}><Pencil aria-hidden="true" />편집하기</button>
+      : <button className="is-danger" type="button" role="menuitem" onClick={() => { setMenuOpen(false); setBlockConfirm(true); }}><Ban aria-hidden="true" />차단하기</button>}
+    <button type="button" role="menuitem" onClick={share}><Share2 aria-hidden="true" />공유하기</button>
+  </div>;
   return <article className="paper-card public-quiz-card" style={{ '--paper-filter-reveal-delay': `${revealDelay}ms` }}>
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
@@ -109,12 +176,25 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, 
     </a>
     <button className={`paper-favorite-toggle is-heart${liked ? ' is-active' : ''}`} type="button" aria-label={`${item.title} ${liked ? '스크랩 취소' : '스크랩'}${count !== null ? `, 좋아요 ${count}개` : ''}`} aria-pressed={liked} aria-busy={likePending || undefined} disabled={likePending || likeMode === 'loading' || !likeState} title={liked ? '스크랩 취소' : '스크랩'}
       onClick={event => { event.preventDefault(); event.stopPropagation(); onToggleLike(item); }}><Heart size={16} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />{count !== null && <span className="public-quiz-like-count" aria-hidden="true">{count.toLocaleString('ko-KR')}</span>}</button>
+    <div className="paper-card-actions public-quiz-card-actions" ref={cardActionsRef}>
+      <button type="button" aria-label={`${item.title} 메뉴`} aria-haspopup="menu" aria-expanded={menuOpen} onClick={event => { event.preventDefault(); event.stopPropagation(); setMenuOpen(value => !value); }}><MoreVertical size={18} aria-hidden="true" /></button>
+      {menuOpen && !mobile && actionMenu}
+    </div>
+    {menuOpen && mobile && <PublicQuizActionSheet onClose={() => setMenuOpen(false)}>{actionMenu}</PublicQuizActionSheet>}
+    {blockConfirm && createPortal(<div className="quiz-manage-overlay public-quiz-block-overlay" role="presentation" onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget && !blockBusy) setBlockConfirm(false); }}>
+      <section className="quiz-manage-dialog public-quiz-block-dialog" role="dialog" aria-modal="true" aria-labelledby={`public-quiz-block-${item.token}`}>
+        <h2 id={`public-quiz-block-${item.token}`}>사용자를 차단할까요?</h2>
+        <p><strong>{item.author_name || '이 사용자'}</strong>님의 공개 문제를 문제 찾기에서 숨깁니다.</p>
+        <footer><button type="button" disabled={blockBusy} onClick={() => setBlockConfirm(false)}>취소</button><button className="is-danger" type="button" disabled={blockBusy} onClick={confirmBlock}>{blockBusy ? '차단 중…' : '차단하기'}</button></footer>
+      </section>
+    </div>, document.body)}
     {confirming && <SolveConfirmDialog title="이 문제를 푸시겠어요?" description={`${item.title} · ${stats}`} solveHref={href}
       loadPreview={() => getQuizShare(item.token).then(share => previewPaperFromQuestions(share))} onClose={() => setConfirming(false)} />}
   </article>;
 }
 
-export function PublicQuizSearch({ userId = null }) {
+export function PublicQuizSearch({ userId = null, onEditOwn }) {
+  const mobile = useMediaQuery('(max-width: 767px)');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('popular');
   const [category, setCategory] = useState(null);
@@ -275,6 +355,12 @@ export function PublicQuizSearch({ userId = null }) {
     }
   }
 
+  async function blockAuthor(item) {
+    await blockPublicQuizAuthor(item.token);
+    setLikeNotice('사용자를 차단했어요. 해당 사용자의 문제는 목록에서 숨겨집니다.');
+    await load(false, 0);
+  }
+
   const ready = state.status === 'ready' || state.status === 'refreshing';
   return <section className="public-quiz-search" aria-labelledby="public-search-title">
     <h2 id="public-search-title" className="mb-sr-only">공개 문제 검색</h2>
@@ -305,7 +391,7 @@ export function PublicQuizSearch({ userId = null }) {
     {state.status === 'unavailable' && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>곧 공개된 문제지를 찾아 풀 수 있어요.</p></div>}
     {state.status === 'error' && <div className="quiz-empty" role="alert"><h2 className="mb-card-title">공개 문제를 불러오지 못했어요</h2><p>{state.error}</p><button type="button" onClick={() => load(false, 0)}>다시 시도</button></div>}
     {ready && state.items.length === 0 && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{scrapOnly && !query && !category ? '스크랩한 문제지가 없어요' : query ? '검색 결과가 없어요' : category ? '이 카테고리의 공개 문제가 없어요' : '아직 공개된 문제가 없어요'}</h2><p>{scrapOnly && !query && !category ? '마음에 드는 문제지의 하트를 눌러 스크랩해보세요.' : query ? '다른 검색어로 다시 찾아보세요.' : category ? '다른 카테고리를 골라보세요.' : '내 문제지를 공개로 올려 첫 문제를 공유해보세요.'}</p></div>}
-    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="공개 문제 목록">{state.items.map((item, itemIndex) => <PublicQuizCard key={item.token} item={item} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} revealDelay={Math.min(itemIndex, 7) * 45} />)}</div>}
+    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="공개 문제 목록">{state.items.map((item, itemIndex) => <PublicQuizCard key={item.token} item={item} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} onEditOwn={onEditOwn} onBlockAuthor={blockAuthor} onAnnounce={setLikeNotice} mobile={mobile} revealDelay={Math.min(itemIndex, 7) * 45} />)}</div>}
     {ready && state.items.length < state.total && <button type="button" className="public-quiz-more" disabled={loadingMore} onClick={() => load(true, state.items.length)}>{loadingMore ? '불러오는 중' : `더 보기 (${Math.min(PUBLIC_PAGE_SIZE, state.total - state.items.length)})`}</button>}
     {likeNotice && <p className="quiz-library-notice" role="status">{likeNotice}</p>}
   </section>;

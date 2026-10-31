@@ -1172,7 +1172,11 @@ function QuizLibrary() {
       {section === 'achievement' ? <QuizAchievement userId={user.id} /> : section === 'create' ? <QuizCreator custom={activeCustom} onChange={refreshCollection} stepRef={creatorStepRef} onScreenChange={setCreatorScreen} /> : <main className={`quiz-main mb-page-gutter quiz-library-main${mixSelecting ? ' is-mix-selecting' : ''}`} id="paper-library" tabIndex={-1}>
         <QuizLibraryTabs section={section} className="quiz-library-tabs--desktop" />
         <div className="quiz-title"><div><h1 className="mb-page-title">{libraryTitle}</h1></div>{section === 'papers' && <div className="quiz-title-actions"><FlowActionButton size="compact" className="quiz-create-button" aria-label="새 문제지 만들기" onClick={() => setCreationGateOpen(true)}><Plus size={16} aria-hidden="true" /><span>새 문제지<span className="quiz-create-optional"> 만들기</span></span></FlowActionButton></div>}</div>
-        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch userId={user.id} /> : <>
+        {section === 'community' ? <CommunityPage user={user} banks={collection.banks} /> : section === 'public' ? <PublicQuizSearch userId={user.id} onEditOwn={item => {
+          const paper = customPapers.find(candidate => candidate.customBankId === item.owner_bank_id);
+          if (paper) editFromMenu(paper);
+          else setNotice('내 문제지 정보를 불러오지 못했어요. 목록을 새로고침해주세요.');
+        }} /> : <>
         <div className="paper-group-bar">
           <div className="paper-group-strip">
             <div className="paper-group-tabs" role="tablist" aria-label="문제지 그룹">
@@ -1253,7 +1257,13 @@ function QuizLibrary() {
                   const visibilityLabel = paper.kind === 'custom' ? VISIBILITY_LABELS[paper.visibility] : '';
                   if (!status && !shownAt && !visibilityLabel) return null;
                   return <div className="paper-added-at">
-                    {status && <span className={`paper-status is-${status.kind}`}>{paperSolveStatusLabel(status)}</span>}
+                    {status && <span className={`paper-status is-${status.kind}`}>
+                      <svg className="paper-solve-status-ring" viewBox="0 0 16 16" aria-hidden="true">
+                        <circle className="paper-solve-status-track" cx="8" cy="8" r="6" pathLength="100" />
+                        <circle className="paper-solve-status-progress" cx="8" cy="8" r="6" pathLength="100" style={{ strokeDasharray: `${status.kind === 'progress' ? Math.max(0, Math.min(100, status.percent || 0)) : 0} 100` }} />
+                      </svg>
+                      <span>{paperSolveStatusLabel(status)}</span>
+                    </span>}
                     {visibilityLabel && <span className="paper-visibility">{visibilityLabel}</span>}
                     {shownAt && <time dateTime={shownAt} title={new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(shownAt))}>{formatRelativeDateShortYear(shownAt)}</time>}
                   </div>;

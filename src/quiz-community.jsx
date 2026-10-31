@@ -8,10 +8,10 @@ import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare } from './quiz-share.js';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
-import { PaperPreview } from './paper-preview.jsx';
-import { decodeQuizThumbnailGif } from './quiz-thumbnail.js';
+import { BrandLogo } from './brand-logo.jsx';
+import { decodeQuizThumbnailGif, getStaticQuizThumbnailUrl } from './quiz-thumbnail.js';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
-import { CommunityGif, CommunityMediaUploadButton, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
+import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
 import { QUIZ_CATEGORIES, categoryLabel } from './quiz-categories.js';
 import {
@@ -260,7 +260,7 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
   const localQuestions = Array.isArray(attachment.samples) ? attachment.samples.map(sample => ({ q: sample.title, options: sample.options || [] })) : [];
   const localPaper = useMemo(() => localQuestions.length
     ? communityPreviewPaper({ title: attachment.title, description: attachment.description || '', questions: localQuestions, thumbnailPath: attachment.thumbnailPath || null, thumbnailMedia: attachment.thumbnailMedia || null })
-    : null, [attachment.title, attachment.description, attachment.samples]);
+    : null, [attachment.title, attachment.description, attachment.samples, attachment.thumbnailPath, attachment.thumbnailMedia]);
   const [paper, setPaper] = useState(() => localPaper || (token ? communityPaperPreviewCache.get(token)?.paper || null : null));
   useEffect(() => {
     let alive = true;
@@ -270,8 +270,34 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
     loadCommunityPaperPreview(token).then(value => { if (alive) setPaper(value); }).catch(() => {});
     return () => { alive = false; };
   }, [token, localPaper]);
+  const thumbnailPath = paper?.thumbnailPath || null;
+  const thumbnailMedia = useMemo(() => paper?.thumbnailMedia || decodeQuizThumbnailGif(thumbnailPath), [paper?.thumbnailMedia, thumbnailPath]);
+  const thumbnailKey = `${thumbnailPath || ''}|${thumbnailMedia ? JSON.stringify(thumbnailMedia) : ''}`;
+  const [thumbnail, setThumbnail] = useState({ key: '', url: '', loading: false });
+  useEffect(() => {
+    let alive = true;
+    let objectUrl = '';
+    if (!thumbnailPath && !thumbnailMedia) {
+      setThumbnail({ key: thumbnailKey, url: '', loading: false });
+      return () => { alive = false; };
+    }
+    setThumbnail({ key: thumbnailKey, url: '', loading: true });
+    getStaticQuizThumbnailUrl(thumbnailPath, thumbnailMedia).then(url => {
+      if (!alive) { if (url.startsWith('blob:')) URL.revokeObjectURL(url); return; }
+      objectUrl = url.startsWith('blob:') ? url : '';
+      setThumbnail({ key: thumbnailKey, url, loading: false });
+    }).catch(() => { if (alive) setThumbnail({ key: thumbnailKey, url: '', loading: false }); });
+    return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [thumbnailKey, thumbnailPath, thumbnailMedia]);
+  const waitingForPaper = Boolean(active && token && !paper);
+  const waitingForThumbnail = Boolean((thumbnailPath || thumbnailMedia) && (thumbnail.key !== thumbnailKey || thumbnail.loading));
+  const imageUrl = thumbnail.key === thumbnailKey ? thumbnail.url : '';
   return <span className={`quiz-community-attachment-thumb${!active ? ' is-inactive' : ''}`} aria-hidden="true">
-    {paper ? <PaperPreview paper={paper} compact /> : <span className="quiz-community-attachment-thumb-skeleton"><i /><b /><em /><u /></span>}
+    {waitingForPaper || waitingForThumbnail
+      ? <span className="quiz-community-attachment-thumb-skeleton"><i /><b /><em /><u /></span>
+      : imageUrl
+        ? <img className="quiz-community-attachment-image" src={imageUrl} alt="" loading="lazy" decoding="async" />
+        : <span className="quiz-community-attachment-brand"><BrandLogo decorative /></span>}
   </span>;
 }
 
@@ -426,7 +452,6 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
         {attachSource && !editing && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
           <span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
         </button>}
-        <CommunityMediaUploadButton disabled={busy} onPick={gif => { onDraftChange(current => ({ ...current, gif })); setError(''); }} onError={setError} />
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => setGifOpen(open => !open)} />
         <span className={`quiz-community-counter${draft.body.length > POST_BODY_LIMIT * .95 ? ' is-near-limit' : ''}`} aria-live="polite">{draft.body.length.toLocaleString('ko-KR')} / {POST_BODY_LIMIT.toLocaleString('ko-KR')}</span>
         <button type="submit" className="is-primary" disabled={!ready || busy}>{editing ? (busy ? '저장 중' : '저장') : (busy ? '남기는 중' : '남기기')}</button>
@@ -535,7 +560,6 @@ function CommentThread({ post, viewer, attachSource = null, onCountChange, onReq
           onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
         <button type="button" className="quiz-community-comment-attach" aria-label="댓글에 문제지 첨부" title="문제지 첨부" disabled={busy} onClick={() => { if (!viewer?.ready) { onRequireLogin(); return; } setAttachOpen(true); }}><Paperclip size={17} aria-hidden="true" /></button>
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
-        <CommunityMediaUploadButton compact disabled={busy} onBeforeOpen={() => { if (!viewer?.ready) { onRequireLogin(); return false; } return true; }} onPick={media => { setGif(media); setError(''); }} onError={setError} />
         <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif && !attachment) || busy : false}>남기기</button>
       </div>
     </form>;

@@ -131,3 +131,37 @@ export async function getQuizThumbnailUrl(path, media = null) {
   signedUrlCache.set(path, { url: data.signedUrl, expiresAt: Date.now() + 3300 * 1000 });
   return data.signedUrl;
 }
+
+// 커뮤니티 첨부 썸네일에는 GIF 애니메이션 대신 첫 프레임을 포스터 이미지로 표시한다.
+export async function getStaticQuizThumbnailUrl(path, media = null) {
+  const sharedMedia = normalizeGif(media) || decodeQuizThumbnailGif(path);
+  if (sharedMedia?.provider === 'klipy' && sharedMedia.preview_url) return sharedMedia.preview_url;
+
+  const sourceUrl = await getQuizThumbnailUrl(path, sharedMedia);
+  if (!sourceUrl) return '';
+  const isGif = sharedMedia?.provider === 'klipy'
+    || (typeof path === 'string' && /\.gif(?:$|[?#])/i.test(path))
+    || (typeof sourceUrl === 'string' && /\.gif(?:$|[?#])/i.test(sourceUrl));
+  if (!isGif) return sourceUrl;
+  if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return '';
+
+  try {
+    const response = await fetch(sourceUrl, { mode: 'cors', credentials: 'omit' });
+    if (!response.ok) return '';
+    const bitmap = await createImageBitmap(await response.blob());
+    try {
+      const scale = Math.min(1, 480 / bitmap.width, 480 / bitmap.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext('2d');
+      if (!context) return '';
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const poster = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      return poster ? URL.createObjectURL(poster) : '';
+    } finally { bitmap.close?.(); }
+  } catch {
+    // 원격 GIF가 정적 변환을 허용하지 않으면 움직이는 원본을 보여주지 않고 로고 대체 상태로 둔다.
+    return '';
+  }
+}

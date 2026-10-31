@@ -62,3 +62,11 @@ export async function setShareVisibility(bankId, visibility, token) {
   }
   throw new Error('공개 범위를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.');
 }
+
+// 공개 문제의 작성자를 차단하면 이후 문제 찾기 목록에서 해당 작성자의 문제가 제외됩니다.
+export async function blockPublicQuizAuthor(token) {
+  const { data, error } = await requireSupabase().rpc('moonble_block_public_quiz_author', { p_token: token });
+  if (!error && data === true) return true;
+  if (missing(error)) throw new Error('사용자 차단 기능을 준비하고 있어요. 데이터베이스 설정을 먼저 적용해주세요.');
+  throw new Error('사용자를 차단하지 못했어요. 잠시 후 다시 시도해주세요.');
+}
