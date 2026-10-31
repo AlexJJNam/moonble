@@ -1,6 +1,9 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Download, FileUp, Gauge, Link2, ListChecks, Search, Upload } from 'lucide-react';
-import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, updateCustomBankMeta } from './custom-bank.js';
+import { csvToQuestions, downloadSampleCSV, extractSheetExportUrl, getCustomBankMeta, setCustomBank, syncCustomBankCollection, updateCustomBankMeta } from './custom-bank.js';
+import { supabase } from './supabase.js';
+import { AiQuizDraft } from './ai-quiz-draft.jsx';
+import { validateAiDraft } from './ai-quiz-draft-validation.js';
 
 // 다른 화면(나의 문제지의 Mix 생성)에서 만든 문제지를 파일 등록 때와 같은 흐름으로 보여줄 때 쓰는 값.
 export const CREATOR_REVEAL_BANK_KEY = 'moonble:creator-reveal-bank';
@@ -165,12 +168,17 @@ function PromptReveal({ text, id }) {
 }
 
 export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange = null }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => { try { const value = sessionStorage.getItem('moonble:creator-external-query') || ''; sessionStorage.removeItem('moonble:creator-external-query'); return value; } catch { return ''; } });
   const [provider, setProvider] = useState('gemini');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [sheetPending, setSheetPending] = useState(false);
+  const [aiPending, setAiPending] = useState(false);
+  const [aiRemaining, setAiRemaining] = useState(null);
+  const [aiQuotaLoaded, setAiQuotaLoaded] = useState(false);
+  const [aiFallback, setAiFallback] = useState(null);
+  const [aiDraft, setAiDraft] = useState(null);
   const [sheetLink, setSheetLink] = useState('');
   const [dragging, setDragging] = useState(false);
   const [promptFocused, setPromptFocused] = useState(false);
@@ -194,6 +202,7 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
   const [thumbnailCleared, setThumbnailCleared] = useState(false);
   const [thumbnailSaving, setThumbnailSaving] = useState(false);
   const promptBarRef = useRef(null);
+  const aiPendingRef = useRef(false);
   const promptInputRef = useRef(null);
   const promptDockOriginRef = useRef(null);
   const promptDockAnimationRef = useRef(null);
@@ -213,6 +222,25 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
   const preview = useMemo(() => displayBank?.questions?.slice(0, 8) || [], [displayBank]);
   const examplePrompt = examplePrompts[exampleIndex];
   const exampleGuide = exampleGuideDetails[exampleIndex];
+
+  useEffect(() => {
+    let active = true;
+    let timer = 0;
+    const refresh = () => {
+      if (!supabase) { if (active) setAiQuotaLoaded(true); return; }
+      supabase.rpc('moonble_ai_quiz_remaining').then(({ data, error: quotaError }) => {
+        if (active) { setAiRemaining(!quotaError && Number.isInteger(data?.remaining) ? data.remaining : null); setAiQuotaLoaded(true); }
+      }).catch(() => { if (active) { setAiRemaining(null); setAiQuotaLoaded(true); } });
+    };
+    const scheduleMidnight = () => {
+      const kstNow = Date.now() + 9 * 60 * 60 * 1000;
+      timer = window.setTimeout(() => { refresh(); scheduleMidnight(); }, 86400000 - (kstNow % 86400000) + 1000);
+    };
+    refresh();
+    scheduleMidnight();
+    window.addEventListener('focus', refresh);
+    return () => { active = false; window.clearTimeout(timer); window.removeEventListener('focus', refresh); };
+  }, []);
 
   useLayoutEffect(() => {
     if (previousScreen.current === screen) return;
@@ -358,7 +386,7 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
   function openPopup(url) {
     if (window.matchMedia('(max-width: 767px)').matches) {
       window.location.assign(url);
-      return;
+      return true;
     }
     const screenWidth = window.screen.availWidth || window.screen.width;
     const screenHeight = window.screen.availHeight || window.screen.height;
@@ -366,12 +394,39 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     const height = Math.min(760, Math.max(560, screenHeight - 32));
     const left = Math.max(0, Math.round((screenWidth - width) / 2));
     const top = Math.max(0, Math.round((screenHeight - height) / 2));
-    const popup = window.open(url, 'moonbleAI', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
-    if (!popup) window.open(url, '_blank', 'noopener');
-    else popup.focus();
+    let popup;
+    try { popup = window.open(url, 'moonbleAI', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`); }
+    catch { return false; }
+    if (!popup) return false;
+    popup.focus();
+    return true;
   }
 
-  function requestGeneration() {
+  function launchExternal(value = query.trim(), selectedProvider = provider, notice = '') {
+    if (!value) { shakePrompt(); return false; }
+    const prompt = encodeURIComponent(generationPrompt(value, selectedProvider));
+    const url = selectedProvider === 'gemini' ? `https://www.google.com/search?q=${prompt}&udm=50` : `https://chatgpt.com/?q=${prompt}`;
+    try { sessionStorage.setItem('moonble:creator-external-query', value); } catch { /* 입력 상태는 현재 화면에도 남긴다. */ }
+    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    if (mobile) {
+      changeStep('upload');
+      openPopup(url);
+      return true;
+    }
+    if (!openPopup(url)) {
+      setAiFallback({ value, provider: selectedProvider, message: notice || '브라우저에서 새 창을 열 수 없어요. 버튼을 눌러 계속해 주세요.' });
+      return false;
+    }
+    changeStep('upload');
+    setAiFallback(null);
+    setMessage(notice || (selectedProvider === 'gemini'
+      ? 'AI Mode에 문제 생성 요청을 열었어요. 완성된 Google Sheets 공유 링크를 등록해주세요.'
+      : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받아 등록해주세요.'));
+    return true;
+  }
+
+  async function requestGeneration() {
+    if (aiPendingRef.current) return;
     window.clearTimeout(examplePromptRevealTimerRef.current);
     examplePromptRevealTimerRef.current = 0;
     examplePromptRevealIdRef.current += 1;
@@ -379,18 +434,33 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     const value = query.trim();
     if (!value) { shakePrompt(); return; }
     setError('');
-    const prompt = encodeURIComponent(generationPrompt(value, provider));
-    const url = provider === 'gemini' ? `https://www.google.com/search?q=${prompt}&udm=50` : `https://chatgpt.com/?q=${prompt}`;
-    changeStep('upload');
-    openPopup(url);
-    setQuery('');
-    if (promptInputRef.current) {
-      promptInputRef.current.style.height = 'auto';
-      promptInputRef.current.blur();
+    setMessage('');
+    setAiFallback(null);
+    const selectedProvider = provider;
+    if (!supabase || !window.crypto?.randomUUID) { launchExternal(value, selectedProvider, 'AI 생성 연결이 원활하지 않아 기존 AI 모드로 전환합니다.'); return; }
+    aiPendingRef.current = true;
+    setAiPending(true);
+    promptInputRef.current?.blur();
+    try {
+      const { data, error: generationError } = await supabase.functions.invoke('generate-quiz', { body: { prompt: value, requestId: window.crypto.randomUUID() } });
+      if (Number.isInteger(data?.remaining)) setAiRemaining(data.remaining);
+      if (!generationError && data?.quiz && !validateAiDraft(data.quiz)) {
+        setAiDraft(data.quiz);
+        changeStep('ai-preview');
+        return;
+      }
+      const notice = data?.error === 'user_limit'
+        ? '오늘의 무료 AI 생성 횟수를 모두 사용했어요. 기존 AI 모드에서 계속 만들 수 있습니다.'
+        : data?.error === 'rate_limit'
+          ? '현재 문블 AI 생성 이용량이 많아 기존 AI 모드로 연결합니다.'
+          : 'AI 생성 연결이 원활하지 않아 기존 AI 모드로 전환합니다.';
+      launchExternal(value, selectedProvider, notice);
+    } catch {
+      launchExternal(value, selectedProvider, 'AI 생성 연결이 원활하지 않아 기존 AI 모드로 전환합니다.');
+    } finally {
+      aiPendingRef.current = false;
+      setAiPending(false);
     }
-    setMessage(provider === 'gemini'
-      ? 'AI Mode에 문제 생성 요청을 열었어요. 완성된 Google Sheets 공유 링크를 등록해주세요.'
-      : 'ChatGPT에 문제 생성 요청을 열었어요. CSV 파일을 내려받아 등록해주세요.');
   }
 
   function useExample(prompt = examplePrompt) {
@@ -619,6 +689,16 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     }
   }
 
+  if (screen === 'ai-preview' && aiDraft) return <AiQuizDraft initial={aiDraft} onBack={() => { setAiDraft(null); changeStep('create'); }} onSave={async draft => {
+    const next = setCustomBank(draft.questions, '문블 AI', undefined, { title: draft.title, description: draft.description, create: true });
+    let notice = '문제지 등록이 완료됐어요. 바로 풀어볼까요?';
+    try { await syncCustomBankCollection(); }
+    catch { notice = '문제지를 이 기기에 저장했어요. 서버 동기화는 연결 후 다시 시도합니다.'; }
+    setAiDraft(null);
+    setScreen('upload');
+    revealRegisteredBank(next, notice);
+  }} />;
+
   if (screen === 'result') return <main className="quiz-main mb-page-gutter quiz-creator creator-result-screen" id="quiz-creator" tabIndex={-1}>
     <button className="creator-result-back" type="button" onClick={() => { changeStep('create'); setResultBank(null); setResultReady(true); }}>문제 만들기로 돌아가기</button>
     <CreatorTabs current="upload" onSelect={changeStep} className="quiz-library-tabs--desktop" />
@@ -688,10 +768,12 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
             <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
               <SegmentedControl ariaLabel="문제 생성 AI 선택" className="creator-provider" items={providerSegments} value={provider} onChange={setProvider} />
             </div>
-            <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>문제 만들기</button>
+            <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" disabled={aiPending} onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>{aiPending ? '문제 생성 중…' : '문제 만들기'}</button>
           </div>
         </div>
       </div>
+      <p className="creator-ai-quota">{aiRemaining === null ? (aiQuotaLoaded ? '무료 AI 생성 횟수를 확인할 수 없어요' : '무료 AI 생성 횟수 확인 중') : `오늘 남은 무료 AI 생성 ${aiRemaining}회`} · <button type="button" className="creator-ai-external" disabled={aiPending} onClick={() => launchExternal()}>선택한 AI로 직접 만들기</button></p>
+      {aiFallback && <p className="creator-ai-fallback" role="status">{aiFallback.message}<button type="button" onClick={() => launchExternal(aiFallback.value, aiFallback.provider, aiFallback.message)}>AI 모드 열기</button></p>}
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
         <div className={`creator-example-cards${exampleCardsDragging ? ' is-dragging' : ''}`} role="region" aria-label="문제 생성 예시, 좌우로 넘겨 선택" tabIndex={0} onPointerDown={startExampleCardsDrag} onPointerMove={moveExampleCardsDrag} onPointerUp={endExampleCardsDrag} onPointerCancel={endExampleCardsDrag} onClickCapture={handleExampleCardClickCapture}>
           {exampleCardIndexes.map((exampleIndex, index) => {

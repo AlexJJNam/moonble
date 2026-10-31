@@ -1,0 +1,23 @@
+.ai-quiz-draft-caption { margin: 0 0 20px; color: var(--mb-text-tertiary); font-size: var(--mb-font-14); }
+.ai-quiz-draft-meta { margin-bottom: 24px; }
+.ai-quiz-draft-list { display: grid; gap: 10px; }
+.ai-quiz-draft-item { border: 1px solid var(--mb-border); border-radius: 16px; background: var(--mb-surface); }
+.ai-quiz-draft-item summary { display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 14px 16px; cursor: pointer; }
+.ai-quiz-draft-item summary span { color: var(--mb-primary-strong); font-size: var(--mb-font-13); font-weight: 700; }
+.ai-quiz-draft-item summary strong { min-width: 0; font-size: var(--mb-font-14); line-height: 1.5; }
+.ai-quiz-draft-fields { display: grid; gap: 16px; padding: 0 16px 18px; }
+.ai-quiz-draft-fields label, .ai-quiz-draft-fields legend { color: var(--mb-text-secondary); font-size: var(--mb-font-13); font-weight: 600; }
+.ai-quiz-draft-fields label:not(.ai-quiz-draft-option) { display: grid; gap: 6px; }
+.ai-quiz-draft-fields fieldset { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
+.ai-quiz-draft-fields legend { margin-bottom: 8px; }
+.ai-quiz-draft-fields textarea, .ai-quiz-draft-fields input:not([type=radio]) { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--mb-border); border-radius: 10px; background: var(--mb-surface); color: var(--mb-text-primary); font: inherit; }
+.ai-quiz-draft-fields textarea { min-height: 72px; resize: vertical; }
+.ai-quiz-draft-option { display: flex; align-items: center; gap: 10px; }
+.ai-quiz-draft-error { color: #d63a3a; font-size: var(--mb-font-14); }
+.ai-quiz-draft-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 24px 0; }
+.ai-quiz-draft-actions button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--mb-surface-muted); color: var(--mb-text-primary); font-weight: 600; }
+.ai-quiz-draft-actions button:last-child { background: var(--mb-primary-strong); color: #fff; }
+.creator-ai-quota { margin: 10px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); }
+.creator-ai-external { padding: 4px 0; border: 0; background: transparent; color: var(--mb-text-secondary); font-size: var(--mb-font-13); text-decoration: underline; cursor: pointer; }
+.creator-ai-fallback { margin: 12px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 1.5; }
+.creator-ai-fallback button { margin-left: 8px; border: 0; background: transparent; color: var(--mb-primary-strong); font: inherit; text-decoration: underline; cursor: pointer; }

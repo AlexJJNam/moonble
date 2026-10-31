@@ -1,0 +1,61 @@
+name: Deploy AI quiz generation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/generate-quiz/**'
+      - '.github/workflows/deploy-ai-quiz.yml'
+  workflow_dispatch:
+    inputs:
+      confirm_free_tier:
+        description: 'Gemini 프로젝트가 무료 요금제임을 확인하고 내부 생성을 활성화'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moonble-ai-quiz
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      CONFIRM_FREE_TIER: ${{ github.event.inputs.confirm_free_tier || 'false' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy the authenticated function
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "::error::SUPABASE_ACCESS_TOKEN is required."; exit 1; }
+          project_ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([^.]+)\.supabase\.co/?$#\1#')
+          test -n "$project_ref" && test "$project_ref" != "$SUPABASE_URL" || { echo "::error::VITE_SUPABASE_URL is invalid."; exit 1; }
+          if [ "$CONFIRM_FREE_TIER" = "true" ]; then
+            PROJECT_REF="$project_ref" node --input-type=module <<'NODE'
+          const query = `select
+            to_regclass('public.ai_quiz_generation_requests') is not null as table_ready,
+            coalesce((select relrowsecurity from pg_catalog.pg_class where oid = to_regclass('public.ai_quiz_generation_requests')), false) as rls_ready,
+            to_regprocedure('public.moonble_reserve_ai_quiz_generation(uuid,uuid,integer)') is not null as reserve_ready,
+            to_regprocedure('public.moonble_finish_ai_quiz_generation(uuid,uuid,boolean)') is not null as finish_ready,
+            to_regprocedure('public.moonble_ai_quiz_remaining()') is not null as quota_ready,
+            not coalesce(has_table_privilege('anon', to_regclass('public.ai_quiz_generation_requests'), 'select'), true) as anon_table_denied,
+            not coalesce(has_function_privilege('authenticated', to_regprocedure('public.moonble_reserve_ai_quiz_generation(uuid,uuid,integer)'), 'execute'), true) as reserve_denied`;
+          const result = await fetch(`https://api.supabase.com/v1/projects/${process.env.PROJECT_REF}/database/query/read-only`, {
+            method: 'POST', headers: { authorization: `Bearer ${process.env.SUPABASE_ACCESS_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ query }),
+          });
+          if (!result.ok) throw new Error(`Database verification failed (${result.status})`);
+          const rows = await result.json();
+          if (!Array.isArray(rows) || !rows[0] || Object.values(rows[0]).some(value => value !== true)) throw new Error('035 migration or its access restrictions are missing');
+          console.log('AI quota migration and access restrictions verified.');
+          NODE
+            supabase secrets set --project-ref "$project_ref" GEMINI_FREE_TIER_CONFIRMED=true
+          fi
+          supabase functions deploy generate-quiz --project-ref "$project_ref" --no-verify-jwt
