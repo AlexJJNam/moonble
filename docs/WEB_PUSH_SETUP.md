@@ -27,21 +27,20 @@ This is a public VAPID key and is embedded in the site build. The private key do
 
 ## 4. Deploy the Supabase function
 
-From this repository, link the Supabase project if it is not linked already and deploy the function:
+The `deploy-web-push.yml` workflow deploys `quiz-share-push` when its source changes. Add these GitHub Actions settings once:
 
-```sh
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy quiz-share-push
-```
+**Actions → Secrets and variables → Actions → Variables**
 
-In Supabase **Project Settings → Edge Functions → Secrets**, set:
+- `VITE_WEB_PUSH_PUBLIC_KEY` — the generated public key (the Pages workflow embeds the same value in the site)
 
-- `VAPID_PUBLIC_KEY` — the same public key used in GitHub
-- `VAPID_PRIVATE_KEY` — the generated private key
-- `VAPID_SUBJECT` — `https://moonble.com`
+**Actions → Secrets and variables → Actions → Secrets**
 
-Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions. Do not put the service-role key or VAPID private key into frontend variables.
+- `SUPABASE_ACCESS_TOKEN` — a Supabase personal access token for CLI deployments
+- `VAPID_PRIVATE_KEY` — the private key generated in step 2
+
+The workflow uses the existing `VITE_SUPABASE_URL` repository variable to identify the Supabase project, writes the VAPID key pair and `VAPID_SUBJECT=https://moonble.com` to that project's Edge Function secrets, then deploys the function. The private key is passed through GitHub Actions as an encrypted secret and is never included in the site build or source code. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the function automatically.
+
+To deploy it immediately after adding these settings, open **GitHub → Actions → Deploy background web push → Run workflow**. Later changes to the function deploy automatically when pushed to `main`.
 
 ## 5. Connect new submissions to the function
 
@@ -57,11 +56,11 @@ The function verifies the project secret API key on the webhook request before i
 
 ## 6. Publish and enable on each device
 
-Push the frontend change to `main` after adding the GitHub variable; the Pages workflow will embed the public key. Each signed-in device must then open **알림 → 푸시 알림 켜기** once to grant permission and register its browser subscription.
+After adding the GitHub settings, run **Actions → Deploy background web push → Run workflow** to deploy the sender. Then run **Actions → Build and deploy Moonble → Run workflow** so the public VAPID key is included in the website. In Supabase, confirm the `quiz-share-push` Edge Function has the three VAPID secrets and that the `quiz_share_notifications` INSERT webhook is enabled. Each signed-in device must open **알림 → 푸시 알림 켜기** once to grant permission and register its browser subscription.
 
 On iPhone or iPad, first use Safari's **Share → Add to Home Screen**, launch the installed Moonble app, then enable notifications there. iOS/iPadOS web push is available to Home Screen web apps on version 16.4 and later; permission must be requested from a user action. Other supported browsers also require a secure HTTPS origin and a one-time permission grant.
 
-Until the migration, keys, function, webhook, frontend deployment, and per-device opt-in are all complete, the UI will keep push setup disabled and continue to show in-app notification history when the site is open.
+Until the migration, keys, function, webhook, frontend deployment, and per-device opt-in are all complete, the UI will keep push setup disabled and continue to show in-app notification history when the site is open. A Cloudflare API token is separate from `SUPABASE_ACCESS_TOKEN` and cannot deploy this Edge Function.
 
 ## 7. Study schedule reminders (워크스페이스 시간표)
 

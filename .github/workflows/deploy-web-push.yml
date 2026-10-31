@@ -1,0 +1,48 @@
+name: Deploy background web push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/quiz-share-push/**'
+      - 'supabase/config.toml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moonble-background-web-push
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VAPID_PUBLIC_KEY: ${{ vars.VITE_WEB_PUSH_PUBLIC_KEY }}
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Verify background push settings
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "::error::Add SUPABASE_ACCESS_TOKEN to GitHub Actions secrets."; exit 1; }
+          test -n "$SUPABASE_URL" || { echo "::error::Set the existing VITE_SUPABASE_URL repository variable."; exit 1; }
+          test -n "$VAPID_PUBLIC_KEY" || { echo "::error::Set VITE_WEB_PUSH_PUBLIC_KEY in GitHub Actions variables."; exit 1; }
+          test -n "$VAPID_PRIVATE_KEY" || { echo "::error::Add VAPID_PRIVATE_KEY to GitHub Actions secrets."; exit 1; }
+          project_ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([^.]+)\.supabase\.co/?$#\1#')
+          test -n "$project_ref" && test "$project_ref" != "$SUPABASE_URL" || { echo "::error::VITE_SUPABASE_URL must use the project's https://<ref>.supabase.co URL."; exit 1; }
+          echo "SUPABASE_PROJECT_REF=$project_ref" >> "$GITHUB_ENV"
+      - name: Store VAPID keys and deploy the push function
+        run: |
+          supabase secrets set \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            "VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY" \
+            "VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY" \
+            "VAPID_SUBJECT=https://moonble.com"
+          supabase functions deploy quiz-share-push --project-ref "$SUPABASE_PROJECT_REF"
