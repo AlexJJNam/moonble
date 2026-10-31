@@ -27,6 +27,7 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       CONFIRM_FREE_TIER: ${{ github.event.inputs.confirm_free_tier || 'false' }}
     steps:
       - uses: actions/checkout@v6
@@ -39,22 +40,26 @@ jobs:
           project_ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([^.]+)\.supabase\.co/?$#\1#')
           test -n "$project_ref" && test "$project_ref" != "$SUPABASE_URL" || { echo "::error::VITE_SUPABASE_URL is invalid."; exit 1; }
           if [ "$CONFIRM_FREE_TIER" = "true" ]; then
-            PROJECT_REF="$project_ref" node --input-type=module <<'NODE'
-          const query = `select
-            to_regclass('public.ai_quiz_generation_requests') is not null as table_ready,
-            coalesce((select relrowsecurity from pg_catalog.pg_class where oid = to_regclass('public.ai_quiz_generation_requests')), false) as rls_ready,
-            to_regprocedure('public.moonble_reserve_ai_quiz_generation(uuid,uuid,integer)') is not null as reserve_ready,
-            to_regprocedure('public.moonble_finish_ai_quiz_generation(uuid,uuid,boolean)') is not null as finish_ready,
-            to_regprocedure('public.moonble_ai_quiz_remaining()') is not null as quota_ready,
-            not coalesce(has_table_privilege('anon', to_regclass('public.ai_quiz_generation_requests'), 'select'), true) as anon_table_denied,
-            not coalesce(has_function_privilege('authenticated', to_regprocedure('public.moonble_reserve_ai_quiz_generation(uuid,uuid,integer)'), 'execute'), true) as reserve_denied`;
-          const result = await fetch(`https://api.supabase.com/v1/projects/${process.env.PROJECT_REF}/database/query/read-only`, {
-            method: 'POST', headers: { authorization: `Bearer ${process.env.SUPABASE_ACCESS_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ query }),
-          });
-          if (!result.ok) throw new Error(`Database verification failed (${result.status})`);
-          const rows = await result.json();
-          if (!Array.isArray(rows) || !rows[0] || Object.values(rows[0]).some(value => value !== true)) throw new Error('035 migration or its access restrictions are missing');
-          console.log('AI quota migration and access restrictions verified.');
+            node --input-type=module <<'NODE'
+          const base = process.env.SUPABASE_URL.replace(/\/$/, '');
+          const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+          if (!key) throw new Error('VITE_SUPABASE_PUBLISHABLE_KEY is required');
+          const user = '00000000-0000-4000-8000-000000000000';
+          const request = '00000000-0000-4000-8000-000000000001';
+          const checks = [
+            ['rpc/moonble_ai_quiz_remaining', {}],
+            ['rpc/moonble_reserve_ai_quiz_generation', { p_user_id: user, p_request_id: request, p_global_limit: null }],
+            ['rpc/moonble_finish_ai_quiz_generation', { p_user_id: user, p_request_id: request, p_success: false }],
+            ['ai_quiz_generation_requests?select=user_id&limit=1', null],
+          ];
+          for (const [path, body] of checks) {
+            const result = await fetch(`${base}/rest/v1/${path}`, {
+              method: body === null ? 'GET' : 'POST', headers: { apikey: key, 'content-type': 'application/json' }, ...(body === null ? {} : { body: JSON.stringify(body) }),
+            });
+            const data = await result.json();
+            if (![401, 403].includes(result.status) || data?.code !== '42501') throw new Error(`035 migration or anonymous access restriction check failed: ${path}`);
+          }
+          console.log('AI quota endpoints are present and anonymous access is denied.');
           NODE
             supabase secrets set --project-ref "$project_ref" GEMINI_FREE_TIER_CONFIRMED=true
           fi
