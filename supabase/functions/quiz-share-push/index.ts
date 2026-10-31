@@ -117,7 +117,7 @@ Deno.serve(async request => {
     }
     recipientId = notification.owner_id;
     message = JSON.stringify({
-      title: '문블 · 공유한 문제 풀이',
+      title: '공유한 문제를 누군가 풀었어요.',
       body: `${notification.paper_title.slice(0, 80)} · ${notification.score}점 (${notification.correct_count}/${notification.total_count})`,
       tag: `moonble-share-${notification.id}`,
       url: 'https://moonble.com/quiz.html?openNotifications=1',

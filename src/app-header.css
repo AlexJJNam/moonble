@@ -36,11 +36,11 @@ body.mb-has-app-sidebar.mb-sidebar-hidden { padding-left: 0; }
 .mb-notification-screen-heading { padding: 4px 0 0; }
 .mb-notification-screen-heading h1 { margin: 0; font-size: var(--mb-font-26); line-height: 34px; letter-spacing: -.025em; font-weight: 700; }
 .mb-notification-screen-list { padding-top: 12px; }
-.mb-notification-screen-item { display: grid; gap: 4px; padding: 13px 0; }
+.mb-notification-screen-item { display: grid; justify-items: start; gap: 4px; padding: 13px 0; }
 .mb-notification-item-heading { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.mb-notification-meta { overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.mb-notification-meta { margin-top: 2px; overflow: hidden; color: var(--mb-text-tertiary); font-size: var(--mb-font-12); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
 .mb-notification-title { min-width: 0; display: flex; align-items: center; gap: 7px; font-size: var(--mb-font-16); line-height: 24px; font-weight: 700; }
-.mb-notification-paper-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-notification-paper-title { min-width: 0; max-width: 100%; overflow: hidden; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 21px; text-overflow: ellipsis; white-space: nowrap; }
 .mb-notification-unread { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #e5484d; }
 .mb-notification-copy { color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 21px; }
 .mb-notification-empty { display: grid; justify-items: center; gap: 7px; padding: 40px 18px 34px; text-align: center; }

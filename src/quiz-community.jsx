@@ -9,7 +9,7 @@ import { formatRelativeDate } from './date-format.js';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare } from './quiz-share.js';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
 import { BrandLogo } from './brand-logo.jsx';
-import { decodeQuizThumbnailGif, getStaticQuizThumbnailUrl } from './quiz-thumbnail.js';
+import { decodeQuizThumbnailGif, getQuizThumbnailUrl, getStaticQuizThumbnailUrl } from './quiz-thumbnail.js';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
 import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
@@ -30,6 +30,11 @@ const REPORT_REASONS = [
   { value: 'other', label: '기타' },
 ];
 const AVATAR_TONES = ['blue', 'green', 'yellow', 'purple', 'pink', 'gray'];
+const COMMUNITY_POST_SORT_OPTIONS = [
+  { value: 'popular', label: '인기순' },
+  { value: 'trending', label: '급상승' },
+  { value: 'latest', label: '최신순' },
+];
 const EMPTY_DRAFT = { topic: '', title: '', body: '', attachment: null, showRecord: true, gif: null };
 
 export function CommunitySortToggle({ ariaLabel, sort, onChange, options = [{ value: 'popular', label: '인기순' }, { value: 'latest', label: '최신순' }] }) {
@@ -230,9 +235,6 @@ function ReportDialog({ onSubmit, onClose }) {
 const communityPaperPreviewCache = new Map();
 function communityPreviewPaper(share) {
   const paper = previewPaperFromQuestions(share);
-  const media = paper.thumbnailMedia || decodeQuizThumbnailGif(paper.thumbnailPath);
-  // KLIPY는 애니메이션 원본 대신 API가 제공하는 정지 미리보기만 커뮤니티 첨부에서 쓴다.
-  if (media?.provider === 'klipy' && media.preview_url) paper.thumbnailMedia = { ...media, url: media.preview_url };
   return paper;
 }
 
@@ -265,6 +267,12 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
   const thumbnailMedia = useMemo(() => paper?.thumbnailMedia || attachment.thumbnailMedia || decodeQuizThumbnailGif(thumbnailPath), [paper?.thumbnailMedia, attachment.thumbnailMedia, thumbnailPath]);
   const thumbnailKey = `${thumbnailPath || ''}|${thumbnailMedia ? JSON.stringify(thumbnailMedia) : ''}`;
   const [thumbnail, setThumbnail] = useState({ key: '', url: '', loading: false });
+  const [animatedThumbnail, setAnimatedThumbnail] = useState({ key: '', url: '' });
+  const [playing, setPlaying] = useState(false);
+  const longPressTimer = useRef(0);
+  const longPressFired = useRef(false);
+  const suppressClick = useRef(false);
+  const suppressClickTimer = useRef(0);
   useEffect(() => {
     let alive = true;
     let objectUrl = '';
@@ -280,14 +288,58 @@ function CommunityAttachmentThumbnail({ attachment, active }) {
     }).catch(() => { if (alive) setThumbnail({ key: thumbnailKey, url: '', loading: false }); });
     return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [thumbnailKey, thumbnailPath, thumbnailMedia]);
+  const decodedThumbnailMedia = thumbnailMedia || decodeQuizThumbnailGif(thumbnailPath);
+  const isGif = decodedThumbnailMedia?.provider === 'klipy'
+    || (typeof thumbnailPath === 'string' && /\.gif(?:$|[?#])/i.test(thumbnailPath))
+    || (typeof decodedThumbnailMedia?.url === 'string' && /\.gif(?:$|[?#])/i.test(decodedThumbnailMedia.url));
+  useEffect(() => {
+    let alive = true;
+    let objectUrl = '';
+    setAnimatedThumbnail({ key: thumbnailKey, url: '' });
+    if (!isGif) return () => { alive = false; };
+    getQuizThumbnailUrl(thumbnailPath, decodedThumbnailMedia).then(url => {
+      if (!alive) { if (url.startsWith('blob:')) URL.revokeObjectURL(url); return; }
+      objectUrl = url.startsWith('blob:') ? url : '';
+      setAnimatedThumbnail({ key: thumbnailKey, url });
+    }).catch(() => { if (alive) setAnimatedThumbnail({ key: thumbnailKey, url: '' }); });
+    return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [thumbnailKey, thumbnailPath, decodedThumbnailMedia, isGif]);
+  useEffect(() => () => {
+    window.clearTimeout(longPressTimer.current);
+    window.clearTimeout(suppressClickTimer.current);
+  }, []);
+  function clearLongPress() {
+    window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = 0;
+    setPlaying(false);
+  }
+  function startLongPress(event) {
+    if (!isGif || !active || event.button > 0 || !imageUrl) return;
+    longPressFired.current = false;
+    window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = window.setTimeout(() => {
+      if (animatedThumbnail.key !== thumbnailKey || !animatedThumbnail.url) return;
+      longPressFired.current = true;
+      suppressClick.current = true;
+      suppressClickTimer.current = window.setTimeout(() => { suppressClick.current = false; }, 700);
+      setPlaying(true);
+    }, 1000);
+  }
+  function captureLongPressClick(event) {
+    if (!suppressClick.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick.current = false;
+    window.clearTimeout(suppressClickTimer.current);
+  }
   const waitingForPaper = Boolean(active && token && !paper);
   const waitingForThumbnail = Boolean((thumbnailPath || thumbnailMedia) && (thumbnail.key !== thumbnailKey || thumbnail.loading));
   const imageUrl = thumbnail.key === thumbnailKey ? thumbnail.url : '';
-  return <span className={`quiz-community-attachment-thumb${!active ? ' is-inactive' : ''}`} aria-hidden="true">
+  return <span className={`quiz-community-attachment-thumb${!active ? ' is-inactive' : ''}${playing ? ' is-playing' : ''}`} aria-hidden="true" onPointerDown={startLongPress} onPointerUp={clearLongPress} onPointerCancel={clearLongPress} onPointerLeave={clearLongPress} onContextMenu={event => event.preventDefault()} onClickCapture={captureLongPressClick}>
     {waitingForPaper || waitingForThumbnail
       ? <span className="quiz-community-attachment-thumb-skeleton"><i /><b /><em /><u /></span>
       : imageUrl
-        ? <img className="quiz-community-attachment-image" src={imageUrl} alt="" loading="lazy" decoding="async" />
+        ? <img className="quiz-community-attachment-image" src={playing && animatedThumbnail.key === thumbnailKey && animatedThumbnail.url ? animatedThumbnail.url : imageUrl} alt="" loading="lazy" decoding="async" draggable="false" />
         : <span className="quiz-community-attachment-brand"><BrandLogo decorative /></span>}
   </span>;
 }
@@ -924,7 +976,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
   return <Wrapper className={variant === 'card' ? 'quiz-community' : 'quiz-community-page'} aria-labelledby={variant === 'card' ? 'quizCommunityTitle' : undefined} aria-busy={state.status === 'loading'}>
     {!listOnly && variant === 'card' && <header className="quiz-community-head">
       <div><h3 id="quizCommunityTitle">커뮤니티</h3><p>이 문제를 푼 사람들의 이야기{countText ? ` ${countText}` : ''}</p></div>
-      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} />
+      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} options={COMMUNITY_POST_SORT_OPTIONS} />
     </header>}
 
     {!listOnly && <button type="button" className="quiz-community-composer" onClick={() => setDialog(canWrite ? { type: 'compose' } : { type: 'login' })}>
@@ -933,7 +985,7 @@ export function CommunityFeed({ scope = 'all', token = null, viewer, variant = '
       <b className="quiz-community-composer-action" aria-hidden="true">{canWrite ? '의견 남기기' : '로그인'}</b>
     </button>}
     {!listOnly && variant === 'page' && scope === 'all' && <div className="quiz-community-page-controls">
-      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} />
+      <CommunitySortToggle ariaLabel="글" sort={sort} onChange={setSort} options={COMMUNITY_POST_SORT_OPTIONS} />
       <CommunityCategoryFilter value={category} onChange={value => { setCategory(value); }} />
     </div>}
 

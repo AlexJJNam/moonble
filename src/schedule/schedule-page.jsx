@@ -337,7 +337,9 @@ function ScheduleEditor({ userId, initial, onSave, onDelete, onClose }) {
   const pickerButtonsRef = useRef({});
   useEffect(() => {
     const unlock = lockPageScroll();
-    dialogRef.current?.querySelector('input')?.focus({ preventScroll: true });
+    if (!window.matchMedia('(max-width: 767px)').matches) {
+      dialogRef.current?.querySelector('input')?.focus({ preventScroll: true });
+    }
     const onKey = event => {
       if (event.key !== 'Escape') return;
       event.preventDefault();

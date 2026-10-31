@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { CalendarDays, Check, ChevronDown, Download, FileDown, RotateCcw, Search, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, Download, FileDown, MoreVertical, RotateCcw, Search, Trash2, Trophy, X } from 'lucide-react';
 import { DEFAULT_GROUP_ID, getCustomBankCollection } from './custom-bank.js';
 import { BUILT_IN_PAPER_PREVIEWS, PaperPreview } from './paper-preview.jsx';
 import { formatRelativeDate } from './date-format.js';
@@ -270,6 +270,7 @@ export function QuizAchievement({ userId }) {
   const requestedPaperKey = new URLSearchParams(window.location.search).get('achievementPaper');
   const requestedPaperEntry = requestedPaperKey ? history.find(item => historyPaperKey(item) === requestedPaperKey) : null;
   const [confirming, setConfirming] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [collection, setCollection] = useState(() => getCustomBankCollection(userId));
   const [selectedGroups, setSelectedGroups] = useState(() => requestedPaperEntry ? [requestedPaperEntry.groupId || DEFAULT_GROUP_ID] : []);
   const [selectedPapers, setSelectedPapers] = useState(() => requestedPaperEntry ? [requestedPaperKey] : []);
@@ -288,6 +289,20 @@ export function QuizAchievement({ userId }) {
   const periodOverlayRef = useRef(null);
   const periodSheetRef = useRef(null);
   const periodCloseTimerRef = useRef(0);
+
+  useEffect(() => {
+    if (!deleteTarget) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = event => {
+      if (event.key === 'Escape') setDeleteTarget(null);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [deleteTarget]);
 
   useEffect(() => {
     let alive = true;
@@ -629,7 +644,7 @@ export function QuizAchievement({ userId }) {
               <div className="achievement-actions">
                 <button className="achievement-retry-action" type="button" disabled={!item.questionIds?.length} onClick={() => retry(item, item.questionIds)}><RotateCcw size={16} aria-hidden="true" />같은 문제</button>
                 {item.wrongIds?.length > 0 && <button className="achievement-retry-action" type="button" onClick={() => retry(item, item.wrongIds)}><Search size={16} aria-hidden="true" />오답만</button>}
-                {confirming === item.date ? <><button onClick={() => setConfirming(null)}>취소</button><button className="danger" onClick={() => update(history.filter(record => record !== item))}>삭제</button></> : <button className="icon-button" type="button" aria-label={`${index + 1}회차 기록 삭제`} onClick={() => setConfirming(item.date)}><Trash2 size={17} aria-hidden="true" /></button>}
+                <button className="icon-button achievement-attempt-menu" type="button" aria-label={`${index + 1}회차 기록 메뉴`} aria-haspopup="dialog" onClick={() => setDeleteTarget(item)}><MoreVertical size={18} aria-hidden="true" /></button>
               </div>
             </li>;
           })}
@@ -660,6 +675,14 @@ export function QuizAchievement({ userId }) {
           <p className={periodError ? 'is-error' : ''} role={periodError ? 'alert' : undefined}>{periodError || '원하는 시작일과 종료일을 선택하세요.'}</p>
           <button type="button" onClick={applyCustomPeriod}>이 기간으로 보기</button>
         </div>
+      </section>
+    </div>}
+    {deleteTarget && <div className="achievement-delete-overlay" role="presentation" onPointerDown={event => { if (event.target === event.currentTarget) setDeleteTarget(null); }}>
+      <section className="achievement-delete-sheet" role="dialog" aria-modal="true" aria-labelledby="achievement-delete-title" aria-describedby="achievement-delete-copy">
+        <span className="achievement-period-grab" aria-hidden="true" />
+        <header><h2 id="achievement-delete-title">풀이 기록을 삭제할까요?</h2><button type="button" aria-label="닫기" onClick={() => setDeleteTarget(null)}><X size={18} aria-hidden="true" /></button></header>
+        <p id="achievement-delete-copy"><strong>{historyPaperDetails(deleteTarget).title}</strong>의 풀이 기록이 목록에서 삭제됩니다.</p>
+        <footer><button type="button" onClick={() => setDeleteTarget(null)}>취소</button><button type="button" className="is-danger" onClick={() => { update(history.filter(record => record !== deleteTarget)); setDeleteTarget(null); }}>삭제</button></footer>
       </section>
     </div>}
   </main>;

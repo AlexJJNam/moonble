@@ -966,11 +966,11 @@ export function AppHeader({ active, error, hideMobileTop = false, hideSolverBack
       {shareNotifications.length ? <div className="mb-notification-screen-list">
         {shareNotifications.map(item => <article className="mb-notification-screen-item" key={item.id}>
           <div className="mb-notification-item-heading">
-            <span className="mb-notification-title"><span className="mb-notification-paper-title">{item.title}</span>{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
-            <time className="mb-notification-meta" dateTime={item.created_at}>{formatRelativeDate(item.created_at)}</time>
+            <span className="mb-notification-title">공유한 문제를 누군가 풀었어요.{!item.seen && <i className="mb-notification-unread" aria-label="안 읽음" />}</span>
           </div>
-          <span className="mb-notification-copy">공유한 문제를 누군가 풀었어요.</span>
+          <span className="mb-notification-paper-title">{item.title}</span>
           <span className="mb-notification-copy">{item.score}점 ({item.correct}/{item.total})</span>
+          <time className="mb-notification-meta" dateTime={item.created_at}>{formatRelativeDate(item.created_at)}</time>
         </article>)}
       </div> : <div className="mb-notification-empty">
         <Bell size={30} aria-hidden="true" />

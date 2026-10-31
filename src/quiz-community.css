@@ -182,8 +182,9 @@
 @media (hover: hover) { a.quiz-community-attachment:hover { border-color: var(--mb-primary); background: #fbfdff; } }
 a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-strong); outline-offset: 2px; }
 .quiz-community-attachment.is-inactive { background: var(--mb-surface-muted); }
-.quiz-community-attachment-thumb { position: relative; width: 56px; height: 72px; flex: 0 0 56px; display: block; overflow: hidden; box-sizing: border-box; border: 1px solid var(--mb-border); border-radius: var(--mb-radius-8); background: var(--mb-surface); }
+.quiz-community-attachment-thumb { position: relative; width: 56px; height: 72px; flex: 0 0 56px; display: block; overflow: hidden; box-sizing: border-box; border: 1px solid var(--mb-border); border-radius: var(--mb-radius-8); background: var(--mb-surface); touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .quiz-community-attachment-image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.quiz-community-attachment-image[draggable='false'] { -webkit-user-drag: none; }
 .quiz-community-attachment-brand { width: 100%; height: 100%; display: grid; place-items: center; }
 .quiz-community-attachment-brand .mb-brand-wordmark { display: block; width: 42px; height: auto; }
 .quiz-community-attachment-thumb.is-inactive { opacity: .55; }

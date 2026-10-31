@@ -223,7 +223,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           <p><strong>{editor.title || editor.name}</strong>{isBank || isSample ? ' 문제지' : ' 그룹'}를 삭제하면 되돌릴 수 없어요.</p>
           {!isBank && !isSample && <p>이 그룹의 문제지는 삭제되지 않고 ‘미분류’로 이동해요.</p>}
         </> : isBank ? <div className="quiz-manage-fields">
-          <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
+          <label><span>문제지 이름</span><input autoFocus={!window.matchMedia('(max-width: 767px)').matches} type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
           <label><span>문제지 설명</span><textarea rows="2" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
           <QuizThumbnailPicker path={editor.thumbnailCleared ? null : editor.thumbnailPath} file={editor.thumbnailFile} disabled={Boolean(editor.saving)} onFileChange={file => onChange({ ...editor, thumbnailFile: file, thumbnailCleared: false })} onGifChange={thumbnailPath => onChange({ ...editor, thumbnailFile: null, thumbnailPath, thumbnailCleared: false })} onClear={() => onChange({ ...editor, thumbnailFile: null, thumbnailPath: null, thumbnailCleared: true })} />
@@ -233,7 +233,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           </div>}
           <div className="quiz-manage-category"><span>카테고리</span><CategoryChips label="카테고리" value={editor.category || null} onChange={next => onChange({ ...editor, category: next })} /></div>
         </div> : <div className="quiz-manage-fields">
-          <label><span>그룹 이름</span><input autoFocus className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength={12} value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value.slice(0, 12) })} /><small className="quiz-group-name-hint">{editor.name.length}/12자</small></label>
+          <label><span>그룹 이름</span><input autoFocus={!window.matchMedia('(max-width: 767px)').matches} className="quiz-group-name-preview" style={groupColorPreviewStyle(editor.colorKey)} type="text" maxLength={12} value={editor.name} onChange={event => onChange({ ...editor, name: event.target.value.slice(0, 12) })} /><small className="quiz-group-name-hint">{editor.name.length}/12자</small></label>
           <fieldset className="quiz-group-color-field"><legend>배경 색상</legend><div className="quiz-group-color-options" role="group" aria-label="배경 색상">
             {GROUP_COLOR_OPTIONS.map(option => <button key={option.key} type="button" aria-pressed={editor.colorKey === option.key} aria-label={`${option.label} 색상`} title={option.label} className={`quiz-group-color-option${editor.colorKey === option.key ? ' is-selected' : ''}`} style={{ '--group-color-swatch': option.swatch, '--group-color-check': groupColorCheckColor(option.swatch) }} onClick={() => { setCustomColorOpen(false); setCustomColorError(''); onChange({ ...editor, colorKey: option.key }); }}><span />{editor.colorKey === option.key && <Check size={13} aria-hidden="true" />}</button>)}
             <button type="button" aria-pressed={customColorSelected} aria-expanded={customColorOpen} aria-label="사용자 지정 색상" aria-controls={customColorOpen ? 'quiz-custom-color-editor' : undefined} title="사용자 지정 색상" className={`quiz-group-color-option is-custom${customColorSelected ? ' is-selected' : ''}`} style={{ '--group-color-swatch': customColorSelected ? groupColorSwatch(editor.colorKey) : '#eef0f3', '--group-color-check': customColorSelected ? groupColorCheckColor(editor.colorKey) : '#6b7684' }} onClick={() => { if (!customColorOpen) setCustomColorDraft(groupColorSwatch(editor.colorKey)); setCustomColorError(''); setCustomColorOpen(!customColorOpen); }}><span /><Plus size={15} aria-hidden="true" /></button>
@@ -311,11 +311,21 @@ function QuizLibrarySkeleton({ view }) {
       <main className="quiz-main mb-page-gutter quiz-library-main" aria-busy="true" aria-label="문제지 목록을 불러오는 중">
         <QuizLibraryTabs section="papers" className="quiz-library-tabs--desktop" />
         <div className="quiz-skeleton-title-row"><span className="quiz-skeleton-line quiz-skeleton-title" /><span className="quiz-skeleton-button" /></div>
-        <div className="quiz-skeleton-tabs" aria-hidden="true">{[76, 92, 104, 68].map((width, index) => <i key={index} style={{ width }} />)}</div>
-        <div className="quiz-skeleton-tools"><span /><span /></div>
+        <div className="quiz-skeleton-group-row" aria-hidden="true">
+          <div className="quiz-skeleton-group-tabs">{[76, 104, 86, 94, 72].map((width, index) => <i className={`quiz-skeleton-block${index === 0 ? ' is-active' : ''}`} key={index} style={{ width }} />)}</div>
+          <span className="quiz-skeleton-block quiz-skeleton-group-action" />
+        </div>
+        <div className="quiz-library-skeleton-tools" aria-hidden="true">
+          <div className="quiz-skeleton-scope">{[44, 56, 64, 48].map((width, index) => <i className={`quiz-skeleton-block${index === 0 ? ' is-active' : ''}`} key={index} style={{ width }} />)}</div>
+          <span className="quiz-skeleton-block quiz-skeleton-search" />
+        </div>
+        <div className="quiz-skeleton-sort-row" aria-hidden="true">
+          <span className="quiz-skeleton-block quiz-skeleton-sort" />
+          <div><span className="quiz-skeleton-block quiz-skeleton-favorite" /><span className="quiz-skeleton-block quiz-skeleton-view" /></div>
+        </div>
         <section className={`quiz-library-skeleton-grid${view === 'list' ? ' is-list' : ''}`} aria-hidden="true">
           {Array.from({ length: count }, (_, index) => <article className="quiz-library-skeleton-card" key={index}>
-            <div className="quiz-library-skeleton-preview"><i /></div>
+            <div className="quiz-library-skeleton-preview"><i><b /><span /><small /><em /></i><span className="quiz-skeleton-block quiz-skeleton-card-star" /><span className="quiz-skeleton-block quiz-skeleton-card-count" /></div>
             <div className="quiz-library-skeleton-copy"><b /><b className="is-title-second" /><span /><small /></div>
           </article>)}
         </section>

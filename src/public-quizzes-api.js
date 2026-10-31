@@ -35,6 +35,15 @@ export async function listPublicQuizzes({ query = '', sort = 'popular', offset =
   return { items: Array.isArray(data?.items) ? data.items : [], total: Number.isInteger(data?.total) ? data.total : 0 };
 }
 
+// 이벤트의 종류와 대상은 서버가 공개 토큰에서 검증하고, 횟수·점수는 클라이언트가 전달하지 않습니다.
+export async function trackPublicQuizActivity(token, kind) {
+  if (!supabase || !/^[A-Za-z0-9_-]{40,50}$/.test(String(token || '')) || !['view', 'start'].includes(kind)) return false;
+  try {
+    const { data, error } = await supabase.rpc('moonble_track_public_quiz_activity', { p_token: token, p_kind: kind });
+    return !error && data === true;
+  } catch { return false; }
+}
+
 // 검색어 자동완성: 검색어가 들어간 공개 문제 제목을 인기순으로 몇 개 돌려준다.
 export async function suggestPublicQuizTitles(term, limit = 8) {
   const { data, error } = await requireSupabase().rpc('moonble_list_public_quizzes', { p_query: term, p_sort: 'popular', p_offset: 0, p_limit: limit });

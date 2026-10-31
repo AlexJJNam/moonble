@@ -66,7 +66,7 @@ function PreviewComment({ comment }) {
 }
 
 // load(): 위 모양의 문제지(또는 그 Promise). 대화상자 위에 다시 뜨므로 Esc는 이 창만 닫는다.
-export function QuizPreviewDialog({ load, solveHref, onClose }) {
+export function QuizPreviewDialog({ load, solveHref, onClose, onStart }) {
   const titleId = useId();
   const dialogRef = useRef(null);
   const loadRef = useRef(load);
@@ -105,6 +105,12 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
   }, []);
   const paper = state.paper;
   const stop = event => event.stopPropagation();
+  const startSolve = event => {
+    if (!onStart) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) { void onStart(); return; }
+    event.preventDefault();
+    Promise.resolve().then(onStart).catch(() => {}).finally(() => window.location.assign(solveHref));
+  };
   return createPortal(<div className="mb-preview-overlay" role="presentation" onClick={stop} onKeyDown={stop}
     onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialogRef} className="mb-preview-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
@@ -129,14 +135,14 @@ export function QuizPreviewDialog({ load, solveHref, onClose }) {
       </>}
       <footer className="mb-preview-actions">
         <button type="button" onClick={onClose}>닫기</button>
-        <a className="is-primary" href={solveHref}>풀어보기</a>
+        <a className="is-primary" href={solveHref} onClick={startSolve}>풀어보기</a>
       </footer>
     </section>
   </div>, document.body);
 }
 
 // "이 문제를 푸시겠어요?" 확인 + 아래 회색 캡션으로 미리보기. 문제 찾기 등에서 쓴다.
-export function SolveConfirmDialog({ title, description, solveHref, loadPreview, onClose }) {
+export function SolveConfirmDialog({ title, description, solveHref, loadPreview, onClose, onStart }) {
   const titleId = useId();
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -155,8 +161,14 @@ export function SolveConfirmDialog({ title, description, solveHref, loadPreview,
       if (previous && typeof previous.focus === 'function') previous.focus({ preventScroll: true });
     };
   }, [previewing]);
-  if (previewing) return <QuizPreviewDialog solveHref={solveHref} load={loadPreview} onClose={() => setPreviewing(false)} />;
+  if (previewing) return <QuizPreviewDialog solveHref={solveHref} load={loadPreview} onClose={() => setPreviewing(false)} onStart={onStart} />;
   const stop = event => event.stopPropagation();
+  const startSolve = event => {
+    if (!onStart) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) { void onStart(); return; }
+    event.preventDefault();
+    Promise.resolve().then(onStart).catch(() => {}).finally(() => window.location.assign(solveHref));
+  };
   return createPortal(<div className="mb-preview-overlay" role="presentation" onClick={stop} onKeyDown={stop}
     onMouseDown={event => { event.stopPropagation(); if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialogRef} className="mb-preview-dialog is-confirm" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
@@ -164,7 +176,7 @@ export function SolveConfirmDialog({ title, description, solveHref, loadPreview,
       {description && <p className="mb-preview-confirm-copy">{description}</p>}
       <footer className="mb-preview-actions">
         <button type="button" onClick={onClose}>취소</button>
-        <a className="is-primary" href={solveHref}>풀어보기</a>
+        <a className="is-primary" href={solveHref} onClick={startSolve}>풀어보기</a>
       </footer>
       {loadPreview && <p className="mb-preview-caption"><span>어떤 문제인지 궁금하신가요?</span><button type="button" onClick={() => setPreviewing(true)}>미리보기</button></p>}
     </section>

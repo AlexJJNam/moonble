@@ -12,9 +12,14 @@ import { getQuizShare } from './quiz-share.js';
 import { externalShareUrl } from './quiz-community-api.js';
 import { getLikedPublicQuizzes, toggleLikedPublicQuiz } from './paper-favorites.js';
 import { getMyPublicQuizLikedTokens, getPublicQuizLikeStates, importPublicQuizLikes, setPublicQuizLike } from './public-quiz-likes.js';
-import { blockPublicQuizAuthor, listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles } from './public-quizzes-api.js';
+import { blockPublicQuizAuthor, listPublicQuizzes, PUBLIC_PAGE_SIZE, suggestPublicQuizTitles, trackPublicQuizActivity } from './public-quizzes-api.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,50}$/;
+const PUBLIC_QUIZ_SORT_OPTIONS = [
+  { value: 'popular', label: '인기순' },
+  { value: 'trending', label: '급상승' },
+  { value: 'latest', label: '최신순' },
+];
 const localLikesKey = userId => `moonble:user:${userId}:public-quiz-likes-v1`;
 const migrationKey = userId => `moonble:user:${userId}:public-quiz-likes-migrated-v1`;
 const pendingLikesKey = userId => `moonble:user:${userId}:public-quiz-likes-pending-v1`;
@@ -95,13 +100,14 @@ function PublicQuizActionSheet({ onClose, children }) {
   </div>, document.body);
 }
 
-function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, onEditOwn, onBlockAuthor, onAnnounce, mobile, revealDelay = 0 }) {
+function PublicQuizCard({ item, userId, likeState, likeMode, likePending, onToggleLike, onEditOwn, onBlockAuthor, onAnnounce, mobile, revealDelay = 0 }) {
   const [confirming, setConfirming] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockConfirm, setBlockConfirm] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
   const cardActionsRef = useRef(null);
   const menuRef = useRef(null);
+  const articleRef = useRef(null);
   const liked = Boolean(likeState?.liked);
   const count = Number.isInteger(likeState?.likeCount) ? likeState.likeCount : null;
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
@@ -123,6 +129,19 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, 
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!userId || !articleRef.current || !('IntersectionObserver' in window)) return undefined;
+    let recorded = false;
+    const observer = new IntersectionObserver(entries => {
+      if (recorded || !entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.5)) return;
+      recorded = true;
+      observer.disconnect();
+      void trackPublicQuizActivity(item.token, 'view');
+    }, { threshold: [0.5] });
+    observer.observe(articleRef.current);
+    return () => observer.disconnect();
+  }, [item.token, userId]);
 
   async function share() {
     setMenuOpen(false);
@@ -161,7 +180,7 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, 
       : <button className="is-danger" type="button" role="menuitem" onClick={() => { setMenuOpen(false); setBlockConfirm(true); }}><Ban aria-hidden="true" />차단하기</button>}
     <button type="button" role="menuitem" onClick={share}><Share2 aria-hidden="true" />공유하기</button>
   </div>;
-  return <article className="paper-card public-quiz-card" style={{ '--paper-filter-reveal-delay': `${revealDelay}ms` }}>
+  return <article ref={articleRef} className="paper-card public-quiz-card" style={{ '--paper-filter-reveal-delay': `${revealDelay}ms` }}>
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       <PaperPreview paper={paper} />
@@ -189,6 +208,7 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike, 
       </section>
     </div>, document.body)}
     {confirming && <SolveConfirmDialog title="이 문제를 푸시겠어요?" description={`${item.title} · ${stats}`} solveHref={href}
+      onStart={userId ? () => trackPublicQuizActivity(item.token, 'start') : undefined}
       loadPreview={() => getQuizShare(item.token).then(share => previewPaperFromQuestions(share))} onClose={() => setConfirming(false)} />}
   </article>;
 }
@@ -371,7 +391,7 @@ export function PublicQuizSearch({ userId = null, onEditOwn }) {
             screenExtra={(draft, setDraft) => <div className="mb-search-filter"><CategoryChips label="카테고리 필터" allLabel="전체" value={draft} onChange={setDraft} /></div>} />
     {likeWarning && <p className="public-quiz-like-warning" role="status">{likeWarning} <button type="button" onClick={() => { if (likeMode === 'local') setLikeRetry(value => value + 1); else load(false, 0); }}>다시 시도</button></p>}
     <div className="quiz-community-page-sort public-quiz-sort">
-      <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} />
+      <CommunitySortToggle ariaLabel="문제" sort={sort} onChange={setSort} options={PUBLIC_QUIZ_SORT_OPTIONS} />
       <div className="public-quiz-sort-right">
         <label className="mb-switch">
           <input type="checkbox" role="switch" checked={scrapOnly} aria-checked={scrapOnly} onChange={event => { setScrapOnly(event.target.checked); setFilterRevealPhase(current => current === 1 ? 2 : 1); }} />
@@ -391,7 +411,7 @@ export function PublicQuizSearch({ userId = null, onEditOwn }) {
     {state.status === 'unavailable' && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>곧 공개된 문제지를 찾아 풀 수 있어요.</p></div>}
     {state.status === 'error' && <div className="quiz-empty" role="alert"><h2 className="mb-card-title">공개 문제를 불러오지 못했어요</h2><p>{state.error}</p><button type="button" onClick={() => load(false, 0)}>다시 시도</button></div>}
     {ready && state.items.length === 0 && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{scrapOnly && !query && !category ? '스크랩한 문제지가 없어요' : query ? '검색 결과가 없어요' : category ? '이 카테고리의 공개 문제가 없어요' : '아직 공개된 문제가 없어요'}</h2><p>{scrapOnly && !query && !category ? '마음에 드는 문제지의 하트를 눌러 스크랩해보세요.' : query ? '다른 검색어로 다시 찾아보세요.' : category ? '다른 카테고리를 골라보세요.' : '내 문제지를 공개로 올려 첫 문제를 공유해보세요.'}</p></div>}
-    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="공개 문제 목록">{state.items.map((item, itemIndex) => <PublicQuizCard key={item.token} item={item} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} onEditOwn={onEditOwn} onBlockAuthor={blockAuthor} onAnnounce={setLikeNotice} mobile={mobile} revealDelay={Math.min(itemIndex, 7) * 45} />)}</div>}
+    {ready && state.items.length > 0 && <div className={`paper-grid public-quiz-grid${view === 'list' ? ' paper-list' : ''}${filterRevealPhase ? ` filter-reveal-${filterRevealPhase}` : ''}`} aria-label="공개 문제 목록">{state.items.map((item, itemIndex) => <PublicQuizCard key={item.token} item={item} userId={userId} likeState={likeStates[item.token]} likeMode={likeMode} likePending={Boolean(likeBusy[item.token])} onToggleLike={toggleLike} onEditOwn={onEditOwn} onBlockAuthor={blockAuthor} onAnnounce={setLikeNotice} mobile={mobile} revealDelay={Math.min(itemIndex, 7) * 45} />)}</div>}
     {ready && state.items.length < state.total && <button type="button" className="public-quiz-more" disabled={loadingMore} onClick={() => load(true, state.items.length)}>{loadingMore ? '불러오는 중' : `더 보기 (${Math.min(PUBLIC_PAGE_SIZE, state.total - state.items.length)})`}</button>}
     {likeNotice && <p className="quiz-library-notice" role="status">{likeNotice}</p>}
   </section>;
