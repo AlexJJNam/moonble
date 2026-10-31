@@ -209,9 +209,9 @@ a.quiz-community-attachment:focus-visible { outline: 2px solid var(--mb-primary-
 .quiz-community-attachment.is-editing { margin-top: 0; background: var(--mb-surface-muted); border-color: transparent; }
 .quiz-community-attachment.is-editing .quiz-community-icon-button { flex: 0 0 auto; }
 
-.quiz-community-record { width: fit-content; max-width: 100%; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px var(--mb-space-8); border-radius: 999px; color: var(--mb-primary-strong); background: var(--mb-primary-soft); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-medium); font-variant-numeric: tabular-nums; }
+.quiz-community-record { width: fit-content; max-width: 100%; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px var(--mb-space-8); border-radius: 999px; color: var(--mb-text-tertiary); background: var(--mb-surface-muted); font-size: var(--mb-font-12); line-height: 18px; font-weight: var(--mb-weight-medium); font-variant-numeric: tabular-nums; }
 .quiz-community-record b { font-weight: var(--mb-weight-bold); }
-.quiz-community-record.is-top { color: var(--mb-warning); background: var(--mb-warning-soft); }
+.quiz-community-record.is-top { color: var(--mb-text-tertiary); background: var(--mb-surface-muted); }
 .quiz-community-record svg { flex: 0 0 auto; }
 
 /* 글쓰기 창의 첨부 영역 */

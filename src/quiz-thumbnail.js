@@ -135,9 +135,10 @@ export async function getQuizThumbnailUrl(path, media = null) {
 // 커뮤니티 첨부 썸네일에는 GIF 애니메이션 대신 첫 프레임을 포스터 이미지로 표시한다.
 export async function getStaticQuizThumbnailUrl(path, media = null) {
   const sharedMedia = normalizeGif(media) || decodeQuizThumbnailGif(path);
-  if (sharedMedia?.provider === 'klipy' && sharedMedia.preview_url) return sharedMedia.preview_url;
-
-  const sourceUrl = await getQuizThumbnailUrl(path, sharedMedia);
+  // preview_url도 제공처별로 애니메이션일 수 있어 그대로 렌더링하지 않고 첫 프레임을 고정한다.
+  const sourceUrl = sharedMedia?.provider === 'klipy'
+    ? (sharedMedia.preview_url || sharedMedia.url)
+    : await getQuizThumbnailUrl(path, sharedMedia);
   if (!sourceUrl) return '';
   const isGif = sharedMedia?.provider === 'klipy'
     || (typeof path === 'string' && /\.gif(?:$|[?#])/i.test(path))
