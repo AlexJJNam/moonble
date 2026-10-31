@@ -54,6 +54,6 @@ test('회원 한도에 도달하면 Gemini를 호출하지 않는다', async () 
 test('Gemini 429와 네트워크 실패는 예약을 실패로 되돌린다', async () => {
   for (const failure of [new Response('{}', { status: 429, headers: { 'retry-after': '2' } }), new Error('network')]) {
     const app = setup({ fetchResponse: failure }); const body = await (await app.run()).json();
-    assert.equal(body.error, failure instanceof Error ? 'unavailable' : 'rate_limit'); assert.deepEqual(app.finished, [false]);
+    assert.equal(body.error, failure instanceof Error ? 'unavailable' : 'rate_limit'); assert.equal(body.diagnostic, undefined); assert.deepEqual(app.finished, [false]);
   }
 });

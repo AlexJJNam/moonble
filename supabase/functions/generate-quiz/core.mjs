@@ -33,15 +33,22 @@ const normalized = value => value.normalize('NFKC').replace(/\s+/g, '').toLowerC
 export function validateQuiz(value) {
   const title = clean(value?.title, 80);
   const description = clean(value?.description, 160);
-  if (!title || !description || !Array.isArray(value?.questions) || value.questions.length !== QUESTION_COUNT) throw new Error('invalid_quiz');
+  if (!title) throw new Error('invalid_title');
+  if (!description) throw new Error('invalid_description');
+  if (!Array.isArray(value?.questions) || value.questions.length !== QUESTION_COUNT) throw new Error('invalid_question_count');
   const seen = new Set();
   const questions = value.questions.map((item, index) => {
     const q = clean(item?.question, 2000);
     const explain = clean(item?.explain, 2000);
-    if (!q || !explain || !Array.isArray(item?.options) || item.options.length !== 4 || !Number.isInteger(item?.correct) || item.correct < 1 || item.correct > 4) throw new Error('invalid_quiz');
+    if (!q) throw new Error('invalid_question');
+    if (!explain) throw new Error('invalid_explanation');
+    if (!Array.isArray(item?.options) || item.options.length !== 4) throw new Error('invalid_options');
+    if (!Number.isInteger(item?.correct) || item.correct < 1 || item.correct > 4) throw new Error('invalid_answer');
     const options = item.options.map(option => clean(option, 500));
     const key = normalized(q);
-    if (options.some(option => !option) || new Set(options.map(normalized)).size !== 4 || seen.has(key)) throw new Error('invalid_quiz');
+    if (options.some(option => !option)) throw new Error('invalid_options');
+    if (new Set(options.map(normalized)).size !== 4) throw new Error('duplicate_options');
+    if (seen.has(key)) throw new Error('duplicate_question');
     seen.add(key);
     return { id: 100001 + index, q, options, correct: [item.correct - 1], explain, multi: false };
   });
@@ -81,17 +88,30 @@ export function rateLimitDetails(body, retryAfter, now = Date.now()) {
 export async function executeGeneration({ reserve, generate, finish }) {
   let reservation;
   try { reservation = await reserve(); }
-  catch { return { error: 'unavailable' }; }
+  catch (error) { return { error: 'unavailable', diagnostic: { stage: 'reserve', code: safeCode(error) } }; }
   if (!reservation || reservation.status !== 'reserved') return { error: quotaMessage(reservation?.status), remaining: reservation?.remaining ?? null };
   let success = false;
+  let stage = 'generate';
   try {
-    const quiz = parseGeminiResponse(await generate());
+    const body = await generate();
+    stage = 'validate';
+    const quiz = parseGeminiResponse(body);
+    stage = 'finalize';
     if (await finish(true) !== true) throw new Error('finalize_failed');
     success = true;
     return { quiz, remaining: reservation.remaining };
   } catch (error) {
-    return { error: error?.code === 'rate_limit' ? 'rate_limit' : 'unavailable' };
+    return { error: error?.code === 'rate_limit' ? 'rate_limit' : 'unavailable', diagnostic: { stage, code: safeCode(error) } };
   } finally {
     if (!success) { try { await finish(false); } catch { /* 만료된 예약은 다음 요청에서 해제합니다. */ } }
   }
+}
+
+function safeCode(error) {
+  const expected = new Set(['invalid_title', 'invalid_description', 'invalid_question_count', 'invalid_question', 'invalid_explanation', 'invalid_options', 'invalid_answer', 'duplicate_options', 'duplicate_question', 'invalid_response', 'finalize_failed', 'rate_limit', 'unavailable']);
+  if (expected.has(error?.code)) return error.code;
+  if (expected.has(error?.message)) return error.message;
+  if (typeof error?.dbCode === 'string' && /^[A-Z0-9]{5}$/.test(error.dbCode)) return error.dbCode;
+  if (error instanceof SyntaxError) return 'invalid_json';
+  return 'unknown';
 }

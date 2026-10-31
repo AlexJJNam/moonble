@@ -39,8 +39,15 @@ test('사용량 확정에 실패하면 결과를 반환하지 않고 예약 해�
   const transitions = [];
   const outcome = await executeGeneration({ reserve: async () => ({ status: 'reserved', remaining: 4 }), generate: async () => result(quiz()), finish: async success => { transitions.push(success); return !success; } });
   assert.equal(outcome.error, 'unavailable');
+  assert.equal(outcome.diagnostic.stage, 'finalize');
   assert.equal(outcome.quiz, undefined);
   assert.deepEqual(transitions, [true, false]);
+});
+test('실패 원인은 입력 내용 없이 단계와 안전한 코드만 기록한다', async () => {
+  const value = quiz(); value.questions[1].question = value.questions[0].question;
+  const outcome = await executeGeneration({ reserve: async () => ({ status: 'reserved', remaining: 4 }), generate: async () => result(value), finish: async () => true });
+  assert.deepEqual(outcome.diagnostic, { stage: 'validate', code: 'duplicate_question' });
+  assert.equal(JSON.stringify(outcome).includes(value.questions[0].question), false);
 });
 test('회원 또는 전체 한도에 도달하면 모델을 호출하지 않는다', async () => {
   for (const [status, expected] of [['user_limit', 'user_limit'], ['global_limit', 'rate_limit'], ['in_progress', 'unavailable'], ['already_done', 'unavailable']]) {

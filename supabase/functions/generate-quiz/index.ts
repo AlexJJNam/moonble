@@ -56,12 +56,12 @@ Deno.serve(async (request: Request) => {
   const result = await executeGeneration({
     reserve: async () => {
       const reservation = await admin.rpc('moonble_reserve_ai_quiz_generation', { p_user_id: userId, p_request_id: requestId, p_global_limit: globalLimit });
-      if (reservation.error) throw new Error('reserve_failed');
+      if (reservation.error) throw Object.assign(new Error('reserve_failed'), { dbCode: reservation.error.code });
       return reservation.data;
     },
     finish: async (completed: boolean) => {
       const finished = await admin.rpc('moonble_finish_ai_quiz_generation', { p_user_id: userId, p_request_id: requestId, p_success: completed });
-      if (finished.error) throw new Error('finalize_failed');
+      if (finished.error) throw Object.assign(new Error('database_error'), { dbCode: finished.error.code });
       return finished.data === true;
     },
     generate: async () => {
@@ -87,6 +87,7 @@ Deno.serve(async (request: Request) => {
       } finally { clearTimeout(timeout); }
     },
   });
-  console.log(JSON.stringify({ event: 'gemini_quiz_generation', outcome: result.error || 'success', http_status: httpStatus || null, input_tokens: inputTokens, output_tokens: outputTokens, thinking_tokens: thinkingTokens }));
-  return response(request, 200, result);
+  const { diagnostic, ...publicResult } = result;
+  console.log(JSON.stringify({ event: 'gemini_quiz_generation', outcome: result.error || 'success', stage: diagnostic?.stage || null, code: diagnostic?.code || null, http_status: httpStatus || null, input_tokens: inputTokens, output_tokens: outputTokens, thinking_tokens: thinkingTokens }));
+  return response(request, 200, publicResult);
 });
