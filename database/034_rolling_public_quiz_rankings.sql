@@ -338,7 +338,7 @@ declare
     where post.deleted_at is null$old$;
   from_new text := $new$    from public.community_posts as post
     left join public.community_post_ranking_cache as activity on activity.post_id = post.id
-    where post.deleted_at is null$from_new$;
+    where post.deleted_at is null$new$;
 begin
   foreach function_signature in array array[
     'public.moonble_list_community_posts(text,text,text,integer,integer)',
