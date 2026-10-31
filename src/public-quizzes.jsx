@@ -93,7 +93,7 @@ function PublicQuizCard({ item, likeState, likeMode, likePending, onToggleLike }
   const href = `./solve.html#share=${encodeURIComponent(item.token)}`;
   const stats = [`${item.question_count}문항`, item.participants > 0 ? `${item.participants.toLocaleString('ko-KR')}명 참여` : ''].filter(Boolean).join(' · ');
   const samples = usePublicSamples(item);
-  const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples };
+  const paper = { kind: 'custom', label: item.title, description: item.description, count: item.question_count, samples, thumbnailPath: item.thumbnail_path || null, thumbnailMedia: item.thumbnail_media || null };
   return <article className="paper-card public-quiz-card">
     <a className="paper-card-link" href={href} aria-label={`${item.title} · ${item.question_count}문항 문제 풀기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
@@ -295,7 +295,12 @@ export function PublicQuizSearch({ userId = null }) {
         onClick={() => setView(current => current === 'grid' ? 'list' : 'grid')}>{view === 'grid' ? <List size={18} aria-hidden="true" /> : <LayoutGrid size={18} aria-hidden="true" />}</button>
       </div>
     </div>
-    {state.status === 'loading' && <p className="public-quiz-muted" role="status">공개 문제를 불러오고 있어요.</p>}
+    {state.status === 'loading' && <div className={`paper-grid public-quiz-grid public-quiz-skeleton-grid${view === 'list' ? ' paper-list' : ''}`} role="status" aria-label="공개 문제를 불러오는 중">
+      {Array.from({ length: view === 'list' ? 4 : 6 }, (_, index) => <article className="paper-card public-quiz-skeleton-card" key={index} aria-hidden="true">
+        <div className="paper-preview public-quiz-skeleton-preview"><span className="public-quiz-skeleton-sheet"><i className="is-brand" /><b className="is-title" /><small className="is-description" /><span className="public-quiz-skeleton-questions"><i /><i /></span></span></div>
+        <div className="paper-info public-quiz-info"><i className="public-quiz-skeleton-avatar" /><div className="paper-copy"><b className="public-quiz-skeleton-title" /><p className="public-quiz-skeleton-meta" /></div></div>
+      </article>)}
+    </div>}
     {state.status === 'unavailable' && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">공개 문제 검색을 준비하고 있어요</h2><p>곧 공개된 문제지를 찾아 풀 수 있어요.</p></div>}
     {state.status === 'error' && <div className="quiz-empty" role="alert"><h2 className="mb-card-title">공개 문제를 불러오지 못했어요</h2><p>{state.error}</p><button type="button" onClick={() => load(false, 0)}>다시 시도</button></div>}
     {ready && state.items.length === 0 && <div className="quiz-empty"><Search size={28} aria-hidden="true" /><h2 className="mb-card-title">{scrapOnly && !query && !category ? '스크랩한 문제지가 없어요' : query ? '검색 결과가 없어요' : category ? '이 카테고리의 공개 문제가 없어요' : '아직 공개된 문제가 없어요'}</h2><p>{scrapOnly && !query && !category ? '마음에 드는 문제지의 하트를 눌러 스크랩해보세요.' : query ? '다른 검색어로 다시 찾아보세요.' : category ? '다른 카테고리를 골라보세요.' : '내 문제지를 공개로 올려 첫 문제를 공유해보세요.'}</p></div>}

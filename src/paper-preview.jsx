@@ -18,7 +18,7 @@ export function PaperPreview({ paper, compact = false, style, badge = null }) {
   const samples = Array.isArray(paper?.samples) ? paper.samples : [];
   const label = paper?.label || '문제지';
   const count = Number(paper?.count) || 0;
-  const customThumbnailUrl = useQuizThumbnailUrl(paper?.thumbnailPath);
+  const customThumbnailUrl = useQuizThumbnailUrl(paper?.thumbnailPath, paper?.thumbnailMedia);
 
   return <div className={`paper-preview preview-${paper?.kind || 'custom'}${compact ? ' paper-preview--compact' : ''}`} style={style} aria-hidden="true">
     {customThumbnailUrl ? <img className="paper-preview-custom-image" src={customThumbnailUrl} alt="" /> : <div className={`preview-sheet${compact ? ' preview-sheet--compact' : ' preview-solver-sheet'}`}>

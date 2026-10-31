@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { normalizeGif } from './community-gif.jsx';
 
 export const QUIZ_THUMBNAIL_BUCKET = 'quiz-thumbnails';
 export const QUIZ_THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
@@ -6,6 +7,21 @@ const signedUrlCache = new Map();
 
 const supportedTypes = new Set(['image/gif', 'image/jpeg', 'image/png']);
 const fileExtension = { 'image/gif': 'gif', 'image/jpeg': 'jpg', 'image/png': 'png' };
+const THUMBNAIL_GIF_PREFIX = 'klipy:';
+
+export function encodeQuizThumbnailGif(gif) {
+  const media = normalizeGif(gif);
+  if (!media || media.provider !== 'klipy') throw new Error('GIF를 다시 선택해 주세요.');
+  return `${THUMBNAIL_GIF_PREFIX}${encodeURIComponent(JSON.stringify(media))}`;
+}
+
+export function decodeQuizThumbnailGif(value) {
+  if (typeof value !== 'string' || !value.startsWith(THUMBNAIL_GIF_PREFIX)) return null;
+  try {
+    const media = normalizeGif(JSON.parse(decodeURIComponent(value.slice(THUMBNAIL_GIF_PREFIX.length))));
+    return media?.provider === 'klipy' ? media : null;
+  } catch { return null; }
+}
 
 export function validateQuizThumbnail(file) {
   if (!file) return '이미지 파일을 선택해 주세요.';
@@ -26,7 +42,7 @@ export async function uploadQuizThumbnail(file, bankId, userId) {
 
   const { data: previous, error: previousError } = await supabase
     .from('quiz_bank_thumbnails')
-    .select('object_path')
+    .select('object_path,provider')
     .eq('owner_id', userId)
     .eq('bank_id', bankId)
     .maybeSingle();
@@ -43,6 +59,8 @@ export async function uploadQuizThumbnail(file, bankId, userId) {
     bank_id: bankId,
     owner_id: userId,
     object_path: path,
+    provider: 'upload',
+    media: null,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'bank_id' });
   if (saveError) {
@@ -59,6 +77,30 @@ export async function uploadQuizThumbnail(file, bankId, userId) {
   return path;
 }
 
+export async function saveQuizThumbnailGif(gif, bankId, userId) {
+  const media = normalizeGif(gif);
+  if (!media || media.provider !== 'klipy') throw new Error('GIF를 다시 선택해 주세요.');
+  if (!supabase || !bankId) throw new Error('로그인 상태를 확인해 주세요.');
+  if (!userId) {
+    const { data } = await supabase.auth.getUser();
+    userId = data?.user?.id;
+  }
+  if (!userId) throw new Error('로그인 상태를 확인해 주세요.');
+  const { data: previous, error: previousError } = await supabase.from('quiz_bank_thumbnails')
+    .select('object_path,provider').eq('owner_id', userId).eq('bank_id', bankId).maybeSingle();
+  if (previousError) throw previousError;
+  const { error } = await supabase.from('quiz_bank_thumbnails').upsert({
+    bank_id: bankId, owner_id: userId, object_path: null, provider: 'klipy', media, updated_at: new Date().toISOString(),
+  }, { onConflict: 'bank_id' });
+  if (error) throw error;
+  if (previous?.object_path) {
+    const { error: removeError } = await supabase.storage.from(QUIZ_THUMBNAIL_BUCKET).remove([previous.object_path]);
+    if (removeError) console.warn('이전 썸네일 파일을 정리하지 못했습니다.', removeError);
+    signedUrlCache.delete(previous.object_path);
+  }
+  return encodeQuizThumbnailGif(media);
+}
+
 export async function deleteQuizThumbnail(path, bankId, userId) {
   if (!supabase || !bankId) throw new Error('로그인 상태를 확인해 주세요.');
   if (!userId) {
@@ -68,15 +110,20 @@ export async function deleteQuizThumbnail(path, bankId, userId) {
   if (!userId) throw new Error('로그인 상태를 확인해 주세요.');
   const { error: rowError } = await supabase.from('quiz_bank_thumbnails').delete().eq('owner_id', userId).eq('bank_id', bankId);
   if (rowError) throw rowError;
-  if (path) {
+  if (path && !decodeQuizThumbnailGif(path)) {
     const { error: fileError } = await supabase.storage.from(QUIZ_THUMBNAIL_BUCKET).remove([path]);
     if (fileError) console.warn('썸네일 파일을 정리하지 못했습니다.', fileError);
     signedUrlCache.delete(path);
   }
 }
 
-export async function getQuizThumbnailUrl(path) {
-  if (!path || !supabase) return '';
+export async function getQuizThumbnailUrl(path, media = null) {
+  const sharedMedia = normalizeGif(media);
+  if (sharedMedia?.provider === 'klipy') return sharedMedia.url;
+  if (!path) return '';
+  const externalMedia = decodeQuizThumbnailGif(path);
+  if (externalMedia) return externalMedia.url;
+  if (!supabase) return '';
   const cached = signedUrlCache.get(path);
   if (cached && cached.expiresAt > Date.now()) return cached.url;
   const { data, error } = await supabase.storage.from(QUIZ_THUMBNAIL_BUCKET).createSignedUrl(path, 3600);

@@ -1,6 +1,7 @@
 // Shared CSV format and storage for the library and existing solver.
 import { supabase } from './supabase.js';
 import { normalizeCategory } from './quiz-categories.js';
+import { decodeQuizThumbnailGif, encodeQuizThumbnailGif } from './quiz-thumbnail.js';
 
   var LEGACY_CUSTOM_BANK_KEY = 'moonble-custom-bank-v1';
   var CUSTOM_BANK_KEY_PREFIX = 'moonble:user:';
@@ -115,7 +116,8 @@ import { normalizeCategory } from './quiz-categories.js';
       if (removedThumbnailResult.error) throw removedThumbnailResult.error;
     }
     var thumbnailRows = collection.banks.filter(function (bank) { return bank.thumbnailPath; }).map(function (bank) {
-      return { bank_id: bank.id, owner_id: userId, object_path: bank.thumbnailPath, updated_at: bank.updatedAt || new Date().toISOString() };
+      var gif = decodeQuizThumbnailGif(bank.thumbnailPath);
+      return { bank_id: bank.id, owner_id: userId, object_path: gif ? null : bank.thumbnailPath, provider: gif ? 'klipy' : 'upload', media: gif, updated_at: bank.updatedAt || new Date().toISOString() };
     });
     if (thumbnailRows.length) {
       var thumbnailResult = await supabase.from('quiz_bank_thumbnails').upsert(thumbnailRows, { onConflict: 'bank_id' });
@@ -164,7 +166,10 @@ import { normalizeCategory } from './quiz-categories.js';
     var deletedBankIds = new Set(remoteBankRecords.filter(function (row) { return row.deleted_at; }).map(function (row) { return row.id; }));
     var localGroups = new Map(local.groups.map(function (group) { return [group.id, group]; }));
     var localBanks = new Map(local.banks.map(function (bank) { return [bank.id, bank]; }));
-    var remoteThumbnailPaths = new Map((remoteThumbnailRows || []).map(function (row) { return [row.bank_id, row.object_path]; }));
+    var remoteThumbnailPaths = new Map((remoteThumbnailRows || []).map(function (row) {
+      var path = row.provider === 'klipy' && row.media ? encodeQuizThumbnailGif(row.media) : row.object_path;
+      return [row.bank_id, path || null];
+    }));
     var mergedGroups = [];
     var seenGroupIds = new Set();
     remoteGroupRecords.filter(function (row) { return !row.deleted_at; }).forEach(function (row) {
@@ -234,7 +239,7 @@ import { normalizeCategory } from './quiz-categories.js';
     var results = await Promise.all([
       supabase.from('quiz_groups').select('id,owner_id,name,color_key,sort_order,created_at,updated_at,deleted_at').eq('owner_id', id).order('sort_order', { ascending: true }),
       loadRemoteBanks(id),
-      supabase.from('quiz_bank_thumbnails').select('bank_id,owner_id,object_path,updated_at').eq('owner_id', id)
+      supabase.from('quiz_bank_thumbnails').select('bank_id,owner_id,object_path,provider,media,updated_at').eq('owner_id', id)
     ]);
     if (results[0].error) throw results[0].error;
     if (results[1].error) throw results[1].error;

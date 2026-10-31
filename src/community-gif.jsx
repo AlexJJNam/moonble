@@ -2,13 +2,18 @@
 // KLIPY 요구사항: 검색창 "Search KLIPY" 표시(라이브러리가 설정), 미디어는 받은 URL 그대로 브라우저에서 직접 불러오고 파일을 저장하지 않는다.
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { RefreshCw, X } from 'lucide-react';
+import { ImagePlus, RefreshCw, X } from 'lucide-react';
+import { supabase } from './supabase.js';
 
 const KLIPY_APP_KEY = String(import.meta.env.VITE_KLIPY_APP_KEY || '').trim();
 export const GIF_ENABLED = /^[A-Za-z0-9_-]{8,128}$/.test(KLIPY_APP_KEY);
 
 const KLIPY_MEDIA_PREFIX = /^https:\/\/(static|static1|static2)\.klipy\.com\//;
 const UNSAFE_URL_CHARS = /[\s"'<>\\`^{}|]/;
+const COMMUNITY_MEDIA_BUCKET = 'community-media';
+const COMMUNITY_MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+const UPLOAD_MEDIA_PATH = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(gif|jpg|png)$/i;
+const UPLOAD_EXTENSIONS = { 'image/gif': 'gif', 'image/jpeg': 'jpg', 'image/png': 'png' };
 
 // 서버(013 마이그레이션)와 같은 기준으로 KLIPY 미디어 URL만 허용한다. URL은 바꾸지 않는다.
 export function isKlipyMediaUrl(url) {
@@ -29,15 +34,84 @@ function toDimension(value) {
 // 선택기·서버 응답의 GIF를 저장 형식({ provider, id, url, preview_url, width, height, title })으로 정리한다.
 export function normalizeGif(gif) {
   if (!gif || typeof gif !== 'object') return null;
+  const provider = gif.provider ?? 'klipy';
   const id = String(gif.id ?? '');
   const url = gif.url ?? gif.imageUrl;
   const previewUrl = gif.preview_url ?? gif.preview?.imageUrl ?? null;
   const width = toDimension(gif.width);
   const height = toDimension(gif.height);
-  if ((gif.provider ?? 'klipy') !== 'klipy' || !/^[A-Za-z0-9_-]{1,120}$/.test(id) || !isKlipyMediaUrl(url) || !width || !height) return null;
-  if (previewUrl != null && !isKlipyMediaUrl(previewUrl)) return null;
   const title = String(gif.title ?? gif.description ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 120);
+  if (provider === 'upload') {
+    if (!UPLOAD_MEDIA_PATH.test(id) || !width || !height || !supabase) return null;
+    const publicUrl = supabase.storage.from(COMMUNITY_MEDIA_BUCKET).getPublicUrl(id).data?.publicUrl;
+    if (!publicUrl) return null;
+    return { provider: 'upload', id, url: publicUrl, preview_url: null, width, height, title: title || null };
+  }
+  if (provider !== 'klipy' || !/^[A-Za-z0-9_-]{1,120}$/.test(id) || !isKlipyMediaUrl(url) || !width || !height) return null;
+  if (previewUrl != null && !isKlipyMediaUrl(previewUrl)) return null;
   return { provider: 'klipy', id, url, preview_url: previewUrl, width, height, title: title || null };
+}
+
+function makeUuid() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const random = Math.random() * 16 | 0;
+    return (char === 'x' ? random : (random & 3 | 8)).toString(16);
+  });
+}
+
+async function imageDimensions(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const dimensions = { width: toDimension(bitmap.width) || 640, height: toDimension(bitmap.height) || 360 };
+    bitmap.close?.();
+    return dimensions;
+  } catch {
+    return { width: 640, height: 360 };
+  }
+}
+
+async function uploadCommunityMedia(file) {
+  if (!supabase) throw new Error('이미지를 올릴 수 있는 서비스 설정을 확인해 주세요.');
+  if (!file || !Object.prototype.hasOwnProperty.call(UPLOAD_EXTENSIONS, file.type)) throw new Error('GIF, JPG, PNG 파일을 선택해 주세요.');
+  if (file.size > COMMUNITY_MEDIA_MAX_BYTES) throw new Error('이미지는 5MB 이하로 등록해 주세요.');
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user?.id) throw new Error('로그인 상태를 확인해 주세요.');
+  const id = `${user.id}/${makeUuid()}.${UPLOAD_EXTENSIONS[file.type]}`;
+  const { error } = await supabase.storage.from(COMMUNITY_MEDIA_BUCKET).upload(id, file, {
+    contentType: file.type,
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (error) throw error;
+  const { width, height } = await imageDimensions(file);
+  const media = normalizeGif({ provider: 'upload', id, width, height, title: file.name });
+  if (!media) {
+    await supabase.storage.from(COMMUNITY_MEDIA_BUCKET).remove([id]).catch(() => {});
+    throw new Error('이미지를 확인하지 못했어요. 다른 파일을 선택해 주세요.');
+  }
+  return media;
+}
+
+export function CommunityMediaUploadButton({ disabled = false, onPick, onError, onBeforeOpen, compact = false }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  async function handleChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    try { onPick?.(await uploadCommunityMedia(file)); }
+    catch (error) { onError?.(error.message || '이미지를 올리지 못했어요.'); }
+    finally { setBusy(false); }
+  }
+  return <>
+    <input ref={inputRef} className="mb-sr-only" type="file" accept="image/gif,image/jpeg,image/png" disabled={disabled || busy} onChange={handleChange} tabIndex={-1} />
+    <button type="button" className={`quiz-community-upload-button${compact ? ' is-compact' : ''}`} aria-label="이미지 첨부" title="GIF, JPG, PNG 이미지 첨부" disabled={disabled || busy}
+      onClick={() => { if (onBeforeOpen?.() === false) return; inputRef.current?.click(); }}>
+      <ImagePlus size={18} aria-hidden="true" />{!compact && <span>{busy ? '올리는 중' : '이미지'}</span>}
+    </button>
+  </>;
 }
 
 // 대화상자·GIF 선택기가 겹쳐 열려도 Esc는 맨 위 층만 닫는다.
@@ -163,23 +237,25 @@ export function GifButton({ open, onToggle, buttonRef, disabled }) {
 
 // 작성 중인 GIF 미리보기: X로 빼거나 다른 GIF로 바꿀 수 있다.
 export function GifDraftPreview({ gif, onRemove, onReplace, compact = false }) {
-  if (!gif || !isKlipyMediaUrl(gif.url)) return null;
-  const preview = isKlipyMediaUrl(gif.preview_url) ? gif.preview_url : gif.url;
+  const media = normalizeGif(gif);
+  if (!media) return null;
+  const preview = media.provider === 'klipy' && isKlipyMediaUrl(media.preview_url) ? media.preview_url : media.url;
   const size = fitSize(gif.width, gif.height, compact ? 160 : 240, compact ? 120 : 180);
   return <div className={`quiz-community-gif-draft${compact ? ' is-compact' : ''}`}>
     <span className="quiz-community-gif-frame">
       <img src={preview} alt={gif.title ? `선택한 GIF: ${gif.title}` : '선택한 GIF'} width={size.width} height={size.height} style={{ width: size.width }} decoding="async" />
       <button type="button" className="quiz-community-gif-remove" aria-label="GIF 빼기" onClick={onRemove}><X size={16} aria-hidden="true" /></button>
     </span>
-    {onReplace && <button type="button" className="quiz-community-text-button quiz-community-gif-replace" onClick={onReplace}><RefreshCw size={14} aria-hidden="true" />다른 GIF</button>}
+    {onReplace && media.provider === 'klipy' && <button type="button" className="quiz-community-text-button quiz-community-gif-replace" onClick={onReplace}><RefreshCw size={14} aria-hidden="true" />다른 GIF</button>}
   </div>;
 }
 
 // 등록된 글·댓글의 GIF. 저장된 KLIPY URL만 그대로 불러온다.
 export function CommunityGif({ gif, size = 'post' }) {
-  if (!gif || !isKlipyMediaUrl(gif.url)) return null;
-  const box = size === 'comment' ? fitSize(gif.width, gif.height, 200, 160) : fitSize(gif.width, gif.height, 360, 320);
+  const media = normalizeGif(gif);
+  if (!media) return null;
+  const box = size === 'comment' ? fitSize(media.width, media.height, 200, 160) : fitSize(media.width, media.height, 360, 320);
   return <span className={`quiz-community-gif is-${size}`}>
-    <img src={gif.url} alt={gif.title ? `GIF: ${gif.title}` : 'GIF'} width={box.width} height={box.height} style={{ width: box.width }} loading="lazy" decoding="async" />
+    <img src={media.url} alt={media.title ? `${media.provider === 'upload' ? '이미지' : 'GIF'}: ${media.title}` : (media.provider === 'upload' ? '첨부 이미지' : 'GIF')} width={box.width} height={box.height} style={{ width: box.width }} loading="lazy" decoding="async" />
   </span>;
 }

@@ -9,7 +9,7 @@ import { CreatorTabs } from './section-tabs.jsx';
 import { SegmentedControl } from './segmented-control.jsx';
 import { takeSharedFile } from './share-target.js';
 import { TooltipIcon } from './tooltip-icon.jsx';
-import { deleteQuizThumbnail, uploadQuizThumbnail } from './quiz-thumbnail.js';
+import { decodeQuizThumbnailGif, deleteQuizThumbnail, saveQuizThumbnailGif, uploadQuizThumbnail } from './quiz-thumbnail.js';
 import { QuizThumbnailPicker } from './quiz-thumbnail-picker.jsx';
 
 function generationPrompt(query, provider) {
@@ -523,6 +523,9 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
     try {
       let nextPath = thumbnailPath;
       if (thumbnailFile) nextPath = await uploadQuizThumbnail(thumbnailFile, displayBank.id);
+      else if (thumbnailPath && thumbnailPath !== originalThumbnailPath && decodeQuizThumbnailGif(thumbnailPath)) {
+        nextPath = await saveQuizThumbnailGif(decodeQuizThumbnailGif(thumbnailPath), displayBank.id);
+      }
       else if (thumbnailCleared && originalThumbnailPath) {
         await deleteQuizThumbnail(originalThumbnailPath, displayBank.id);
         nextPath = null;
@@ -628,8 +631,8 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
           <label><span>문제지 설명</span><input type="text" value={bankDescription} maxLength={160} onChange={event => setBankDescription(event.target.value)} onBlur={() => persistBankMeta()} /></label>
           <div className="creator-bank-category"><span id="creator-bank-category-label">카테고리</span>
             <CategoryChips wrap label="카테고리" value={bankCategory} onChange={next => { setBankCategory(next); persistBankMeta(next); }} /></div>
-          <div className="creator-bank-thumbnail"><QuizThumbnailPicker path={thumbnailCleared ? null : thumbnailPath} file={thumbnailFile} disabled={thumbnailSaving} onFileChange={file => { setThumbnailFile(file); setThumbnailCleared(false); }} onClear={() => { setThumbnailFile(null); setThumbnailPath(null); setThumbnailCleared(true); }} />
-            {(thumbnailFile || thumbnailCleared) && <button type="button" className="creator-thumbnail-save" disabled={thumbnailSaving} onClick={persistThumbnail}>{thumbnailSaving ? '저장 중' : '썸네일 저장'}</button>}
+          <div className="creator-bank-thumbnail"><QuizThumbnailPicker path={thumbnailCleared ? null : thumbnailPath} file={thumbnailFile} disabled={thumbnailSaving} onFileChange={file => { setThumbnailFile(file); setThumbnailCleared(false); }} onGifChange={path => { setThumbnailFile(null); setThumbnailPath(path); setThumbnailCleared(false); }} onClear={() => { setThumbnailFile(null); setThumbnailPath(null); setThumbnailCleared(true); }} />
+            {(thumbnailFile || thumbnailCleared || thumbnailPath !== originalThumbnailPath) && <button type="button" className="creator-thumbnail-save" disabled={thumbnailSaving} onClick={persistThumbnail}>{thumbnailSaving ? '저장 중' : '썸네일 저장'}</button>}
           </div>
         </div>
         <nav className="creator-result-actions" aria-label="문제지 등록 후 이동">

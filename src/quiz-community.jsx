@@ -1,15 +1,16 @@
 // 커뮤니티: 문제지 화면의 "커뮤니티" 탭(전체 피드)과 공유 문제 순위 카드 아래(그 문제가 첨부된 글)에서 함께 쓴다.
-import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronLeft, CornerDownRight, Ellipsis, Heart, MessageCircle, Paperclip, Share2, Trophy, X } from 'lucide-react';
 import { cachedAuthSession, getSessionSafely, loginUrl, supabase } from './supabase.js';
 import { hasProfile, profileOf } from './profile.js';
 import { formatRelativeDate } from './date-format.js';
 import { clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare } from './quiz-share.js';
 import { QuizPreviewDialog, previewPaperFromQuestions } from './quiz-preview-dialog.jsx';
+import { PaperPreview } from './paper-preview.jsx';
 import { cachedCommunityAvatarUrl, communityAvatarUrl } from './profile-avatar.js';
-import { CommunityGif, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
+import { CommunityGif, CommunityMediaUploadButton, GifButton, GifDraftPreview, GifPickerPanel, useEscapeLayer } from './community-gif.jsx';
 import { lockPageScroll } from './scroll-lock.js';
 import { QUIZ_CATEGORIES, categoryLabel } from './quiz-categories.js';
 import {
@@ -234,6 +235,37 @@ function MiniSheet({ title, preview }) {
   </span>;
 }
 
+const communityPaperPreviewCache = new Map();
+function loadCommunityPaperPreview(token) {
+  const cached = communityPaperPreviewCache.get(token);
+  if (cached?.paper) return Promise.resolve(cached.paper);
+  if (cached?.promise) return cached.promise;
+  const promise = getQuizShare(token).then(previewPaperFromQuestions);
+  communityPaperPreviewCache.set(token, { promise });
+  promise.then(paper => communityPaperPreviewCache.set(token, { paper }), () => communityPaperPreviewCache.delete(token));
+  return promise;
+}
+
+function CommunityAttachmentThumbnail({ attachment, active }) {
+  const token = active ? attachment.token : null;
+  const localQuestions = Array.isArray(attachment.samples) ? attachment.samples.map(sample => ({ q: sample.title, options: sample.options || [] })) : [];
+  const localPaper = useMemo(() => localQuestions.length
+    ? previewPaperFromQuestions({ title: attachment.title, description: attachment.description || '', questions: localQuestions })
+    : null, [attachment.title, attachment.description, attachment.samples]);
+  const [paper, setPaper] = useState(() => localPaper || (token ? communityPaperPreviewCache.get(token)?.paper || null : null));
+  useEffect(() => {
+    let alive = true;
+    if (localPaper) { setPaper(localPaper); return () => { alive = false; }; }
+    if (!token) { setPaper(null); return () => { alive = false; }; }
+    setPaper(communityPaperPreviewCache.get(token)?.paper || null);
+    loadCommunityPaperPreview(token).then(value => { if (alive) setPaper(value); }).catch(() => {});
+    return () => { alive = false; };
+  }, [token, localPaper]);
+  return <span className={`quiz-community-attachment-thumb${!active ? ' is-inactive' : ''}`} aria-hidden="true">
+    {paper ? <PaperPreview paper={paper} compact /> : <span className="quiz-community-attachment-thumb-skeleton"><i /><b /><em /><u /></span>}
+  </span>;
+}
+
 function RecordLine({ record }) {
   if (!record || !Number.isInteger(record.score)) return null;
   const top = Number.isInteger(record.rank) && record.rank <= 3;
@@ -243,7 +275,7 @@ function RecordLine({ record }) {
   </span>;
 }
 
-// 글에 붙은 문제지: 썸네일 + 요약 + 풀어보기(공유 링크). 작성 중에는 미리보기로 쓴다.
+// 글에 붙은 문제지: 썸네일과 요약. 작성 중에는 미리보기로 쓴다.
 function QuizAttachment({ attachment, record, onRemove }) {
   const [confirming, setConfirming] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -253,7 +285,7 @@ function QuizAttachment({ attachment, record, onRemove }) {
   const active = attachment.active !== false;
   const token = attachment.token;
   const Body = <>
-    <MiniSheet title={attachment.title} preview={attachment.preview} />
+    <CommunityAttachmentThumbnail attachment={attachment} active={active} />
     <span className="quiz-community-attachment-copy">
       <strong>{attachment.title}</strong>
       {stats && <span>{stats}</span>}
@@ -270,10 +302,9 @@ function QuizAttachment({ attachment, record, onRemove }) {
   if (!active || !token) return <div className="quiz-community-attachment is-inactive">{Body}</div>;
   // 바로 이동하지 않고 풀지 한 번 묻는다. 대화상자 안의 클릭이 글 상세 열기로 번지지 않게 막는다.
   return <>
-    <a className="quiz-community-attachment" href={solveHref(token)} aria-label={`${attachment.title} 문제 풀어보기`}
+    <a className="quiz-community-attachment" href={solveHref(token)} aria-label={`${attachment.title} 문제지 열기`}
       onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return; event.preventDefault(); setConfirming(true); }}>
       {Body}
-      <span className="quiz-community-attachment-cta">풀어보기<ChevronRight size={16} aria-hidden="true" /></span>
     </a>
     {confirming && <span className="quiz-community-confirm-host" onClick={event => event.stopPropagation()} onMouseDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
       {!previewing && <ConfirmDialog title="이 문제를 푸시겠어요?" description={stats ? `${attachment.title} · ${stats}` : attachment.title} confirmLabel="풀어보기"
@@ -295,7 +326,7 @@ function AttachPicker({ banks = [], solved, onPick, onBack, titleId }) {
     <section aria-labelledby="community-pick-mine">
       <h3 id="community-pick-mine">내가 만든 문제지</h3>
       {banks.length ? <ul>{banks.map(bank => <li key={bank.id}>
-        <button type="button" onClick={() => onPick({ kind: 'bank', bankId: bank.id, title: bank.title, questionCount: bank.questions?.length || 0, preview: String(bank.questions?.[0]?.q || '').slice(0, 80) })}>
+        <button type="button" onClick={() => onPick({ kind: 'bank', bankId: bank.id, title: bank.title, questionCount: bank.questions?.length || 0, preview: String(bank.questions?.[0]?.q || '').slice(0, 80), samples: bank.questions?.slice(0, 6).map(question => ({ title: question.q, options: question.options })) || [] })}>
           <MiniSheet title={bank.title} preview={String(bank.questions?.[0]?.q || '').slice(0, 80)} />
           <span><strong>{bank.title}</strong><span>{bank.questions?.length || 0}문항</span></span>
         </button>
@@ -386,6 +417,7 @@ function ComposeDialog({ viewer, draft, onDraftChange, onSubmit, onClose, attach
         {attachSource && !editing && !attachment?.fixed && <button type="button" className="quiz-community-attach-button" onClick={() => setView('attach')}>
           <span>{attachment ? '다른 문제지' : '문제지 첨부'}</span>
         </button>}
+        <CommunityMediaUploadButton disabled={busy} onPick={gif => { onDraftChange(current => ({ ...current, gif })); setError(''); }} onError={setError} />
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => setGifOpen(open => !open)} />
         <span className={`quiz-community-counter${draft.body.length > POST_BODY_LIMIT * .95 ? ' is-near-limit' : ''}`} aria-live="polite">{draft.body.length.toLocaleString('ko-KR')} / {POST_BODY_LIMIT.toLocaleString('ko-KR')}</span>
         <button type="submit" className="is-primary" disabled={!ready || busy}>{editing ? (busy ? '저장 중' : '저장') : (busy ? '남기는 중' : '남기기')}</button>
@@ -494,6 +526,7 @@ function CommentThread({ post, viewer, attachSource = null, onCountChange, onReq
           onFocus={() => { if (!viewer?.ready) onRequireLogin(); }} onChange={event => setBody(event.target.value)} readOnly={!viewer?.ready} />
         <button type="button" className="quiz-community-comment-attach" aria-label="댓글에 문제지 첨부" title="문제지 첨부" disabled={busy} onClick={() => { if (!viewer?.ready) { onRequireLogin(); return; } setAttachOpen(true); }}><Paperclip size={17} aria-hidden="true" /></button>
         <GifButton buttonRef={gifButtonRef} open={gifOpen} disabled={busy} onToggle={() => { if (!viewer?.ready) { onRequireLogin(); return; } setGifOpen(open => !open); }} />
+        <CommunityMediaUploadButton compact disabled={busy} onBeforeOpen={() => { if (!viewer?.ready) { onRequireLogin(); return false; } return true; }} onPick={media => { setGif(media); setError(''); }} onError={setError} />
         <button type="submit" disabled={viewer?.ready ? (!body.trim() && !gif && !attachment) || busy : false}>남기기</button>
       </div>
     </form>;

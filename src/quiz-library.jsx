@@ -27,7 +27,7 @@ import { CategoryChips } from './category-chips.jsx';
 import { categoryLabel } from './quiz-categories.js';
 import { getMyShareVisibilities, setShareVisibility } from './public-quizzes-api.js';
 import { cacheQuizShareToken, clearCachedQuizShareToken, createQuizShare, getCachedQuizShareToken, getQuizShare, quizShareUrl, revokeQuizShare } from './quiz-share.js';
-import { deleteQuizThumbnail, uploadQuizThumbnail } from './quiz-thumbnail.js';
+import { decodeQuizThumbnailGif, deleteQuizThumbnail, saveQuizThumbnailGif, uploadQuizThumbnail } from './quiz-thumbnail.js';
 import { QuizThumbnailPicker } from './quiz-thumbnail-picker.jsx';
 import './design-system.css';
 import './quiz-library.css';
@@ -226,7 +226,7 @@ function ManagementDialog({ editor, groups, onChange, onClose, onSubmit }) {
           <label><span>문제지 이름</span><input autoFocus type="text" maxLength="80" value={editor.title} onChange={event => onChange({ ...editor, title: event.target.value })} /></label>
           <label><span>문제지 설명</span><textarea rows="2" maxLength="160" value={editor.description} onChange={event => onChange({ ...editor, description: event.target.value })} /></label>
           <label><span>그룹</span><select value={editor.groupId} onChange={event => onChange({ ...editor, groupId: event.target.value })}><option value={DEFAULT_GROUP_ID}>미분류</option>{groups.map(group => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label>
-          <QuizThumbnailPicker path={editor.thumbnailCleared ? null : editor.thumbnailPath} file={editor.thumbnailFile} disabled={Boolean(editor.saving)} onFileChange={file => onChange({ ...editor, thumbnailFile: file, thumbnailCleared: false })} onClear={() => onChange({ ...editor, thumbnailFile: null, thumbnailPath: null, thumbnailCleared: true })} />
+          <QuizThumbnailPicker path={editor.thumbnailCleared ? null : editor.thumbnailPath} file={editor.thumbnailFile} disabled={Boolean(editor.saving)} onFileChange={file => onChange({ ...editor, thumbnailFile: file, thumbnailCleared: false })} onGifChange={thumbnailPath => onChange({ ...editor, thumbnailFile: null, thumbnailPath, thumbnailCleared: false })} onClear={() => onChange({ ...editor, thumbnailFile: null, thumbnailPath: null, thumbnailCleared: true })} />
           {editor.visibility && <div className="quiz-manage-visibility"><span>공개 범위</span>
             <SegmentedControl className="quiz-manage-visibility-tabs" ariaLabel="공개 범위" items={VISIBILITY_OPTIONS.map(option => ({ value: option.value, label: option.label }))} value={editor.visibility} onChange={next => onChange({ ...editor, visibility: next })} />
             <small>{VISIBILITY_OPTIONS.find(option => option.value === editor.visibility)?.copy}</small>
@@ -674,6 +674,7 @@ function QuizLibrary() {
         setEditor(current => ({ ...current, saving: true, error: '' }));
         let thumbnailPath = editor.thumbnailPath || null;
         if (editor.thumbnailFile) thumbnailPath = await uploadQuizThumbnail(editor.thumbnailFile, editor.bankId, user.id);
+        else if (thumbnailPath && thumbnailPath !== editor.originalThumbnailPath && decodeQuizThumbnailGif(thumbnailPath)) thumbnailPath = await saveQuizThumbnailGif(decodeQuizThumbnailGif(thumbnailPath), editor.bankId, user.id);
         else if (editor.thumbnailCleared && editor.originalThumbnailPath) await deleteQuizThumbnail(editor.originalThumbnailPath, editor.bankId, user.id);
         updateCustomBankMeta(editor.title, editor.description, undefined, editor.bankId, editor.groupId, editor.category || null, thumbnailPath);
         setNotice('문제지 정보를 저장했어요.');
