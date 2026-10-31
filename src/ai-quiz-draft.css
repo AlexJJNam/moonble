@@ -17,7 +17,15 @@
 .ai-quiz-draft-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 24px 0; }
 .ai-quiz-draft-actions button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--mb-surface-muted); color: var(--mb-text-primary); font-weight: 600; }
 .ai-quiz-draft-actions button:last-child { background: var(--mb-primary-strong); color: #fff; }
-.creator-ai-quota { margin: 10px 0 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); }
-.creator-ai-external { padding: 4px 0; border: 0; background: transparent; color: var(--mb-text-secondary); font-size: var(--mb-font-13); text-decoration: underline; cursor: pointer; }
+.creator-ai-free-option { grid-column: 1 / -1; grid-row: 3; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; min-width: 0; color: var(--mb-text-tertiary); font-size: var(--mb-font-13); line-height: 20px; }
+.creator-ai-free-option label { display: inline-flex; align-items: center; gap: 4px; color: var(--mb-text-secondary); cursor: pointer; user-select: none; }
+.creator-ai-free-option input { position: relative; appearance: none; -webkit-appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; border: 1.5px solid var(--mb-border); border-radius: 6px; background: rgb(255 255 255 / 55%); cursor: pointer; transition: background .15s ease, border-color .15s ease, transform .1s ease; }
+.creator-ai-free-option input:hover { border-color: var(--mb-primary); }
+.creator-ai-free-option input:active { transform: scale(.9); }
+.creator-ai-free-option input:focus-visible { outline: 2px solid var(--mb-primary); outline-offset: 2px; }
+.creator-ai-free-option input:checked { border-color: var(--mb-primary); background: color-mix(in oklab, var(--mb-primary) 78%, transparent); }
+.creator-ai-free-option input:checked::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 13 10 18 19 7'/%3E%3C/svg%3E") center / 68% no-repeat; animation: creator-ai-free-check-pop .3s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes creator-ai-free-check-pop { from { opacity: 0; transform: scale(.65); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .creator-ai-free-option input { transition: none; } .creator-ai-free-option input:checked::after { animation: none; } }
 .creator-ai-fallback { margin: 12px 0 0; color: var(--mb-text-secondary); font-size: var(--mb-font-14); line-height: 1.5; }
 .creator-ai-fallback button { margin-left: 8px; border: 0; background: transparent; color: var(--mb-primary-strong); font: inherit; text-decoration: underline; cursor: pointer; }
