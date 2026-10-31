@@ -795,17 +795,19 @@ export function QuizCreator({ custom, onChange, stepRef = null, onScreenChange =
             <textarea ref={promptInputRef} className={`creator-ai-prompt-input${examplePromptReveal ? ' is-example-revealing' : ''}`} value={query} onFocus={dockPrompt} onBlur={() => setPromptFocused(false)} onChange={event => { window.clearTimeout(examplePromptRevealTimerRef.current); examplePromptRevealTimerRef.current = 0; examplePromptRevealIdRef.current += 1; setExamplePromptReveal(null); setQuery(event.target.value); event.currentTarget.style.height = 'auto'; event.currentTarget.style.height = `${Math.min(110, event.currentTarget.scrollHeight)}px`; }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); requestGeneration(); } }} aria-label="만들 문제의 목표, 주제와 난이도" rows="1" autoComplete="off" maxLength={1200} />
           </span>
           <div className="creator-ai-actions">
-            <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
-              <SegmentedControl ariaLabel="문제 생성 AI 선택" className="creator-provider" items={providerSegments} value={provider} onChange={setProvider} />
+            <div className="creator-ai-mode-controls">
+              <div onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
+                <SegmentedControl ariaLabel="문제 생성 AI 선택" className="creator-provider" items={providerSegments} value={provider} onChange={setProvider} />
+              </div>
+              <div className="creator-ai-free-option" onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
+                <label><input type="checkbox" checked={useFreeAi} disabled={aiPending} onChange={event => setUseFreeAi(event.target.checked)} aria-describedby="creator-ai-quota" /><span>무료 AI 생성 사용하기</span></label>
+              </div>
             </div>
             <button className={`creator-ai-prompt-btn${query.trim() ? '' : ' is-inactive'}`} type="button" disabled={aiPending} onPointerDown={event => event.preventDefault()} onClick={requestGeneration}>{aiPending ? '문제 생성 중…' : '문제 만들기'}</button>
           </div>
-          <div className="creator-ai-free-option" onPointerDown={event => { if (promptFocused) event.preventDefault(); }}>
-            <label><input type="checkbox" checked={useFreeAi} disabled={aiPending} onChange={event => setUseFreeAi(event.target.checked)} aria-describedby="creator-ai-free-detail" />무료 AI 생성 사용하기</label>
-            <span id="creator-ai-free-detail">{useFreeAi ? (aiRemaining === null ? (aiQuotaLoaded ? '남은 횟수를 확인할 수 없어요' : '남은 횟수 확인 중') : `오늘 ${aiRemaining}회 남음`) : '선택한 AI로 직접 이동해요'}</span>
-          </div>
         </div>
       </div>
+      <p className="creator-ai-quota" id="creator-ai-quota" aria-live="polite">{aiRemaining === null ? (aiQuotaLoaded ? '무료 AI 생성 횟수를 확인할 수 없어요' : '무료 AI 생성 횟수 확인 중') : `오늘 남은 무료 AI 생성 ${aiRemaining}회`}</p>
       {aiFallback && <p className="creator-ai-fallback" role="status">{aiFallback.message}<button type="button" onClick={() => launchExternal(aiFallback.value, aiFallback.provider, aiFallback.message)}>AI 모드 열기</button></p>}
       <section className="creator-example-suggestions" aria-label="문제 생성 예시">
         <div className={`creator-example-cards${exampleCardsDragging ? ' is-dragging' : ''}`} role="region" aria-label="문제 생성 예시, 좌우로 넘겨 선택" tabIndex={0} onPointerDown={startExampleCardsDrag} onPointerMove={moveExampleCardsDrag} onPointerUp={endExampleCardsDrag} onPointerCancel={endExampleCardsDrag} onClickCapture={handleExampleCardClickCapture}>
